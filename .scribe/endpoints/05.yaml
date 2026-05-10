@@ -1,0 +1,89 @@
+name: Audit
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/audit-logs/export
+    metadata:
+      custom: []
+      groupName: Audit
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Exportar logs como CSV.'
+      description: |-
+        Mesmos filtros do `index`, sem paginação. UTF-8 com BOM para
+        compatibilidade com Excel. Seguro contra formula injection.
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"Content-Type": "text/csv"}'
+        headers: []
+        description: csv
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/audit-logs
+    metadata:
+      custom: []
+      groupName: Audit
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Lista paginada do log de auditoria.'
+      description: |-
+        Suporta filtros por `from`, `to`, `action` e `actor_user_id`.
+        Máximo de 200 itens por página (cap silencioso).
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data": [{"id": 1, "action": "auth.login", "created_at": "2026-05-10T10:00:00Z"}]}'
+        headers: []
+        description: logs
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null

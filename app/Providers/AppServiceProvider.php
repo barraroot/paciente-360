@@ -2,23 +2,218 @@
 
 namespace App\Providers;
 
+use App\Events\TenantResolved;
+use App\Models\AuditLog;
+use App\Models\Invitation;
+use App\Models\Tenant;
+use App\Models\User;
+use App\Policies\AuditLogPolicy;
+use App\Policies\InvitationPolicy;
+use App\Policies\OnboardingPolicy;
+use App\Policies\UserPolicy;
+use App\Services\Billing\StripeClientWrapper;
+use Illuminate\Auth\Events\Authenticated;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Cashier\Cashier;
+use Sentry\State\Scope;
+use Spatie\Permission\PermissionRegistrar;
+use Stripe\StripeClient;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Register any application services.
+     * Registra serviços no container.
      */
     public function register(): void
     {
-        //
+        // Wrapper do Stripe SDK — permite swap por mock em testes.
+        // Só instancia o StripeClient real se a chave secreta estiver configurada.
+        $this->app->singleton(StripeClientWrapper::class, function () {
+            $secret = (string) config('cashier.secret');
+
+            if ($secret === '') {
+                $secret = 'sk_test_placeholder_for_non_stripe_calls';
+            }
+
+            return new StripeClientWrapper(new StripeClient($secret));
+        });
     }
 
     /**
-     * Bootstrap any application services.
+     * Bootstrap dos serviços da aplicação.
      */
     public function boot(): void
     {
-        //
+        // T183 — Cashier com Tenant como modelo billable.
+        Cashier::useCustomerModel(Tenant::class);
+
+        $this->configureSentryScope();
+        $this->configureTenantCachePrefix();
+        $this->configureSpatieTeamId();
+        $this->configureSuperAdminGate();
+        $this->registerPolicies();
+    }
+
+    /**
+     * Registra as policies da aplicação no Gate (T162 — OnboardingPolicy).
+     *
+     * A ability `manage-onboarding` é mapeada diretamente via Gate::define
+     * porque a OnboardingPolicy não está associada a um Eloquent model.
+     */
+    protected function registerPolicies(): void
+    {
+        Gate::define('manage-onboarding', [OnboardingPolicy::class, 'manage']);
+
+        Gate::policy(Invitation::class, InvitationPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(AuditLog::class, AuditLogPolicy::class);
+    }
+
+    /**
+     * Sincroniza o "team id" do Spatie Permission com o tenant resolvido
+     * (T061 — Princípio II). Com `permission.teams = true` e
+     * `team_foreign_key = 'tenant_id'`, o Spatie filtra roles/permissions
+     * automaticamente pelo team id corrente.
+     *
+     *  - `TenantResolved` (middleware): seta team id = `$tenant->id`.
+     *  - `Authenticated`: cobre o caso do usuário autenticado **fora**
+     *    do middleware (CLI, jobs, testes que usam `$this->actingAs()`)
+     *    — usa `$user->tenant_id` (NULL para Super Admin = team id null,
+     *    o que faz o Spatie cair no caminho "global").
+     */
+    protected function configureSpatieTeamId(): void
+    {
+        Event::listen(TenantResolved::class, static function (TenantResolved $event): void {
+            app(PermissionRegistrar::class)->setPermissionsTeamId($event->tenant->id);
+        });
+
+        Event::listen(Authenticated::class, static function (Authenticated $event): void {
+            $user = $event->user;
+
+            if (! is_object($user)) {
+                return;
+            }
+
+            $tenantId = $user->tenant_id ?? null;
+
+            app(PermissionRegistrar::class)->setPermissionsTeamId(
+                $tenantId !== null && $tenantId !== '' ? (int) $tenantId : null
+            );
+        });
+    }
+
+    /**
+     * Bypass total para `super-admin` (T061 — Princípio II + VII). Como
+     * `super-admin` tem `tenant_id = NULL` (role global), o Spatie
+     * resolve a role normalmente quando o team id é `null`. O Gate
+     * `before` evita a necessidade de declarar policy para cada ability
+     * cross-tenant.
+     */
+    protected function configureSuperAdminGate(): void
+    {
+        Gate::before(static function (Authenticatable $user, string $ability): ?bool {
+            if (! method_exists($user, 'hasRole')) {
+                return null;
+            }
+
+            return $user->hasRole('super-admin') ? true : null;
+        });
+    }
+
+    /**
+     * Aplica o prefix `paciente360:tenant:{id}:` no driver de cache
+     * default sempre que um tenant é resolvido (T045 — Princípio II,
+     * isolation by default).
+     *
+     * Implementação:
+     *  - Listener no evento `TenantResolved` (disparado pelo middleware
+     *    `ResolveTenant` após bind de `app('tenant')`).
+     *  - `Config::set('cache.prefix', ...)` + `Cache::forgetDriver()`
+     *    força o `CacheManager` a reconstruir o repositório com o novo
+     *    prefix na próxima chamada a `Cache::*`.
+     *  - O store `global` (configurado em `config/cache.php`) NÃO é
+     *    afetado — chaves cross-tenant continuam isoladas pelo store,
+     *    não pelo prefix.
+     *
+     * Nota: o reset do prefix entre tenants no MESMO processo (caso
+     * Octane/queue worker hot) acontece via novo `TenantResolved` —
+     * ou via `Cache::store('global')` para acessar o store sem prefix.
+     */
+    protected function configureTenantCachePrefix(): void
+    {
+        Event::listen(TenantResolved::class, static function (TenantResolved $event): void {
+            Config::set('cache.prefix', "paciente360:tenant:{$event->tenant->id}:");
+
+            // Esquece a instância default do cache para que o
+            // `CacheManager` reconstrua com o prefix novo na próxima
+            // resolução.
+            Cache::forgetDriver(Config::get('cache.default'));
+        });
+    }
+
+    /**
+     * Popula o escopo do Sentry com `tenant.id` e `user.id` quando
+     * disponíveis (Princípio V — Observabilidade).
+     *
+     * Estratégia:
+     *  - Sem o pacote `sentry/sentry-laravel` resolvido no container,
+     *    nada acontece (boot continua intocado para testes/CI sem DSN).
+     *  - Quando um usuário é autenticado, escutamos
+     *    `Illuminate\Auth\Events\Authenticated` para fixar `user.id` e
+     *    `tenant.id` (extraído do próprio model autenticado).
+     *  - Quando o middleware `ResolveTenant` (T050) dispara o evento
+     *    string `tenant.resolved`, propagamos `tenant.id` e
+     *    `tenant.slug` para o escopo — útil em rotas públicas
+     *    pré-autenticação (cadastro, login) onde o tenant é resolvido
+     *    pelo subdomínio antes de qualquer login.
+     *
+     * Os closures fazem `function_exists('Sentry\\configureScope')` para
+     * tolerar ausência do SDK em runtime sem quebrar o request.
+     */
+    protected function configureSentryScope(): void
+    {
+        if (! $this->app->bound('sentry')) {
+            return;
+        }
+
+        Event::listen(Authenticated::class, static function (Authenticated $event): void {
+            if (! function_exists('Sentry\\configureScope')) {
+                return;
+            }
+
+            \Sentry\configureScope(function (Scope $scope) use ($event): void {
+                $user = $event->user;
+
+                $scope->setUser([
+                    'id' => (string) $user->getAuthIdentifier(),
+                ]);
+
+                $tenantId = $user->tenant_id ?? null;
+                if ($tenantId !== null && $tenantId !== '') {
+                    $scope->setTag('tenant.id', (string) $tenantId);
+                }
+            });
+        });
+
+        Event::listen('tenant.resolved', static function ($tenant): void {
+            if (! function_exists('Sentry\\configureScope')) {
+                return;
+            }
+
+            \Sentry\configureScope(function (Scope $scope) use ($tenant): void {
+                if (is_object($tenant) && isset($tenant->id)) {
+                    $scope->setTag('tenant.id', (string) $tenant->id);
+                }
+
+                if (is_object($tenant) && isset($tenant->slug)) {
+                    $scope->setTag('tenant.slug', (string) $tenant->slug);
+                }
+            });
+        });
     }
 }

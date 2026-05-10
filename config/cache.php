@@ -78,6 +78,18 @@ return [
             'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
         ],
 
+        /*
+        | Cache "global" — sem prefix de tenant (T045). Use para chaves
+        | cross-tenant: idempotência de webhooks Stripe, locks globais
+        | de Cashier, métricas de plataforma. Acesso via
+        | `Cache::store('global')` em vez do default.
+        */
+        'global' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
+            'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
+        ],
+
         'dynamodb' => [
             'driver' => 'dynamodb',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -1,0 +1,314 @@
+name: Auth
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/login
+    metadata:
+      custom: []
+      groupName: Auth
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Login de usuário interno.'
+      description: |-
+        Estabelece sessão Sanctum (cookie HttpOnly + CSRF). O tenant é
+        resolvido pelo subdomínio antes deste controller executar.
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Must be a valid email address.'
+        required: true
+        example: gbailey@example.net
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: ''
+        required: true
+        example: '|]|{+-'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      remember:
+        custom: []
+        name: remember
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: gbailey@example.net
+      password: '|]|{+-'
+      remember: true
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"user": {"id": 1, "name": "Dr. Exemplo", "email": "dr@clinica.com.br"}}'
+        headers: []
+        description: sucesso
+      -
+        custom: []
+        status: 401
+        content: '{"message": "Credenciais inválidas."}'
+        headers: []
+        description: 'credenciais inválidas'
+      -
+        custom: []
+        status: 423
+        content: '{"message": "Conta bloqueada temporariamente."}'
+        headers: []
+        description: bloqueado
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/logout
+    metadata:
+      custom: []
+      groupName: Auth
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Encerrar sessão atual.'
+      description: 'Invalida a sessão Sanctum e regenera o CSRF token.'
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 204
+        content: ''
+        headers: []
+        description: sucesso
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/auth/me
+    metadata:
+      custom: []
+      groupName: Auth
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Usuário autenticado e permissões efetivas.'
+      description: |-
+        Retorna o perfil do usuário logado com todas as permissões calculadas
+        para o tenant atual (Spatie team mode).
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"id": 1, "name": "Dr. Exemplo", "email": "dr@clinica.com.br", "permissions": ["users.invite"]}'
+        headers: []
+        description: sucesso
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/password/forgot
+    metadata:
+      custom: []
+      groupName: Auth
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Solicitar link de recuperação de senha.'
+      description: 'Resposta sempre 202, mesmo se o e-mail não existir (FR-032 — anti-enumeração).'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Must be a valid email address. Must not be greater than 254 characters.'
+        required: true
+        example: gbailey@example.net
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: gbailey@example.net
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 202
+        content: ''
+        headers: []
+        description: 'solicitação enviada'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/password/reset
+    metadata:
+      custom: []
+      groupName: Auth
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Redefinir senha com token por e-mail.'
+      description: 'Token inválido ou expirado retorna 410 (via handler global).'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Must be a valid email address.'
+        required: true
+        example: gbailey@example.net
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      token:
+        custom: []
+        name: token
+        description: 'Must be 64 characters.'
+        required: true
+        example: miyvdljnikhwaykcmyuwpwlvqwrsitcpscqldzsnrwtujwvlxjklqppwqbewtnno
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Must be at least 8 characters.'
+        required: true
+        example: "u.*,JHRp_B)L'(?aiG;o"
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      password_confirmation:
+        custom: []
+        name: password_confirmation
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: gbailey@example.net
+      token: miyvdljnikhwaykcmyuwpwlvqwrsitcpscqldzsnrwtujwvlxjklqppwqbewtnno
+      password: "u.*,JHRp_B)L'(?aiG;o"
+      password_confirmation: architecto
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 204
+        content: ''
+        headers: []
+        description: 'senha redefinida'
+      -
+        custom: []
+        status: 410
+        content: '{"message": "Token de redefinição inválido ou expirado."}'
+        headers: []
+        description: 'token inválido'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null

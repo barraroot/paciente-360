@@ -1,0 +1,195 @@
+name: Tenant
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/tenants/register
+    metadata:
+      custom: []
+      groupName: Tenant
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Cadastro público de nova clínica (tenant).'
+      description: |-
+        Cria o tenant em estado `trial`, o usuário criador com perfil
+        Admin Clínica e envia e-mail de boas-vindas.
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      clinic_name:
+        custom: []
+        name: clinic_name
+        description: 'Must be at least 3 characters. Must not be greater than 150 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      cnpj:
+        custom: []
+        name: cnpj
+        description: 'Must match the regex /^\d{14}$/. Must be 14 characters.'
+        required: true
+        example: ngzmiyvdljnikh
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      slug:
+        custom: []
+        name: slug
+        description: 'Must match the regex /^[a-z]([a-z0-9-]{1,61}[a-z0-9])?$/. Must be at least 3 characters. Must not be greater than 63 characters.'
+        required: false
+        example: w
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      responsible_name:
+        custom: []
+        name: responsible_name
+        description: 'Must be at least 3 characters. Must not be greater than 150 characters.'
+        required: true
+        example: a
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      responsible_email:
+        custom: []
+        name: responsible_email
+        description: 'Must be a valid email address. Must not be greater than 254 characters.'
+        required: true
+        example: breitenberg.gilbert@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      responsible_phone:
+        custom: []
+        name: responsible_phone
+        description: 'Must be at least 8 characters. Must not be greater than 20 characters.'
+        required: true
+        example: uwpwlvqwrsitcpsc
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Must match the regex /[A-Z]/. Must match the regex /\d/. Must be at least 8 characters.'
+        required: true
+        example: ':x&S$hS'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      terms_accepted:
+        custom: []
+        name: terms_accepted
+        description: 'Must be accepted.'
+        required: true
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      terms_version:
+        custom: []
+        name: terms_version
+        description: 'Must not be greater than 20 characters.'
+        required: true
+        example: tujwvlxjklqppwqb
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      clinic_name: b
+      cnpj: ngzmiyvdljnikh
+      slug: w
+      responsible_name: a
+      responsible_email: breitenberg.gilbert@example.com
+      responsible_phone: uwpwlvqwrsitcpsc
+      password: ':x&S$hS'
+      terms_accepted: true
+      terms_version: tujwvlxjklqppwqb
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: '{"tenant": {"id": 1, "slug": "clinica-alfa"}, "login_url": "https://clinica-alfa.crm.com.br/login"}'
+        headers: []
+        description: 'tenant criado'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/tenant
+    metadata:
+      custom: []
+      groupName: Tenant
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Leitura do tenant atual.'
+      description: |-
+        Retorna dados públicos do tenant ativo (branding, status de trial,
+        plano vigente). Usado pelo SPA na inicialização.
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"id": 1, "slug": "clinica-alfa", "status": "trial"}'
+        headers: []
+        description: 'tenant ativo'
+      -
+        custom: []
+        status: 404
+        content: '{"message": "Tenant não encontrado."}'
+        headers: []
+        description: 'subdomínio inválido'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null

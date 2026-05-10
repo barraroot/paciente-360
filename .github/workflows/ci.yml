@@ -1,0 +1,218 @@
+name: CI
+
+# Pipeline obrigatório do Paciente360 (Princípio IV — Spec-driven).
+# Roda em todo PR e em push para main. Três jobs paralelos:
+#   - pint              → estilo PSR-12 / preset Laravel (gate de formatação).
+#   - phpunit-coverage  → testes PHPUnit com cobertura ≥ 70% (gate de qualidade).
+#   - playwright        → smoke E2E (zero specs até T138+, mas job já posicionado).
+#
+# Stripe: chaves de TESTE (sk_test_*, pk_test_*) vêm de Secrets do repositório.
+# Nenhum segredo de produção entra no CI.
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+# Cancela runs antigos do mesmo PR/branch ao subir um novo commit.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pint:
+    name: Pint (PHP code style)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-pint-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-pint-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run Pint (test mode)
+        run: vendor/bin/pint --test --format agent
+
+  phpunit-coverage:
+    name: PHPUnit + cobertura (≥ 70%)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    services:
+      pgsql:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: testing
+          POSTGRES_USER: sail
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sail -d testing"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:V0VsbG9ZUjkrUVdEUVRSdkdsR0VVbkdMcWFKb1pYUDk=
+      APP_DEBUG: 'true'
+      LOG_CHANNEL: stack
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_DATABASE: testing
+      DB_USERNAME: sail
+      DB_PASSWORD: password
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: '6379'
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: array
+      MAIL_MAILER: array
+      BROADCAST_CONNECTION: 'null'
+      TENANCY_SUBDOMAIN_SUFFIX: lvh.me
+      # Stripe TEST keys via repo secrets (não exigidos para a Fase 0,
+      # mas posicionados para webhook tests em T072+).
+      STRIPE_KEY: ${{ secrets.STRIPE_KEY_TEST }}
+      STRIPE_SECRET: ${{ secrets.STRIPE_SECRET_TEST }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET_TEST }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.5 (com PCOV para coverage)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: bcmath, intl, pdo_pgsql, redis, sodium
+          coverage: pcov
+          tools: composer:v2
+          ini-values: error_reporting=E_ALL
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-test-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-test-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare storage e cache dirs
+        run: |
+          mkdir -p storage/app/coverage
+          mkdir -p bootstrap/cache
+
+      - name: Copy .env from .env.example
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Run migrations (smoke check)
+        run: php artisan migrate --force --no-interaction
+
+      - name: Check OpenAPI drift
+        run: php artisan openapi:check
+
+      - name: Run PHPUnit com cobertura (--min=70)
+        run: php artisan test --coverage --min=70
+
+      - name: Upload coverage report (clover)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-clover
+          path: storage/app/coverage/clover.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+  playwright:
+    name: Playwright (E2E smoke)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    env:
+      CI: 'true'
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1
+      PLAYWRIGHT_HEADED: ''
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers (chromium)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system deps (cache hit)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run Prettier (lint)
+        run: npm run lint
+
+      - name: Run Playwright (--pass-with-no-tests)
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14

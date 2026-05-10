@@ -1,9 +1,16 @@
-//
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 
-/**
- * Echo exposes an expressive API for subscribing to channels and listening
- * for events that are broadcast by Laravel. Echo and event broadcasting
- * allow your team to quickly build robust real-time web applications.
- */
+import router from './router';
+import i18n from './i18n';
+import App from './App.vue';
 
 import './echo';
+
+const app = createApp(App);
+
+app.use(createPinia());
+app.use(router);
+app.use(i18n);
+
+app.mount('#app');

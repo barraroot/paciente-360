@@ -1,62 +1,99 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.0 → 1.2.0
-Bump rationale: MINOR — adições materiais sem remoção ou redefinição de
-princípios existentes. Adicionados 2 princípios NON-NEGOTIABLE (Meta e
-Segurança Operacional), 1 seção (Localização e Idioma), 1 decisão de
-produto fechada (cobrança híbrida) e refinamentos pontuais a I, II, IV
-e V para incorporar requisitos não cobertos antes.
+Version change: 1.2.0 → 1.3.0
+Bump rationale (escolha do owner): MINOR — diluição de um requisito
+específico (2FA TOTP) dentro do Princípio VII (Segurança Operacional),
+mantendo o princípio em pé com 4 dos 5 bullets originais (argon2id,
+TLS 1.3, rate limiting, brute force lock). O princípio NON-NEGOTIABLE
+não é removido nem redefinido — apenas tem seu escopo reduzido.
+
+⚠️ Leitura alternativa registrada para auditoria: pela letra da seção
+"Governance > Amendments > MAJOR" desta constituição ("mudança em
+quality gate obrigatório"), a remoção do gate de 2FA poderia ser
+classificada como MAJOR, já que a obrigatoriedade de 2FA para Admin
+Clínica e Super Admin era um quality gate explícito. O owner do
+projeto optou por MINOR com a justificativa de que o princípio
+permanece materialmente em vigor; este report preserva ambas as
+leituras para que futuros revisores entendam a intenção.
+
+Justificativa do trade-off de produto:
+  - O conjunto restante (argon2id + TLS 1.3 + rate limiting por
+    tenant+endpoint + bloqueio por brute force) entrega um piso
+    operacional defensável para o MVP.
+  - 2FA pode ser reintroduzido em fase futura como **opt-in
+    voluntário** sem quebrar contratos (a infra de Sanctum + sessão
+    + audit log já cobre o flow).
+  - A auditoria abrangente do Princípio I (LGPD) cobre a parte
+    forense em caso de comprometimento de credencial.
+  - UX de login simplificada para o MVP reduz fricção de adoção em
+    consultórios pequenos (público-alvo principal).
 
 Modified principles:
-  - I. Privacidade, Consentimento e Conformidade LGPD — hash de senha
-       refinado para "argon2id ou bcrypt com cost ≥ 12" (era apenas
-       "bcrypt/argon2").
-  - II. Isolamento Multi-Tenant — reforço explícito: isolamento existe
-        desde a primeira PR de domínio, nunca como retrofit.
-  - IV. Desenvolvimento Spec-Driven e Test-First — adicionados:
-        E2E (Playwright/Cypress) obrigatório nas jornadas críticas
-        (onboarding, agendamento via IA, confirmação automática,
-        renovação de receita); migrações imutáveis após aplicadas em
-        produção; OpenAPI (Scribe) sempre em dia com a API pública.
-  - V. Observabilidade e Excelência Operacional — adicionados:
-       eventos auditáveis para envios externos e mudanças de estado
-       de paciente/agendamento; exportação de métricas via Prometheus
-       para ingestão em Grafana.
+  - VII. Segurança Operacional (NON-NEGOTIABLE) — REMOVIDO o bullet
+        "2FA via TOTP (RFC 6238)" e o sub-requisito "obrigatório
+        para Admin Clínica e Super Admin com janela de carência de 7
+        dias". Os 4 bullets restantes seguem inalterados (hash
+        argon2id/bcrypt cost ≥ 12, TLS 1.3 em produção, rate limiting
+        por tenant+endpoint, bloqueio temporário após 5 tentativas
+        falhas). Rationale do princípio reescrito para refletir o
+        escopo reduzido.
 
-Added sections:
-  - VI. Conformidade Meta nos Disparos (NON-NEGOTIABLE) — janela 24h
-       do WhatsApp, templates aprovados, opt-in de marketing, link de
-       descadastro em mensagens não transacionais, bloqueio em runtime.
-  - VII. Segurança Operacional (NON-NEGOTIABLE) — rate limiting por
-        tenant E por endpoint; 2FA TOTP opcional para usuários
-        internos e OBRIGATÓRIO para Admin Clínica e Super Admin.
-  - Localização e Idioma — pt-BR como padrão, arquitetura i18n-ready
-       (Vue i18n no frontend, arquivos `lang/<locale>` no backend).
-  - Restrições Técnicas e Arquiteturais → bloco "Decisões de produto
-       fechadas": cobrança híbrida (base por profissional ativo +
-       cota mensal de mensagens IA com excedente), gateway Stripe.
+Added sections: nenhuma.
 
-Removed sections: nenhuma.
+Removed sections: bullet "2FA via TOTP" do Princípio VII.
 
 Templates requiring updates:
   - .specify/templates/plan-template.md             ✅ aligned
-       (Constitution Check agora avalia 7 princípios; novos gates de
-       conformidade Meta, segurança operacional e i18n surgem quando
-       relevantes ao escopo da feature).
-  - .specify/templates/spec-template.md             ✅ aligned
-       (sem mudanças de seções obrigatórias; novos princípios surgem
-       como FRs/NFRs específicos).
-  - .specify/templates/tasks-template.md            ✅ aligned
-       (E2E e compliance Meta entram como tasks cross-cutting na fase
-       Polish ou na user story específica).
+       (Constitution Check segue avaliando 7 princípios; gate de 2FA
+       deixa de ser exigência obrigatória).
+  - .specify/templates/spec-template.md             ✅ aligned.
+  - .specify/templates/tasks-template.md            ✅ aligned.
   - .specify/templates/checklist-template.md        ✅ aligned.
 
-Follow-up TODOs: nenhum.
+Artefatos da feature ativa que requerem cascade (NÃO atualizados por
+este comando — o owner deve abrir PR de cleanup):
+  ⚠ specs/001-fundacao-multitenant/spec.md
+       — remover FR-022, cenários 2 e 3 da US-2.1, SC-007, edge case
+       TOTP, premissa de TOTP e item de DoD relativo a 2FA.
+  ⚠ specs/001-fundacao-multitenant/plan.md
+       — remover deps `pragmarx/google2fa`, `bacon/bacon-qr-code` da
+       Stack; remover `TwoFactorController.php`, `TwoFactorService.php`,
+       `EnforceTwoFactorEnrollment.php`, `TwoFactorPage.vue`,
+       `TwoFactorTest.php` da Project Structure; revisar Constitution
+       Check e Verificação Constitucional do Princípio VII.
+  ⚠ specs/001-fundacao-multitenant/research.md
+       — editar R5 (remover blocos de TOTP + recovery codes; manter
+       Sanctum SPA como base).
+  ⚠ specs/001-fundacao-multitenant/data-model.md
+       — remover colunas `two_factor_secret`,
+       `two_factor_recovery_codes`, `two_factor_confirmed_at`,
+       `must_enroll_two_factor_after` da tabela `users` (§ 4).
+  ⚠ specs/001-fundacao-multitenant/contracts/openapi.yaml
+       — remover paths `/auth/two-factor/{enroll,confirm,verify,disable}`;
+       remover schemas `TwoFactorVerifyRequest`, `TwoFactorEnrollResponse`,
+       `TwoFactorConfirmRequest`, `TwoFactorConfirmResponse`,
+       `TwoFactorDisableRequest`; simplificar `LoginResponse`
+       (remover `requires_two_factor`, `must_enroll_two_factor`,
+       `pending_token`); remover campo `two_factor_enabled` do
+       `UserResource`.
+  ⚠ specs/001-fundacao-multitenant/tasks.md
+       — remover T102, T106, T313 inteiras; remover middleware
+       `EnforceTwoFactorEnrollment` (T104); ajustar T103 (sem branch
+       2FA), T105 (sem `TwoFactorService`), T107 (sem `TwoFactorPage`).
+
+Follow-up TODOs: nenhum bloqueante. Recomenda-se rerun de
+`/speckit-analyze` após a cascata estar aplicada para confirmar
+zero CRITICAL.
 
 ----------------------------------------------------------------------
 PRIOR REPORTS
 ----------------------------------------------------------------------
+v1.2.0 (2026-05-10) — MINOR: adicionados Princípio VI (Conformidade
+Meta), Princípio VII (Segurança Operacional), seção "Localização e
+Idioma" e bloco "Decisões de produto fechadas" (cobrança híbrida
+Stripe). Refinamentos a I/II/IV/V.
+
 v1.1.0 (2026-05-10) — MINOR: adicionada subseção "Arquitetura de
 Aplicações e Camadas" (SPA Vue 3 para tenants, Filament 5 para
 super-admin, pipeline Form Request → Controller → Service → Resource).
@@ -242,19 +279,24 @@ princípio I (que cobre os requisitos LGPD de proteção de dados):
 - Rate limiting MUST ser aplicado por tenant E por endpoint. Limites
   default são conservadores e overrides exigem justificativa em
   configuração versionada.
-- 2FA via TOTP (RFC 6238): opcional para usuários internos em geral
-  (Médico, Atendente, Recepcionista, Financeiro), OBRIGATÓRIO para
-  perfis Admin Clínica e Super Admin. Nesses perfis, login sem 2FA
-  habilitado MUST ser bloqueado após período de carência de 7 dias
-  do primeiro acesso.
 - Bloqueio temporário de login após 5 tentativas falhas consecutivas
   (já presente em US-2.1) MUST ser ativo em produção e cobrir
   qualquer endpoint de autenticação (web, API, painel Filament).
 
+**Nota sobre 2FA** (decisão de escopo, v1.3.0): a obrigatoriedade de
+2FA TOTP foi **removida** do MVP. O fator único (senha forte +
+argon2id + rate limit + bloqueio por brute force + TLS 1.3) é o
+piso aceito para a versão atual. 2FA pode ser reintroduzido como
+**opt-in voluntário** em fase futura sem violar este princípio nem
+quebrar contratos existentes; a decisão de torná-lo obrigatório
+novamente exige novo amendment com justificativa formal.
+
 **Rationale**: O conjunto acima é o piso operacional para um SaaS
 multi-tenant que carrega dados clínicos pseudonimizados, credenciais de
-canais Meta e tokens de pagamento. Cada item é verificável por
-inspeção de configuração ou teste automatizado.
+canais Meta e tokens de pagamento. Mesmo sem 2FA obrigatório, a
+combinação de hash forte, rate limiting agressivo, lock por brute
+force e logs auditáveis (Princípio I + V) preserva uma postura de
+defesa em profundidade verificável por configuração e testes.
 
 ## Restrições Técnicas e Arquiteturais
 
@@ -430,4 +472,4 @@ delegadas a CLAUDE.md/AGENTS.md).
   vive em `CLAUDE.md` e `AGENTS.md`; estes arquivos MUST ser mantidos
   consistentes com esta constituição.
 
-**Version**: 1.2.0 | **Ratified**: 2026-05-10 | **Last Amended**: 2026-05-10
+**Version**: 1.3.0 | **Ratified**: 2026-05-10 | **Last Amended**: 2026-05-10

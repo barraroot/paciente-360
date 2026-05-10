@@ -10,7 +10,7 @@
 Esta fase entrega a **fundação operacional da plataforma SaaS multi-tenant**:
 um visitante consegue criar a conta da sua clínica, completar o onboarding,
 contratar/ajustar um plano comercial, ter visibilidade do consumo da cota
-mensal de mensagens IA, autenticar usuários internos com 2FA opcional,
+mensal de mensagens IA, autenticar usuários internos com senha forte,
 montar a equipe via convite por e-mail, recuperar senhas e auditar ações
 sensíveis. Sem essa fase, nenhuma das demais (pacientes, inbox, IA, agenda,
 receituários, campanhas, relatórios) tem onde rodar — todo dado e toda ação
@@ -284,35 +284,27 @@ sazonais; o Admin perceber alerta tarde demais.
 
 **Como** Usuário interno do tenant (Admin, Médico, Atendente,
 Recepcionista, Financeiro)
-**Quero** autenticar com e-mail e senha (com 2FA opcional)
+**Quero** autenticar com e-mail e senha
 **Para que** eu acesse o painel da clínica de forma segura.
 
 **Why this priority**: Sem login, ninguém entra na aplicação além
 do criador inicial. P1 absoluto.
 
 **Independent Test**: Um usuário convidado em estado "ativo" insere
-e-mail/senha corretos, opcionalmente passa o segundo fator, e chega
-ao dashboard apropriado ao seu perfil.
+e-mail/senha corretos e chega ao dashboard apropriado ao seu perfil.
 
 **Acceptance Scenarios**:
 
-1. **Given** usuário com credenciais válidas e 2FA desabilitado,
-   **When** envia e-mail e senha, **Then** sessão é estabelecida e
-   redireciona ao dashboard apropriado ao perfil.
-2. **Given** usuário com credenciais válidas e 2FA habilitado,
-   **When** envia e-mail/senha corretos, **Then** o sistema solicita
-   código TOTP de 6 dígitos antes de estabelecer a sessão.
-3. **Given** usuário com perfil Admin Clínica ou Super Admin,
-   **When** tenta logar sem 2FA habilitado APÓS 7 dias do primeiro
-   acesso, **Then** o login é bloqueado e a tela exige cadastro de
-   2FA imediatamente.
-4. **Given** 5 tentativas de login falhas consecutivas, **When** a
+1. **Given** usuário com credenciais válidas, **When** envia e-mail
+   e senha, **Then** sessão é estabelecida e redireciona ao dashboard
+   apropriado ao perfil.
+2. **Given** 5 tentativas de login falhas consecutivas, **When** a
    sexta tentativa ocorre, **Then** o login é bloqueado
    temporariamente para aquele usuário/IP por janela configurada.
-5. **Given** sessão ativa, **When** o tempo configurado expira sem
+3. **Given** sessão ativa, **When** o tempo configurado expira sem
    atividade, **Then** a sessão é encerrada e o usuário é
    redirecionado ao login.
-6. **Given** login bem-sucedido em qualquer perfil, **When**
+4. **Given** login bem-sucedido em qualquer perfil, **When**
    inspecionamos o log de auditoria, **Then** existe entrada com:
    tenant, usuário, timestamp, IP, user-agent.
 
@@ -321,8 +313,8 @@ de um usuário a logar — mas o usuário criador da US-1.1 já consegue
 logar de saída).
 
 **Riscos**: enumeração de usuários via mensagens de erro distintas
-("e-mail não existe" vs "senha incorreta"); recuperação de TOTP
-fraca abrindo backdoor; bloqueio temporário ser DoS-able.
+("e-mail não existe" vs "senha incorreta"); bloqueio temporário ser
+DoS-able.
 
 **Pontos de ambiguidade**: nenhum específico desta US.
 
@@ -472,7 +464,6 @@ exportação CSV mal escapada virar vetor de injeção em planilhas.
 - **Falha do gateway de pagamento durante upgrade**: a mudança não é aplicada localmente; o estado anterior permanece e o Admin recebe erro acionável.
 - **Race em incremento de cota IA**: dois jobs concorrentes incrementando o contador devem produzir resultado consistente (sem perda).
 - **Token de recuperação de senha solicitado várias vezes**: cada novo token invalida os anteriores; só o último vale.
-- **Relógio do servidor fora de sincronia**: tokens TOTP toleram a janela ±1 step (RFC 6238).
 - **Tenant suspenso pelo Super Admin**: nenhum login não-Super-Admin consegue acessar; mensagem clara é exibida.
 
 ## Requirements *(mandatory)*
@@ -490,7 +481,15 @@ exportação CSV mal escapada virar vetor de injeção em planilhas.
   (com/sem máscara) antes da checagem.
 - **FR-003**: O sistema MUST gerar identificador único de tenant
   (slug) no cadastro e MUST permitir customização do slug pelo
-  Admin Clínica em momento posterior.
+  Admin Clínica em momento posterior. Regras do slug:
+  - Formato: lowercase, `[a-z0-9-]`, 3–63 caracteres (RFC 1035).
+  - Slugs **reservados** (não permitidos para tenants): `api`,
+    `admin`, `panel`, `www`, `app`, `auth`, `static`, `assets`,
+    `mail`, `ftp`, `cdn`, `status`, `support`, `help`. Tentativa
+    de cadastro/customização com slug reservado retorna erro de
+    validação.
+  - Em colisão com slug existente, o sistema MUST sugerir o slug
+    desejado com sufixo numérico (ex.: `clinica-alfa-2`).
 - **FR-004**: O sistema MUST aplicar isolamento de dados entre
   tenants em **todas** as operações de leitura/escrita: queries de
   domínio, jobs em fila, broadcasts, caches e índices de busca. O
@@ -595,16 +594,34 @@ exportação CSV mal escapada virar vetor de injeção em planilhas.
 
 - **FR-021**: O sistema MUST autenticar usuários internos via
   e-mail e senha, escopados pelo tenant.
-- **FR-022**: O sistema MUST suportar 2FA via TOTP (RFC 6238) como
-  opcional para Médico, Atendente, Recepcionista e Financeiro, e
-  como **obrigatório** para Admin Clínica e Super Admin (com
-  período de carência de 7 dias após o primeiro acesso).
+- **FR-021a**: Após login bem-sucedido, o sistema MUST redirecionar
+  para `/panel` (raiz do SPA do tenant). A diferenciação fina de
+  dashboards por perfil (Admin Clínica, Médico, Atendente,
+  Recepcionista, Financeiro) é feita **dentro do `/panel`** pela
+  SPA, baseada nas permissões do `AuthenticatedUserResource` (rotas
+  bloqueadas/visíveis por perfil). Esta fase entrega o `/panel`
+  raiz funcional para Admin Clínica e Financeiro; demais perfis
+  fazem login com sucesso mas veem placeholder com lista de
+  funcionalidades futuras (entram em fases posteriores).
+- **FR-022**: *(removido — 2FA TOTP foi retirado do MVP na constituição
+  v1.3.0; pode retornar como opt-in voluntário em fase futura sem
+  quebrar contratos.)*
 - **FR-023**: O sistema MUST bloquear temporariamente o login após
   5 tentativas falhas consecutivas para o par usuário/IP.
-- **FR-024**: O sistema MUST manter sessão com expiração
-  configurável; expiração por inatividade redireciona ao login.
+- **FR-024**: O sistema MUST manter sessão com expiração configurável
+  (default: 2h de inatividade). Expiração por inatividade
+  redireciona ao login. O login MUST aceitar opção "lembrar-me" que,
+  quando marcada, estende o cookie de sessão para **30 dias** sem
+  renovação por atividade. "Lembrar-me" MUST ser desabilitado para
+  perfis Admin Clínica, Super Admin e Financeiro (operações sensíveis
+  de billing/usuários exigem login fresco em cada janela de uso).
 - **FR-025**: O sistema MUST permitir ao Admin Clínica convidar
-  usuários internos via e-mail com link válido por 24h.
+  usuários internos via e-mail com link válido por 24h. O link de
+  aceite MUST apontar para o **subdomínio do tenant convidado**
+  (`<slug>.crm.com.br/aceitar?token=…`); o aceite ocorre nesse
+  subdomínio e o tenant é resolvido pelo host. Token apresentado em
+  subdomínio diferente do dono do convite retorna 410 (defesa em
+  profundidade contra reuso cross-tenant).
 - **FR-026**: O sistema MUST aplicar permissões granulares por
   perfil (Admin Clínica, Médico, Atendente, Recepcionista,
   Financeiro) em todos os módulos. Um usuário só vê e age sobre
@@ -683,7 +700,7 @@ exportação CSV mal escapada virar vetor de injeção em planilhas.
   gateway.
 - **Usuário Interno**: Pessoa que acessa o painel. Atributos:
   tenant, e-mail, senha hash, perfil(is), status (convidado, ativo,
-  desativado), 2FA habilitado/segredo, data do primeiro acesso.
+  desativado), data do primeiro acesso, último login.
 - **Convite**: Token de definição de senha. Atributos: tenant,
   e-mail destinatário, perfil pretendido, token, validade, status
   (pendente, aceito, expirado).
@@ -721,8 +738,8 @@ exportação CSV mal escapada virar vetor de injeção em planilhas.
 - **SC-006**: Usuário recupera acesso via "esqueci minha senha"
   em ≤ 90 segundos (clique no link do e-mail → nova senha →
   login).
-- **SC-007**: Login com 2FA habilitado é concluído em ≤ 15
-  segundos a partir da tela de credenciais.
+- **SC-007**: *(removido — métrica era específica do fluxo 2FA, que
+  saiu do MVP na constituição v1.3.0.)*
 - **SC-008**: Admin Clínica encontra qualquer evento sensível
   no log de auditoria via filtro em ≤ 30 segundos.
 - **SC-009**: Zero ocorrências de leitura cruzada entre tenants
@@ -792,9 +809,6 @@ estão verdadeiros:
 - [ ] Política de senha forte, hash argon2id/bcrypt cost ≥ 12,
       rate limiting por tenant+endpoint e bloqueio por tentativas
       falhas verificados em testes.
-- [ ] 2FA TOTP implementado e obrigatoriedade aplicada para
-      Admin Clínica e Super Admin (com janela de carência de 7
-      dias verificada por teste).
 - [ ] Log de auditoria registra 100% das ações sensíveis listadas
       em FR-034 e exporta em CSV escapado.
 - [ ] Toda string voltada ao usuário em pt-BR via arquivos de
@@ -813,7 +827,6 @@ estão verdadeiros:
   constituição: Stripe) configurado para o ambiente alvo.
 - Provedor de envio transacional de e-mail configurado (boas-vindas,
   convites, recuperação de senha, alertas de cota).
-- Servidor de tempo confiável para validação de TOTP (NTP).
 
 ### Premissas
 
@@ -824,8 +837,6 @@ estão verdadeiros:
   padrão atual; mudanças exigem amendment.
 - O modelo "1 e-mail pode aparecer em múltiplos tenants" é
   considerado correto (identidade = tuple tenant + e-mail).
-- O tempo do cliente (visitante/Admin) está razoavelmente
-  sincronizado com o servidor (TOTP tolera ±1 step).
 - O ambiente de produção opera em fuso BRT/BRST (afeta cálculo de
   ciclo mensal de cobrança).
 

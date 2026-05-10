@@ -1,0 +1,839 @@
+openapi: 3.1.0
+info:
+  title: Paciente360 — API v1 (Fase 0)
+  version: 0.1.0
+  description: |
+    Contratos REST da Fase 0 (Fundação Multi-tenant, Autenticação e Gestão
+    de Usuários). Todos os endpoints autenticados são escopados ao tenant
+    resolvido pelo subdomínio. Stripe webhook fica fora do prefixo /api/v1.
+  contact:
+    name: Paciente360 Engineering
+servers:
+  - url: https://{slug}.crm.com.br/api/v1
+    description: Produção (subdomínio do tenant)
+    variables:
+      slug:
+        default: clinica-exemplo
+  - url: https://{slug}.lvh.me/api/v1
+    description: Desenvolvimento local (DNS wildcard público; resolve em 127.0.0.1)
+    variables:
+      slug:
+        default: clinica-alfa
+
+tags:
+  - name: tenant
+    description: Cadastro público de novo tenant e leitura do tenant atual
+  - name: auth
+    description: Login, logout, recuperação de senha
+  - name: onboarding
+    description: Wizard de configuração inicial
+  - name: billing
+    description: Planos, assinatura, cota IA
+  - name: users
+    description: Gestão de usuários internos do tenant
+  - name: audit
+    description: Log de auditoria
+
+paths:
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Tenant — Cadastro público (US-1.1) e leitura do tenant atual
+  # ─────────────────────────────────────────────────────────────────────
+  /tenants/register:
+    post:
+      tags: [tenant]
+      summary: Cadastro público de nova clínica (tenant)
+      description: |
+        Endpoint público (sem auth). Servido **apenas** no domínio
+        principal sem subdomínio (ex.: `crm.com.br/api/v1/tenants/register`).
+        Cria tenant em estado `trial`, usuário criador com perfil
+        Admin Clínica e envia e-mail de boas-vindas.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TenantRegisterRequest' }
+      responses:
+        '201':
+          description: Tenant criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantRegisterResponse' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /tenant:
+    get:
+      tags: [tenant]
+      summary: Leitura do tenant atual (resolvido por subdomínio)
+      description: |
+        Retorna dados públicos do tenant ativo (branding, status de trial,
+        plano vigente). Usado pelo SPA na inicialização para customizar
+        UI antes de qualquer login.
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantResource' }
+        '404':
+          description: Subdomínio não corresponde a tenant existente
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Auth (US-2.1, US-2.3)
+  # ─────────────────────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login de usuário interno do tenant
+      description: |
+        Tenant é resolvido pelo subdomínio. Estabelece sessão Sanctum
+        (cookie HttpOnly + CSRF) em caso de credenciais válidas.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Sessão estabelecida
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '401':
+          description: Credenciais inválidas (mensagem genérica — não revela existência)
+        '423':
+          description: Bloqueado temporariamente após 5 tentativas falhas
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Encerra a sessão atual
+      responses:
+        '204': { description: Logout efetuado }
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Usuário autenticado e suas permissões efetivas
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthenticatedUserResource' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /auth/password/forgot:
+    post:
+      tags: [auth]
+      summary: Solicita link de recuperação de senha
+      description: |
+        Resposta sempre é 202 (genérica) mesmo se o e-mail não existe,
+        para não revelar existência (FR-032).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ForgotPasswordRequest' }
+      responses:
+        '202':
+          description: Solicitação processada (e-mail enviado se houver conta)
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/password/reset:
+    post:
+      tags: [auth]
+      summary: Reseta senha usando token recebido por e-mail
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ResetPasswordRequest' }
+      responses:
+        '204': { description: Senha redefinida; e-mail de notificação enviado }
+        '410': { description: Token expirado ou inválido }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Onboarding (US-1.2)
+  # ─────────────────────────────────────────────────────────────────────
+  /onboarding/state:
+    get:
+      tags: [onboarding]
+      summary: Estado atual do wizard de onboarding
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OnboardingStateResource' }
+
+  /onboarding/steps/{stepKey}/complete:
+    post:
+      tags: [onboarding]
+      summary: Marca uma etapa como concluída com payload específico
+      parameters:
+        - in: path
+          name: stepKey
+          required: true
+          schema:
+            type: string
+            enum: [clinic_data, first_professional, channel_connection, schedule_setup, ai_knowledge_base]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OnboardingStepRequest' }
+      responses:
+        '200':
+          description: Estado atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OnboardingStateResource' }
+        '409': { description: Etapa fora desta fase (placeholder desabilitado) }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /onboarding/steps/{stepKey}/skip:
+    post:
+      tags: [onboarding]
+      summary: Pula etapa não-bloqueante
+      parameters:
+        - in: path
+          name: stepKey
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OnboardingStateResource' }
+        '409': { description: Etapa bloqueante não pode ser pulada }
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Billing (US-1.3, US-1.4, US-1.5)
+  # ─────────────────────────────────────────────────────────────────────
+  /billing/plans:
+    get:
+      tags: [billing]
+      summary: Catálogo de planos disponíveis para contratação
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PlanResource' }
+
+  /billing/checkout:
+    post:
+      tags: [billing]
+      summary: Cria sessão de checkout Stripe para o tenant atual
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CheckoutRequest' }
+      responses:
+        '200':
+          description: URL de checkout gerada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CheckoutResponse' }
+        '409': { description: Tenant já possui assinatura ativa }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /billing/subscription:
+    get:
+      tags: [billing]
+      summary: Estado atual da assinatura do tenant
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionResource' }
+        '404': { description: Tenant ainda em trial sem assinatura }
+    patch:
+      tags: [billing]
+      summary: Upgrade/downgrade — altera plano e/ou número de profissionais
+      description: |
+        Aumentos disparam proration imediata via Stripe; reduções vigoram
+        no próximo ciclo (FR-015).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubscriptionPatchRequest' }
+      responses:
+        '200':
+          description: Assinatura atualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '502': { description: Falha ao comunicar com gateway de pagamento }
+
+  /billing/ai-usage:
+    get:
+      tags: [billing]
+      summary: Consumo de IA do ciclo atual e projeção
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AiUsageResource' }
+
+  /billing/ai-usage/hard-cap:
+    patch:
+      tags: [billing]
+      summary: Configura ou remove o hard cap de mensagens IA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HardCapRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AiUsageResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Users e Invitations (US-2.2)
+  # ─────────────────────────────────────────────────────────────────────
+  /users:
+    get:
+      tags: [users]
+      summary: Lista usuários internos do tenant atual
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [invited, active, disabled] }
+        - in: query
+          name: role
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 25, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserListResponse' }
+
+  /users/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    patch:
+      tags: [users]
+      summary: Altera perfil/atributos do usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserPatchRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [users]
+      summary: Desativa usuário (soft delete; preserva auditoria)
+      responses:
+        '204': { description: Usuário desativado }
+        '409': { description: Não é possível desativar o último Admin Clínica }
+
+  /users/invitations:
+    get:
+      tags: [users]
+      summary: Lista convites pendentes
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/InvitationResource' }
+    post:
+      tags: [users]
+      summary: Envia convite de novo usuário interno
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateInvitationRequest' }
+      responses:
+        '201':
+          description: Convite enviado por e-mail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvitationResource' }
+        '409': { description: Limite de usuários do plano atingido }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /users/invitations/{id}:
+    delete:
+      tags: [users]
+      summary: Revoga convite pendente
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Convite revogado }
+        '410': { description: Convite já aceito ou expirado }
+
+  /users/invitations/accept:
+    post:
+      tags: [users]
+      summary: Aceita convite e define senha (público — token vem no e-mail)
+      description: |
+        **Servido no subdomínio do tenant convidado** — `<slug>.crm.com.br`
+        (em dev: `<slug>.lvh.me`). O e-mail de convite contém o link
+        absoluto com o slug correto, descoberto no momento do envio
+        a partir do `invitation.tenant_id`. O middleware `ResolveTenant`
+        resolve o tenant pelo host antes do controller; o `token`
+        amarra ao mesmo tenant via DB lookup, garantindo que aceite
+        em outro subdomínio retorne 410.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AcceptInvitationRequest' }
+      responses:
+        '200':
+          description: Usuário ativado; sessão estabelecida no tenant correto
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthenticatedUserResource' }
+        '404': { description: Subdomínio não corresponde a tenant existente }
+        '410': { description: Token expirado, inválido ou de outro tenant }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Audit log (US-2.4)
+  # ─────────────────────────────────────────────────────────────────────
+  /audit-logs:
+    get:
+      tags: [audit]
+      summary: Lista paginada do log de auditoria do tenant
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: action
+          schema: { type: string, description: 'Filtro por ação (ex.: tenant.registered)' }
+        - in: query
+          name: actor_user_id
+          schema: { type: integer }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 50, maximum: 200 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuditLogListResponse' }
+
+  /audit-logs/export:
+    get:
+      tags: [audit]
+      summary: Exporta CSV escapado dos logs (mesmo filtro do GET)
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: action
+          schema: { type: string }
+      responses:
+        '200':
+          description: CSV
+          content:
+            text/csv:
+              schema: { type: string, format: binary }
+
+# ─────────────────────────────────────────────────────────────────────
+# Components
+# ─────────────────────────────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    sanctumSession:
+      type: apiKey
+      in: cookie
+      name: paciente360_session
+      description: |
+        Sessão Sanctum SPA com cookie HttpOnly + CSRF token via header
+        `X-XSRF-TOKEN`. Antes da primeira chamada protegida, o SPA faz
+        `GET /sanctum/csrf-cookie`.
+
+  security:
+    - sanctumSession: []
+
+  parameters:
+    XRequestId:
+      in: header
+      name: X-Request-Id
+      schema: { type: string }
+      description: Correlation ID; ecoado em logs estruturados.
+
+  responses:
+    Unauthenticated:
+      description: Não autenticado
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationError:
+      description: Erro de validação (422)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+    RateLimited:
+      description: Rate limit excedido
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    # ─── Erros ──────────────────────────────────────────────────────
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+        code: { type: string }
+
+    ValidationError:
+      type: object
+      required: [message, errors]
+      properties:
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+
+    # ─── Tenant ─────────────────────────────────────────────────────
+    TenantRegisterRequest:
+      type: object
+      required: [clinic_name, cnpj, responsible_name, responsible_email, responsible_phone, password, terms_accepted]
+      properties:
+        clinic_name: { type: string, minLength: 3, maxLength: 150 }
+        cnpj: { type: string, description: '14 dígitos com ou sem máscara; canonicalizado server-side' }
+        slug: { type: string, pattern: '^[a-z][a-z0-9-]{1,62}$', description: 'Opcional; gerado automaticamente se ausente' }
+        responsible_name: { type: string, maxLength: 150 }
+        responsible_email: { type: string, format: email, maxLength: 254 }
+        responsible_phone: { type: string, description: 'E.164' }
+        password: { type: string, minLength: 8, description: 'Forte: 1 maiúscula, 1 número' }
+        terms_accepted: { type: boolean, enum: [true] }
+        terms_version: { type: string }
+
+    TenantRegisterResponse:
+      type: object
+      properties:
+        tenant: { $ref: '#/components/schemas/TenantResource' }
+        admin_user: { $ref: '#/components/schemas/UserResource' }
+        login_url: { type: string, format: uri }
+
+    TenantResource:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        name: { type: string }
+        status:
+          type: string
+          enum: [trial, active, overdue, suspended, cancelled]
+        trial_ends_at: { type: string, format: date-time, nullable: true }
+        plan:
+          $ref: '#/components/schemas/PlanResource'
+          nullable: true
+        restrictions_active:
+          type: boolean
+          description: Se as restrições do estado overdue (D+7) estão aplicadas
+        onboarding_completed: { type: boolean }
+
+    # ─── Auth ───────────────────────────────────────────────────────
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+        remember: { type: boolean, default: false }
+
+    LoginResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: '#/components/schemas/AuthenticatedUserResource'
+
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+
+    ResetPasswordRequest:
+      type: object
+      required: [email, token, password]
+      properties:
+        email: { type: string, format: email }
+        token: { type: string }
+        password: { type: string, minLength: 8 }
+        password_confirmation: { type: string }
+
+    UserResource:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        status: { type: string, enum: [invited, active, disabled] }
+        roles:
+          type: array
+          items: { type: string }
+        last_login_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    AuthenticatedUserResource:
+      allOf:
+        - $ref: '#/components/schemas/UserResource'
+        - type: object
+          properties:
+            permissions:
+              type: array
+              items: { type: string }
+            tenant: { $ref: '#/components/schemas/TenantResource' }
+
+    # ─── Onboarding ─────────────────────────────────────────────────
+    OnboardingStateResource:
+      type: object
+      properties:
+        completed: { type: boolean }
+        progress_percent: { type: integer, minimum: 0, maximum: 100 }
+        steps:
+          type: array
+          items:
+            type: object
+            properties:
+              key: { type: string }
+              label: { type: string }
+              status: { type: string, enum: [pending, completed, skipped, locked] }
+              required: { type: boolean }
+
+    OnboardingStepRequest:
+      type: object
+      description: Schema varia por step; use `additionalProperties` no MVP.
+      additionalProperties: true
+
+    # ─── Billing ────────────────────────────────────────────────────
+    PlanResource:
+      type: object
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        base_price_cents: { type: integer }
+        included_professionals: { type: integer }
+        included_ai_messages: { type: integer }
+        overage_price_cents: { type: integer }
+        max_users: { type: integer }
+        max_channels: { type: integer }
+        is_active: { type: boolean }
+
+    CheckoutRequest:
+      type: object
+      required: [plan_code, professionals_quantity]
+      properties:
+        plan_code: { type: string }
+        professionals_quantity: { type: integer, minimum: 1 }
+
+    CheckoutResponse:
+      type: object
+      properties:
+        checkout_url: { type: string, format: uri }
+        expires_at: { type: string, format: date-time }
+
+    SubscriptionResource:
+      type: object
+      properties:
+        plan: { $ref: '#/components/schemas/PlanResource' }
+        professionals_quantity: { type: integer }
+        status: { type: string }
+        current_period_start: { type: string, format: date-time }
+        current_period_end: { type: string, format: date-time }
+        ends_at: { type: string, format: date-time, nullable: true }
+        proration_preview:
+          type: object
+          nullable: true
+          description: Preenchido em PATCH com dry-run da próxima fatura
+
+    SubscriptionPatchRequest:
+      type: object
+      properties:
+        plan_code: { type: string, description: 'Trocar de plano' }
+        professionals_quantity: { type: integer, minimum: 1 }
+        proration_behavior:
+          type: string
+          enum: [create_prorations, none]
+          default: create_prorations
+
+    AiUsageResource:
+      type: object
+      properties:
+        year_month: { type: string, pattern: '^[0-9]{4}-[0-9]{2}$' }
+        included_quota: { type: integer }
+        consumed: { type: integer }
+        projected_end_of_month: { type: integer }
+        overage: { type: integer }
+        overage_cost_estimate_cents: { type: integer }
+        hard_cap: { type: integer, nullable: true }
+        hard_cap_triggered_at: { type: string, format: date-time, nullable: true }
+        cycle_start: { type: string, format: date-time }
+        cycle_end: { type: string, format: date-time }
+
+    HardCapRequest:
+      type: object
+      properties:
+        hard_cap:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: NULL remove o cap; 0 desliga IA imediatamente.
+
+    # ─── Users / Invitations ────────────────────────────────────────
+    UserListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/UserResource' }
+        meta:
+          type: object
+          properties:
+            page: { type: integer }
+            per_page: { type: integer }
+            total: { type: integer }
+
+    UserPatchRequest:
+      type: object
+      properties:
+        name: { type: string }
+        roles:
+          type: array
+          items: { type: string }
+        professionals:
+          type: array
+          items: { type: integer }
+          description: IDs dos profissionais aos quais este usuário fica vinculado (futuro)
+
+    InvitationResource:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        intended_role: { type: string }
+        invited_by: { type: string }
+        expires_at: { type: string, format: date-time }
+        accepted_at: { type: string, format: date-time, nullable: true }
+        revoked_at: { type: string, format: date-time, nullable: true }
+
+    CreateInvitationRequest:
+      type: object
+      required: [email, intended_role]
+      properties:
+        email: { type: string, format: email }
+        intended_role: { type: string, enum: [admin-clinica, medico, atendente, recepcionista, financeiro] }
+
+    AcceptInvitationRequest:
+      type: object
+      required: [token, name, password]
+      properties:
+        token: { type: string }
+        name: { type: string }
+        password: { type: string, minLength: 8 }
+
+    # ─── Audit ──────────────────────────────────────────────────────
+    AuditLogListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/AuditLogResource' }
+        meta:
+          type: object
+          properties:
+            page: { type: integer }
+            per_page: { type: integer }
+            total: { type: integer }
+
+    AuditLogResource:
+      type: object
+      properties:
+        id: { type: integer }
+        actor:
+          type: object
+          properties:
+            type: { type: string, enum: [user, system, webhook] }
+            user_id: { type: integer, nullable: true }
+            user_name: { type: string, nullable: true }
+            email: { type: string, nullable: true }
+        action: { type: string }
+        auditable:
+          type: object
+          nullable: true
+          properties:
+            type: { type: string }
+            id: { type: integer }
+        payload: { type: object, additionalProperties: true }
+        ip: { type: string, nullable: true }
+        user_agent: { type: string, nullable: true }
+        request_id: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }

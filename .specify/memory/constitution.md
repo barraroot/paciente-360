@@ -1,44 +1,66 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.1.0
-Bump rationale: MINOR — expansão material das restrições arquiteturais com
-a adição da subseção "Arquitetura de Aplicações e Camadas" (separação
-SPA-tenant × Filament-admin e pipeline obrigatório
-Request → Controller → Service → Resource). Não há remoção/redefinição
-incompatível de princípios existentes.
+Version change: 1.1.0 → 1.2.0
+Bump rationale: MINOR — adições materiais sem remoção ou redefinição de
+princípios existentes. Adicionados 2 princípios NON-NEGOTIABLE (Meta e
+Segurança Operacional), 1 seção (Localização e Idioma), 1 decisão de
+produto fechada (cobrança híbrida) e refinamentos pontuais a I, II, IV
+e V para incorporar requisitos não cobertos antes.
 
-Modified principles: nenhum (princípios I–V mantidos integralmente).
+Modified principles:
+  - I. Privacidade, Consentimento e Conformidade LGPD — hash de senha
+       refinado para "argon2id ou bcrypt com cost ≥ 12" (era apenas
+       "bcrypt/argon2").
+  - II. Isolamento Multi-Tenant — reforço explícito: isolamento existe
+        desde a primeira PR de domínio, nunca como retrofit.
+  - IV. Desenvolvimento Spec-Driven e Test-First — adicionados:
+        E2E (Playwright/Cypress) obrigatório nas jornadas críticas
+        (onboarding, agendamento via IA, confirmação automática,
+        renovação de receita); migrações imutáveis após aplicadas em
+        produção; OpenAPI (Scribe) sempre em dia com a API pública.
+  - V. Observabilidade e Excelência Operacional — adicionados:
+       eventos auditáveis para envios externos e mudanças de estado
+       de paciente/agendamento; exportação de métricas via Prometheus
+       para ingestão em Grafana.
 
 Added sections:
-  - Restrições Técnicas e Arquiteturais → subseção
-    "Arquitetura de Aplicações e Camadas" (nova)
-    - Define Vue 3 SPA + API REST para tenants
-    - Define Filament 5 exclusivamente para super-admin (tenants/planos)
-    - Define pipeline Request → Controller → Service → Resource
-    - Proíbe lógica de negócio em Controllers, Models e Resources
+  - VI. Conformidade Meta nos Disparos (NON-NEGOTIABLE) — janela 24h
+       do WhatsApp, templates aprovados, opt-in de marketing, link de
+       descadastro em mensagens não transacionais, bloqueio em runtime.
+  - VII. Segurança Operacional (NON-NEGOTIABLE) — rate limiting por
+        tenant E por endpoint; 2FA TOTP opcional para usuários
+        internos e OBRIGATÓRIO para Admin Clínica e Super Admin.
+  - Localização e Idioma — pt-BR como padrão, arquitetura i18n-ready
+       (Vue i18n no frontend, arquivos `lang/<locale>` no backend).
+  - Restrições Técnicas e Arquiteturais → bloco "Decisões de produto
+       fechadas": cobrança híbrida (base por profissional ativo +
+       cota mensal de mensagens IA com excedente), gateway Stripe.
 
 Removed sections: nenhuma.
 
 Templates requiring updates:
-  - .specify/templates/plan-template.md             ✅ aligned (Constitution Check
-                                                       continua válido; novo
-                                                       gate "lógica de negócio
-                                                       em Service" é avaliado
-                                                       no plan)
-  - .specify/templates/spec-template.md             ✅ aligned (sem mudanças
-                                                       de seções obrigatórias)
-  - .specify/templates/tasks-template.md            ✅ aligned (estrutura por
-                                                       user story comporta
-                                                       tasks separadas para
-                                                       Service/Controller/Resource)
-  - .specify/templates/checklist-template.md        ✅ aligned (estrutura genérica)
+  - .specify/templates/plan-template.md             ✅ aligned
+       (Constitution Check agora avalia 7 princípios; novos gates de
+       conformidade Meta, segurança operacional e i18n surgem quando
+       relevantes ao escopo da feature).
+  - .specify/templates/spec-template.md             ✅ aligned
+       (sem mudanças de seções obrigatórias; novos princípios surgem
+       como FRs/NFRs específicos).
+  - .specify/templates/tasks-template.md            ✅ aligned
+       (E2E e compliance Meta entram como tasks cross-cutting na fase
+       Polish ou na user story específica).
+  - .specify/templates/checklist-template.md        ✅ aligned.
 
 Follow-up TODOs: nenhum.
 
 ----------------------------------------------------------------------
 PRIOR REPORTS
 ----------------------------------------------------------------------
+v1.1.0 (2026-05-10) — MINOR: adicionada subseção "Arquitetura de
+Aplicações e Camadas" (SPA Vue 3 para tenants, Filament 5 para
+super-admin, pipeline Form Request → Controller → Service → Resource).
+
 v1.0.0 (2026-05-10) — Initial ratification, baseline com 5 princípios
 (LGPD, Isolamento Multi-Tenant, Segurança Clínica da IA, Spec-Driven
 Test-First, Observabilidade) + Restrições Técnicas, Quality Gates e
@@ -60,7 +82,7 @@ Toda funcionalidade MUST:
   (não exclusão física quando registros financeiros/legais exigirem retenção)
   dentro do prazo legal de 15 dias úteis.
 - Usar criptografia em trânsito (TLS 1.3) e em repouso para dados sensíveis;
-  hash de senhas com bcrypt/argon2.
+  hash de senhas com argon2id (preferencial) ou bcrypt com cost ≥ 12.
 - Pseudonimizar prompts enviados ao LLM: CPF, RG, número de carteirinha,
   telefone e demais identificadores diretos MUST ser substituídos por
   placeholders antes do envio ao provedor de IA.
@@ -76,7 +98,9 @@ testes automatizados ou auditoria de logs.
 
 ### II. Isolamento Multi-Tenant (NON-NEGOTIABLE)
 
-Toda consulta, comando e job MUST ser escopado ao tenant correto. Especificamente:
+Isolamento de dados por tenant é requisito de arquitetura, presente desde
+a primeira PR de domínio — NUNCA tratado como retrofit. Toda consulta,
+comando e job MUST ser escopado ao tenant correto. Especificamente:
 
 - Modelos Eloquent que carregam dados de tenant MUST aplicar global scope
   por `tenant_id` (ou estratégia equivalente decidida em plano).
@@ -131,6 +155,15 @@ e o ciclo Red-Green-Refactor:
   escrito e em falha antes do fix.
 - Cobertura de testes do backend MUST ser ≥ 70% (PHPUnit feature tests
   predominantes; unit quando justificado).
+- Testes E2E (Playwright ou Cypress) MUST cobrir as jornadas críticas:
+  onboarding de clínica, agendamento via IA no chat, confirmação
+  automática de consulta e renovação de receita. Falha de E2E nessas
+  jornadas bloqueia o merge.
+- Migrações aplicadas em produção MUST ser tratadas como imutáveis:
+  correções e mudanças de schema entram via NOVA migration, nunca
+  alterando a já aplicada. Migrations e seeders MUST ser idempotentes.
+- Documentação OpenAPI (Scribe) MUST ser atualizada na mesma PR que
+  altera contrato de API pública; PR sem essa atualização é rejeitada.
 - Toda PR MUST passar `vendor/bin/sail artisan test` e `vendor/bin/sail bin pint`
   antes do merge.
 - Tests existentes MUST NOT ser removidos sem aprovação explícita
@@ -146,11 +179,16 @@ Cada caminho crítico MUST ser observável em produção:
 
 - Logs estruturados (JSON, com `tenant_id`, `user_id`, `correlation_id`)
   para toda requisição HTTP, job de fila e decisão de IA.
-- Métricas operacionais expostas para tempo de resposta da API
-  (target p95 < 300ms), tempo de resposta da IA (target ≤ 5s), taxa de
-  escalonamento, consumo mensal de mensagens IA por tenant.
-- Erros não-tratados MUST ser capturados (Sentry/Telescope) com contexto
-  suficiente para reprodução.
+- Toda ação de IA, todo envio externo (WhatsApp, Instagram, e-mail) e
+  toda mudança de estado de paciente ou agendamento MUST gerar evento
+  auditável persistido (tabela de eventos ou log estruturado dedicado),
+  com identificação do ator (humano, IA, job) e do tenant.
+- Métricas operacionais (tempo de resposta da API com target p95 < 300ms,
+  tempo de resposta da IA com target ≤ 5s, taxa de erro, taxa de
+  escalonamento, consumo mensal de mensagens IA por tenant) MUST ser
+  expostas em endpoint Prometheus para ingestão por Grafana.
+- Erros não-tratados MUST ser reportados ao Sentry com contexto de
+  tenant, usuário e correlation_id suficientes para reprodução.
 - Webhooks de WhatsApp/Instagram/Stripe MUST registrar payload bruto e
   resposta enviada, com retry exponencial em falha.
 - SLA de uptime alvo: 99,5%. Backup diário com retenção de 30 dias e
@@ -161,6 +199,62 @@ Cada caminho crítico MUST ser observável em produção:
 canal externo se acumulam sem dono. Métricas e logs estruturados são a
 base para SLA contratual e para o treinamento contínuo da IA exigido pelo
 princípio III.
+
+### VI. Conformidade Meta nos Disparos (NON-NEGOTIABLE)
+
+A operação dos canais externos (WhatsApp Business Cloud API e Instagram
+Direct via Graph API) está sujeita a regras de plataforma da Meta cuja
+violação acarreta suspensão de conta. Conformidade é gate de envio:
+
+- Envios fora da janela de 24h do WhatsApp MUST usar template aprovado
+  pela Meta. O dispatcher MUST consultar status do template antes do
+  disparo e bloquear o envio se o template não estiver aprovado.
+- Disparos em massa (campanhas de reativação, sazonais, lembretes
+  proativos) MUST validar opt-in de marketing registrado para cada
+  destinatário. Sem opt-in válido, o destinatário é excluído do
+  disparo automaticamente — não há fallback "best effort".
+- Mensagens não transacionais MUST incluir comando/link de
+  descadastro (ex.: "/sair" no canal) e o recebimento desse comando
+  MUST revogar o opt-in de marketing imediatamente, registrando
+  data, canal e finalidade revogados.
+- O dispatcher MUST aplicar bloqueio em runtime se qualquer
+  verificação de conformidade falhar (template não aprovado, opt-in
+  ausente, fora de horário comercial configurado, janela de 24h
+  expirada). Cada bloqueio MUST gerar evento auditável com motivo
+  explícito.
+
+**Rationale**: Suspensão de conta WhatsApp Business é evento
+catastrófico para a clínica contratante (perda do canal principal de
+relacionamento) e para a plataforma (perda de credibilidade junto a
+todos os tenants). A defesa MUST estar no código, não em treinamento
+operacional humano.
+
+### VII. Segurança Operacional (NON-NEGOTIABLE)
+
+Controles de segurança aplicados a toda a stack, complementando o
+princípio I (que cobre os requisitos LGPD de proteção de dados):
+
+- Hash de senhas: argon2id (preferencial) ou bcrypt com cost ≥ 12.
+  Hashes existentes MUST ser recomputados no próximo login válido
+  quando o algoritmo/custo configurado mudar.
+- TLS 1.3 obrigatório em produção; certificados renovados
+  automaticamente.
+- Rate limiting MUST ser aplicado por tenant E por endpoint. Limites
+  default são conservadores e overrides exigem justificativa em
+  configuração versionada.
+- 2FA via TOTP (RFC 6238): opcional para usuários internos em geral
+  (Médico, Atendente, Recepcionista, Financeiro), OBRIGATÓRIO para
+  perfis Admin Clínica e Super Admin. Nesses perfis, login sem 2FA
+  habilitado MUST ser bloqueado após período de carência de 7 dias
+  do primeiro acesso.
+- Bloqueio temporário de login após 5 tentativas falhas consecutivas
+  (já presente em US-2.1) MUST ser ativo em produção e cobrir
+  qualquer endpoint de autenticação (web, API, painel Filament).
+
+**Rationale**: O conjunto acima é o piso operacional para um SaaS
+multi-tenant que carrega dados clínicos pseudonimizados, credenciais de
+canais Meta e tokens de pagamento. Cada item é verificável por
+inspeção de configuração ou teste automatizado.
 
 ## Restrições Técnicas e Arquiteturais
 
@@ -188,6 +282,13 @@ A stack é fixa para o MVP e mudanças exigem amendment desta constituição:
   criar novas pastas raiz sem aprovação.
 - **Dependências**: Mudanças em `composer.json` ou `package.json`
   requerem aprovação explícita na PR.
+
+**Decisões de produto fechadas para o MVP** (mudanças exigem amendment):
+
+- **Cobrança**: modelo híbrido — plano base por profissional ativo +
+  cota mensal de mensagens IA inclusas, com cobrança por mensagem
+  excedente. Gateway: Stripe. Cobrança recorrente mensal; suspensão
+  por inadimplência após 3 falhas de cobrança e 7 dias de carência.
 
 Itens fora do escopo do MVP (não devem ser implementados sem amendment
 do escopo): telemedicina nativa, multi-unidade por tenant, prontuário
@@ -251,13 +352,32 @@ entre Filament e Controllers.
 ou chamadas a integrações dentro de Controllers, Resources ou Models
 MUST ser rejeitadas em code review e refatoradas para Service.
 
+## Localização e Idioma
+
+- **Idioma padrão**: pt-BR. Toda string voltada ao usuário (UI da SPA
+  Vue, painel Filament, mensagens de erro de API, e-mails
+  transacionais, mensagens de IA, templates do WhatsApp) MUST ser
+  servida em pt-BR por padrão.
+- **Arquitetura i18n-ready**: strings de UI MUST viver em arquivos de
+  tradução — Vue I18n no frontend, arquivos `lang/<locale>/*.php` no
+  backend. Strings hardcoded em componentes, controllers ou Services
+  MUST ser rejeitadas em code review.
+- **Formatação localizada**: datas, horários, moedas e números MUST
+  usar formatação localizada (`Intl`/`dayjs` no frontend; `Carbon`
+  com locale e `NumberFormatter` no backend). Não concatenar formatos
+  literais.
+- **Documentação técnica e specs internos**: PT-BR (alinhado com
+  `docs/project-description.md` e `docs/user-stories.md`).
+  Identificadores de código (classes, métodos, variáveis, rotas) e
+  mensagens de log estruturado: inglês, conforme convenção Laravel.
+
 ## Fluxo de Desenvolvimento e Quality Gates
 
 1. **Branch & Spec**: Toda feature começa com `/speckit-git-feature` e
    `/speckit-specify`. Branches seguem nomenclatura `###-feature-name`.
 2. **Clarify & Plan**: Ambiguidades são resolvidas via `/speckit-clarify`
    antes de `/speckit-plan`. O plan MUST passar Constitution Check
-   (verificação contra os 5 princípios) antes de Phase 0.
+   (verificação contra os 7 princípios) antes de Phase 0.
 3. **Tasks**: `/speckit-tasks` gera lista por user story, ordenada por
    dependência, suportando entrega incremental por prioridade (P1 → P2 → P3).
 4. **Implementação**: `/speckit-implement` executa tasks. Cada task
@@ -269,8 +389,9 @@ MUST ser rejeitadas em code review e refatoradas para Service.
    - Análise: Constitution Check revisado, cobertura ≥ 70%, sem
      regressão em testes pré-existentes.
    - Code review: ao menos um revisor humano confirma aderência aos
-     princípios I, II e III quando o diff toca dados sensíveis, tenant
-     boundary ou IA.
+     princípios I, II, III, VI e VII quando o diff toca dados
+     sensíveis, tenant boundary, IA, dispatcher de canais Meta ou
+     superfície de autenticação/rate limiting.
 6. **Documentação técnica**: Mudanças em API pública MUST atualizar
    contratos OpenAPI; mudanças em decisões da IA MUST atualizar a base
    de conhecimento e testes de guardrail.
@@ -309,4 +430,4 @@ delegadas a CLAUDE.md/AGENTS.md).
   vive em `CLAUDE.md` e `AGENTS.md`; estes arquivos MUST ser mantidos
   consistentes com esta constituição.
 
-**Version**: 1.1.0 | **Ratified**: 2026-05-10 | **Last Amended**: 2026-05-10
+**Version**: 1.2.0 | **Ratified**: 2026-05-10 | **Last Amended**: 2026-05-10

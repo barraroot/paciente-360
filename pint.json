@@ -1,0 +1,15 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "phpdoc_align": {
+            "align": "left"
+        },
+        "not_operator_with_successor_space": true
+    },
+    "exclude": [
+        "bootstrap/cache",
+        "storage",
+        "vendor",
+        "node_modules"
+    ]
+}

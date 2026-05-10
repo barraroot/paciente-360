@@ -1,0 +1,339 @@
+name: Billing
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/billing/plans
+    metadata:
+      custom: []
+      groupName: Billing
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Catálogo de planos disponíveis.'
+      description: 'Lista todos os planos ativos para exibição na landing page de preços.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '[{"id": 1, "code": "starter", "name": "Starter"}]'
+        headers: []
+        description: 'planos ativos'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/billing/checkout
+    metadata:
+      custom: []
+      groupName: Billing
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Criar sessão de checkout Stripe.'
+      description: 'Retorna a URL de checkout para o tenant assinar um plano.'
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      plan_code:
+        custom: []
+        name: plan_code
+        description: 'The <code>code</code> of an existing record in the plans table.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      professionals_quantity:
+        custom: []
+        name: professionals_quantity
+        description: 'Must be at least 1.'
+        required: true
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      plan_code: architecto
+      professionals_quantity: 22
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"checkout_url": "https://checkout.stripe.com/...", "expires_at": "2026-05-10T12:00:00Z"}'
+        headers: []
+        description: 'sessão criada'
+      -
+        custom: []
+        status: 409
+        content: '{"message": "Tenant já possui assinatura ativa."}'
+        headers: []
+        description: 'assinatura já existe'
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/billing/subscription
+    metadata:
+      custom: []
+      groupName: Billing
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Estado atual da assinatura.'
+      description: 'Retorna 404 se o tenant ainda estiver em trial sem assinatura formal.'
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"id": 1, "stripe_status": "active"}'
+        headers: []
+        description: 'assinatura ativa'
+      -
+        custom: []
+        status: 404
+        content: '{"error": "subscription_not_found"}'
+        headers: []
+        description: 'sem assinatura'
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: api/v1/billing/subscription
+    metadata:
+      custom: []
+      groupName: Billing
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Upgrade ou downgrade de plano/quantidade.'
+      description: 'Aumentos disparam proration imediata; reduções vigoram no próximo ciclo.'
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      plan_code:
+        custom: []
+        name: plan_code
+        description: 'The <code>code</code> of an existing record in the plans table.'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      professionals_quantity:
+        custom: []
+        name: professionals_quantity
+        description: 'Must be at least 1.'
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      proration_behavior:
+        custom: []
+        name: proration_behavior
+        description: ''
+        required: false
+        example: none
+        type: string
+        enumValues:
+          - create_prorations
+          - none
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      plan_code: architecto
+      professionals_quantity: 22
+      proration_behavior: none
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"id": 1, "stripe_status": "active"}'
+        headers: []
+        description: atualizado
+      -
+        custom: []
+        status: 502
+        content: '{"message": "Falha ao comunicar com gateway."}'
+        headers: []
+        description: 'falha no Stripe'
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/billing/ai-usage
+    metadata:
+      custom: []
+      groupName: Billing
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Consumo de IA do ciclo atual.'
+      description: 'Retorna o meter de uso do mês corrente com projeção e dados de hard cap.'
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"year_month": "2026-05", "consumed": 150, "included_quota": 1000}'
+        headers: []
+        description: 'meter atual'
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: api/v1/billing/ai-usage/hard-cap
+    metadata:
+      custom: []
+      groupName: Billing
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Configurar ou remover hard cap de mensagens IA.'
+      description: |-
+        Passe `hard_cap: null` para remover o limite. `hard_cap: 0` desliga
+        a IA imediatamente.
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      hard_cap:
+        custom: []
+        name: hard_cap
+        description: 'Must be at least 0.'
+        required: false
+        example: 27
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      hard_cap: 27
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"hard_cap": 500, "consumed": 150}'
+        headers: []
+        description: 'cap atualizado'
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null

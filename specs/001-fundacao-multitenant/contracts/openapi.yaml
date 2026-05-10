@@ -435,7 +435,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/AuthenticatedUserResource' }
         '404': { description: Subdomínio não corresponde a tenant existente }
-        '410': { description: Token expirado, inválido ou de outro tenant }
+        '410': { description: "Token expirado, inválido ou de outro tenant" }
         '422': { $ref: '#/components/responses/ValidationError' }
 
   # ─────────────────────────────────────────────────────────────────────
@@ -704,11 +704,17 @@ components:
     SubscriptionResource:
       type: object
       properties:
+        id: { type: integer }
+        stripe_status:
+          type: string
+          description: Status da assinatura no Stripe (active, trialing, past_due, canceled, etc.)
+        stripe_id: { type: string, nullable: true, description: 'ID da subscription no Stripe' }
         plan: { $ref: '#/components/schemas/PlanResource' }
-        professionals_quantity: { type: integer }
-        status: { type: string }
-        current_period_start: { type: string, format: date-time }
-        current_period_end: { type: string, format: date-time }
+        professionals_quantity: { type: integer, nullable: true }
+        quantity: { type: integer, nullable: true }
+        current_period_start: { type: string, format: date-time, nullable: true }
+        current_period_end: { type: string, format: date-time, nullable: true }
+        trial_ends_at: { type: string, format: date-time, nullable: true }
         ends_at: { type: string, format: date-time, nullable: true }
         proration_preview:
           type: object

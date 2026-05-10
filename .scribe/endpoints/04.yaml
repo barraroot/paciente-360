@@ -1,0 +1,446 @@
+name: Users
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/users
+    metadata:
+      custom: []
+      groupName: Users
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar usuários internos do tenant.'
+      description: 'Suporta filtros por `status` (invited|active|disabled) e `role`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data": [{"id": 1, "name": "Dr. Exemplo", "status": "active"}]}'
+        headers: []
+        description: lista
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/users/{id}'
+    metadata:
+      custom: []
+      groupName: Users
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Alterar perfil ou roles do usuário.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the user.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 150 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      roles:
+        custom: []
+        name: roles
+        description: ''
+        required: false
+        example:
+          - recepcionista
+        type: 'string[]'
+        enumValues:
+          - admin-clinica
+          - medico
+          - atendente
+          - recepcionista
+          - financeiro
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      name: b
+      roles:
+        - recepcionista
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"id": 1, "name": "Dr. Novo Nome", "roles": ["medico"]}'
+        headers: []
+        description: atualizado
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/users/{id}'
+    metadata:
+      custom: []
+      groupName: Users
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Desativar usuário (soft-delete; preserva auditoria).'
+      description: 'Retorna 409 se for o último Admin Clínica do tenant.'
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the user.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 204
+        content: ''
+        headers: []
+        description: desativado
+      -
+        custom: []
+        status: 409
+        content: '{"message": "Não é possível desativar o último Admin Clínica."}'
+        headers: []
+        description: 'último admin'
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/users/invitations
+    metadata:
+      custom: []
+      groupName: Users
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar convites pendentes.'
+      description: 'Retorna apenas convites com `status=pending` do tenant atual.'
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '[{"id": 1, "email": "novo@clinica.com.br", "intended_role": "medico"}]'
+        headers: []
+        description: 'convites pendentes'
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/users/invitations
+    metadata:
+      custom: []
+      groupName: Users
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Enviar convite de novo usuário interno.'
+      description: |-
+        Dispara e-mail ao convidado. Retorna 409 se o limite de usuários do
+        plano foi atingido.
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Must be a valid email address. Must not be greater than 254 characters.'
+        required: true
+        example: gbailey@example.net
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      intended_role:
+        custom: []
+        name: intended_role
+        description: ''
+        required: true
+        example: atendente
+        type: string
+        enumValues:
+          - admin-clinica
+          - medico
+          - atendente
+          - recepcionista
+          - financeiro
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: gbailey@example.net
+      intended_role: atendente
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: '{"id": 1, "email": "novo@clinica.com.br"}'
+        headers: []
+        description: 'convite enviado'
+      -
+        custom: []
+        status: 409
+        content: '{"message": "Limite de usuários do plano atingido."}'
+        headers: []
+        description: 'limite atingido'
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/users/invitations/{id}'
+    metadata:
+      custom: []
+      groupName: Users
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Revogar convite pendente.'
+      description: 'Retorna 410 se o convite já foi aceito ou expirou.'
+      authenticated: true
+      deprecated: false
+    headers:
+      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the invitation.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 204
+        content: ''
+        headers: []
+        description: revogado
+      -
+        custom: []
+        status: 410
+        content: '{"message": "Convite já aceito ou expirado."}'
+        headers: []
+        description: 'convite expirado'
+    responseFields: []
+    auth:
+      - headers
+      - X-XSRF-TOKEN
+      - 6g43cv8PD1aE5beadkZfhV6
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/users/invitations/accept
+    metadata:
+      custom: []
+      groupName: Users
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Aceitar convite e definir senha.'
+      description: |-
+        Endpoint público (token vem no e-mail). O tenant é resolvido pelo
+        subdomínio. Token de outro tenant retorna 410.
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      token:
+        custom: []
+        name: token
+        description: 'Must be at least 32 characters.'
+        required: true
+        example: bngzmiyvdljnikhwaykcmyuwpwlvqwrsitcpscqldzsnrwtujwvlxjklqppwqbewtnn
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 150 characters.'
+        required: true
+        example: o
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Must match the regex /[A-Z]/. Must match the regex /[0-9]/. Must be at least 8 characters.'
+        required: true
+        example: "u.*,JHRp_B)L'(?aiG;o"
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      token: bngzmiyvdljnikhwaykcmyuwpwlvqwrsitcpscqldzsnrwtujwvlxjklqppwqbewtnn
+      name: o
+      password: "u.*,JHRp_B)L'(?aiG;o"
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"id": 1, "name": "Dr. Novo", "email": "novo@clinica.com.br"}'
+        headers: []
+        description: 'usuário ativado'
+      -
+        custom: []
+        status: 410
+        content: '{"message": "Token expirado, inválido ou de outro tenant."}'
+        headers: []
+        description: 'token inválido'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null

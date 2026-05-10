@@ -55,7 +55,13 @@ vendor/bin/sail artisan db:seed --class=DevSeeder
 
 ## 3. Configurar Stripe em test mode
 
-No `.env`:
+### Obter Test Keys
+
+1. Acesse [Stripe Dashboard](https://dashboard.stripe.com)
+2. Ative Test Mode (canto superior direito)
+3. Copie as chaves públicas e secretas
+
+### Configurar .env
 
 ```env
 STRIPE_KEY=pk_test_...
@@ -63,14 +69,26 @@ STRIPE_SECRET=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-Para testar webhooks localmente:
+### Testar Webhooks Localmente (opcional)
+
+Para que webhooks `invoice.payment_failed` funcionem em dev, use `stripe-cli`:
 
 ```bash
-stripe listen --forward-to https://crm.lvh.me/stripe/webhook
+# Instale stripe-cli (macOS/Homebrew)
+brew install stripe/stripe-cli/stripe
+
+# Faça login
+stripe login
+
+# Forward webhooks para localhost
+stripe listen --forward-to http://crm.lvh.me/webhooks/stripe
+
+# Em outro terminal, simule evento
+stripe trigger invoice.payment_failed
 ```
 
-(`crm.lvh.me` resolve em `127.0.0.1`; nosso `nginx` termina o
-host na app.)
+**Nota**: `crm.lvh.me` resolve em `127.0.0.1` via DNS público; nosso `nginx`
+roteia para a app corretamente.
 
 ## 4. Acessar as superfícies
 
@@ -82,13 +100,38 @@ host na app.)
 - **Telescope** (apenas dev/staging): <https://crm.lvh.me/telescope>
 - **Horizon dashboard** (filas): <https://crm.lvh.me/horizon>
 
-## 5. Validar a fase ponta a ponta
+## 5. Testes E2E (Playwright)
 
 Cada user story tem um teste E2E que cobre o caminho feliz.
-Execute todos:
+Os testes estão em `tests/e2e/` e usam Playwright.
+
+### Executar E2E (requer servidor rodando)
 
 ```bash
+# Terminal 1: inicia servidor
+vendor/bin/sail up -d
+
+# Terminal 2: roda E2E
 vendor/bin/sail npm run test:e2e
+
+# Ou diretamente com Playwright
+npx playwright test
+```
+
+### Testes E2E disponíveis
+
+- **tenant-register-and-onboard.spec.ts** — Cadastro de novo tenant, login e onboarding
+- **invite-and-accept.spec.ts** — Convitar usuário, aceitar convite via e-mail (requer Mailpit)
+- **checkout.spec.ts** — Checkout Stripe (requer Stripe Test Keys; skip automático se não configurado)
+- **password-reset.spec.ts** — Recuperação de senha via e-mail (requer Mailpit)
+
+⚠️ **Nota**: E2E são lentos e dependem de infraestrutura externa (Mailpit, subdomínios DNS).
+Por isso, ficam fora do CI principal — rodem manualmente ou em job separado.
+
+## 5b. Validar a fase ponta a ponta (PHPUnit)
+
+```bash
+vendor/bin/sail artisan test --compact
 ```
 
 Caminhos manuais para confirmar:
@@ -169,8 +212,13 @@ vendor/bin/sail bin pint --dirty --format agent
 vendor/bin/sail artisan migrate:fresh --seed && \
 vendor/bin/sail artisan db:seed --class=DevSeeder
 
-# Logs em tempo real (Pail)
+# Logs em tempo real (Pail) — modo ad-hoc no container principal
 vendor/bin/sail artisan pail
+
+# Logs em tempo real (Pail) — service Compose dedicado (opcional)
+# Ativa o profile e mantém um container streaming logs em background.
+COMPOSE_PROFILES=pail vendor/bin/sail up -d pail
+vendor/bin/sail logs -f pail
 
 # Inspecionar filas
 vendor/bin/sail artisan horizon:status

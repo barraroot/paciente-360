@@ -1,0 +1,273 @@
+{
+    "app": {
+        "name": "Paciente 360",
+        "tagline": "CRM médico SaaS multi-tenant"
+    },
+    "auth": {
+        "login": {
+            "title": "Entrar",
+            "email": "E-mail",
+            "password": "Senha",
+            "remember": "Lembrar de mim",
+            "submit": "Entrar",
+            "forgot_password": "Esqueceu a senha?",
+            "locked": "Sua conta foi bloqueada por excesso de tentativas. Tente em {minutes} minutos."
+        },
+        "logout": {
+            "cta": "Sair",
+            "success": "Você saiu da conta com sucesso."
+        },
+        "password_reset": {
+            "request_title": "Recuperar senha",
+            "request_help": "Informe o e-mail cadastrado e enviaremos um link.",
+            "request_cta": "Enviar link",
+            "email_sent": "Enviamos um link de recuperação para o seu e-mail.",
+            "reset_title": "Definir nova senha",
+            "submit": "Salvar nova senha",
+            "success": "Senha redefinida. Faça login com a nova senha.",
+            "token_invalid": "O link de recuperação é inválido ou expirou.",
+            "token_expired_or_invalid": "O link de recuperação é inválido ou expirou. Solicite um novo link.",
+            "new_link_cta": "Solicitar novo link",
+            "go_to_login": "Ir para o login",
+            "password_confirm_label": "Confirmar nova senha",
+            "password_min": "A senha deve ter no mínimo 8 caracteres.",
+            "password_mismatch": "As senhas não coincidem."
+        },
+        "hero": {
+            "aria_label": "Benefícios do Paciente360",
+            "headline_prefix": "Sua clínica resolve",
+            "headline_stat": "74%",
+            "headline_suffix": "dos contatos sem precisar abrir a inbox.",
+            "card1_title": "Atendimento que conhece o paciente",
+            "card1_body": "IA contextual que entende histórico e protocolos, sugerindo a próxima ação certa.",
+            "card2_title": "Multi-canal unificado",
+            "card2_body": "WhatsApp, Instagram e chat web em uma só caixa — sem alternar abas.",
+            "card3_title": "LGPD por padrão",
+            "card3_body": "Auditoria, criptografia e retenção configurável desde o dia 1."
+        },
+        "errors": {
+            "failed": "Credenciais inválidas.",
+            "throttle": "Muitas tentativas. Tente novamente em {seconds} segundos."
+        }
+    },
+    "tenant": {
+        "register": {
+            "title": "Cadastrar clínica",
+            "subtitle": "Comece grátis por 14 dias. Sem cartão de crédito.",
+            "name": "Nome da clínica",
+            "cnpj": "CNPJ",
+            "cnpj_help": "Apenas dígitos ou com pontuação.",
+            "slug_label": "Endereço (subdomínio)",
+            "slug_help": "Sua clínica ficará em {slug}",
+            "responsible_name": "Nome do responsável",
+            "responsible_email": "E-mail do responsável",
+            "responsible_phone": "Telefone",
+            "password_label": "Senha",
+            "password_help": "Mínimo 8 caracteres, com 1 maiúscula e 1 número.",
+            "password_strength_ok": "Senha forte",
+            "password_strength_weak": "Senha fraca",
+            "terms_label": "Li e aceito os termos de uso e política de privacidade",
+            "submit": "Criar clínica",
+            "success": "Clínica cadastrada com sucesso. Bem-vindo ao Paciente360!",
+            "cta_back_to_login": "Já tem conta? Fazer login"
+        },
+        "suspended": {
+            "title": "Conta suspensa",
+            "message": "Sua clínica está suspensa por inadimplência. Regularize o pagamento para reativar.",
+            "cta": "Ir para Faturamento"
+        },
+        "overdue": {
+            "banner": "Sua assinatura está em atraso desde {since}. Regularize para evitar suspensão."
+        },
+        "onboarding": {
+            "title": "Vamos configurar sua clínica",
+            "subtitle": "Complete as etapas para começar a usar o Paciente360.",
+            "step_completed": "Etapa concluída.",
+            "all_steps_completed": "Onboarding finalizado!",
+            "continue": "Continuar",
+            "skip": "Pular",
+            "locked_tooltip": "Disponível em fase posterior",
+            "cta_start": "Iniciar",
+            "cta_save": "Salvar",
+            "cta_skip": "Pular",
+            "cta_edit": "Editar",
+            "go_to_panel": "Ir para o painel",
+            "fields": {
+                "address": "Endereço",
+                "phone": "Telefone",
+                "opening_hours": "Horário de funcionamento"
+            }
+        }
+    },
+    "billing": {
+        "plans": {
+            "title": "Planos disponíveis",
+            "subtitle": "Escolha o plano ideal para sua clínica"
+        },
+        "plan": {
+            "starter": "Starter",
+            "pro": "Pro",
+            "enterprise": "Enterprise",
+            "monthly_price": "{price}/mês",
+            "professionals_included": "{count} profissionais incluídos",
+            "users_max": "Até {count} usuários",
+            "ai_credits_monthly": "{count} mensagens IA/mês"
+        },
+        "checkout": {
+            "cta": "Assinar",
+            "success": "Assinatura ativada. Bem-vindo!",
+            "cancelled": "Você cancelou o pagamento. Nenhuma cobrança foi feita.",
+            "failed": "O pagamento falhou. Verifique os dados do cartão.",
+            "choose_quantity": "Quantos profissionais?",
+            "continue": "Continuar para pagamento",
+            "already_subscribed": "Você já tem uma assinatura ativa.",
+            "permission_denied": "Apenas Admin Clínica ou Financeiro pode assinar."
+        },
+        "subscription": {
+            "active": "Ativa",
+            "past_due": "Em atraso",
+            "cancelled": "Cancelada",
+            "trial": "Em teste",
+            "upgrade_success": "Plano atualizado.",
+            "downgrade_scheduled": "O downgrade será aplicado no próximo ciclo ({date}).",
+            "title": "Minha assinatura",
+            "current_plan": "Plano atual",
+            "next_invoice": "Próxima fatura",
+            "next_invoice_due": "{amount} em {date}",
+            "professionals_active": "Profissionais ativos",
+            "change_plan": "Alterar plano",
+            "cancel": "Cancelar assinatura",
+            "no_subscription_title": "Período de avaliação",
+            "no_subscription_body": "Você está em trial. Escolha um plano para continuar após o período.",
+            "see_plans": "Ver planos",
+            "modify_professionals": "Alterar profissionais",
+            "modify_plan": "Alterar plano",
+            "preview_increase": "Você está aumentando de {old} para {new} profissionais.",
+            "preview_decrease": "Você está reduzindo de {old} para {new} profissionais.",
+            "preview_upgrade": "Você está fazendo upgrade para {plan}.",
+            "preview_downgrade": "Você está fazendo downgrade para {plan}.",
+            "proration_immediate": "A diferença será cobrada proporcionalmente agora.",
+            "proration_next_cycle": "A alteração vigora no próximo ciclo ({date}).",
+            "proration_amount_due": "Valor a ser cobrado agora: {amount}",
+            "toggle_immediate_proration": "Aplicar com proração imediata",
+            "confirm_change": "Confirmar alteração",
+            "gateway_error": "Falha ao comunicar com a operadora. Tente novamente em instantes."
+        },
+        "ai_usage": {
+            "meter_label": "Uso de IA neste mês",
+            "hard_cap_reached": "Você atingiu o limite manual de uso de IA neste ciclo.",
+            "overage_warning": "Você ultrapassou a cota incluída do plano. Mensagens adicionais serão cobradas em {price} por mensagem.",
+            "set_hard_cap": "Definir limite máximo",
+            "title": "Uso de IA",
+            "cycle_label": "Ciclo: {start} a {end}",
+            "included_quota_label": "Cota inclusa",
+            "consumed_label": "Consumido",
+            "projected_label": "Projeção fim de mês",
+            "overage_cost_label": "Custo estimado de excedente",
+            "hard_cap_label": "Limite máximo (hard cap)",
+            "hard_cap_none": "Sem limite definido",
+            "hard_cap_save": "Salvar",
+            "hard_cap_remove": "Remover limite",
+            "hard_cap_zero_warning": "Definir como 0 desliga a IA imediatamente. Tem certeza?",
+            "hard_cap_set_success": "Limite atualizado."
+        }
+    },
+    "users": {
+        "list": {
+            "title": "Usuários",
+            "invite_cta": "Convidar usuário",
+            "filter_status": "Status",
+            "filter_status_all": "Todos os status",
+            "filter_role": "Papel",
+            "filter_role_all": "Todos os papéis",
+            "search_placeholder": "Buscar por nome ou e-mail",
+            "column_name": "Nome",
+            "column_email": "E-mail",
+            "column_roles": "Papéis",
+            "column_status": "Status",
+            "column_last_login": "Último login",
+            "column_actions": "Ações",
+            "column_expires": "Expira em",
+            "tab_invitations": "Convites pendentes",
+            "action_edit": "Editar",
+            "action_disable": "Desativar",
+            "action_revoke": "Revogar",
+            "disable_confirm": "Desativar usuário?",
+            "last_admin_warning": "Não é possível desativar o último Admin Clínica.",
+            "no_pending_invitations": "Nenhum convite pendente.",
+            "status_active": "Ativo",
+            "status_invited": "Convidado",
+            "status_inactive": "Desativado"
+        },
+        "invite": {
+            "title": "Convidar usuário",
+            "subtitle": "Convide um novo usuário interno por e-mail.",
+            "email": "E-mail",
+            "role": "Papel",
+            "submit": "Enviar convite",
+            "sent": "Convite enviado para {email}.",
+            "limit_reached": "Limite de usuários do plano atingido. Faça upgrade para convidar mais.",
+            "plan_limit": "Limite de usuários do plano atingido. Faça upgrade para convidar mais.",
+            "role_options": {
+                "admin-clinica": "Admin Clínica",
+                "medico": "Médico",
+                "atendente": "Atendente",
+                "recepcionista": "Recepcionista",
+                "financeiro": "Financeiro"
+            }
+        },
+        "accept_invitation": {
+            "title": "Aceitar convite",
+            "subtitle": "Defina seu nome e senha para acessar.",
+            "name": "Seu nome",
+            "password": "Crie uma senha",
+            "password_confirmation_label": "Confirmar senha",
+            "submit": "Criar conta",
+            "success": "Conta criada. Bem-vindo!",
+            "expired": "Este convite expirou ou foi revogado.",
+            "invalid_link": "Link inválido."
+        }
+    },
+    "audit": {
+        "list": {
+            "title": "Logs de auditoria",
+            "subtitle": "Eventos críticos do tenant. Filtre e exporte para auditoria externa.",
+            "action": "Ação",
+            "user": "Usuário",
+            "date": "Data",
+            "ip": "IP",
+            "export_csv": "Exportar CSV",
+            "filter_from": "De",
+            "filter_to": "Até",
+            "filter_action": "Ação",
+            "filter_user": "Usuário",
+            "filter_apply": "Aplicar filtros",
+            "filter_clear": "Limpar",
+            "actor_system": "Sistema",
+            "actor_webhook": "Webhook",
+            "column_details": "Detalhes",
+            "empty": "Nenhum log encontrado para os filtros aplicados.",
+            "detail_modal_title": "Detalhes do log",
+            "detail_payload": "Payload",
+            "detail_request_id": "Request ID",
+            "detail_user_agent": "User Agent",
+            "detail_auditable": "Recurso auditado"
+        }
+    },
+    "common": {
+        "save": "Salvar",
+        "cancel": "Cancelar",
+        "delete": "Excluir",
+        "confirm": "Confirmar",
+        "back": "Voltar",
+        "next": "Próximo",
+        "loading": "Carregando…",
+        "error_generic": "Ocorreu um erro. Tente novamente.",
+        "error_rate_limit": "Muitas tentativas. Aguarde {seconds} segundos.",
+        "search": "Buscar",
+        "filter": "Filtrar",
+        "yes": "Sim",
+        "no": "Não",
+        "no_results": "Nenhum resultado encontrado."
+    }
+}

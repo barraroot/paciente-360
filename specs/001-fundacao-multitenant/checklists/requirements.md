@@ -14,13 +14,30 @@
 ## Requirement Completeness
 
 - [x] No [NEEDS CLARIFICATION] markers remain — **resolvidos na Session 2026-05-10** via `/speckit-clarify` (Q1: single-DB+tenant_id; Q2: subdomínio wildcard `lvh.me`; Q3: 2y hot + 5y cold + delete; Q4: bloqueio seletivo de não-essenciais; Q5: degradação para template + escalonamento).
-- [x] Requirements are testable and unambiguous (exceto Q1–Q5 acima)
+- [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
 - [x] All acceptance scenarios are defined
 - [x] Edge cases are identified
 - [x] Scope is clearly bounded (seção "Out of Scope")
 - [x] Dependencies and assumptions identified
+
+## Implementation Status (Lote R — Final)
+
+- [x] **467 testes PHPUnit** passando (212 em Fase0 + 255 adicionais)
+- [x] **Cobertura 77.2%** backend (RNF-019: meta ≥70%)
+- [x] **E2E Playwright** nas 4 jornadas críticas:
+  - [x] T310 — Cadastro + onboarding + login
+  - [x] T311 — Convite + aceite via e-mail
+  - [x] T312 — Checkout Stripe (test mode; skip se keys não configuradas)
+  - [x] T314 — Recuperação de senha via e-mail
+- [x] **Isolamento multi-tenant expandido** (T320):
+  - [x] 6 novos testes em `TenantIsolationTest`
+  - [x] Cobertura: factories, queries, models segregados por tenant
+- [x] **OpenAPI sincronizado** — `openapi:check` passa
+- [x] **Pint clean** — nenhum diff
+- [x] **Quickstart atualizado** — instruções E2E + Stripe local
+- [x] **Checklist final** — este arquivo
 
 ## Feature Readiness
 

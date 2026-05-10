@@ -4,8 +4,76 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../**/*.vue';
 
+/*
+ * Paciente 360 — design tokens (Tailwind v4, CSS-first).
+ *
+ * Tokens extraídos do mockup `docs/design/01 _ Login _US-2.1_ US-2.2_.png`.
+ * Paleta primária = verde-escuro / teal (oklch ~180–200°). Fundo é creme
+ * quente (~95° hue, croma baixo) — superfícies neutras com leve calor.
+ *
+ * Convenção: cada cor segue a escala 50/100/200/.../900/950 do Tailwind v4
+ * sempre que possível. Tokens semânticos (surface, foreground, border)
+ * referenciam diretamente os valores oklch — facilita dark mode posterior.
+ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Tipografia (carregada via bunny no vite.config.js). */
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+    /* === Primária — teal/verde-escuro do brand === */
+    --color-primary-50: oklch(0.96 0.025 180);
+    --color-primary-100: oklch(0.88 0.04 180);
+    --color-primary-200: oklch(0.85 0.12 180);
+    --color-primary-300: oklch(0.75 0.13 180);
+    --color-primary-400: oklch(0.65 0.12 180);
+    --color-primary-500: oklch(0.55 0.10 180);
+    --color-primary-600: oklch(0.45 0.11 200);
+    --color-primary-700: oklch(0.32 0.06 180);
+    --color-primary-800: oklch(0.27 0.05 195);
+    --color-primary-900: oklch(0.22 0.04 200);
+    --color-primary-950: oklch(0.18 0.03 205);
+
+    /* === Neutros — fundo creme quente, texto frio === */
+    --color-surface: oklch(0.985 0.003 95);
+    --color-surface-muted: oklch(0.96 0.005 95);
+    --color-surface-subtle: oklch(0.975 0.004 95);
+    --color-surface-elevated: oklch(1 0 0);
+
+    --color-foreground: oklch(0.22 0.012 250);
+    --color-foreground-muted: oklch(0.45 0.012 250);
+    --color-foreground-subtle: oklch(0.6 0.012 250);
+
+    --color-border: oklch(0.92 0.005 95);
+    --color-border-strong: oklch(0.86 0.006 95);
+
+    /* === Estados semânticos (mapeados para tokens oklch do mockup) === */
+    --color-success-50: oklch(0.96 0.04 150);
+    --color-success-300: oklch(0.75 0.15 150);
+    --color-success-500: oklch(0.62 0.12 150);
+    --color-success-600: oklch(0.55 0.18 145);
+
+    --color-warning-50: oklch(0.97 0.05 80);
+    --color-warning-500: oklch(0.72 0.13 70);
+
+    --color-danger-50: oklch(0.97 0.04 25);
+    --color-danger-500: oklch(0.6 0.17 25);
+
+    --color-info-50: oklch(0.96 0.03 245);
+    --color-info-500: oklch(0.6 0.12 245);
+
+    --color-accent-50: oklch(0.96 0.03 295);
+    --color-accent-500: oklch(0.6 0.13 295);
+
+    /* === Sombras suaves coerentes com o creme === */
+    --shadow-card: 0 1px 2px 0 oklch(0.4 0.01 240 / 0.04), 0 1px 3px 0 oklch(0.4 0.01 240 / 0.10);
+    --shadow-popover: 0 4px 12px -2px oklch(0.4 0.01 240 / 0.10);
+
+    /* === Border radius padrão === */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
 }

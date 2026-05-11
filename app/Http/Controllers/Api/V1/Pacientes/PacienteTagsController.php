@@ -19,6 +19,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  *   - Retorna 200 com `X-Soft-Warning: tag.soft_limit` quando ≥ 10 tags.
  * `detach` — DELETE `/pacientes/{id}/tags/{tag_id}`.
  *   - Retorna 403 ao tentar remover tag sistêmica sem ser admin.
+ *
+ * @group CRM Pacientes
  */
 class PacienteTagsController extends Controller
 {

@@ -234,6 +234,29 @@ paths:
         name: id
         required: true
         schema: { type: integer }
+    get:
+      tags: [anotacoes]
+      summary: Lista anotações do paciente (paginada, ordem cronológica inversa)
+      parameters:
+        - in: query
+          name: tipo
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AnotacaoResource' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
     post:
       tags: [anotacoes]
       summary: Cria anotação tipada (imutável)

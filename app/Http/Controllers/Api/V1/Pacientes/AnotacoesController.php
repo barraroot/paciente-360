@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Gate;
  * Autorização via `CreateAnotacaoRequest`/`RetratacaoRequest` (authorize())
  * e `AnotacaoPolicy::view` para listagem/visibilidade.
  *
+ * @group CRM Pacientes
+ *
  * @see App\Services\Pacientes\AnotacaoService
  * @see App\Policies\AnotacaoPolicy
  */

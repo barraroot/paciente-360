@@ -18,6 +18,8 @@ use Illuminate\Http\Request;
  *  - `MesclagemExpiradaException` → 410
  *  - `MesclagemJaRevertidaException` → 422
  *
+ * @group CRM Pacientes
+ *
  * @see App\Services\Pacientes\MergeService
  */
 class MesclagemController extends Controller

@@ -19,6 +19,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  *
  * `index` — lista tags do tenant com filtro por tipo.
  * `store` — find-or-create normalizado; 201 se nova, 409 se duplicata.
+ *
+ * @group CRM Pacientes
  */
 class TagsController extends Controller
 {

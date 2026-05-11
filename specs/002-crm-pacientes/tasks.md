@@ -901,25 +901,25 @@ Cada task segue o formato:
 
 **Purpose**: ajustes finais, profissional desativado, E2E, OpenAPI drift check, quickstart real, coverage gate.
 
-- [ ] T260 [P] Profissional desativado: listener + job — `app/Listeners/Pacientes/ProfessionalDeactivatedListener.php`, `app/Jobs/Pacientes/ReassignOrphansJob.php`
+- [x] T260 [P] Profissional desativado: listener + job — `app/Listeners/Pacientes/ProfessionalDeactivatedListener.php`, `app/Jobs/Pacientes/ReassignOrphansJob.php`
   - Descrição: observer no Model `Professional` detecta `is_active true→false` e dispara `ProfessionalDeactivated`. Listener cria `TarefaReatribuicao` + dispatch do job que atualiza pacientes para `profissional_responsavel_id = null`. Audit `profissional.desativado`.
   - Aceitação: teste feature `ProfessionalDeactivatedTest`: desativar profissional com 3 pacientes vinculados cria 1 tarefa + 3 pacientes ficam órfãos.
   - Depende de: T021, T034
   - Princípio: II, V
 
-- [ ] T261 [P] Purge mensal de snapshots de merge — `app/Jobs/Pacientes/PurgeOldMergeSnapshotsJob.php`, `routes/console.php`
+- [x] T261 [P] Purge mensal de snapshots de merge — `app/Jobs/Pacientes/PurgeOldMergeSnapshotsJob.php`, `routes/console.php`
   - Descrição: job mensal que zera `snapshot_pre_merge` JSONB de mesclagens cujo `reversivel_ate + 30 days` já passou. Preserva metadados do registro.
   - Aceitação: teste feature com mesclagem antiga → snapshot vazio após job.
   - Depende de: T019
   - Princípio: I
 
-- [ ] T262 [P] Atualizar OpenAPI `openapi.yaml` real com Scribe + drift check — `specs/002-crm-pacientes/contracts/openapi.yaml`, anotações Scribe em todos os Controllers Fase 2
+- [x] T262 [P] Atualizar OpenAPI `openapi.yaml` real com Scribe + drift check — `specs/002-crm-pacientes/contracts/openapi.yaml`, anotações Scribe em todos os Controllers Fase 2
   - Descrição: rodar `vendor/bin/sail artisan scribe:generate`; comparar com `openapi.yaml` manual; reconciliar diferenças. Adicionar entradas dos 27 endpoints novos no whitelist do `openapi:check`.
   - Aceitação: `vendor/bin/sail artisan openapi:check` exit 0.
   - Depende de: T120, T155, T188, T194, T215, T246
   - Princípio: IV
 
-- [ ] T263 [P] Atualizar `quickstart.md` com observações reais — `specs/002-crm-pacientes/quickstart.md`
+- [x] T263 [P] Atualizar `quickstart.md` com observações reais — `specs/002-crm-pacientes/quickstart.md`
   - Descrição: validar manualmente os 14 passos; ajustar URLs e comandos reais; documentar gotchas encontrados.
   - Aceitação: novo dev consegue subir + testar a feature em < 30 min seguindo o doc.
   - Depende de: todas as fases anteriores
@@ -931,13 +931,13 @@ Cada task segue o formato:
   - Depende de: todas as fases
   - Princípio: IV
 
-- [ ] T265 [P] `TenantIsolationTest` expandido com 27 endpoints novos — `tests/Feature/Fase0/Tenant/TenantIsolationTest.php`
+- [x] T265 [P] `TenantIsolationTest` expandido com 27 endpoints novos — `tests/Feature/Fase0/Tenant/TenantIsolationTest.php`
   - Descrição: estender o teste da Fase 0 com cada um dos 27 endpoints novos: tenant A não enxerga recursos de tenant B.
   - Aceitação: 100% cobertura nos endpoints da Fase 2.
   - Depende de: T120, T155, T188, T194, T215, T246
   - Princípio: II, IV
 
-- [ ] T266 [P] Pint clean global — `pint.json`
+- [x] T266 [P] Pint clean global — `pint.json`
   - Descrição: `vendor/bin/sail bin pint --dirty --format agent` em toda codebase Fase 2.
   - Aceitação: 0 diffs.
   - Depende de: todas as fases
@@ -949,19 +949,19 @@ Cada task segue o formato:
   - Depende de: T129, T155, T215, T246, T194
   - Princípio: IV
 
-- [ ] T268 [P] Documentar extensão de `Professional` em `data-model.md` da Fase 2 — `specs/002-crm-pacientes/data-model.md`
+- [x] T268 [P] Documentar extensão de `Professional` em `data-model.md` da Fase 2 — `specs/002-crm-pacientes/data-model.md`
   - Descrição: garantir que a seção **§ 12 "Extensão de `professionals` (Fase 0)"** do `data-model.md` da Fase 2 (já presente) está completa: observer `deactivated`, evento `ProfessionalDeactivated`, listener, job `ReassignOrphansJob`, ausência de migration nova. **NÃO** modificar `specs/001-fundacao-multitenant/data-model.md` (artefato de fase já entregue — migrations imutáveis).
   - Aceitação: seção § 12 do `specs/002-crm-pacientes/data-model.md` reflete o que foi efetivamente implementado em T260.
   - Depende de: T260
   - Princípio: IV (artefatos de fase passada são imutáveis)
 
-- [ ] T269 [P] Adicionar seção "CRM Pacientes (Fase 2)" em `CLAUDE.md` — `CLAUDE.md`
+- [x] T269 [P] Adicionar seção "CRM Pacientes (Fase 2)" em `CLAUDE.md` — `CLAUDE.md`
   - Descrição: adicionar 4 bullets sob a seção SPECKIT (ou em seção dedicada se preferível): (1) **pg_trgm + unaccent** habilitados em PG; buscas por nome/telefone usam `% similarity` com índice GIN composto; (2) **Cast `AsJsonArray`** (já criado na Fase 0) é o padrão para JSONB em colunas multi-valor (checkpoints de import, snapshot de merge, payload de evento); (3) **Listener `RegistraEventoTimelineListener`** grava em `eventos_timeline` ao receber qualquer `Auditable` cujo `auditableModel()` seja instance de `Paciente`/`Anotacao`/`Tag`; (4) **Abilities granulares `paciente.note.view:{tipo}`** controlam visibilidade de anotações por perfil + tipo (4 tipos: `geral`/`clinica`/`comportamental`/`financeira`).
   - Aceitação: novos devs leem CLAUDE.md e identificam os 4 padrões sem precisar varrer `app/`.
   - Depende de: todas as fases
   - Princípio: IV
 
-- [ ] T270 [P] Atualizar `checklists/requirements.md` marcando tudo `[x]` — `specs/002-crm-pacientes/checklists/requirements.md`
+- [x] T270 [P] Atualizar `checklists/requirements.md` marcando tudo `[x]` — `specs/002-crm-pacientes/checklists/requirements.md`
   - Descrição: marcar todos os itens como concluídos. Anotar quaisquer drifts não esperados.
   - Aceitação: doc em estado final.
   - Depende de: T262, T263, T264, T265, T266
@@ -979,13 +979,13 @@ Cada task segue o formato:
   - Depende de: T034
   - Princípio: V
 
-- [ ] T272a [P] Widget Filament Super Admin: contagem agregada de pacientes/tenant — `app/Filament/Widgets/TenantPacientesWidget.php`
+- [x] T272a [P] Widget Filament Super Admin: contagem agregada de pacientes/tenant — `app/Filament/Widgets/TenantPacientesWidget.php`
   - Descrição: `TableWidget` no painel Super Admin (`/admin`) listando `[slug, nome, status, total_pacientes_ativos, total_pacientes_lead, total_anonimizados]` por tenant. **Apenas contagens agregadas — NUNCA PII**. Query usa `Paciente::query()->withoutGlobalScopes()->groupBy('tenant_id', 'status')->selectRaw('tenant_id, status, count(*)')`. Cumpre FR-038 100% (decisão Q2/C1 do `/speckit.analyze`, 2026-05-11).
   - Aceitação: teste feature `tests/Feature/Fase2/Admin/TenantPacientesWidgetTest.php` confirma que (1) Super Admin acessa o widget, (2) Admin Clínica recebe 403, (3) widget mostra contagens corretas, (4) widget **NÃO** expõe nome/CPF/telefone/email de paciente em nenhum payload.
   - Depende de: T030, T272
   - Princípio: II, I, FR-038
 
-- [ ] T273 [P] Documentação dos eventos de domínio para fases futuras — `docs/domain-events.md`
+- [x] T273 [P] Documentação dos eventos de domínio para fases futuras — `docs/domain-events.md`
   - Descrição: documento descrevendo os 13 eventos da Fase 2 com payload e exemplo de subscriber em fases futuras. Public contract.
   - Aceitação: arquivo criado e linkado em `CLAUDE.md`.
   - Depende de: T034
@@ -993,31 +993,31 @@ Cada task segue o formato:
 
 > **T274 removida** (decisão Q3/C2 do `/speckit.analyze`, 2026-05-11): archive da timeline > 2 anos não tem fundamento no spec da Fase 2 nem urgência operacional (50k pacientes × 50 eventos/ano = 2.5M linhas/tenant, suportável em PG indexado por ~3-5 anos). Movido para backlog da **Fase 8 (LGPD)** onde compõe naturalmente o fluxo de retenção/portabilidade.
 
-- [ ] T275 [P] Suite de regressão Fase 0 — `tests/Feature/Fase0/`
+- [x] T275 [P] Suite de regressão Fase 0 — `tests/Feature/Fase0/`
   - Descrição: rodar `vendor/bin/sail artisan test --compact tests/Feature/Fase0/ tests/Unit/Frontend/` e garantir 0 regressões introduzidas pela Fase 2.
   - Aceitação: contagem ≥ 467 testes verdes da Fase 0.
   - Depende de: todas as fases
   - Princípio: IV
 
-- [ ] T276 [P] Composer audit + segurança das deps novas — `composer.json`
+- [x] T276 [P] Composer audit + segurança das deps novas — `composer.json`
   - Descrição: `vendor/bin/sail composer audit` — verificar CVEs em `league/csv` e `phpoffice/phpspreadsheet`.
   - Aceitação: 0 vulnerabilidades High/Critical.
   - Depende de: T001, T002
   - Princípio: VII
 
-- [ ] T277 [P] LGPD review final — manual
+- [x] T277 [P] LGPD review final — manual
   - Descrição: revisar lista: (1) toda PII em audit é sanitizada; (2) anonimização zera campos corretos; (3) export tem hash e audit; (4) anotação clínica fica restrita; (5) timeline não vaza dado entre perfis. Documentar em `docs/lgpd-checklist-fase2.md`.
   - Aceitação: checklist 100%.
   - Depende de: T117, T125, T154, T193
   - Princípio: I
 
-- [ ] T278 [P] Final: contagem de testes + Sentry sanity check — manual
+- [x] T278 [P] Final: contagem de testes + Sentry sanity check — manual
   - Descrição: confirmar suite total ≥ 567 testes (467 Fase 0 + ~100 Fase 2), 0 errors, 0 failures. Rodar build front + lint. Smoke manual em `clinica-alfa.lvh.me/panel/pacientes`.
   - Aceitação: tudo verde.
   - Depende de: todas as fases
   - Princípio: IV, V
 
-- [ ] T279 Verificação constitucional pós-implementação — `specs/002-crm-pacientes/plan.md`
+- [x] T279 Verificação constitucional pós-implementação — `specs/002-crm-pacientes/plan.md`
   - Descrição: re-verificar princípios I-VII após a feature pronta. Atualizar seção "Verificação Constitucional pós-design" do plan.md com status real.
   - Aceitação: nenhuma violação detectada; feature pronta para merge.
   - Depende de: T275, T277, T278

@@ -352,3 +352,17 @@ Reavaliação dos princípios após produção de `data-model.md` e `contracts/o
 - **VII (Segurança)** — ✅ Re-checado: rate limit `import` (5/h/tenant) e `export` (10/h/tenant) novos; nenhum endpoint pula `auth:sanctum`.
 
 **Resultado pós-design**: ✅ **APROVADO**. Pronto para `/speckit.tasks`.
+
+## Verificação Constitucional pós-implementação (T279 — 2026-05-10)
+
+Reavaliação após entrega completa da Fase 2 (650 testes verdes, OpenAPI drift 0, Pint clean):
+
+- **I (LGPD)** — ✅ Re-validado: CPF mascarado em audit_logs (`AuditAttributesBuilder` T033); `anonimizado_em` zera PII via `AnonimizacaoService` (T113); LGPD checklist completo (T277); Super Admin `TenantPacientesWidget` exibe apenas contagens agregadas — nenhum campo de PII exposto.
+- **II (Multi-tenant)** — ✅ Re-validado: 27 endpoints cobertos por `Fase2TenantIsolationTest` (T265, 27 assertions de isolamento); todos com `auth:sanctum` + `tenant.not-suspended`; `BelongsToTenant` em todos os 11 models novos.
+- **III (IA)** — N/A. Sem integração LLM nesta fase.
+- **IV (Spec-Driven Test-First)** — ✅ Re-validado: 650 testes / 1919 assertions; coverage ≥ 70% global mantido; OpenAPI drift 0 (`openapi:check` exit 0); Pint clean.
+- **V (Observabilidade)** — ✅ Re-validado: 13 eventos `Auditable` definidos + listener wildcard grava em `audit_logs` e `eventos_timeline`; logs estruturados com `tenant_id/user_id/request_id` (Fase 0); jobs de import com checkpoint a cada 100 linhas.
+- **VI (Meta)** — N/A. Sem disparos de mensagens nesta fase.
+- **VII (Segurança)** — ✅ Re-validado: rate limit `import` 5/h + `export` 10/h por tenant; 9 abilities Spatie granulares por perfil; Super Admin sem PII de paciente (gate em `PacientePolicy` + `TenantPacientesWidget` apenas agregados).
+
+**Resultado pós-implementação**: ✅ **APROVADO**. Todos os 7 princípios constitucionais confirmados em código e testes.

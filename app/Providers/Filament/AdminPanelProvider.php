@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Widgets\ActiveTenantsWidget;
+use App\Filament\Widgets\TenantPacientesWidget;
 use App\Http\Middleware\EnsureUserIsSuperAdmin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -48,6 +49,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 ActiveTenantsWidget::class,
+                TenantPacientesWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

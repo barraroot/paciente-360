@@ -27,6 +27,8 @@ use Illuminate\Support\Facades\Gate;
  *  3. Delegam lógica de negócio ao `PacienteService`.
  *  4. Retornam `PacienteResource` / `PacienteListResource`.
  *
+ * @group CRM Pacientes
+ *
  * @see App\Services\Pacientes\PacienteService
  * @see App\Http\Resources\V1\PacienteResource
  */

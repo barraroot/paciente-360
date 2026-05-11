@@ -14,6 +14,8 @@ use App\Services\Pacientes\StatusMachineService;
  * Transições válidas delegadas ao `StatusMachineService`.
  * Autorização via `PatchStatusRequest::authorize()` (PacientePolicy::update).
  *
+ * @group CRM Pacientes
+ *
  * @see App\Services\Pacientes\StatusMachineService
  */
 class PatchStatusController extends Controller

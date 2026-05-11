@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Gate;
  * `updateColuna` trata colisão de UNIQUE (posicao) com 409.
  * `moveCard` delega ao `FunilService` que valida motivo e dispara evento.
  *
+ * @group CRM Pacientes
+ *
  * @see App\Services\Funil\FunilTemplateService
  * @see App\Services\Funil\FunilService
  */

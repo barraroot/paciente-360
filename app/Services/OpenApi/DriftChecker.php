@@ -26,7 +26,31 @@ final class DriftChecker
     ) {}
 
     /**
-     * Executa a comparação.
+     * Executa a comparação contra múltiplos arquivos OpenAPI (paths são mergeados).
+     *
+     * @param list<string> $openApiFiles Caminhos absolutos para arquivos .yaml
+     * @param string $routeJson Saída JSON de `php artisan route:list`
+     * @return array{errors: list<string>, total_real: int, total_spec: int}
+     */
+    public function checkMultiple(array $openApiFiles, string $routeJson): array
+    {
+        $openApiRoutes = [];
+
+        foreach ($openApiFiles as $openApiFile) {
+            foreach ($this->parseOpenApiPaths($openApiFile) as $canonical => $methods) {
+                foreach ($methods as $method => $val) {
+                    $openApiRoutes[$canonical][$method] = $val;
+                }
+            }
+        }
+
+        $realRoutes = $this->parseRouteList($routeJson);
+
+        return $this->compare($openApiRoutes, $realRoutes);
+    }
+
+    /**
+     * Executa a comparação contra um único arquivo OpenAPI.
      *
      * @param string $openApiFile Caminho absoluto para o arquivo .yaml
      * @param string $routeJson Saída JSON de `php artisan route:list`
@@ -36,6 +60,19 @@ final class DriftChecker
     {
         $openApiRoutes = $this->parseOpenApiPaths($openApiFile);
         $realRoutes = $this->parseRouteList($routeJson);
+
+        return $this->compare($openApiRoutes, $realRoutes);
+    }
+
+    /**
+     * Compara rotas reais com paths OpenAPI já parseados.
+     *
+     * @param array<string, array<string, true>> $openApiRoutes
+     * @param array<string, array<string, true>> $realRoutes
+     * @return array{errors: list<string>, total_real: int, total_spec: int}
+     */
+    private function compare(array $openApiRoutes, array $realRoutes): array
+    {
 
         $errors = [];
 

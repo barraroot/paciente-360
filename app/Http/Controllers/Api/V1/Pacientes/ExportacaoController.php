@@ -15,6 +15,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  *
  * Streaming direto para o cliente sem persistir arquivo no servidor.
  * Após conclusão, dispara `PacientesExportados` para auditoria.
+ *
+ * @group CRM Pacientes
  */
 final class ExportacaoController extends Controller
 {

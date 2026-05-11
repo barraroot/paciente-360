@@ -41,3 +41,4 @@
 
 - **Iteração 1 (2026-05-10)**: rodada inicial — 0 itens de Content Quality falharam, 0 itens de Feature Readiness falharam. Único item "não check" foi por design (13 NC pedidos pelo usuário).
 - **Iteração 2 (2026-05-10)**: 13 NEEDS_CLARIFICATION resolvidos via `/speckit.clarify` com respostas em batch ("yes em todas"); todos os FRs, ACs, Edge Cases e Key Entities agora concretos. Spec status atualizado para `Clarified`. Pronto para `/speckit.plan`.
+- **Iteração 3 (2026-05-10)**: Confirmação pós-entrega completa da Fase 2. Estado: **650 testes verdes / 1919 assertions**. OpenAPI drift 0 (`openapi:check` exit 0 — specs Fase 0 + Fase 2 mergeadas, 43 paths). Pint clean. `Fase2TenantIsolationTest` cobre 27 endpoints. `TenantPacientesWidget` entregue (Super Admin, sem PII). LGPD checklist (T277) completo. 13 eventos `Auditable` + listener wildcard ativos. Composer audit: 0 CVEs. Regressão Fase 0: 347 testes verdes mantidos.

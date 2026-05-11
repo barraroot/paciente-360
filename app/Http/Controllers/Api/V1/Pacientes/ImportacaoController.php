@@ -18,6 +18,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * T187 — Controller de importação de pacientes (US-3.3).
+ *
+ * @group CRM Pacientes
  */
 final class ImportacaoController extends Controller
 {

@@ -26,6 +26,8 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
  *  - POST /convenios               — criação (admin-clinica via Form Request)
  *  - PATCH /convenios/{id}         — atualização (admin-clinica via Form Request)
  *  - DELETE /convenios/{id}        — exclusão (admin-clinica; 409 se em uso)
+ *
+ * @group CRM Pacientes
  */
 class ConveniosController extends Controller
 {

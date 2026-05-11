@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Gate;
  * Invocado via `GET /api/v1/pacientes/{id}/timeline`.
  * Delega toda a lógica de filtro, cursor e visibilidade ao `TimelineService`.
  *
+ * @group CRM Pacientes
+ *
  * @see App\Services\Pacientes\TimelineService
  */
 final class TimelineController extends Controller

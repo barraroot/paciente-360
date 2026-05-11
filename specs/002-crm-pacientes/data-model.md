@@ -332,6 +332,14 @@ app/Models/Professional.php
 
 Nenhuma alteração de schema em `professionals` nesta fase.
 
+**Implementação real (T260 — 2026-05-10)**:
+
+- `app/Models/Professional.php` — `boot()` usa `static::updated()` com guard `$model->wasChanged('is_active') && !$model->is_active`. Dispara `ProfessionalDeactivated` event.
+- `app/Events/Profissional/ProfessionalDeactivated.php` — evento implementando `Auditable` via `IsAuditable` trait; `auditAction()` = `'profissional.desativado'`; `auditPayload()` inclui `professional_id`, `tenant_id`, `nome` (sem PII além de nome profissional).
+- `app/Listeners/Profissional/ProfessionalDeactivatedListener.php` — cria `TarefaReatribuicao` (pivot com lista de `paciente_ids`) e despacha `ReassignOrphansJob` na fila `default`.
+- `app/Jobs/Pacientes/ReassignOrphansJob.php` — `TenantAwareJob`; `uniqueId()` = `"reassign-orphans-{professional_id}-{tenant_id}"`; itera pacientes com `profissional_responsavel_id = $professional->id` e seta para `null`; idempotente.
+- Sem migration nova — a tabela `tarefas_reatribuicao` (§ 11) é a persistência desta operação.
+
 ---
 
 ## Máquina de estados de Paciente

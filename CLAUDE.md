@@ -194,3 +194,30 @@ shell commands, and other important information, read the current plan:
 - **Previous feature (delivered)**: `001-fundacao-multitenant` — [plan](specs/001-fundacao-multitenant/plan.md) — 467 testes verdes, 77.2% cobertura
 - **Constitution**: [.specify/memory/constitution.md](.specify/memory/constitution.md) (v1.2.0)
 <!-- SPECKIT END -->
+
+## CRM Pacientes (Fase 2) — Key Patterns
+
+When working on CRM Pacientes features, remember these critical patterns:
+
+1. **`pg_trgm + unaccent` enabled in PostgreSQL**
+   - Buscas por nome/telefone usam `% similarity` com índice GIN composto `(tenant_id, campo_trgm)`.
+   - `unaccent()` não é IMMUTABLE — use wrapper `immutable_unaccent(text)` em colunas GENERATED para evitar índices inválidos.
+
+2. **Cast `AsJsonArray` padrão para JSONB multi-valor**
+   - Use em colunas JSONB como `pacientes_origem_ids`, `checkpoint`, `snapshot_pre_merge`, `payload` de eventos.
+   - Aplicado automaticamente em `MesclagemPaciente`, `Importacao`, `EventoTimeline`.
+
+3. **Listener `RegistraEventoTimelineListener` projeta eventos para timeline**
+   - Escuta qualquer `Auditable` cujo `auditableModel()` retorna Paciente/Anotacao/Tag.
+   - Grava em `eventos_timeline` automaticamente (além de `audit_logs`).
+   - Bind em `EventServiceProvider`.
+
+4. **Abilities granulares `paciente.note.view:{tipo}` controlam visibilidade**
+   - 4 tipos: `geral`, `clinica`, `comportamental`, `financeira`.
+   - `AnotacaoPolicy::view()` retorna falso se o user não tem ability para o tipo da anotação.
+   - Aplicado em `PacientePolicy`, `AnotacaoPolicy`, confirmado em T030.
+
+5. **Event `ProfessionalDeactivated` dispara reatribuição de pacientes (T260)**
+   - Observer no `Professional.boot()` detecta `is_active: true → false`.
+   - Listener cria `TarefaReatribuicao` com lista de pacientes órfãos.
+   - Job `ReassignOrphansJob` (extends `TenantAwareJob`) atualiza `profissional_responsavel_id = null`.

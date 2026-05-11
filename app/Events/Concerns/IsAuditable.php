@@ -2,6 +2,7 @@
 
 namespace App\Events\Concerns;
 
+use App\Models\Paciente;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -67,5 +68,43 @@ trait IsAuditable
     public function auditActorType(): ?string
     {
         return null;
+    }
+
+    /**
+     * Hook usado pelo `RegistraEventoTimelineListener` (T035 — Fase 2)
+     * para resolver o `paciente_id` da linha em `eventos_timeline`.
+     *
+     * Default heurístico:
+     *  - Se o evento tem prop pública `paciente` e ela tem `id`, usa.
+     *  - Caso contrário, infere a partir de `auditableModel()`:
+     *      - Se o model é uma `Paciente`, retorna seu id.
+     *      - Se o model tem atributo `paciente_id` (ex.: `Anotacao`,
+     *        `EventoTimeline`), retorna esse id.
+     *  - Retorna `null` para eventos sem paciente associado (ex.:
+     *    `PacientesImportados`, `PacientesExportados`).
+     *
+     * Eventos podem sobrescrever este método quando o paciente não vem
+     * por `auditableModel()` (ex.: `LeadMovidoNoFunil` que carrega o
+     * paciente pelo construtor).
+     */
+    public function relatedPacienteId(): ?int
+    {
+        if (property_exists($this, 'paciente') && is_object($this->paciente) && isset($this->paciente->id)) {
+            return (int) $this->paciente->id;
+        }
+
+        $auditable = $this->auditableModel();
+
+        if ($auditable === null) {
+            return null;
+        }
+
+        if ($auditable instanceof Paciente) {
+            return (int) $auditable->getKey();
+        }
+
+        $pacienteId = $auditable->getAttribute('paciente_id');
+
+        return $pacienteId !== null ? (int) $pacienteId : null;
     }
 }

@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use App\Events\Contracts\Auditable;
+use App\Events\Professional\ProfessionalDeactivated;
+use App\Listeners\Paciente\RegistraEventoTimelineListener;
 use App\Listeners\PersistAuditLogListener;
+use App\Listeners\Professional\ProfessionalDeactivatedListener;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,5 +29,14 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(Auditable::class, PersistAuditLogListener::class);
+
+        // Fase 2 (T035) — projeção de eventos auditáveis em `eventos_timeline`
+        // para a timeline do paciente. Coexiste com o listener de audit_logs:
+        // ambos são chamados em sequência pelo dispatcher do Laravel.
+        Event::listen(Auditable::class, RegistraEventoTimelineListener::class);
+
+        // T260 — listener específico para o evento ProfessionalDeactivated.
+        // Cria TarefaReatribuicao e dispara ReassignOrphansJob.
+        Event::listen(ProfessionalDeactivated::class, ProfessionalDeactivatedListener::class);
     }
 }

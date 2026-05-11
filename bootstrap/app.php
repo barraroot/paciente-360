@@ -10,6 +10,11 @@ use App\Exceptions\Billing\NoActiveSubscriptionException;
 use App\Exceptions\Onboarding\StepLockedException;
 use App\Exceptions\Onboarding\StepRequiredException;
 use App\Exceptions\Onboarding\UnknownStepException;
+use App\Exceptions\Pacientes\AnotacaoImutavelException;
+use App\Exceptions\Pacientes\CpfDuplicadoException;
+use App\Exceptions\Pacientes\DedupConflictException;
+use App\Exceptions\Pacientes\MesclagemExpiradaException;
+use App\Exceptions\Pacientes\MesclagemJaRevertidaException;
 use App\Exceptions\Users\InvalidInvitationException;
 use App\Exceptions\Users\LastAdminClinicaException;
 use App\Exceptions\Users\PlanLimitReachedException;
@@ -17,6 +22,7 @@ use App\Http\Middleware\ApplyOverdueRestrictions;
 use App\Http\Middleware\EnsureTenantNotSuspended;
 use App\Http\Middleware\LogStructuredRequestData;
 use App\Http\Middleware\ResolveTenant;
+use App\Support\Cpf\CpfValidator;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -169,5 +175,52 @@ return Application::configure(basePath: dirname(__DIR__))
                 'error' => 'last_admin_clinica',
                 'message' => $e->getMessage(),
             ], 409);
+        });
+
+        // Anotação imutável → 409 (T029 — Fase 2 CRM).
+        $exceptions->render(function (AnotacaoImutavelException $e, Request $request) {
+            return response()->json([
+                'error' => 'anotacao_imutavel',
+                'message' => $e->getMessage(),
+            ], 409);
+        });
+
+        // Duplicata detectada → 409 com candidatos e ações sugeridas (T110).
+        $exceptions->render(function (DedupConflictException $e, Request $request) {
+            return response()->json([
+                'error' => 'dedup_conflict',
+                'message' => $e->getMessage(),
+                'candidatos' => $e->candidatos->map(fn ($p) => [
+                    'id' => $p->id,
+                    'nome' => $p->nome,
+                    'cpf' => $p->cpf ? CpfValidator::format($p->cpf) : null,
+                    'status' => $p->status,
+                ])->values()->all(),
+                'acoes' => ['mesclar', 'abrir_existente'],
+            ], 409);
+        });
+
+        // CPF duplicado com ignorar_duplicata=true → 422 (T110).
+        $exceptions->render(function (CpfDuplicadoException $e, Request $request) {
+            return response()->json([
+                'error' => 'cpf_duplicado_nao_permitido',
+                'message' => $e->getMessage(),
+            ], 422);
+        });
+
+        // Janela de reversão de mesclagem expirada → 410 Gone (T112).
+        $exceptions->render(function (MesclagemExpiradaException $e, Request $request) {
+            return response()->json([
+                'error' => 'mesclagem_expirada',
+                'message' => $e->getMessage(),
+            ], 410);
+        });
+
+        // Mesclagem já revertida → 422 (T112).
+        $exceptions->render(function (MesclagemJaRevertidaException $e, Request $request) {
+            return response()->json([
+                'error' => 'mesclagem_ja_revertida',
+                'message' => $e->getMessage(),
+            ], 422);
         });
     })->create();

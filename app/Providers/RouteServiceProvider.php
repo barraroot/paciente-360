@@ -77,5 +77,17 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('webhooks', fn (): Limit => Limit::none());
+
+        RateLimiter::for('import', function (Request $request): Limit {
+            $tenantId = app()->bound('tenant') ? app('tenant')->id : 'no-tenant';
+
+            return Limit::perHour(5)->by("{$tenantId}:import");
+        });
+
+        RateLimiter::for('export', function (Request $request): Limit {
+            $tenantId = app()->bound('tenant') ? app('tenant')->id : 'no-tenant';
+
+            return Limit::perHour(10)->by("{$tenantId}:export");
+        });
     }
 }

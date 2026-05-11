@@ -44,12 +44,27 @@ class RolesSeeder extends Seeder
      * @var list<string>
      */
     private const PERMISSIONS = [
+        // Fase 0 — gestão da clínica
         'manage-users',
         'manage-billing',
         'manage-onboarding',
         'view-audit-logs',
         'view-billing',
         'view-ai-usage',
+
+        // Fase 2 — CRM de Pacientes (§ 2.4 do spec)
+        'paciente.view',
+        'paciente.create',
+        'paciente.update',
+        'paciente.delete',
+        'paciente.import',
+        'paciente.export',
+        'paciente.merge',
+        'paciente.note.write',
+        'paciente.note.view:geral',
+        'paciente.note.view:clinica',
+        'paciente.note.view:comportamental',
+        'paciente.note.view:financeira',
     ];
 
     /**
@@ -57,17 +72,58 @@ class RolesSeeder extends Seeder
      */
     private const ROLE_PERMISSIONS = [
         'admin-clinica' => [
+            // Fase 0
             'manage-users',
             'manage-billing',
             'manage-onboarding',
             'view-audit-logs',
             'view-billing',
             'view-ai-usage',
+            // Fase 2 — admin clínica tem TODAS as abilities CRM.
+            'paciente.view',
+            'paciente.create',
+            'paciente.update',
+            'paciente.delete',
+            'paciente.import',
+            'paciente.export',
+            'paciente.merge',
+            'paciente.note.write',
+            'paciente.note.view:geral',
+            'paciente.note.view:clinica',
+            'paciente.note.view:comportamental',
+            'paciente.note.view:financeira',
+        ],
+        'medico' => [
+            'paciente.view',
+            'paciente.create',
+            'paciente.update',
+            'paciente.note.write',
+            'paciente.note.view:geral',
+            'paciente.note.view:clinica',
+            'paciente.note.view:comportamental',
+        ],
+        'atendente' => [
+            'paciente.view',
+            'paciente.create',
+            'paciente.update',
+            'paciente.note.write',
+            'paciente.note.view:geral',
+            'paciente.note.view:comportamental',
+        ],
+        'recepcionista' => [
+            'paciente.view',
+            'paciente.create',
+            'paciente.update',
+            'paciente.note.write',
+            'paciente.note.view:geral',
+            'paciente.note.view:comportamental',
         ],
         'financeiro' => [
+            // Fase 0
             'view-billing',
             'view-ai-usage',
             'view-audit-logs',
+            // Fase 2 — financeiro NÃO recebe abilities de paciente.
         ],
     ];
 

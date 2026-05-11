@@ -9,7 +9,18 @@ use App\Http\Controllers\Api\V1\Billing\AiUsageController;
 use App\Http\Controllers\Api\V1\Billing\CheckoutController;
 use App\Http\Controllers\Api\V1\Billing\PlansController;
 use App\Http\Controllers\Api\V1\Billing\SubscriptionController;
+use App\Http\Controllers\Api\V1\Convenios\ConveniosController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
+use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
+use App\Http\Controllers\Api\V1\Pacientes\ExportacaoController;
+use App\Http\Controllers\Api\V1\Pacientes\FunilController;
+use App\Http\Controllers\Api\V1\Pacientes\ImportacaoController;
+use App\Http\Controllers\Api\V1\Pacientes\MesclagemController;
+use App\Http\Controllers\Api\V1\Pacientes\PacientesController;
+use App\Http\Controllers\Api\V1\Pacientes\PacienteTagsController;
+use App\Http\Controllers\Api\V1\Pacientes\PatchStatusController;
+use App\Http\Controllers\Api\V1\Pacientes\TagsController;
+use App\Http\Controllers\Api\V1\Pacientes\TimelineController;
 use App\Http\Controllers\Api\V1\Tenant\CurrentTenantController;
 use App\Http\Controllers\Api\V1\Tenant\RegisterController as TenantRegisterController;
 use App\Http\Controllers\Api\V1\Users\InvitationsController;
@@ -133,4 +144,93 @@ Route::post('/users/invitations/accept', [InvitationsController::class, 'accept'
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/audit-logs/export', [AuditLogsController::class, 'export'])->name('audit-logs.export');
     Route::get('/audit-logs', [AuditLogsController::class, 'index'])->name('audit-logs.index');
+});
+
+// US-3.3 — Exportação CSV de pacientes (T194). Throttle `export`.
+Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->group(function (): void {
+    Route::get('/pacientes/exportar', ExportacaoController::class)
+        ->middleware('throttle:export')
+        ->name('pacientes.exportar');
+});
+
+// US-3.3 — Importação de pacientes (T188).
+Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->group(function (): void {
+    Route::get('/pacientes/importacao/template', [ImportacaoController::class, 'template'])
+        ->name('pacientes.import.template');
+    Route::post('/pacientes/importacao', [ImportacaoController::class, 'store'])
+        ->middleware('throttle:import')
+        ->name('pacientes.import.store');
+    Route::get('/pacientes/importacao/{id}', [ImportacaoController::class, 'show'])
+        ->name('pacientes.import.show')
+        ->whereNumber('id');
+});
+
+// US-3.4 — Funil Kanban (T215)
+Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->group(function (): void {
+    Route::get('/funil/colunas', [FunilController::class, 'colunas'])
+        ->name('funil.colunas');
+    Route::patch('/funil/colunas/{id}', [FunilController::class, 'updateColuna'])
+        ->name('funil.colunas.update')
+        ->whereNumber('id');
+});
+
+// Fase 2 — US-3.1 (T120): endpoints de pacientes.
+// Substitui o stub de T030.
+Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->prefix('pacientes')->group(function (): void {
+    // Mesclagem (antes dos {id} para não conflitar com whereNumber)
+    Route::post('/mesclagens', [MesclagemController::class, 'store'])
+        ->name('pacientes.mesclagens.store');
+
+    Route::post('/mesclagens/{id}/reverter', [MesclagemController::class, 'reverter'])
+        ->name('pacientes.mesclagens.reverter')
+        ->whereNumber('id');
+
+    // CRUD pacientes
+    Route::get('/', [PacientesController::class, 'index'])->name('pacientes.index');
+    Route::post('/', [PacientesController::class, 'store'])->name('pacientes.store');
+    Route::get('/{id}', [PacientesController::class, 'show'])->name('pacientes.show')->whereNumber('id');
+    Route::patch('/{id}', [PacientesController::class, 'update'])->name('pacientes.update')->whereNumber('id');
+    Route::delete('/{id}', [PacientesController::class, 'destroy'])->name('pacientes.destroy')->whereNumber('id');
+    Route::patch('/{id}/status', PatchStatusController::class)->name('pacientes.status')->whereNumber('id');
+    Route::post('/{id}/anonimizar', [PacientesController::class, 'anonimizar'])->name('pacientes.anonimizar')->whereNumber('id');
+
+    // US2 — Timeline (T155)
+    Route::get('/{id}/timeline', TimelineController::class)->name('pacientes.timeline')->whereNumber('id');
+
+    // US2 — Anotações (T155)
+    Route::get('/{id}/anotacoes', [AnotacoesController::class, 'index'])->name('pacientes.anotacoes.index')->whereNumber('id');
+    Route::post('/{id}/anotacoes', [AnotacoesController::class, 'store'])->name('pacientes.anotacoes.store')->whereNumber('id');
+    Route::post('/{id}/anotacoes/{anotacao_id}/retratacao', [AnotacoesController::class, 'retratar'])
+        ->name('pacientes.anotacoes.retratar')
+        ->whereNumber('id')
+        ->whereNumber('anotacao_id');
+
+    // US4 — Funil Kanban: mover card (T215)
+    Route::patch('/{id}/funil', [FunilController::class, 'moveCard'])
+        ->name('pacientes.funil.move')
+        ->whereNumber('id');
+
+    // US5 — Tags: aplicar e remover (T246)
+    Route::post('/{id}/tags', [PacienteTagsController::class, 'attach'])
+        ->name('pacientes.tags.attach')
+        ->whereNumber('id');
+
+    Route::delete('/{id}/tags/{tag_id}', [PacienteTagsController::class, 'detach'])
+        ->name('pacientes.tags.detach')
+        ->whereNumber('id')
+        ->whereNumber('tag_id');
+});
+
+// US5 — Tags: catálogo (T246)
+Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->group(function (): void {
+    Route::get('/tags', [TagsController::class, 'index'])->name('tags.index');
+    Route::post('/tags', [TagsController::class, 'store'])->name('tags.store');
+});
+
+// US5 — Convênios: catálogo CRUD (T246)
+Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->group(function (): void {
+    Route::get('/convenios', [ConveniosController::class, 'index'])->name('convenios.index');
+    Route::post('/convenios', [ConveniosController::class, 'store'])->name('convenios.store');
+    Route::patch('/convenios/{id}', [ConveniosController::class, 'update'])->name('convenios.update')->whereNumber('id');
+    Route::delete('/convenios/{id}', [ConveniosController::class, 'destroy'])->name('convenios.destroy')->whereNumber('id');
 });

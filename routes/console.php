@@ -19,3 +19,6 @@ Schedule::command('invitations:purge-expired')->weeklyOn(0, '03:00');
 // registros no boundary entrem em cold ANTES da deleção física.
 Schedule::command('audit:archive')->monthlyOn(1, '04:00');
 Schedule::command('audit:delete-expired')->monthlyOn(2, '04:00');
+
+// T261 — Purga snapshots de mesclagens antigas (Fase 2, Polish).
+Schedule::command('app:purge-old-merge-snapshots')->monthlyOn(2, '04:00');

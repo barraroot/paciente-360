@@ -476,7 +476,7 @@ Esta fase introduz os seguintes novos abilities, atribuídos aos perfis conforme
 - **FR-038**: Sistema MUST proibir Super Admin de enxergar PII de paciente — apenas contagens agregadas no painel administrativo (a tela em si vem em fase futura; o gate vale agora).
 
 #### Performance e UX
-- **FR-039**: Lista de pacientes MUST suportar até **50.000 pacientes por tenant** sem degradação perceptível.
+- **FR-039**: Lista paginada de pacientes (25 itens por página, default) MUST responder em **p95 < 500 ms** em base de até **50.000 pacientes por tenant**.
 - **FR-040**: Busca por nome ou telefone MUST devolver primeiros resultados em **p95 < 300 ms**; busca usa **similaridade** (suporta erro de digitação, busca parcial, normalização de acentos).
 - **FR-041**: Timeline MUST carregar primeiro lote em < 1 s para até 1000 eventos (RF-011).
 
@@ -571,7 +571,7 @@ Resumo das resoluções:
 Critérios medíveis, agnósticos de tecnologia, verificáveis sem detalhes de implementação:
 
 - **SC-001**: Atendente cadastra paciente novo (formulário completo válido) em **até 2 minutos**, sem ajuda externa, na primeira tentativa.
-- **SC-002**: Médico abre a timeline de um paciente com 500 eventos e vê o primeiro lote em **menos de 1 segundo** (p95).
+- **SC-002**: Médico abre a timeline de um paciente com **1.000 eventos** e vê o primeiro lote em **menos de 1 segundo** (p95). *(Sincronizado com FR-041 e AC-3.2.6 em 2026-05-11 via /speckit.analyze.)*
 - **SC-003**: Admin Clínica importa uma planilha de 1000 linhas e recebe o relatório final (importados/duplicados/erros) em **até 5 minutos**.
 - **SC-004**: Movimentação de card no Kanban responde em **menos de 300 ms** (p95) e a mudança persiste após refresh.
 - **SC-005**: 100% dos endpoints autenticados desta fase passam no `TenantIsolationTest` expandido (cross-tenant retorna 404/403, nunca 200).

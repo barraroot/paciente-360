@@ -26,7 +26,7 @@ A abordagem técnica privilegia **reuso máximo da infra da Fase 0** (Auditable 
 **Primary Dependencies**:
 - **Backend novo**: `league/csv` (parser CSV streaming, sem dependência de ext-zip/ph​pspreadsheet pesada); `phpoffice/phpspreadsheet` (parser Excel quando arquivo é `.xlsx`).
 - **Backend reusado** (Fase 0): laravel/framework v13, laravel/sanctum, laravel/horizon, laravel/reverb, laravel/cashier-stripe, spatie/laravel-permission (team mode), filament/filament v5, sentry/sentry-laravel, laravel/pail.
-- **Frontend reusado**: vue@^3, pinia, vue-router, vue-i18n, tailwindcss v4. **Frontend novo**: nenhum (drag-and-drop do Kanban implementado nativo via HTML5 Drag API).
+- **Frontend reusado**: vue@^3, pinia, vue-router, vue-i18n, tailwindcss v4. **Frontend novo**: `vuedraggable@^4` (~12KB minified, baseado em SortableJS) para o Kanban — decisão Q1/A2 do `/speckit.analyze` (2026-05-11): nativo HTML5 era viável mas inconsistente em mobile/touch e exigia ~+8h de dev manual; vuedraggable resolve drag+animação+fractional indexing out-of-the-box.
 - **Dev/Test**: phpunit ^12, laravel/pint, mockery/mockery, playwright (E2E já configurado).
 
 **Storage**:
@@ -57,7 +57,7 @@ A abordagem técnica privilegia **reuso máximo da infra da Fase 0** (Auditable 
 **Scale/Scope**:
 - **MVP**: 50.000 pacientes por tenant; 10 médicos/tenant médios; 5 anos de histórico clínico simulado.
 - **Volume operacional**: ~50 importações simultâneas globais sem fila bloqueada; 500 eventos/dia/tenant na timeline.
-- **Scope de código**: ~15 controllers novos, ~10 services, ~12 migrations, ~15 Vue pages/components, ~6 jobs, ~100 testes novos.
+- **Scope de código**: ~15 controllers novos, ~10 services, ~13 migrations, ~15 Vue pages/components, ~6 jobs, ~100 testes novos, **27 endpoints novos** em `routes/api.php` (refinado pós-design via /speckit.analyze).
 
 ## Constitution Check
 
@@ -78,7 +78,7 @@ A abordagem técnica privilegia **reuso máximo da infra da Fase 0** (Auditable 
 - ✅ **Jobs `TenantAwareJob`**: `ProcessPatientImportJob` e demais usam a classe base que rehidrata `app('tenant')` no worker.
 - ✅ **Broadcast**: N/A nesta fase (sem real-time).
 - ✅ **Cache prefixado por tenant**: já automático via listener `TenantResolved` da Fase 0.
-- ✅ **Teste de isolamento**: `TenantIsolationTest` será **expandido** para incluir os 22 endpoints novos (FR-006).
+- ✅ **Teste de isolamento**: `TenantIsolationTest` será **expandido** para incluir os 27 endpoints novos (FR-006).
 
 ### Princípio III — Segurança Clínica da IA (NON-NEGOTIABLE)
 
@@ -127,7 +127,7 @@ specs/002-crm-pacientes/
 ├── data-model.md        # Phase 1 — 11 entidades novas
 ├── quickstart.md        # Phase 1 — como rodar/testar a feature local
 ├── contracts/
-│   └── openapi.yaml     # Phase 1 — 22 endpoints novos do CRM
+│   └── openapi.yaml     # Phase 1 — 27 endpoints novos do CRM
 ├── checklists/
 │   └── requirements.md  # Já existe (do /speckit.specify)
 └── tasks.md             # Phase 2 — gerado pelo /speckit.tasks
@@ -313,7 +313,7 @@ tests/
 
 - **Phase 0 — Research**: [research.md](./research.md) — todas as decisões técnicas resolvidas (parser CSV, pg_trgm, normalização de tags, granularidade da timeline, idempotência de import, mesclagem reversível, padrão de retomada de jobs).
 - **Phase 1 — Data Model**: [data-model.md](./data-model.md) — 11 entidades novas + extensão de `professionals` (listener de desativação).
-- **Phase 1 — Contracts**: [contracts/openapi.yaml](./contracts/openapi.yaml) — 22 endpoints novos cobertos por Scribe + `openapi:check`.
+- **Phase 1 — Contracts**: [contracts/openapi.yaml](./contracts/openapi.yaml) — 27 endpoints novos cobertos por Scribe + `openapi:check`.
 - **Phase 1 — Quickstart**: [quickstart.md](./quickstart.md) — passos manuais para validar localmente.
 
 ## Convenções de implementação (recap)
@@ -344,7 +344,7 @@ Estas regras são herdadas e reforçadas para Fase 2:
 Reavaliação dos princípios após produção de `data-model.md` e `contracts/openapi.yaml`:
 
 - **I (LGPD)** — ✅ Re-checado: nenhum endpoint expõe PII em log; CSV de export passa por `CsvExporter::escapeFormulaInjection` (já da Fase 0); payload de audit sanitizado em `AuditAttributesBuilder` (idem).
-- **II (Multi-tenant)** — ✅ Re-checado: todos os 22 endpoints aplicam `auth:sanctum` + `ResolveTenant`; modelos novos têm `BelongsToTenant`. `pg_trgm` indexes incluem `tenant_id` como primeira coluna composta.
+- **II (Multi-tenant)** — ✅ Re-checado: todos os 27 endpoints aplicam `auth:sanctum` + `ResolveTenant`; modelos novos têm `BelongsToTenant`. `pg_trgm` indexes incluem `tenant_id` como primeira coluna composta.
 - **III (IA)** — ✅ N/A.
 - **IV (Spec-Driven Test-First)** — ✅ Re-checado: contrato OpenAPI gerado e batido contra rotas; coverage gate ≥75% local mantido.
 - **V (Observabilidade)** — ✅ Re-checado: jobs de import logam progresso por checkpoint; eventos publicados conforme spec § 6.

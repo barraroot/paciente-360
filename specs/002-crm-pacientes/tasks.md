@@ -28,20 +28,20 @@ Cada task segue o formato:
 - Migrations são **imutáveis e idempotentes** — novos arquivos para cada mudança.
 - AC referenciado entre parênteses em cada task de teste para rastreabilidade.
 
-**Mapa de fases (contagem real)**:
+**Mapa de fases (contagem real após `/speckit.analyze` 2026-05-11)**:
 
 | Fase | Bloco | Faixa de TIDs | Tasks reais |
 |------|-------|---------------|-------------|
-| 1 | Setup (compartilhado) | T001–T009 | 9 |
+| 1 | Setup (compartilhado) | T001–T009a | 10 (T009a = vuedraggable) |
 | 2 | Foundational (migrations + infra + abilities) | T010–T039 | 30 |
 | 3 | US1 — Cadastro Manual (P1) 🎯 MVP | T100–T129 | 23 |
 | 4 | US2 — Timeline (P1) | T140–T159 | 10 |
 | 5 | US3 — Importação (P2) | T170–T194 | 20 |
 | 6 | US4 — Funil Kanban (P2) | T200–T219 | 13 |
 | 7 | US5 — Tags/Status (P2) | T230–T249 | 13 |
-| 8 | Polish + E2E + verificação final | T260–T279 | 20 |
+| 8 | Polish + E2E + verificação final | T260–T279 | 20 (T274 removida; T272a, T009a adicionadas) |
 
-**Total: 145+ tasks numeradas** (TIDs deixam gaps deliberados para inserir refinamentos sem renumerar; `[P]` em ~97 delas).
+**Total: ~146 tasks numeradas** após decisões de produto Q1/Q2/Q3 (TIDs deixam gaps deliberados para inserir refinamentos sem renumerar; `[P]` em ~98 delas).
 
 ---
 
@@ -102,6 +102,12 @@ Cada task segue o formato:
   - Aceitação: `vendor/bin/sail npm run build` sem warnings; `t('paciente.list.title')` resolve.
   - Depende de: —
   - Princípio: Localização, Restrições Técnicas
+
+- [ ] T009a [P] Adicionar `vuedraggable@^4` ao `package.json` — `package.json`
+  - Descrição: `vendor/bin/sail npm install vuedraggable@next --save` (~12KB, SortableJS-based). Decisão de produto Q1/A2 do `/speckit.analyze` (2026-05-11): substituí drag-and-drop nativo HTML5 para garantir consistência UX desktop+mobile no Kanban (US4) e simplificar fractional indexing.
+  - Aceitação: `vendor/bin/sail npm run build` sucesso; bundle final +12KB.
+  - Depende de: —
+  - Princípio: Restrições Técnicas
 
 ---
 
@@ -778,9 +784,9 @@ Cada task segue o formato:
   - Princípio: Restrições Técnicas
 
 - [ ] T217 [P] [US4] Vue: `KanbanBoard.vue` + `KanbanColumn.vue` + `PacienteCard.vue` — `resources/js/components/funil/*.vue`
-  - Descrição: componentes do Kanban. Card mostra nome, canal, última interação, valor estimado (placeholder). Column mostra contador e título.
-  - Aceitação: smoke test estático.
-  - Depende de: T216
+  - Descrição: componentes do Kanban via `vuedraggable` (T009a). `KanbanBoard` envolve `<draggable>` por coluna com `group="funil"` permitindo drop cross-coluna; `KanbanColumn` mostra contador, título e accepts drop; `PacienteCard` mostra nome, canal, última interação, valor estimado (placeholder). Fractional indexing: ao on-end, calcular `posicao = (anterior + proximo) / 2` antes de fazer PATCH para `pacientes/{id}/funil`.
+  - Aceitação: smoke test estático; drag funciona em desktop e touch.
+  - Depende de: T216, T009a
   - Princípio: Restrições Técnicas
 
 - [ ] T218 [P] [US4] Vue: `FunilConfigPage.vue` (configurar colunas) — `resources/js/pages/pacientes/FunilConfigPage.vue`
@@ -863,8 +869,8 @@ Cada task segue o formato:
   - Depende de: T240, T242, T243, T244
   - Princípio: II
 
-- [ ] T246 [US5] Rotas tags + convenios + status — `routes/api.php`
-  - Descrição: 8 rotas novas (apiResource para tags, convenios + endpoint custom de attach/detach).
+- [ ] T246 [US5] Rotas tags + convenios — `routes/api.php`
+  - Descrição: 8 rotas novas (apiResource para tags, convenios + endpoint custom de attach/detach). **Nota**: a rota `PATCH /pacientes/{id}/status` já é registrada em T120 (US1) e **NÃO** deve ser duplicada aqui.
   - Aceitação: route:list confirma.
   - Depende de: T245
   - Princípio: II
@@ -908,7 +914,7 @@ Cada task segue o formato:
   - Princípio: I
 
 - [ ] T262 [P] Atualizar OpenAPI `openapi.yaml` real com Scribe + drift check — `specs/002-crm-pacientes/contracts/openapi.yaml`, anotações Scribe em todos os Controllers Fase 2
-  - Descrição: rodar `vendor/bin/sail artisan scribe:generate`; comparar com `openapi.yaml` manual; reconciliar diferenças. Adicionar entradas dos 22 endpoints novos no whitelist do `openapi:check`.
+  - Descrição: rodar `vendor/bin/sail artisan scribe:generate`; comparar com `openapi.yaml` manual; reconciliar diferenças. Adicionar entradas dos 27 endpoints novos no whitelist do `openapi:check`.
   - Aceitação: `vendor/bin/sail artisan openapi:check` exit 0.
   - Depende de: T120, T155, T188, T194, T215, T246
   - Princípio: IV
@@ -925,8 +931,8 @@ Cada task segue o formato:
   - Depende de: todas as fases
   - Princípio: IV
 
-- [ ] T265 [P] `TenantIsolationTest` expandido com 22 endpoints novos — `tests/Feature/Fase0/Tenant/TenantIsolationTest.php`
-  - Descrição: estender o teste da Fase 0 com cada um dos 22 endpoints novos: tenant A não enxerga recursos de tenant B.
+- [ ] T265 [P] `TenantIsolationTest` expandido com 27 endpoints novos — `tests/Feature/Fase0/Tenant/TenantIsolationTest.php`
+  - Descrição: estender o teste da Fase 0 com cada um dos 27 endpoints novos: tenant A não enxerga recursos de tenant B.
   - Aceitação: 100% cobertura nos endpoints da Fase 2.
   - Depende de: T120, T155, T188, T194, T215, T246
   - Princípio: II, IV
@@ -943,15 +949,15 @@ Cada task segue o formato:
   - Depende de: T129, T155, T215, T246, T194
   - Princípio: IV
 
-- [ ] T268 [P] Atualizar `data-model.md` da Fase 0 documentando que `professionals` ganhou observer — `specs/001-fundacao-multitenant/data-model.md`
-  - Descrição: anexar nota informativa sobre extensão sem migration (Fase 2 reuso).
-  - Aceitação: doc atualizado.
+- [ ] T268 [P] Documentar extensão de `Professional` em `data-model.md` da Fase 2 — `specs/002-crm-pacientes/data-model.md`
+  - Descrição: garantir que a seção **§ 12 "Extensão de `professionals` (Fase 0)"** do `data-model.md` da Fase 2 (já presente) está completa: observer `deactivated`, evento `ProfessionalDeactivated`, listener, job `ReassignOrphansJob`, ausência de migration nova. **NÃO** modificar `specs/001-fundacao-multitenant/data-model.md` (artefato de fase já entregue — migrations imutáveis).
+  - Aceitação: seção § 12 do `specs/002-crm-pacientes/data-model.md` reflete o que foi efetivamente implementado em T260.
   - Depende de: T260
-  - Princípio: IV
+  - Princípio: IV (artefatos de fase passada são imutáveis)
 
-- [ ] T269 [P] Atualizar `CLAUDE.md` se houver convenções novas reveladas — `CLAUDE.md`
-  - Descrição: revisar se decisões R1-R14 introduziram convenção que deveria estar no CLAUDE.md. Adicionar nota sobre `pg_trgm` + busca por similaridade.
-  - Aceitação: novos devs encontram a info.
+- [ ] T269 [P] Adicionar seção "CRM Pacientes (Fase 2)" em `CLAUDE.md` — `CLAUDE.md`
+  - Descrição: adicionar 4 bullets sob a seção SPECKIT (ou em seção dedicada se preferível): (1) **pg_trgm + unaccent** habilitados em PG; buscas por nome/telefone usam `% similarity` com índice GIN composto; (2) **Cast `AsJsonArray`** (já criado na Fase 0) é o padrão para JSONB em colunas multi-valor (checkpoints de import, snapshot de merge, payload de evento); (3) **Listener `RegistraEventoTimelineListener`** grava em `eventos_timeline` ao receber qualquer `Auditable` cujo `auditableModel()` seja instance de `Paciente`/`Anotacao`/`Tag`; (4) **Abilities granulares `paciente.note.view:{tipo}`** controlam visibilidade de anotações por perfil + tipo (4 tipos: `geral`/`clinica`/`comportamental`/`financeira`).
+  - Aceitação: novos devs leem CLAUDE.md e identificam os 4 padrões sem precisar varrer `app/`.
   - Depende de: todas as fases
   - Princípio: IV
 
@@ -973,17 +979,19 @@ Cada task segue o formato:
   - Depende de: T034
   - Princípio: V
 
+- [ ] T272a [P] Widget Filament Super Admin: contagem agregada de pacientes/tenant — `app/Filament/Widgets/TenantPacientesWidget.php`
+  - Descrição: `TableWidget` no painel Super Admin (`/admin`) listando `[slug, nome, status, total_pacientes_ativos, total_pacientes_lead, total_anonimizados]` por tenant. **Apenas contagens agregadas — NUNCA PII**. Query usa `Paciente::query()->withoutGlobalScopes()->groupBy('tenant_id', 'status')->selectRaw('tenant_id, status, count(*)')`. Cumpre FR-038 100% (decisão Q2/C1 do `/speckit.analyze`, 2026-05-11).
+  - Aceitação: teste feature `tests/Feature/Fase2/Admin/TenantPacientesWidgetTest.php` confirma que (1) Super Admin acessa o widget, (2) Admin Clínica recebe 403, (3) widget mostra contagens corretas, (4) widget **NÃO** expõe nome/CPF/telefone/email de paciente em nenhum payload.
+  - Depende de: T030, T272
+  - Princípio: II, I, FR-038
+
 - [ ] T273 [P] Documentação dos eventos de domínio para fases futuras — `docs/domain-events.md`
   - Descrição: documento descrevendo os 13 eventos da Fase 2 com payload e exemplo de subscriber em fases futuras. Public contract.
   - Aceitação: arquivo criado e linkado em `CLAUDE.md`.
   - Depende de: T034
   - Princípio: IV
 
-- [ ] T274 [P] Cron de archive da timeline (≥ 2 anos) — `app/Jobs/Pacientes/ArchiveOldTimelineJob.php`, `routes/console.php`
-  - Descrição: similar ao archive de audit_logs (Fase 0). Move eventos > 2 anos para tabela `eventos_timeline_cold`. Cria a migration na hora (`2026_05_11_000014_create_eventos_timeline_cold_table.php`).
-  - Aceitação: teste feature com evento antigo é movido.
-  - Depende de: T017
-  - Princípio: I, V
+> **T274 removida** (decisão Q3/C2 do `/speckit.analyze`, 2026-05-11): archive da timeline > 2 anos não tem fundamento no spec da Fase 2 nem urgência operacional (50k pacientes × 50 eventos/ano = 2.5M linhas/tenant, suportável em PG indexado por ~3-5 anos). Movido para backlog da **Fase 8 (LGPD)** onde compõe naturalmente o fluxo de retenção/portabilidade.
 
 - [ ] T275 [P] Suite de regressão Fase 0 — `tests/Feature/Fase0/`
   - Descrição: rodar `vendor/bin/sail artisan test --compact tests/Feature/Fase0/ tests/Unit/Frontend/` e garantir 0 regressões introduzidas pela Fase 2.

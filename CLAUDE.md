@@ -184,12 +184,13 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `001-fundacao-multitenant`
-- **Plan**: [specs/001-fundacao-multitenant/plan.md](specs/001-fundacao-multitenant/plan.md)
-- **Spec**: [specs/001-fundacao-multitenant/spec.md](specs/001-fundacao-multitenant/spec.md)
-- **Research (Phase 0)**: [specs/001-fundacao-multitenant/research.md](specs/001-fundacao-multitenant/research.md)
-- **Data model (Phase 1)**: [specs/001-fundacao-multitenant/data-model.md](specs/001-fundacao-multitenant/data-model.md)
-- **API contracts (Phase 1)**: [specs/001-fundacao-multitenant/contracts/openapi.yaml](specs/001-fundacao-multitenant/contracts/openapi.yaml)
-- **Quickstart (Phase 1)**: [specs/001-fundacao-multitenant/quickstart.md](specs/001-fundacao-multitenant/quickstart.md)
+- **Active feature**: `002-crm-pacientes`
+- **Plan**: [specs/002-crm-pacientes/plan.md](specs/002-crm-pacientes/plan.md)
+- **Spec**: [specs/002-crm-pacientes/spec.md](specs/002-crm-pacientes/spec.md)
+- **Research (Phase 0)**: [specs/002-crm-pacientes/research.md](specs/002-crm-pacientes/research.md)
+- **Data model (Phase 1)**: [specs/002-crm-pacientes/data-model.md](specs/002-crm-pacientes/data-model.md)
+- **API contracts (Phase 1)**: [specs/002-crm-pacientes/contracts/openapi.yaml](specs/002-crm-pacientes/contracts/openapi.yaml)
+- **Quickstart (Phase 1)**: [specs/002-crm-pacientes/quickstart.md](specs/002-crm-pacientes/quickstart.md)
+- **Previous feature (delivered)**: `001-fundacao-multitenant` — [plan](specs/001-fundacao-multitenant/plan.md) — 467 testes verdes, 77.2% cobertura
 - **Constitution**: [.specify/memory/constitution.md](.specify/memory/constitution.md) (v1.2.0)
 <!-- SPECKIT END -->

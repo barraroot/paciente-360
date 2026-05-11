@@ -99,6 +99,66 @@ const routes = [
         component: () => import('@/pages/audit/AuditLogsPage.vue'),
         meta: { requiresAuth: true },
     },
+    // ─── Pacientes ──────────────────────────────────────────────────────────────
+    {
+        path: '/panel/pacientes',
+        name: 'pacientes.list',
+        component: () => import('@/pages/pacientes/PacientesListPage.vue'),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/panel/pacientes/novo',
+        name: 'pacientes.create',
+        component: () => import('@/pages/pacientes/PacienteFormPage.vue'),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/panel/pacientes/mesclagem',
+        name: 'pacientes.mesclagem',
+        component: () => import('@/pages/pacientes/MesclagemPage.vue'),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/panel/pacientes/:id',
+        name: 'pacientes.show',
+        component: () => import('@/pages/pacientes/PacienteShowPage.vue'),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/panel/pacientes/:id/editar',
+        name: 'pacientes.edit',
+        component: () => import('@/pages/pacientes/PacienteFormPage.vue'),
+        props: (route) => ({ id: Number(route.params.id) }),
+        meta: { requiresAuth: true },
+    },
+    // US4 — Funil Kanban
+    {
+        path: '/panel/pacientes/funil',
+        name: 'pacientes.funil.kanban',
+        component: () => import('@/pages/pacientes/FunilKanbanPage.vue'),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/panel/pacientes/funil/config',
+        name: 'pacientes.funil.config',
+        component: () => import('@/pages/pacientes/FunilConfigPage.vue'),
+        meta: { requiresAuth: true },
+    },
+    // US3 — Importação em massa
+    {
+        path: '/panel/pacientes/importar',
+        name: 'pacientes.import.upload',
+        component: () => import('@/pages/pacientes/ImportacaoPage.vue'),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/panel/pacientes/importacao/:id',
+        name: 'pacientes.import.status',
+        component: () => import('@/pages/pacientes/ImportacaoStatusPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { requiresAuth: true },
+    },
+
     {
         path: '/panel/:pathMatch(.*)*',
         name: 'panel.catchAll',

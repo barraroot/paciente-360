@@ -1,0 +1,987 @@
+openapi: 3.1.0
+info:
+  title: Paciente360 — API v1 (Fase 2 — CRM Pacientes)
+  version: 0.2.0
+  description: |
+    Endpoints novos da Fase 2: gestão de pacientes, convênios, tags,
+    anotações, timeline, importação, mesclagem, funil de leads e
+    exportação. Todos os endpoints autenticados são escopados ao tenant
+    resolvido por subdomínio (herdado da Fase 0).
+  contact:
+    name: Paciente360 Engineering
+servers:
+  - url: https://{slug}.crm.com.br/api/v1
+    variables:
+      slug:
+        default: clinica-exemplo
+  - url: https://{slug}.lvh.me/api/v1
+    variables:
+      slug:
+        default: clinica-alfa
+
+tags:
+  - name: pacientes
+    description: CRUD de pacientes, busca, dedupe e anonimização
+  - name: anotacoes
+    description: Anotações tipadas e imutáveis com retratação
+  - name: timeline
+    description: Linha do tempo unificada do paciente
+  - name: tags
+    description: Catálogo de tags por tenant e aplicação a pacientes
+  - name: convenios
+    description: Catálogo CRUD de convênios por tenant
+  - name: funil
+    description: Kanban de leads — colunas configuráveis e movimentação
+  - name: importacao
+    description: Importação assíncrona em massa (CSV/XLSX)
+  - name: exportacao
+    description: Exportação CSV escapada com auditoria
+  - name: mesclagem
+    description: Mesclagem reversível de pacientes (30 dias)
+
+paths:
+
+  # ──────────────────────────────────────────────────────────────
+  # Pacientes — CRUD + busca + status + anonimização
+  # ──────────────────────────────────────────────────────────────
+  /pacientes:
+    get:
+      tags: [pacientes]
+      summary: Lista paginada de pacientes com filtros e busca por similaridade
+      parameters:
+        - in: query
+          name: q
+          description: Busca por similaridade em nome ou telefone (trigram). Mín. 2 chars.
+          schema: { type: string, minLength: 2 }
+        - in: query
+          name: status
+          schema: { type: string, enum: [lead, ativo, inativo, bloqueado] }
+        - in: query
+          name: tag
+          description: Slug normalizado da tag. Múltiplos via repetição (`?tag=vip&tag=diabetico`).
+          schema: { type: array, items: { type: string } }
+        - in: query
+          name: profissional_responsavel_id
+          schema: { type: integer }
+        - in: query
+          name: origem
+          schema: { type: string }
+        - in: query
+          name: convenio_id
+          schema: { type: integer }
+        - in: query
+          name: funil_coluna_id
+          schema: { type: integer }
+        - in: query
+          name: created_from
+          schema: { type: string, format: date }
+        - in: query
+          name: created_to
+          schema: { type: string, format: date }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 25, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PacienteListResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [pacientes]
+      summary: Cria paciente manualmente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePacienteRequest' }
+      responses:
+        '201':
+          description: Paciente criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PacienteResource' }
+        '409':
+          description: Duplicata detectada — payload contém os candidatos e ações sugeridas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DedupSuggestionResponse' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /pacientes/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [pacientes]
+      summary: Ficha completa de paciente
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PacienteResource' }
+        '404': { description: Não encontrado ou anonimizado }
+    patch:
+      tags: [pacientes]
+      summary: Atualiza paciente (campos não sensíveis e contatos)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdatePacienteRequest' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PacienteResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [pacientes]
+      summary: Soft delete (raramente usado; anonimização é preferida)
+      responses:
+        '204': { description: Soft-deletado }
+        '403': { description: Sem ability paciente.delete }
+
+  /pacientes/{id}/status:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    patch:
+      tags: [pacientes]
+      summary: Transição de status (máquina explícita)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [lead, ativo, inativo, bloqueado] }
+                motivo: { type: string, description: 'Opcional. Recomendado em mudanças sensíveis.' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PacienteResource' }
+        '403': { description: 'Transição requer Admin Clínica (ex.: para/de bloqueado).' }
+        '422': { description: 'Transição inválida.' }
+
+  /pacientes/{id}/anonimizar:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [pacientes]
+      summary: Marca paciente como anonimizado (stub LGPD)
+      description: |
+        Apaga PII direta (`cpf`, `documento_estrangeiro`, `email`, `telefone_primario`,
+        `telefones_secundarios`, `endereco`, `data_nascimento`), preserva ID,
+        seta `anonimizado_em=now()` e dispara `PacienteAnonimizado`. Operação
+        irreversível por esta API; restauração só por DBA com justificativa formal.
+      responses:
+        '204': { description: Anonimizado }
+        '403': { description: Requer ability paciente.delete }
+
+  # ──────────────────────────────────────────────────────────────
+  # Timeline
+  # ──────────────────────────────────────────────────────────────
+  /pacientes/{id}/timeline:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [timeline]
+      summary: Eventos da timeline do paciente em ordem cronológica reversa
+      parameters:
+        - in: query
+          name: tipo
+          description: Filtro por tipo de evento (repetível).
+          schema: { type: array, items: { type: string } }
+        - in: query
+          name: cursor
+          description: Cursor opaco para paginação cursor-based (mais eficiente que page).
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50, minimum: 1, maximum: 200 }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TimelineResponse' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Anotações
+  # ──────────────────────────────────────────────────────────────
+  /pacientes/{id}/anotacoes:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [anotacoes]
+      summary: Lista anotações do paciente (paginada, ordem cronológica inversa)
+      parameters:
+        - in: query
+          name: tipo
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AnotacaoResource' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [anotacoes]
+      summary: Cria anotação tipada (imutável)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAnotacaoRequest' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnotacaoResource' }
+        '403': { description: Sem ability para criar anotação deste tipo }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /pacientes/{id}/anotacoes/{anotacao_id}/retratacao:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+      - in: path
+        name: anotacao_id
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [anotacoes]
+      summary: Adiciona retratação a uma anotação existente (nova anotação linkada)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [texto]
+              properties:
+                texto: { type: string, minLength: 10, maxLength: 5000 }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnotacaoResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Tags
+  # ──────────────────────────────────────────────────────────────
+  /tags:
+    get:
+      tags: [tags]
+      summary: Lista tags do tenant
+      parameters:
+        - in: query
+          name: tipo
+          schema: { type: string, enum: [livre, sistemica] }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TagResource' }
+    post:
+      tags: [tags]
+      summary: Cria tag livre
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome]
+              properties:
+                nome: { type: string, minLength: 2, maxLength: 50 }
+                cor: { type: string, pattern: '^#[0-9A-Fa-f]{6}$' }
+                descricao: { type: string, maxLength: 255 }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TagResource' }
+        '409':
+          description: Tag com mesmo nome normalizado já existe; retorna a existente.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TagResource' }
+        '422': { description: 'Validação ou prefixo sys: reservado.' }
+
+  /pacientes/{id}/tags:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [tags]
+      summary: Aplica tag a paciente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tag_id]
+              properties:
+                tag_id: { type: integer }
+      responses:
+        '204': { description: Aplicada (idempotente) }
+        '409': { description: 'Limite soft de 10 tags atingido; aplica com warning no header X-Soft-Warning.' }
+
+  /pacientes/{id}/tags/{tag_id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+      - in: path
+        name: tag_id
+        required: true
+        schema: { type: integer }
+    delete:
+      tags: [tags]
+      summary: Remove tag do paciente
+      responses:
+        '204': { description: Removida }
+        '403': { description: 'Tag sistêmica não removível por usuário comum.' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Convênios
+  # ──────────────────────────────────────────────────────────────
+  /convenios:
+    get:
+      tags: [convenios]
+      summary: Catálogo de convênios do tenant
+      parameters:
+        - in: query
+          name: is_active
+          schema: { type: boolean }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ConvenioResource' }
+    post:
+      tags: [convenios]
+      summary: Cria convênio (apenas Admin Clínica)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateConvenioRequest' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConvenioResource' }
+
+  /convenios/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    patch:
+      tags: [convenios]
+      summary: Atualiza convênio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateConvenioRequest' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConvenioResource' }
+    delete:
+      tags: [convenios]
+      summary: Desativa convênio (soft toggle via is_active=false)
+      responses:
+        '204': { description: Desativado }
+        '409': { description: 'Convênio em uso por pacientes; desative em vez de excluir.' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Funil
+  # ──────────────────────────────────────────────────────────────
+  /funil/colunas:
+    get:
+      tags: [funil]
+      summary: Lista colunas do funil do tenant (lazy init no primeiro acesso)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/FunilColunaResource' }
+
+  /funil/colunas/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    patch:
+      tags: [funil]
+      summary: Renomeia coluna ou ajusta motivo_obrigatorio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome: { type: string, maxLength: 50 }
+                cor: { type: string, pattern: '^#[0-9A-Fa-f]{6}$' }
+                motivo_obrigatorio: { type: boolean }
+                posicao: { type: integer }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FunilColunaResource' }
+
+  /pacientes/{id}/funil:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    patch:
+      tags: [funil]
+      summary: Move paciente entre colunas do funil
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [coluna_id]
+              properties:
+                coluna_id: { type: integer }
+                posicao: { type: number, format: double, description: 'Fractional indexing; cliente calcula (anterior + proximo) / 2.' }
+                motivo: { type: string, enum: [sem_interesse, sem_retorno, preco, outro] }
+                motivo_outro: { type: string, minLength: 10, maxLength: 255, description: 'Obrigatório quando motivo=outro.' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PacienteResource' }
+        '422': { description: 'Motivo obrigatório ausente ou inválido.' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Importação
+  # ──────────────────────────────────────────────────────────────
+  /pacientes/importacao/template:
+    get:
+      tags: [importacao]
+      summary: Baixa template CSV/XLSX com cabeçalhos pt-BR e exemplo
+      parameters:
+        - in: query
+          name: formato
+          schema: { type: string, enum: [csv, xlsx], default: csv }
+      responses:
+        '200':
+          description: Template
+          content:
+            text/csv: { schema: { type: string, format: binary } }
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: { schema: { type: string, format: binary } }
+
+  /pacientes/importacao:
+    post:
+      tags: [importacao]
+      summary: Envia arquivo para importação assíncrona
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [arquivo, status_inicial]
+              properties:
+                arquivo:
+                  type: string
+                  format: binary
+                  description: '.csv ou .xlsx; até 5 MB e 10.000 linhas'
+                status_inicial:
+                  type: string
+                  enum: [lead, ativo]
+                  default: lead
+      responses:
+        '202':
+          description: Aceita; processando em background
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportacaoResource' }
+        '413': { description: Arquivo acima do limite (5 MB / 10.000 linhas) }
+        '422': { description: Cabeçalhos faltantes ou formato inválido }
+
+  /pacientes/importacao/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [importacao]
+      summary: Status e relatório da importação
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImportacaoResource' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Exportação
+  # ──────────────────────────────────────────────────────────────
+  /pacientes/exportar:
+    get:
+      tags: [exportacao]
+      summary: Exporta CSV escapado dos pacientes (mesmos filtros do GET /pacientes)
+      description: |
+        Streaming download. Audit log registra executor, escopo (filtros), contagem,
+        hash SHA-256 do arquivo gerado e tamanho. Não há retenção do arquivo no servidor.
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: tag
+          schema: { type: array, items: { type: string } }
+        - in: query
+          name: profissional_responsavel_id
+          schema: { type: integer }
+      responses:
+        '200':
+          description: CSV streaming
+          content:
+            text/csv: { schema: { type: string, format: binary } }
+        '403': { description: Sem ability paciente.export (default Admin Clínica) }
+        '429': { description: 'Limite 10/h/tenant atingido.' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Mesclagem
+  # ──────────────────────────────────────────────────────────────
+  /pacientes/mesclagens:
+    post:
+      tags: [mesclagem]
+      summary: Mescla pacientes (sugerido após dedup) — reversível 30 dias
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MesclagemRequest' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MesclagemResource' }
+        '422': { description: Pacientes não encontrados ou resoluções inválidas }
+
+  /pacientes/mesclagens/{id}/reverter:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [mesclagem]
+      summary: Reverte mesclagem dentro de 30 dias
+      responses:
+        '204': { description: Revertida; pacientes restaurados ao estado pré-merge }
+        '410': { description: Janela de 30 dias expirou }
+        '422': { description: Mesclagem já revertida anteriormente }
+
+# ──────────────────────────────────────────────────────────────
+# Components
+# ──────────────────────────────────────────────────────────────
+components:
+
+  responses:
+    Unauthenticated:
+      description: Sessão não estabelecida
+    Forbidden:
+      description: Sem ability para esta operação
+    ValidationError:
+      description: Erros de validação (422)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string }
+
+  schemas:
+
+    PacienteResource:
+      type: object
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cpf: { type: string, nullable: true, description: 'Formato 000.000.000-00 quando preenchido' }
+        documento_estrangeiro: { type: string, nullable: true }
+        data_nascimento: { type: string, format: date, nullable: true }
+        idade: { type: integer, nullable: true, description: 'Calculada server-side a partir de data_nascimento' }
+        telefone_primario: { type: string, nullable: true, description: 'Formato (00) 00000-0000' }
+        telefones_secundarios:
+          type: array
+          items:
+            type: object
+            properties:
+              numero: { type: string }
+              label: { type: string, nullable: true }
+        email: { type: string, format: email, nullable: true }
+        endereco:
+          type: object
+          nullable: true
+          properties:
+            cep: { type: string }
+            logradouro: { type: string }
+            numero: { type: string }
+            complemento: { type: string, nullable: true }
+            bairro: { type: string }
+            cidade: { type: string }
+            uf: { type: string, minLength: 2, maxLength: 2 }
+        status: { type: string, enum: [lead, ativo, inativo, bloqueado] }
+        origem: { type: string, enum: [site, indicacao, whatsapp, instagram, telefone, presencial, outro] }
+        origem_detalhe: { type: string, nullable: true }
+        origem_origem: { type: string, enum: [manual, canal] }
+        profissional_responsavel:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        tags:
+          type: array
+          items: { $ref: '#/components/schemas/TagResource' }
+        convenios:
+          type: array
+          items: { $ref: '#/components/schemas/PacienteConvenioResource' }
+        funil:
+          type: object
+          nullable: true
+          properties:
+            coluna: { $ref: '#/components/schemas/FunilColunaResource' }
+            posicao: { type: number, format: double }
+        anonimizado_em: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    PacienteListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/PacienteResource'
+              - description: 'Versão "list" pode omitir endereço completo e relações pesadas; cliente pode pedir GET /pacientes/{id} para detalhes.'
+        meta:
+          type: object
+          properties:
+            page: { type: integer }
+            per_page: { type: integer }
+            total: { type: integer }
+            last_page: { type: integer }
+
+    CreatePacienteRequest:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string, minLength: 2, maxLength: 150 }
+        cpf: { type: string, description: 'Opcional. 11 dígitos com ou sem máscara; validado por DV server-side.' }
+        documento_estrangeiro: { type: string, maxLength: 30 }
+        data_nascimento: { type: string, format: date }
+        telefone_primario: { type: string }
+        telefones_secundarios:
+          type: array
+          items:
+            type: object
+            properties:
+              numero: { type: string }
+              label: { type: string }
+        email: { type: string, format: email }
+        endereco:
+          type: object
+          properties:
+            cep: { type: string }
+            logradouro: { type: string }
+            numero: { type: string }
+            complemento: { type: string }
+            bairro: { type: string }
+            cidade: { type: string }
+            uf: { type: string }
+        status:
+          type: string
+          enum: [lead, ativo]
+          default: lead
+          description: 'Apenas lead ou ativo no momento da criação.'
+        origem:
+          type: string
+          enum: [site, indicacao, whatsapp, instagram, telefone, presencial, outro]
+          default: outro
+        origem_detalhe: { type: string, maxLength: 255 }
+        profissional_responsavel_id: { type: integer, nullable: true }
+        convenios:
+          type: array
+          maxItems: 2
+          items:
+            type: object
+            required: [convenio_id, papel]
+            properties:
+              convenio_id: { type: integer }
+              papel: { type: string, enum: [principal, secundario] }
+              numero_carteirinha: { type: string, maxLength: 30 }
+        tags:
+          type: array
+          items: { type: integer, description: 'tag_id existente; criar nova via POST /tags antes.' }
+        ignorar_duplicata: { type: boolean, default: false, description: 'Se true, cria mesmo havendo duplicata por CPF.' }
+
+    UpdatePacienteRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreatePacienteRequest'
+        - type: object
+          description: 'Mesmos campos do create, todos opcionais. CPF não é alterável após criação (apenas via mesclagem ou anonimização).'
+
+    DedupSuggestionResponse:
+      type: object
+      description: 'Resposta 409 do POST /pacientes quando duplicata é detectada.'
+      properties:
+        message: { type: string }
+        candidatos:
+          type: array
+          items: { $ref: '#/components/schemas/PacienteResource' }
+        acoes_sugeridas:
+          type: array
+          items:
+            type: string
+            enum: [mesclar, criar_paralelo, abrir_existente]
+
+    AnotacaoResource:
+      type: object
+      properties:
+        id: { type: integer }
+        paciente_id: { type: integer }
+        tipo: { type: string, enum: [geral, clinica, comportamental, financeira] }
+        texto: { type: string }
+        autor:
+          type: object
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        retratacao_de_anotacao_id: { type: integer, nullable: true }
+        retratacoes:
+          type: array
+          description: 'Lista de IDs de retratações vinculadas a esta anotação (preenchido apenas se for anotação original).'
+          items: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    CreateAnotacaoRequest:
+      type: object
+      required: [tipo, texto]
+      properties:
+        tipo: { type: string, enum: [geral, clinica, comportamental, financeira] }
+        texto: { type: string, minLength: 1, maxLength: 5000 }
+
+    TagResource:
+      type: object
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        nome_normalizado: { type: string }
+        tipo: { type: string, enum: [livre, sistemica] }
+        cor: { type: string, nullable: true }
+        descricao: { type: string, nullable: true }
+        pacientes_count: { type: integer, description: 'Contagem de pacientes com a tag. Pode ser omitido em endpoints list para performance.' }
+
+    ConvenioResource:
+      type: object
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        codigo_ans: { type: string, nullable: true }
+        is_active: { type: boolean }
+        pacientes_count: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    CreateConvenioRequest:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string, minLength: 2, maxLength: 150 }
+        codigo_ans: { type: string, maxLength: 10 }
+        is_active: { type: boolean, default: true }
+
+    PacienteConvenioResource:
+      type: object
+      properties:
+        id: { type: integer }
+        convenio: { $ref: '#/components/schemas/ConvenioResource' }
+        numero_carteirinha: { type: string, nullable: true }
+        papel: { type: string, enum: [principal, secundario] }
+
+    FunilColunaResource:
+      type: object
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        slug: { type: string }
+        posicao: { type: integer }
+        cor: { type: string, nullable: true }
+        is_terminal: { type: boolean }
+        motivo_obrigatorio: { type: boolean }
+        is_system: { type: boolean }
+        pacientes_count: { type: integer }
+
+    TimelineResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/EventoTimelineResource' }
+        meta:
+          type: object
+          properties:
+            next_cursor: { type: string, nullable: true }
+            has_more: { type: boolean }
+
+    EventoTimelineResource:
+      type: object
+      properties:
+        id: { type: integer }
+        tipo: { type: string }
+        actor:
+          type: object
+          properties:
+            type: { type: string, enum: [user, system, webhook, ia] }
+            user_id: { type: integer, nullable: true }
+            user_name: { type: string, nullable: true }
+        payload: { type: object, additionalProperties: true }
+        referencia:
+          type: object
+          nullable: true
+          properties:
+            tipo: { type: string }
+            id: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    ImportacaoResource:
+      type: object
+      properties:
+        id: { type: integer }
+        arquivo_nome_original: { type: string }
+        arquivo_tamanho_bytes: { type: integer }
+        total_linhas: { type: integer, nullable: true }
+        status: { type: string, enum: [pending, processing, completed, partial_failure, failed, retrying] }
+        status_inicial_pacientes: { type: string, enum: [lead, ativo] }
+        progress_percent: { type: integer, minimum: 0, maximum: 100 }
+        contadores:
+          type: object
+          properties:
+            importadas: { type: integer }
+            atualizadas: { type: integer }
+            duplicatas: { type: integer }
+            erros: { type: integer }
+        relatorio:
+          type: array
+          nullable: true
+          description: 'Preenchido apenas quando status é completed ou partial_failure'
+          items:
+            type: object
+            properties:
+              linha: { type: integer }
+              status: { type: string, enum: [importada, atualizada, duplicata, erro] }
+              motivo: { type: string, nullable: true }
+        executor:
+          type: object
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        started_at: { type: string, format: date-time, nullable: true }
+        finished_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    MesclagemRequest:
+      type: object
+      required: [paciente_alvo_id, pacientes_origem_ids]
+      properties:
+        paciente_alvo_id: { type: integer, description: 'Paciente que absorve os outros.' }
+        pacientes_origem_ids:
+          type: array
+          minItems: 1
+          maxItems: 5
+          items: { type: integer }
+        resolucoes:
+          type: object
+          description: 'Override manual de campo conflitante; chave = nome do campo, valor = paciente_id da fonte preferida.'
+          additionalProperties: { type: integer }
+
+    MesclagemResource:
+      type: object
+      properties:
+        id: { type: integer }
+        paciente_alvo_id: { type: integer }
+        pacientes_origem_ids:
+          type: array
+          items: { type: integer }
+        executor:
+          type: object
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        executada_em: { type: string, format: date-time }
+        reversivel_ate: { type: string, format: date-time }
+        revertida_em: { type: string, format: date-time, nullable: true }
+        resolucoes: { type: object, additionalProperties: true }

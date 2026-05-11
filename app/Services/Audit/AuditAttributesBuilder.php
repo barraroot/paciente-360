@@ -139,17 +139,75 @@ final class AuditAttributesBuilder
     }
 
     /**
-     * Remove chaves sensíveis do payload recursivamente (nível 1).
+     * Remove chaves sensíveis e mascara CPF recursivamente.
      *
-     * Princípio I — LGPD: minimização de dados. Credenciais e tokens
-     * NUNCA devem aparecer em registros de auditoria — mesmo que passados
-     * acidentalmente pelo caller.
+     * Princípio I — LGPD: minimização de dados.
+     *  - Credenciais e tokens NUNCA devem aparecer em registros de auditoria.
+     *  - CPF NUNCA é gravado em claro — máscara `***.***.***-XX` preserva
+     *    apenas os 2 últimos dígitos para suporte forense (T033 / Fase 2).
+     *
+     * Regra de máscara CPF: aplicada quando a chave **é exatamente** `cpf`
+     * ou **contém** `_cpf` ou `cpf_` (ex.: `documento_cpf`, `cpf_titular`).
      *
      * @param array<string, mixed> $payload
      * @return array<string, mixed>
      */
     private function sanitizePayload(array $payload): array
     {
-        return array_diff_key($payload, array_flip(self::SENSITIVE_KEYS));
+        $sensitiveSet = array_flip(self::SENSITIVE_KEYS);
+        $result = [];
+
+        foreach ($payload as $key => $value) {
+            if (isset($sensitiveSet[$key])) {
+                continue;
+            }
+
+            if (is_array($value)) {
+                $result[$key] = $this->sanitizePayload($value);
+
+                continue;
+            }
+
+            if (self::isCpfKey($key) && $value !== null) {
+                $result[$key] = self::maskCpf((string) $value);
+
+                continue;
+            }
+
+            $result[$key] = $value;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Determina se a chave do payload representa um CPF que deve ser mascarado.
+     */
+    private static function isCpfKey(int|string $key): bool
+    {
+        if (! is_string($key)) {
+            return false;
+        }
+
+        $lower = strtolower($key);
+
+        return $lower === 'cpf'
+            || str_contains($lower, '_cpf')
+            || str_contains($lower, 'cpf_');
+    }
+
+    /**
+     * Máscara `***.***.***-XX`. Preserva os 2 últimos dígitos numéricos
+     * (ou usa `**` se a entrada não tiver 2 dígitos numéricos disponíveis).
+     */
+    private static function maskCpf(string $raw): string
+    {
+        $digits = preg_replace('/\D+/', '', $raw) ?? '';
+
+        if (strlen($digits) >= 2) {
+            return '***.***.***-'.substr($digits, -2);
+        }
+
+        return '***.***.***-**';
     }
 }

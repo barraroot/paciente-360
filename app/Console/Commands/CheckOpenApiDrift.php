@@ -23,12 +23,18 @@ final class CheckOpenApiDrift extends Command
 
     public function handle(): int
     {
-        $openApiFile = base_path('specs/001-fundacao-multitenant/contracts/openapi.yaml');
+        /** @var list<string> $openApiFiles */
+        $openApiFiles = [
+            base_path('specs/001-fundacao-multitenant/contracts/openapi.yaml'),
+            base_path('specs/002-crm-pacientes/contracts/openapi.yaml'),
+        ];
 
-        if (! file_exists($openApiFile)) {
-            $this->error("Arquivo OpenAPI não encontrado: {$openApiFile}");
+        foreach ($openApiFiles as $openApiFile) {
+            if (! file_exists($openApiFile)) {
+                $this->error("Arquivo OpenAPI não encontrado: {$openApiFile}");
 
-            return self::FAILURE;
+                return self::FAILURE;
+            }
         }
 
         /** @var list<string> $excludedPaths */
@@ -44,7 +50,7 @@ final class CheckOpenApiDrift extends Command
         $routeJson = Artisan::output();
 
         $checker = new DriftChecker($excludedPaths);
-        $result = $checker->check($openApiFile, $routeJson);
+        $result = $checker->checkMultiple($openApiFiles, $routeJson);
 
         $this->line('OpenAPI Drift Check');
         $this->line(str_repeat('─', 60));

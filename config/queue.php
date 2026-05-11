@@ -73,6 +73,14 @@ return [
             'after_commit' => false,
         ],
 
+        'imports' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            'queue' => env('IMPORTS_QUEUE', 'imports'),
+            'retry_after' => 660,
+            'block_for' => null,
+        ],
+
         'deferred' => [
             'driver' => 'deferred',
         ],

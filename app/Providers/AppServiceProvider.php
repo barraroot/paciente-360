@@ -3,13 +3,23 @@
 namespace App\Providers;
 
 use App\Events\TenantResolved;
+use App\Models\Anotacao;
 use App\Models\AuditLog;
+use App\Models\Convenio;
+use App\Models\FunilColuna;
 use App\Models\Invitation;
+use App\Models\Paciente;
+use App\Models\Tag;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Policies\AnotacaoPolicy;
 use App\Policies\AuditLogPolicy;
+use App\Policies\ConvenioPolicy;
+use App\Policies\FunilPolicy;
 use App\Policies\InvitationPolicy;
 use App\Policies\OnboardingPolicy;
+use App\Policies\PacientePolicy;
+use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
 use App\Services\Billing\StripeClientWrapper;
 use Illuminate\Auth\Events\Authenticated;
@@ -72,6 +82,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Invitation::class, InvitationPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(AuditLog::class, AuditLogPolicy::class);
+
+        // Fase 2 — CRM de Pacientes (T032 — spec § 2.4).
+        Gate::policy(Paciente::class, PacientePolicy::class);
+        Gate::policy(Anotacao::class, AnotacaoPolicy::class);
+        Gate::policy(Tag::class, TagPolicy::class);
+        Gate::policy(Convenio::class, ConvenioPolicy::class);
+        Gate::policy(FunilColuna::class, FunilPolicy::class);
     }
 
     /**
@@ -113,15 +130,49 @@ class AppServiceProvider extends ServiceProvider
      * resolve a role normalmente quando o team id é `null`. O Gate
      * `before` evita a necessidade de declarar policy para cada ability
      * cross-tenant.
+     *
+     * Exceções (Fase 2 — FR-038): Super Admin NÃO acessa dados clínicos
+     * de pacientes — abilities do namespace `paciente.*` e classes do
+     * domínio CRM caem na policy específica (que nega explicitamente
+     * via `before` da policy).
      */
     protected function configureSuperAdminGate(): void
     {
-        Gate::before(static function (Authenticatable $user, string $ability): ?bool {
+        $crmDomainClasses = [
+            Paciente::class,
+            Anotacao::class,
+            Tag::class,
+            Convenio::class,
+            FunilColuna::class,
+        ];
+
+        Gate::before(static function (Authenticatable $user, string $ability, array $arguments = []) use ($crmDomainClasses): ?bool {
             if (! method_exists($user, 'hasRole')) {
                 return null;
             }
 
-            return $user->hasRole('super-admin') ? true : null;
+            if (! $user->hasRole('super-admin')) {
+                return null;
+            }
+
+            // FR-038: Super Admin nunca enxerga dados de paciente.
+            // Abilities `paciente.*` saem do bypass — deixa a policy decidir.
+            if (str_starts_with($ability, 'paciente.') || str_starts_with($ability, 'lead.')) {
+                return null;
+            }
+
+            // Abilities de policy (`viewAny`, `view`, `create`, …) podem
+            // chegar com um Model do CRM como primeiro argumento — também
+            // saem do bypass.
+            $firstArg = $arguments[0] ?? null;
+            if ($firstArg !== null) {
+                $targetClass = is_object($firstArg) ? $firstArg::class : (is_string($firstArg) ? $firstArg : null);
+                if ($targetClass !== null && in_array($targetClass, $crmDomainClasses, true)) {
+                    return null;
+                }
+            }
+
+            return true;
         });
     }
 

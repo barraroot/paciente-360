@@ -268,6 +268,143 @@
         "filter": "Filtrar",
         "yes": "Sim",
         "no": "Não",
-        "no_results": "Nenhum resultado encontrado."
+        "no_results": "Nenhum resultado encontrado.",
+        "show_more": "Ver mais",
+        "show_less": "Ver menos",
+        "save": "Salvar",
+        "error_forbidden": "Você não tem permissão para esta ação."
+    },
+    "paciente": {
+        "list": {
+            "title": "Pacientes",
+            "search_placeholder": "Buscar por nome ou telefone",
+            "new_cta": "Novo Paciente",
+            "filters": { "status": "Status", "tag": "Tag", "profissional": "Profissional", "origem": "Origem", "convenio": "Convênio" },
+            "empty": "Nenhum paciente encontrado.",
+            "anonymized_excluded": "Pacientes anonimizados não aparecem nesta lista."
+        },
+        "form": {
+            "title_new": "Novo Paciente",
+            "title_edit": "Editar Paciente",
+            "nome": "Nome",
+            "cpf": "CPF",
+            "documento_estrangeiro": "Documento (passaporte/RNE)",
+            "data_nascimento": "Data de nascimento",
+            "telefone_primario": "Telefone principal",
+            "telefones_secundarios": "Telefones adicionais",
+            "email": "E-mail",
+            "endereco": "Endereço",
+            "convenios": "Convênios",
+            "tags": "Tags",
+            "status_inicial": "Status inicial",
+            "origem": "Origem",
+            "origem_detalhe": "Detalhe da origem",
+            "profissional_responsavel": "Profissional responsável",
+            "submit": "Salvar"
+        },
+        "show": {
+            "tabs": { "detalhes": "Detalhes", "timeline": "Timeline", "anotacoes": "Anotações", "mesclagens": "Mesclagens" },
+            "anonimizar_cta": "Anonimizar paciente",
+            "anonimizar_confirm": "Esta ação remove dados pessoais permanentemente. Continuar?",
+            "alterar_status_cta": "Alterar status",
+            "alterar_status_modal": "Alterar status do paciente"
+        },
+        "status": { "lead": "Lead", "ativo": "Ativo", "inativo": "Inativo", "bloqueado": "Bloqueado" }
+    },
+    "anotacao": {
+        "create": "Adicionar anotação",
+        "tipo": { "geral": "Geral", "clinica": "Clínica", "comportamental": "Comportamental", "financeira": "Financeira" },
+        "imutavel": "Anotações são imutáveis. Use retratação se precisar corrigir.",
+        "retratacao": "Adicionar retratação",
+        "retratada_em": "Retratada em {date}",
+        "criada_sucesso": "Anotação registrada com sucesso.",
+        "texto_placeholder": "Digite o texto da anotação…"
+    },
+    "timeline": {
+        "empty": "Nenhum evento na timeline.",
+        "load_more": "Carregar mais",
+        "tipo": {
+            "paciente.criado": "Paciente criado",
+            "paciente.atualizado": "Dados atualizados",
+            "paciente.status_alterado": "Status alterado",
+            "paciente.tag_aplicada": "Tag aplicada",
+            "paciente.tag_removida": "Tag removida",
+            "paciente.anotacao_criada": "Anotação criada",
+            "paciente.anotacao_retratada": "Anotação retratada",
+            "paciente.mesclado": "Paciente mesclado",
+            "paciente.mesclagem_revertida": "Mesclagem revertida",
+            "paciente.anonimizado": "Paciente anonimizado",
+            "lead.movido_no_funil": "Movido no funil",
+            "paciente.importado": "Paciente importado",
+            "paciente.exportado": "Dados exportados"
+        }
+    },
+    "tag": {
+        "picker_placeholder": "Buscar ou criar tag",
+        "sistemica_badge": "Sistema",
+        "limit_warning": "Recomendamos no máximo 10 tags por paciente."
+    },
+    "funil": {
+        "title": "Funil de Leads",
+        "config_title": "Configurar Funil",
+        "colunas_default": ["Novo", "Qualificado", "Agendado", "Compareceu", "Perdido"],
+        "motivo": { "sem_interesse": "Sem interesse", "sem_retorno": "Sem retorno", "preco": "Preço", "outro": "Outro" },
+        "motivo_obrigatorio_title": "Por que este lead foi perdido?",
+        "motivo_outro_label": "Descreva o motivo"
+    },
+    "import": {
+        "title": "Importar Pacientes",
+        "template_title": "Baixar template de importação",
+        "template_help": "Preencha o template com os dados dos pacientes e envie abaixo.",
+        "download_csv": "Baixar CSV",
+        "download_xlsx": "Baixar XLSX",
+        "upload_title": "Enviar arquivo",
+        "field_arquivo": "Arquivo CSV ou XLSX",
+        "field_arquivo_help": "Máximo 5 MB e 10.000 linhas. Formato: CSV ou XLSX.",
+        "field_status_inicial": "Status inicial dos pacientes importados",
+        "submit_cta": "Importar",
+        "template_cta": "Baixar template",
+        "upload_cta": "Enviar planilha",
+        "status_inicial_label": "Status inicial dos importados",
+        "limites_info": "Máximo 5 MB e 10.000 linhas por arquivo.",
+        "status_title": "Status da importação",
+        "status_pending": "Aguardando",
+        "status_processing": "Processando",
+        "status_completed": "Concluída com sucesso",
+        "status_partial_failure": "Concluída com erros",
+        "status_failed": "Falhou",
+        "status_retrying": "Retentando",
+        "progress_label": "Progresso",
+        "aguardando": "Processando… atualizando automaticamente.",
+        "voltar_pacientes": "Voltar para Pacientes",
+        "contagem_criados": "criados",
+        "contagem_atualizados": "atualizados",
+        "contagem_erros": "erros",
+        "relatorio_erros_titulo": "Linhas com erro",
+        "relatorio_sucesso_titulo": "Linhas importadas",
+        "col_linha": "Linha",
+        "col_resultado": "Resultado",
+        "col_motivo": "Motivo",
+        "resultado_criado": "Criado",
+        "resultado_atualizado": "Atualizado",
+        "erro_arquivo_obrigatorio": "Selecione um arquivo para importar.",
+        "erro_arquivo_grande": "O arquivo é muito grande (máximo 5 MB).",
+        "status": { "pending": "Aguardando", "processing": "Processando", "completed": "Concluída", "partial_failure": "Concluída com erros", "failed": "Falhou", "retrying": "Retentando" },
+        "relatorio": { "linha": "Linha", "status": "Status", "motivo": "Motivo", "importada": "Importada", "atualizada": "Atualizada", "duplicata": "Duplicata", "erro": "Erro" }
+    },
+    "convenio": {
+        "list_title": "Convênios",
+        "new_cta": "Novo Convênio",
+        "nome": "Nome",
+        "codigo_ans": "Código ANS",
+        "is_active": "Ativo",
+        "em_uso": "Convênio em uso por pacientes; desative em vez de excluir."
+    },
+    "mesclagem": {
+        "title": "Mesclar Pacientes",
+        "dedup_modal_title": "Possível duplicata detectada",
+        "actions": { "mesclar": "Mesclar com existente", "criar_paralelo": "Criar paciente paralelo", "abrir_existente": "Abrir cadastro existente" },
+        "reversivel_ate": "Reversível até {date}",
+        "reverter_cta": "Reverter mesclagem"
     }
 }

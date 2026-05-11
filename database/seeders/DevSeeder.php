@@ -2,10 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Paciente;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Cpf\CpfValidator;
+use App\Support\Telefone\TelefoneNormalizer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -48,6 +51,9 @@ class DevSeeder extends Seeder
 
         $this->seedTenantAlfa();
         $this->seedTenantBeta();
+
+        // T039 — popular pacientes apenas em clinica-alfa (tenant ativo).
+        $this->seedPacientesClinicaAlfa();
 
         if (isset($this->command)) {
             $this->command->info('DevSeeder: tenants navegáveis em http://clinica-alfa.lvh.me e http://clinica-beta.lvh.me');
@@ -267,5 +273,145 @@ class DevSeeder extends Seeder
         }
 
         $registrar->setPermissionsTeamId(null);
+    }
+
+    /**
+     * T039 — Popula 30 pacientes em `clinica-alfa` para navegação manual em dev.
+     *
+     * Distribuição (atende SC-005 do spec — variedade representativa):
+     *   - 10 `lead`
+     *   - 15 `ativo`
+     *   - 3  `inativo`
+     *   - 2  `bloqueado`
+     *
+     * 5 pacientes recebem `profissional_responsavel_id` setado (médico do tenant).
+     *
+     * Idempotente: usa `Paciente::firstOrCreate(['cpf', 'tenant_id'], ...)` —
+     * roda múltiplas vezes sem duplicar.
+     */
+    private function seedPacientesClinicaAlfa(): void
+    {
+        $tenant = Tenant::where('slug', 'clinica-alfa')->first();
+        if ($tenant === null) {
+            return;
+        }
+
+        $medico = User::where('email', 'medico@clinica-alfa.test')->first();
+        $profissionalId = DB::table('professionals')
+            ->where('tenant_id', $tenant->id)
+            ->where('user_id', $medico?->id)
+            ->value('id');
+
+        // Bind do tenant para que `BelongsToTenant::creating` auto-popule
+        // `tenant_id` se necessário; também isolamos o escopo correto.
+        app()->instance('tenant', $tenant);
+
+        // Distribuição fixa (não-aleatória) para reproducibilidade do seed.
+        $pacientes = self::dadosPacientesClinicaAlfa($tenant->id, $profissionalId !== null ? (int) $profissionalId : null);
+
+        foreach ($pacientes as $dados) {
+            Paciente::firstOrCreate(
+                ['tenant_id' => $dados['tenant_id'], 'cpf' => $dados['cpf']],
+                $dados
+            );
+        }
+    }
+
+    /**
+     * Resolve pluralmente o dataset de 30 pacientes (determinístico).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function dadosPacientesClinicaAlfa(int $tenantId, ?int $profissionalId): array
+    {
+        // Listas determinísticas (sem faker) — reproducibilidade total.
+        $nomes = [
+            'Ana Beatriz Souza', 'Bruno Carvalho Lima', 'Carla Mendes Ribeiro', 'Daniel Ferreira Costa',
+            'Eduarda Almeida Castro', 'Felipe Rocha Pinheiro', 'Gabriela Cardoso Nunes', 'Hugo Tavares Moura',
+            'Isabela Pereira Dias', 'João Vinícius Borges', 'Karina Lopes Andrade', 'Lucas Rezende Vieira',
+            'Mariana Freitas Sales', 'Nicolas Barreto Cruz', 'Olívia Cunha Bittencourt', 'Pedro Henrique Galvão',
+            'Quitéria Sampaio Lima', 'Rafael Teixeira Macedo', 'Sabrina Maciel Aragão', 'Tiago Pacheco Brandão',
+            'Úrsula Antunes Vasconcelos', 'Vinícius Cordeiro Camargo', 'Wanda Siqueira Furtado',
+            'Xavier Bittencourt Prado', 'Yasmin Resende Falcão', 'Zélia Borba Cavalcanti',
+            'Aline Drummond Vieira', 'Bernardo Pádua Salles', 'Cecília Monteiro Caldas', 'Diogo Aragão Tristão',
+        ];
+
+        $statusMap = array_merge(
+            array_fill(0, 10, 'lead'),
+            array_fill(0, 15, 'ativo'),
+            array_fill(0, 3, 'inativo'),
+            array_fill(0, 2, 'bloqueado'),
+        );
+
+        $origens = ['site', 'indicacao', 'whatsapp', 'instagram', 'telefone', 'presencial', 'outro'];
+
+        $pacientes = [];
+
+        foreach ($nomes as $i => $nome) {
+            // CPF determinístico: usa o índice como base e calcula DV.
+            $cpf = self::gerarCpfDeterministico($i);
+
+            // Telefone móvel determinístico.
+            $telefone = TelefoneNormalizer::normalize(
+                sprintf('31 9%04d%04d', 1000 + $i, 1000 + ($i * 7) % 9000)
+            );
+
+            $pacientes[] = [
+                'tenant_id' => $tenantId,
+                'nome' => $nome,
+                'cpf' => CpfValidator::format($cpf),
+                'data_nascimento' => sprintf('19%02d-%02d-%02d', 60 + ($i % 35), 1 + ($i % 12), 1 + ($i % 28)),
+                'telefone_primario' => $telefone,
+                'telefones_secundarios' => [],
+                'email' => sprintf('paciente.%02d@clinica-alfa.test', $i + 1),
+                'endereco' => null,
+                'status' => $statusMap[$i],
+                'origem' => $origens[$i % count($origens)],
+                'origem_detalhe' => null,
+                'origem_origem' => 'manual',
+                'profissional_responsavel_id' => $i < 5 ? $profissionalId : null,
+                'convenio_principal_id' => null,
+                'funil_coluna_atual_id' => null,
+                'funil_posicao' => null,
+            ];
+        }
+
+        return $pacientes;
+    }
+
+    /**
+     * Gera um CPF válido determinístico a partir de um seed inteiro.
+     * Pega os 9 primeiros dígitos baseando-se no seed e calcula os DVs.
+     */
+    private static function gerarCpfDeterministico(int $seed): string
+    {
+        // Construir 9 dígitos a partir do seed (offset para fugir de "todos iguais").
+        $base = sprintf('%09d', 100000000 + ($seed * 12345));
+
+        // Calcular DV1
+        $sum = 0;
+        for ($i = 0; $i < 9; $i++) {
+            $sum += ((int) $base[$i]) * (10 - $i);
+        }
+        $dv1 = $sum % 11;
+        $dv1 = $dv1 < 2 ? 0 : 11 - $dv1;
+
+        // Calcular DV2
+        $withDv1 = $base.$dv1;
+        $sum = 0;
+        for ($i = 0; $i < 10; $i++) {
+            $sum += ((int) $withDv1[$i]) * (11 - $i);
+        }
+        $dv2 = $sum % 11;
+        $dv2 = $dv2 < 2 ? 0 : 11 - $dv2;
+
+        $cpf = $withDv1.$dv2;
+
+        // Em caso raro de todos iguais, regenerar com offset.
+        if (preg_match('/^(\d)\1{10}$/', $cpf) === 1) {
+            return self::gerarCpfDeterministico($seed + 1000);
+        }
+
+        return $cpf;
     }
 }

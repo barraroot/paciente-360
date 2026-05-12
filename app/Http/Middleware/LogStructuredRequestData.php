@@ -23,14 +23,33 @@ use Symfony\Component\HttpFoundation\Response;
  * O `X-Request-Id` é também ecoado na response para facilitar
  * correlação de logs no cliente/APM.
  *
+ * T055 (Fase 3) — Mascaramento de campos sensíveis em rotas `inbox/*` e `webhooks/*`:
+ * Campos `body`, `message_body`, `content` (inbox) e `Body`, `message`, `text` (webhooks)
+ * são substituídos por `[REDACTED_MESSAGE_BODY]` antes de qualquer log, garantindo que
+ * conteúdo de mensagens de pacientes nunca apareça em logs (Princípio I — LGPD).
+ *
  * Posição na pilha: após `ResolveTenant` (tenant já resolvido), append
  * no grupo 'api' via `bootstrap/app.php`.
  *
  * @see ResolveTenant
  * @see specs/001-fundacao-multitenant/spec.md — RNF-016 (observabilidade estruturada)
+ * @see specs/003-omnichannel-inbox/research.md — R4 (criptografia em repouso + LGPD)
  */
 class LogStructuredRequestData
 {
+    private const REDACTED = '[REDACTED_MESSAGE_BODY]';
+
+    /**
+     * Campos sensíveis mascarados por padrão de rota.
+     * Chave: padrão de rota (strContains), valor: lista de keys a mascarar.
+     *
+     * @var array<string, list<string>>
+     */
+    protected array $sensitiveFieldsByRoutePattern = [
+        'inbox' => ['body', 'message_body', 'content'],
+        'webhooks' => ['Body', 'message', 'text', 'body', 'message_body', 'content'],
+    ];
+
     /**
      * Handle an incoming request.
      *
@@ -62,5 +81,72 @@ class LogStructuredRequestData
         $response->headers->set('X-Request-Id', $requestId);
 
         return $response;
+    }
+
+    /**
+     * Mascara campos sensíveis de um payload de acordo com o path da request.
+     *
+     * Usada por componentes que precisam logar o payload (ex.: audit listeners,
+     * debug middleware em staging) sem vazar conteúdo de mensagens.
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public function maskSensitiveFields(Request $request, array $payload): array
+    {
+        $path = $request->path();
+        $sensitiveKeys = $this->resolveSensitiveKeys($path);
+
+        if (empty($sensitiveKeys)) {
+            return $payload;
+        }
+
+        return $this->redactRecursive($payload, array_flip($sensitiveKeys));
+    }
+
+    /**
+     * Determina quais chaves devem ser mascaradas para o path da request.
+     *
+     * @return list<string>
+     */
+    private function resolveSensitiveKeys(string $path): array
+    {
+        foreach ($this->sensitiveFieldsByRoutePattern as $pattern => $keys) {
+            if (str_contains($path, $pattern)) {
+                return $keys;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Substitui recursivamente as chaves sensíveis pelo placeholder.
+     *
+     * @param array<string, mixed> $data
+     * @param array<string, int> $sensitiveKeySet Array flip para lookup O(1)
+     * @return array<string, mixed>
+     */
+    private function redactRecursive(array $data, array $sensitiveKeySet): array
+    {
+        $result = [];
+
+        foreach ($data as $key => $value) {
+            if (isset($sensitiveKeySet[$key])) {
+                $result[$key] = self::REDACTED;
+
+                continue;
+            }
+
+            if (is_array($value)) {
+                $result[$key] = $this->redactRecursive($value, $sensitiveKeySet);
+
+                continue;
+            }
+
+            $result[$key] = $value;
+        }
+
+        return $result;
     }
 }

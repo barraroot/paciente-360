@@ -58,58 +58,58 @@
 
 ### Core models + traits
 
-- [ ] T025 [P] Write `tests/Unit/Messaging/MessagingModelsBelongsToTenantTest.php` — assert all 11 non-webhook_events models use `BelongsToTenant` trait
-- [ ] T026 [P] Create `app/Domain/Messaging/Channel/Models/Channel.php` with `BelongsToTenant`, casts `credentials_encrypted=>encrypted`, `provider_metadata=>AsJsonArray`, soft deletes
-- [ ] T027 [P] Create `app/Domain/Messaging/Channel/Models/ChannelTemplate.php` with `BelongsToTenant`, cast `variables_schema=>AsJsonArray`
-- [ ] T028 [P] Create `app/Domain/Messaging/Conversation/Models/Conversation.php` with `BelongsToTenant`, relations to `Channel`, `Paciente` (nullable), `User` (assigned)
-- [ ] T029 [P] Create `app/Domain/Messaging/Conversation/Models/ConversationAssignment.php` with `BelongsToTenant`
-- [ ] T030 [P] Create `app/Domain/Messaging/Message/Models/Message.php` with `BelongsToTenant`, cast `body=>encrypted`, `external_metadata=>AsJsonArray`, `template_variables=>AsJsonArray`
-- [ ] T031 [P] Create `app/Domain/Messaging/Message/Models/MessageMedia.php` with `BelongsToTenant`
-- [ ] T032 [P] Create `app/Domain/Messaging/QuickReply/Models/QuickReply.php` with `BelongsToTenant`, cast `variables_used=>AsJsonArray`
-- [ ] T033 [P] Create `app/Domain/Messaging/Widget/Models/WebWidgetConfig.php` with `BelongsToTenant`, cast `allowed_origins=>AsJsonArray`, `appearance=>AsJsonArray`, `business_hours=>AsJsonArray`
-- [ ] T034 [P] Create `app/Domain/Messaging/Widget/Models/WebWidgetSession.php` with `BelongsToTenant`, cast `provisional_data=>AsJsonArray`
-- [ ] T035 [P] Create `app/Domain/Messaging/Assignment/Models/AssignmentRule.php` with `BelongsToTenant`, cast `config=>AsJsonArray`
-- [ ] T036 [P] Create `app/Domain/Messaging/Presence/Models/UserPresence.php` with `BelongsToTenant`, cast `notification_preferences=>AsJsonArray`
-- [ ] T037 [P] Create `app/Domain/Messaging/Infrastructure/Webhook/WebhookEvent.php` **WITHOUT** `BelongsToTenant` (tenant resolved post-processing), cast `raw_payload_encrypted=>encrypted`
-- [ ] T038 Create factories for all 12 models in `database/factories/Messaging/`
-- [ ] T039 Run `vendor/bin/sail artisan test --filter=MessagingModelsBelongsToTenantTest` and confirm green
+- [x] T025 [P] Write `tests/Feature/Fase3/Foundational/MessagingModelsBelongsToTenantTest.php` — assert all 11 non-webhook_events models use `BelongsToTenant` trait
+- [x] T026 [P] Create `app/Domain/Messaging/Channel/Models/Channel.php` with `BelongsToTenant`, casts `credentials_encrypted=>encrypted`, `provider_metadata=>AsJsonArray`, soft deletes
+- [x] T027 [P] Create `app/Domain/Messaging/Channel/Models/ChannelTemplate.php` with `BelongsToTenant`, cast `variables_schema=>AsJsonArray`
+- [x] T028 [P] Create `app/Domain/Messaging/Conversation/Models/Conversation.php` with `BelongsToTenant`, relations to `Channel`, `Paciente` (nullable), `User` (assigned)
+- [x] T029 [P] Create `app/Domain/Messaging/Conversation/Models/ConversationAssignment.php` with `BelongsToTenant`
+- [x] T030 [P] Create `app/Domain/Messaging/Message/Models/Message.php` with `BelongsToTenant`, cast `body=>encrypted`, `external_metadata=>AsJsonArray`, `template_variables=>AsJsonArray`
+- [x] T031 [P] Create `app/Domain/Messaging/Message/Models/MessageMedia.php` with `BelongsToTenant`
+- [x] T032 [P] Create `app/Domain/Messaging/QuickReply/Models/QuickReply.php` with `BelongsToTenant`, cast `variables_used=>AsJsonArray`
+- [x] T033 [P] Create `app/Domain/Messaging/Widget/Models/WebWidgetConfig.php` with `BelongsToTenant`, cast `allowed_origins=>AsJsonArray`, `appearance=>AsJsonArray`, `business_hours=>AsJsonArray`
+- [x] T034 [P] Create `app/Domain/Messaging/Widget/Models/WebWidgetSession.php` with `BelongsToTenant`, cast `provisional_data=>AsJsonArray`
+- [x] T035 [P] Create `app/Domain/Messaging/Assignment/Models/AssignmentRule.php` with `BelongsToTenant`, cast `config=>AsJsonArray`
+- [x] T036 [P] Create `app/Domain/Messaging/Presence/Models/UserPresence.php` with `BelongsToTenant`, cast `notification_preferences=>AsJsonArray`
+- [x] T037 [P] Create `app/Domain/Messaging/Infrastructure/Webhook/WebhookEvent.php` **WITHOUT** `BelongsToTenant` (tenant resolved post-processing), cast `raw_payload_encrypted=>encrypted`
+- [x] T038 Create factories for all 12 models in `database/factories/Messaging/`
+- [x] T039 Run `vendor/bin/sail artisan test --filter=MessagingModelsBelongsToTenantTest` and confirm green
 
 ### Reverb broadcast channels + auth
 
-- [ ] T040 [P] Write `tests/Feature/Fase3/Foundational/ReverbChannelAuthorizationTest.php` covering: (a) user without ability rejected, (b) cross-tenant rejected, (c) médico only sees assigned conversations
-- [ ] T041 Add 2 broadcast channels to `routes/channels.php`: `tenant.{tenantId}.inbox` (validates `Auth::user()->tenant_id === $tenantId && user can `inbox.view`) and `tenant.{tenantId}.conversa.{conversationId}` (validates ownership/visibility per spec § 11)
-- [ ] T042 Run `vendor/bin/sail artisan test --filter=ReverbChannelAuthorizationTest` and confirm green
+- [x] T040 [P] Write `tests/Feature/Fase3/Foundational/ReverbChannelAuthorizationTest.php` covering: (a) user without ability rejected, (b) cross-tenant rejected, (c) médico only sees assigned conversations
+- [x] T041 Add 2 broadcast channels to `routes/channels.php`: `tenant.{tenantId}.inbox` (validates `Auth::user()->tenant_id === $tenantId && user can `inbox.view`) and `tenant.{tenantId}.conversa.{conversationId}` (validates ownership/visibility per spec § 11)
+- [x] T042 Run `vendor/bin/sail artisan test --filter=ReverbChannelAuthorizationTest` and confirm green
 
 ### Circuit breaker (research R6)
 
-- [ ] T043 [P] Write `tests/Unit/Messaging/CircuitBreakerServiceTest.php` covering all state transitions: closed→open (5 failures in 60s), open→half-open (30s recovery), half-open→closed (1 success), half-open→open (1 failure)
-- [ ] T044 Create `app/Domain/Messaging/Infrastructure/CircuitBreaker/CircuitBreakerService.php` (~150 LOC, Redis-backed via `Cache::tags(['cb', $provider])`)
-- [ ] T045 Create `app/Domain/Messaging/Infrastructure/CircuitBreaker/CircuitOpenException.php`
-- [ ] T046 Run `vendor/bin/sail artisan test --filter=CircuitBreakerServiceTest` and confirm green
+- [x] T043 [P] Write `tests/Unit/Messaging/CircuitBreakerServiceTest.php` covering all state transitions: closed→open (5 failures in 60s), open→half-open (30s recovery), half-open→closed (1 success), half-open→open (1 failure)
+- [x] T044 Create `app/Domain/Messaging/Infrastructure/CircuitBreaker/CircuitBreakerService.php` (~150 LOC, Redis-backed via `Cache::tags(['cb', $provider])`)
+- [x] T045 Create `app/Domain/Messaging/Infrastructure/CircuitBreaker/CircuitOpenException.php`
+- [x] T046 Run `vendor/bin/sail artisan test --filter=CircuitBreakerServiceTest` and confirm green
 
 ### ChannelAdapter contract
 
-- [ ] T047 [P] Write `tests/Unit/Messaging/ChannelAdapterContractTest.php` asserting interface signature: `send(Channel, OutboundMessage): MessageDispatchResult`, `validateCredentials(array): bool`, `parseInboundWebhook(array): InboundMessageDto`, `getType(): string`
-- [ ] T048 Create `app/Domain/Messaging/Channel/Adapters/ChannelAdapter.php` interface + supporting DTOs `OutboundMessage`, `MessageDispatchResult`, `InboundMessageDto`
-- [ ] T049 Run `vendor/bin/sail artisan test --filter=ChannelAdapterContractTest` and confirm green
+- [x] T047 [P] Write `tests/Unit/Messaging/ChannelAdapterContractTest.php` asserting interface signature: `send(Channel, OutboundMessage): MessageDispatchResult`, `validateCredentials(array): bool`, `parseInboundWebhook(array): InboundMessageDto`, `getType(): string`
+- [x] T048 Create `app/Domain/Messaging/Channel/Adapters/ChannelAdapter.php` interface + supporting DTOs `OutboundMessage`, `MessageDispatchResult`, `InboundMessageDto`
+- [x] T049 Run `vendor/bin/sail artisan test --filter=ChannelAdapterContractTest` and confirm green
 
 ### Webhook idempotency infrastructure (research R9)
 
-- [ ] T050 [P] Write `tests/Feature/Fase3/Foundational/WebhookIdempotencyTest.php` covering: duplicate `(provider, external_id)` returns 200 without re-dispatching job; INSERT ON CONFLICT DO NOTHING works
-- [ ] T051 Create `app/Domain/Messaging/Infrastructure/Webhook/WebhookEventRecorder.php` service with `recordOnce(provider, externalId, payload, signatureVerified): WebhookEvent|null` using `DB::table('messaging_webhook_events')->insertOrIgnore(...)`
-- [ ] T052 Run `vendor/bin/sail artisan test --filter=WebhookIdempotencyTest` and confirm green
+- [x] T050 [P] Write `tests/Feature/Fase3/Foundational/WebhookIdempotencyTest.php` covering: duplicate `(provider, external_id)` returns 200 without re-dispatching job; INSERT ON CONFLICT DO NOTHING works
+- [x] T051 Create `app/Domain/Messaging/Infrastructure/Webhook/WebhookEventRecorder.php` service with `recordOnce(provider, externalId, payload, signatureVerified): WebhookEvent|null` using `DB::table('messaging_webhook_events')->insertOrIgnore(...)`
+- [x] T052 Run `vendor/bin/sail artisan test --filter=WebhookIdempotencyTest` and confirm green
 
 ### Encryption + logging guards
 
-- [ ] T053 [P] Write `tests/Feature/Fase3/Foundational/MessageBodyEncryptionTest.php` asserting `Message::factory()->create(['body' => 'PII'])` persists encrypted (raw DB row != plain) but reads decrypted via Eloquent
-- [ ] T054 [P] Write `tests/Feature/Fase3/Foundational/StructuredLoggingMasksMessageBodyTest.php` asserting `Log::info(...)` with message context never logs `body` or `body_preview` plain
-- [ ] T055 Extend Fase 0 `LogStructuredRequestData` middleware in `app/Http/Middleware/LogStructuredRequestData.php` to mask any `body` / `message_body` / `content` field in request payloads of `/api/v1/inbox/*` and `/api/v1/webhooks/*` routes
-- [ ] T056 Extend Fase 2 `AuditAttributesBuilder` in `app/Support/Audit/AuditAttributesBuilder.php` to mask message content (same rule)
-- [ ] T057 Run both encryption + logging tests; both green
+- [x] T053 [P] Write `tests/Feature/Fase3/Foundational/MessageBodyEncryptionTest.php` asserting `Message::factory()->create(['body' => 'PII'])` persists encrypted (raw DB row != plain) but reads decrypted via Eloquent
+- [x] T054 [P] Write `tests/Feature/Fase3/Foundational/StructuredLoggingMasksMessageBodyTest.php` asserting `Log::info(...)` with message context never logs `body` or `body_preview` plain
+- [x] T055 Extend Fase 0 `LogStructuredRequestData` middleware in `app/Http/Middleware/LogStructuredRequestData.php` to mask any `body` / `message_body` / `content` field in request payloads of `/api/v1/inbox/*` and `/api/v1/webhooks/*` routes
+- [x] T056 Extend Fase 2 `AuditAttributesBuilder` in `app/Support/Audit/AuditAttributesBuilder.php` to mask message content (same rule)
+- [x] T057 Run both encryption + logging tests; both green
 
 ### Tenant isolation test scaffolding
 
-- [ ] T058 Create `tests/Feature/Fase3/InboxTenantIsolationTest.php` empty skeleton with `provideAuthenticatedEndpoints(): array` driver method — will be filled progressively in each US
+- [x] T058 Create `tests/Feature/Fase3/InboxTenantIsolationTest.php` empty skeleton with `provideAuthenticatedEndpoints(): array` driver method — will be filled progressively in each US
 
 **Checkpoint**: Foundation pronto — US tasks podem começar. **Pint clean** obrigatório aqui (`vendor/bin/sail bin pint --dirty --format agent`).
 

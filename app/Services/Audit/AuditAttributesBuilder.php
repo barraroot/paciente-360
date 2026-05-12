@@ -2,6 +2,8 @@
 
 namespace App\Services\Audit;
 
+use App\Domain\Messaging\Conversation\Models\ConversationAssignment;
+use App\Domain\Messaging\Message\Models\Message;
 use App\Events\Contracts\Auditable;
 use Illuminate\Support\Str;
 
@@ -45,6 +47,33 @@ final class AuditAttributesBuilder
     ];
 
     /**
+     * Keys de conteúdo de mensagem mascaradas quando o auditável é Message
+     * ou ConversationAssignment. Princípio I — LGPD (Fase 3, T056).
+     *
+     * @var list<string>
+     */
+    private const MESSAGE_CONTENT_KEYS = [
+        'body',
+        'content',
+        'message_body',
+        'text',
+        'Body',
+    ];
+
+    private const MESSAGE_CONTENT_REDACTED = '[REDACTED_MESSAGE_BODY]';
+
+    /**
+     * Auditáveis cujo conteúdo de mensagem deve ser mascarado.
+     * `ConversationAssignment.transfer_note` é mascarado apenas quando > 100 chars.
+     *
+     * @var list<class-string>
+     */
+    private const MESSAGE_CONTENT_AUDITABLES = [
+        Message::class,
+        ConversationAssignment::class,
+    ];
+
+    /**
      * Constrói o array de atributos para `AuditLog::create()`.
      *
      * @return array<string, mixed>
@@ -56,6 +85,9 @@ final class AuditAttributesBuilder
 
         $auditable = $event->auditableModel();
 
+        $sanitizedPayload = $this->sanitizePayload($event->auditPayload());
+        $sanitizedPayload = $this->sanitizeMessageContentPayload($sanitizedPayload, $auditable);
+
         return [
             'tenant_id' => $event->auditTenantId() ?? $this->resolveTenantId(),
             'user_id' => $userId,
@@ -63,7 +95,7 @@ final class AuditAttributesBuilder
             'action' => $event->auditAction(),
             'auditable_type' => $auditable !== null ? $auditable::class : null,
             'auditable_id' => $auditable?->getKey(),
-            'payload' => $this->sanitizePayload($event->auditPayload()),
+            'payload' => $sanitizedPayload,
             'ip' => $this->resolveIp(),
             'user_agent' => $this->resolveUserAgent(),
             'request_id' => $this->resolveRequestId(),
@@ -145,6 +177,8 @@ final class AuditAttributesBuilder
      *  - Credenciais e tokens NUNCA devem aparecer em registros de auditoria.
      *  - CPF NUNCA é gravado em claro — máscara `***.***.***-XX` preserva
      *    apenas os 2 últimos dígitos para suporte forense (T033 / Fase 2).
+     *  - Conteúdo de mensagem (`body`, `content`, etc.) mascarado quando o
+     *    auditável é Message ou ConversationAssignment (T056 / Fase 3).
      *
      * Regra de máscara CPF: aplicada quando a chave **é exatamente** `cpf`
      * ou **contém** `_cpf` ou `cpf_` (ex.: `documento_cpf`, `cpf_titular`).
@@ -175,6 +209,51 @@ final class AuditAttributesBuilder
             }
 
             $result[$key] = $value;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Mascara conteúdo de mensagem no payload quando o auditável é do
+     * domínio de Messaging (Fase 3 — T056).
+     *
+     * Regras:
+     *  - `Message`: mascara `body`, `content`, `message_body`, `text`, `Body`
+     *    incondicionalmente (conteúdo de mensagem NUNCA em audit_logs).
+     *  - `ConversationAssignment`: mascara `transfer_note` apenas se length > 100
+     *    (notas curtas de atribuição podem ser preservadas para contexto operacional).
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public function sanitizeMessageContentPayload(array $payload, ?object $auditableModel): array
+    {
+        if ($auditableModel === null) {
+            return $payload;
+        }
+
+        $isMessage = $auditableModel instanceof Message;
+        $isAssignment = $auditableModel instanceof ConversationAssignment;
+
+        if (! $isMessage && ! $isAssignment) {
+            return $payload;
+        }
+
+        $messageContentSet = array_flip(self::MESSAGE_CONTENT_KEYS);
+        $result = $payload;
+
+        foreach ($result as $key => $value) {
+            if ($isMessage && isset($messageContentSet[$key]) && $value !== null) {
+                $result[$key] = self::MESSAGE_CONTENT_REDACTED;
+
+                continue;
+            }
+
+            // ConversationAssignment: mascara transfer_note apenas se comprimento > 100
+            if ($isAssignment && $key === 'transfer_note' && is_string($value) && strlen($value) > 100) {
+                $result[$key] = self::MESSAGE_CONTENT_REDACTED;
+            }
         }
 
         return $result;

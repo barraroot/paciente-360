@@ -21,8 +21,12 @@ use Illuminate\Support\ServiceProvider;
  *  - `password-forgot` : 3 req/h por e-mail (previne enumeração de contas).
  *  - `api`             : 60 req/min por user_id+tenant_id (autenticado) ou IP+host (anônimo).
  *  - `webhooks`        : sem limite (Stripe/terceiros não devem ser bloqueados).
+ *  - `inbox`           : 60 req/min por user_id+tenant_id — endpoints de inbox do painel.
+ *  - `widget-public`   : 30 req/min por IP — defesa do widget público (sem auth).
+ *  - `webhook-meta`    : 1000 req/min global — defesa contra ataque; Meta/Twilio fazem retry.
  *
  * @see specs/001-fundacao-multitenant/spec.md — RNF-009 (rate limit por tenant)
+ * @see specs/003-omnichannel-inbox/spec.md — Princípio VII, RNF-009
  */
 class RouteServiceProvider extends ServiceProvider
 {
@@ -88,6 +92,32 @@ class RouteServiceProvider extends ServiceProvider
             $tenantId = app()->bound('tenant') ? app('tenant')->id : 'no-tenant';
 
             return Limit::perHour(10)->by("{$tenantId}:export");
+        });
+
+        // Fase 3 — Omnichannel Inbox (Princípio VII, RNF-009)
+
+        RateLimiter::for('inbox', function (Request $request): Limit {
+            $userId = $request->user()?->id ?? 'anon';
+            $tenantId = $request->user()?->tenant_id ?? ($request->header('X-Tenant-Id', 'no-tenant'));
+
+            return Limit::perMinute(60)
+                ->by("{$userId}:{$tenantId}:inbox")
+                ->response(fn () => response()->json(['error' => 'too_many_requests'], 429)
+                    ->header('Retry-After', '60'));
+        });
+
+        RateLimiter::for('widget-public', function (Request $request): Limit {
+            return Limit::perMinute(30)
+                ->by($request->ip().':widget')
+                ->response(fn () => response()->json(['error' => 'too_many_requests'], 429)
+                    ->header('Retry-After', '60'));
+        });
+
+        RateLimiter::for('webhook-meta', function (Request $request): Limit {
+            return Limit::perMinute(1000)
+                ->by('webhook-meta:global')
+                ->response(fn () => response()->json(['error' => 'too_many_requests'], 429)
+                    ->header('Retry-After', '60'));
         });
     }
 }

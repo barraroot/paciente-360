@@ -66,6 +66,32 @@ return [
             'throw' => false,
         ],
 
+        /*
+         * Disk de mídia omnichannel (Fase 3 — Princípio I LGPD).
+         *
+         * S3-compatible com MinIO em dev/test e AWS S3/Cloudflare R2 em produção.
+         * visibility: private — acesso exclusivo via URLs pré-assinadas (TTL 24h).
+         * use_path_style_endpoint: true — obrigatório para MinIO.
+         *
+         * Prefixo de objetos (aplicado no domain service):
+         *   tenant_{id}/conversa_{cid}/msg_{mid}/{filename}
+         *
+         * Credenciais separadas do disco 's3' padrão para isolar permissões
+         * (bucket dedicado, sem acesso a outros buckets do mesmo account).
+         */
+        'media' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID_MEDIA'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY_MEDIA'),
+            'region' => env('AWS_REGION_MEDIA', 'us-east-1'),
+            'bucket' => env('AWS_BUCKET_MEDIA', 'paciente360-media'),
+            'endpoint' => env('AWS_ENDPOINT_MEDIA'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', true),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
     ],
 
     /*

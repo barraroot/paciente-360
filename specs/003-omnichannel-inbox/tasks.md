@@ -20,16 +20,16 @@
 
 **Purpose**: Pré-requisitos físicos da fase — packages, config, infra Docker, abilities, rate limiters.
 
-- [ ] T001 Add `twilio/sdk:^8.0` via `vendor/bin/sail composer require twilio/sdk` (research R2)
-- [ ] T002 [P] Create `config/messaging.php` with keys: `providers.twilio`, `providers.meta`, `retention.{message_months:24, media_months:12, webhook_events_days:30}`, `auto_resolve.hours:72`, `auto_resolve.range:[24,168]`, `ai_pause.minutes:30`, `ai_pause.range:[5,240]`, `auto_assign.max_per_user:15`, `auto_assign.user_idle_minutes:5`, `widget.public_domain`, `circuit_breaker.{threshold:5, window_seconds:60, recovery_seconds:30}`
-- [ ] T003 [P] Extend `config/filesystems.php` with new `media` disk (S3-compatible, SSE-S3, prefix `tenant_{id}/conversa_{id}/msg_{id}/`)
-- [ ] T004 [P] Add MinIO service to `docker-compose.yml` for dev (image `minio/minio`, ports 9000/9001, bucket `paciente360-media` auto-created via init script)
-- [ ] T005 [P] Add new rate limiters in `app/Providers/RouteServiceProvider.php`: `inbox` (60 req/min/user+tenant), `widget-public` (30 req/min/IP), `webhook-meta` (1000 req/min/global)
-- [ ] T006 [P] Add 8 abilities to `database/seeders/AbilitiesSeeder.php`: `inbox.view`, `inbox.respond`, `inbox.assign`, `inbox.transfer`, `inbox.takeover_ai`, `channel.connect`, `channel.disconnect`, `quick_reply.manage` (with role bindings from spec § 2.3)
-- [ ] T007 [P] Add `.env.example` entries for Twilio + Meta + Widget + S3 (per quickstart.md § 3)
-- [ ] T008 [P] Create directory structure `app/Domain/Messaging/{Channel,Conversation,Message,Assignment,QuickReply,Presence,Widget,Infrastructure}/{Models,Services,Adapters,Events,Exceptions,Contracts,StateMachine,CircuitBreaker,Webhook,Listeners}`
-- [ ] T009 [P] Create `tests/Feature/Fase3/` and `tests/Unit/Messaging/` directories with empty `.gitkeep`
-- [ ] T010 Run `vendor/bin/sail composer dump-autoload` and verify `App\Domain\Messaging\*` autoload-able via `vendor/bin/sail artisan tinker --execute 'class_exists("App\\Domain\\Messaging\\Channel\\Models\\Channel") || echo "ok namespace structure";'`
+- [x] T001 Add `twilio/sdk:^8.0` via `vendor/bin/sail composer require twilio/sdk` (research R2)
+- [x] T002 [P] Create `config/messaging.php` with keys: `providers.twilio`, `providers.meta`, `retention.{message_months:24, media_months:12, webhook_events_days:30}`, `auto_resolve.hours:72`, `auto_resolve.range:[24,168]`, `ai_pause.minutes:30`, `ai_pause.range:[5,240]`, `auto_assign.max_per_user:15`, `auto_assign.user_idle_minutes:5`, `widget.public_domain`, `circuit_breaker.{threshold:5, window_seconds:60, recovery_seconds:30}`
+- [x] T003 [P] Extend `config/filesystems.php` with new `media` disk (S3-compatible, SSE-S3, prefix `tenant_{id}/conversa_{id}/msg_{id}/`)
+- [x] T004 [P] Add MinIO service to `docker-compose.yml` for dev (image `minio/minio`, ports 9000/9001, bucket `paciente360-media` auto-created via init script)
+- [x] T005 [P] Add new rate limiters in `app/Providers/RouteServiceProvider.php`: `inbox` (60 req/min/user+tenant), `widget-public` (30 req/min/IP), `webhook-meta` (1000 req/min/global)
+- [x] T006 [P] Add 8 abilities to `database/seeders/RolesSeeder.php`: `inbox.view`, `inbox.respond`, `inbox.assign`, `inbox.transfer`, `inbox.takeover_ai`, `channel.connect`, `channel.disconnect`, `quick_reply.manage` (with role bindings from spec § 2.3)
+- [x] T007 [P] Add `.env.example` entries for Twilio + Meta + Widget + S3 (per quickstart.md § 3)
+- [x] T008 [P] Create directory structure `app/Domain/Messaging/{Channel,Conversation,Message,Assignment,QuickReply,Presence,Widget,Infrastructure}/{Models,Services,Adapters,Events,Exceptions,Contracts,StateMachine,CircuitBreaker,Webhook,Listeners}`
+- [x] T009 [P] Create `tests/Feature/Fase3/` and `tests/Unit/Messaging/` directories with empty `.gitkeep`
+- [x] T010 Run `vendor/bin/sail composer dump-autoload` and verify `App\Domain\Messaging\*` autoload-able via `vendor/bin/sail artisan tinker --execute 'class_exists("App\\Domain\\Messaging\\Channel\\Models\\Channel") || echo "ok namespace structure";'`
 
 ---
 
@@ -41,20 +41,20 @@
 
 ### Migrations (12 tabelas)
 
-- [ ] T011 [P] Create migration `2026_05_11_create_messaging_channels_table.php` per data-model.md § 1
-- [ ] T012 [P] Create migration `2026_05_11_create_messaging_channel_templates_table.php` per data-model.md § 2
-- [ ] T013 [P] Create migration `2026_05_11_create_messaging_conversations_table.php` per data-model.md § 3 (including `external_thread_id_normalized` GENERATED + 6 indexes)
-- [ ] T014 [P] Create migration `2026_05_11_create_messaging_conversation_assignments_table.php` per data-model.md § 4
-- [ ] T015 [P] Create migration `2026_05_11_create_messaging_messages_table.php` per data-model.md § 5 (with `body TEXT encrypted`, `body_searchable VARCHAR(2000)`, `body_searchable_normalized GENERATED`, `body_preview VARCHAR(140)`)
-- [ ] T016 [P] Create migration `2026_05_11_create_messaging_message_media_table.php` per data-model.md § 6
-- [ ] T017 [P] Create migration `2026_05_11_create_messaging_quick_replies_table.php` per data-model.md § 7
-- [ ] T018 [P] Create migration `2026_05_11_create_messaging_web_widget_configs_table.php` per data-model.md § 8
-- [ ] T019 [P] Create migration `2026_05_11_create_messaging_web_widget_sessions_table.php` per data-model.md § 9
-- [ ] T020 [P] Create migration `2026_05_11_create_messaging_assignment_rules_table.php` per data-model.md § 10
-- [ ] T021 [P] Create migration `2026_05_11_create_messaging_user_presence_table.php` per data-model.md § 11
-- [ ] T022 [P] Create migration `2026_05_11_create_messaging_webhook_events_table.php` per data-model.md § 12 (no `tenant_id` in UNIQUE; resolved post-insert)
-- [ ] T023 Create migration `2026_05_11_add_messaging_trigram_indexes.php` — GIN index `messages_body_trgm_idx ON messages USING GIN (tenant_id, body_searchable_normalized gin_trgm_ops)` + BRIN `messages_created_at_brin_idx ON messages USING BRIN (created_at)` (research R5)
-- [ ] T024 Run `vendor/bin/sail artisan migrate` and verify 13 messaging_* tables + indexes via `vendor/bin/sail artisan db:show`
+- [x] T011 [P] Create migration `2026_05_11_create_messaging_channels_table.php` per data-model.md § 1
+- [x] T012 [P] Create migration `2026_05_11_create_messaging_channel_templates_table.php` per data-model.md § 2
+- [x] T013 [P] Create migration `2026_05_11_create_messaging_conversations_table.php` per data-model.md § 3 (including `external_thread_id_normalized` GENERATED + 6 indexes)
+- [x] T014 [P] Create migration `2026_05_11_create_messaging_conversation_assignments_table.php` per data-model.md § 4
+- [x] T015 [P] Create migration `2026_05_11_create_messaging_messages_table.php` per data-model.md § 5 (with `body TEXT encrypted`, `body_searchable VARCHAR(2000)`, `body_searchable_normalized GENERATED`, `body_preview VARCHAR(140)`)
+- [x] T016 [P] Create migration `2026_05_11_create_messaging_message_media_table.php` per data-model.md § 6
+- [x] T017 [P] Create migration `2026_05_11_create_messaging_quick_replies_table.php` per data-model.md § 7
+- [x] T018 [P] Create migration `2026_05_11_create_messaging_web_widget_configs_table.php` per data-model.md § 8
+- [x] T019 [P] Create migration `2026_05_11_create_messaging_web_widget_sessions_table.php` per data-model.md § 9
+- [x] T020 [P] Create migration `2026_05_11_create_messaging_assignment_rules_table.php` per data-model.md § 10
+- [x] T021 [P] Create migration `2026_05_11_create_messaging_user_presence_table.php` per data-model.md § 11
+- [x] T022 [P] Create migration `2026_05_11_create_messaging_webhook_events_table.php` per data-model.md § 12 (no `tenant_id` in UNIQUE; resolved post-insert)
+- [x] T023 Create migration `2026_05_11_add_messaging_trigram_indexes.php` — GIN index `messages_body_trgm_idx ON messages USING GIN (tenant_id, body_searchable_normalized gin_trgm_ops)` + BRIN `messages_created_at_brin_idx ON messages USING BRIN (created_at)` (research R5)
+- [x] T024 Run `vendor/bin/sail artisan migrate` and verify 13 messaging_* tables + indexes via `vendor/bin/sail artisan db:show`
 
 ### Core models + traits
 

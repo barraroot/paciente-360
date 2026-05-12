@@ -3,6 +3,7 @@
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
+use Spatie\Permission\PermissionRegistrar;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,7 +65,17 @@ Broadcast::channel('tenant.{tenantId}.inbox', function (User $user, int $tenantI
         return false;
     }
 
-    // (b) Ability inbox.view (Spatie team mode — tenant_id como team)
+    // (b) Ability inbox.view (Spatie team mode — tenant_id como team).
+    //     ResolveTenant middleware seta o team_id antes do callback; em
+    //     ambiente de cold-start (fila, listener pré-roteamento) pode não
+    //     estar setado — fallback explícito garante consistência.
+    $teamId = app(PermissionRegistrar::class)->getPermissionsTeamId();
+
+    if ($teamId !== $user->tenant_id) {
+        app(PermissionRegistrar::class)->setPermissionsTeamId($user->tenant_id);
+        $user->unsetRelation('roles')->unsetRelation('permissions');
+    }
+
     return $user->can('inbox.view')
         ? ['id' => $user->id, 'name' => $user->name]
         : false;

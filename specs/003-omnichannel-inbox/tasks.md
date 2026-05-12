@@ -125,14 +125,14 @@
 
 ### Tests for US1 (TDD — write FAILING tests first)
 
-- [ ] T059 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/ConnectWhatsAppEndpointTest.php` covering AC-4.1.1, AC-4.1.2, AC-4.1.6, AC-4.1.9: POST `/api/v1/inbox/channels` `type=whatsapp` valida credenciais via mock Twilio + grava `audit_logs.channel.connected` + 422 quando sender não-Business
-- [ ] T060 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/TwilioWebhookInboundTest.php` covering AC-4.1.3, AC-4.1.4: POST `/api/v1/webhooks/twilio/whatsapp` valida HMAC + persiste mensagem + dedup `MessageSid` em retry
-- [ ] T061 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/TwilioStatusCallbackTest.php` for delivered/read/failed status updates
-- [ ] T062 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/ChannelTemplateSyncTest.php` covering AC-4.1.7: `ChannelTemplateSyncJob` fetches mock Twilio Content API + upserts `messaging_channel_templates`
-- [ ] T063 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/QualityRatingDropTest.php` covering AC-4.1.8, AC-4.1.5: Quality `Low`/`Flagged` webhook → `auto_send_disabled=true` + `CanalDegradado` event + admin notification
-- [ ] T064 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/DisconnectChannelTest.php` covering AC-4.1.10: DELETE `/api/v1/inbox/channels/{id}` soft-deletes + `CanalDesconectado` event
-- [ ] T065 [P] [US1] Write `tests/Unit/Messaging/WhatsAppCloudAdapterTest.php` testing send/validateCredentials/parseInboundWebhook against mocked `Twilio\Rest\Client`
-- [ ] T066 [US1] Run all US1 tests; **all must FAIL** before implementation (`vendor/bin/sail artisan test tests/Feature/Fase3/US1_WhatsApp/ --compact`)
+- [x] T059 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/ConnectWhatsAppEndpointTest.php` covering AC-4.1.1, AC-4.1.2, AC-4.1.6, AC-4.1.9: POST `/api/v1/inbox/channels` `type=whatsapp` valida credenciais via mock Twilio + grava `audit_logs.channel.connected` + 422 quando sender não-Business
+- [x] T060 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/TwilioWebhookInboundTest.php` covering AC-4.1.3, AC-4.1.4: POST `/api/v1/webhooks/twilio/whatsapp` valida HMAC + persiste mensagem + dedup `MessageSid` em retry
+- [x] T061 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/TwilioStatusCallbackTest.php` for delivered/read/failed status updates
+- [x] T062 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/ChannelTemplateSyncTest.php` covering AC-4.1.7: `ChannelTemplateSyncJob` fetches mock Twilio Content API + upserts `messaging_channel_templates`
+- [x] T063 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/QualityRatingDropTest.php` covering AC-4.1.8, AC-4.1.5: Quality `Low`/`Flagged` webhook → `auto_send_disabled=true` + `CanalDegradado` event + admin notification
+- [x] T064 [P] [US1] Write `tests/Feature/Fase3/US1_WhatsApp/DisconnectChannelTest.php` covering AC-4.1.10: DELETE `/api/v1/inbox/channels/{id}` soft-deletes + `CanalDesconectado` event
+- [x] T065 [P] [US1] Write `tests/Unit/Messaging/WhatsAppCloudAdapterTest.php` testing send/validateCredentials/parseInboundWebhook against mocked `Twilio\Rest\Client`
+- [x] T066 [US1] Run all US1 tests; **all must FAIL** before implementation (`vendor/bin/sail artisan test tests/Feature/Fase3/US1_WhatsApp/ --compact`)
 
 ### Implementation for US1
 

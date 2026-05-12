@@ -2,7 +2,7 @@
 
 **Feature Branch**: `004-token-auth-migration`
 **Created**: 2026-05-12
-**Status**: Draft — aguarda `/speckit.clarify` (alguns NCs intencionais)
+**Status**: **Clarified** — 5/5 perguntas críticas resolvidas em 2026-05-12 (NC-1, NC-2, NC-3 + 2 ambiguidades descobertas em sessão clarify)
 **Input**: Migrar autenticação Sanctum SPA stateful (cookie-based) para Sanctum Personal Access Tokens (Bearer) para desacoplar camadas API e SPA, permitir deploy independente em domínios distintos (`api.crm.com.br` + `app.crm.com.br`), e habilitar clientes adicionais (mobile, Postman, integrações) sem custo arquitetural.
 
 ---
@@ -24,11 +24,23 @@ Esta feature **substitui** o fluxo cookie por **Bearer tokens emitidos no login*
 
 ---
 
+## Clarifications
+
+### Session 2026-05-12
+
+- Q: Como o backend `api.crm.com.br` identifica qual tenant pertence a request em deploy decoupled? → **A: Header `X-Tenant-Slug` obrigatório em toda request autenticada; SPA injeta via axios interceptor lendo do auth store. Resolve NC-1.**
+- Q: Onde a SPA armazena o token Bearer? → **A: `localStorage` — persiste entre tabs/reloads, melhor UX. Trade-off XSS aceito sob mitigação obrigatória (CSP estrita + DOMPurify + token expiração 30d). Resolve NC-3.**
+- Q: Como tratamos expiração de token Bearer? → **A: Sliding expiration — toda request autenticada renova janela do token por mais 30 dias. Sem refresh token separado. Resolve NC-2.**
+- Q: Como o login em `app.crm.com.br` (sem subdomínio de tenant) resolve qual tenant alvo? → **A: Email globalmente único — constraint UNIQUE cross-tenant em `users.email`. Login lookup por email retorna user + tenant_id; SPA persiste e usa `X-Tenant-Slug` daí em diante. Casos raros de "mesma pessoa em múltiplas clínicas" usam emails distintos.**
+- Q: Escopo do `POST /auth/logout`? → **A: Apenas o token corrente (o do `Authorization: Bearer` da request). Outros dispositivos continuam logados. Endpoint separado `POST /auth/logout-all` para revogar todos os tokens do user.**
+
+---
+
 ## 2. Contratos Herdados das Fases 0–3
 
-### 2.1 Multi-tenancy (Fase 0 — preservado)
+### 2.1 Multi-tenancy (Fase 0 — preservado com nova estratégia de resolução)
 
-`ResolveTenant` middleware continua resolvendo tenant via subdomínio em rotas que servem a SPA do tenant; em deploy decoupled (`app.crm.com.br` chamando `api.crm.com.br`), o tenant pode ser resolvido via **header `X-Tenant-Slug`** ou **claim no token** (decisão em NC-1).
+`ResolveTenant` middleware passa a resolver tenant via **header `X-Tenant-Slug`** em endpoints autenticados (decisão NC-1 resolvida em 2026-05-12). Subdomínio continua aceito como fallback para compatibilidade com deploys mono-domínio (legado). SPA injeta o header via axios interceptor lendo do auth store; Postman/curl/mobile injetam manualmente.
 
 ### 2.2 Auditoria (Fase 0 — preservado)
 
@@ -128,26 +140,25 @@ Widget JS continua autenticando por `public_key + Origin whitelist`. Não vira B
 
 ### Auth flow
 
-- **FR-001**: Sistema MUST emitir Sanctum Personal Access Token no `POST /api/v1/auth/login` retornando `{token, token_expires_at, user}`.
+- **FR-001**: Sistema MUST emitir Sanctum Personal Access Token no `POST /api/v1/auth/login` retornando `{token, token_expires_at, user, tenant: {id, slug, name}}`. Tenant é resolvido via lookup `users.email` (email globalmente único — decisão Q4 /clarify 2026-05-12). SPA persiste `tenant.slug` para uso em `X-Tenant-Slug` header subsequente.
+- **FR-001a**: Sistema MUST aplicar UNIQUE constraint global em `users.email` (cross-tenant) via migration de pré-implementação. Migration MUST validar existência de duplicatas antes de aplicar; se houver, dispara comando interativo `users:dedupe-emails-cross-tenant` que: lista duplicatas, oferece append de sufixo `.tenant-{slug}` ao email duplicado E notifica admins dos tenants envolvidos. Sem duplicatas → constraint aplicada automaticamente.
 - **FR-002**: Sistema MUST aceitar `Authorization: Bearer <token>` em endpoints autenticados via guard `sanctum`.
 - **FR-003**: Sistema MUST descontinuar `EnsureFrontendRequestsAreStateful` na pipeline da API tenant (mantém para Filament).
-- **FR-004**: Sistema MUST revogar token corrente em `POST /api/v1/auth/logout`.
+- **FR-004**: Sistema MUST revogar **apenas o token corrente** (extraído de `Authorization: Bearer` header da request) em `POST /api/v1/auth/logout` (decisão Q5 /clarify 2026-05-12). Outros tokens do mesmo user em outros dispositivos permanecem ativos.
+- **FR-004a**: Sistema MUST oferecer `POST /api/v1/auth/logout-all` para revogar TODOS os tokens do user autenticado (sair de todos os dispositivos). Dispara `TokenRevogado` event por token afetado com `motivo='logout_all'`.
 - **FR-005**: Sistema MUST permitir listar tokens ativos de um user em `GET /api/v1/auth/tokens` e revogar específico em `DELETE .../tokens/{id}`.
-- **FR-006**: Tokens MUST ter expiração configurável (default 30 dias via `config('sanctum.expiration')`).
+- **FR-006**: Tokens MUST ter expiração **sliding** (decisão NC-2 resolvida em 2026-05-12) com janela default 30 dias via `config('sanctum.expiration')`. **Toda request autenticada renova `tokens.expires_at = now() + janela`** de forma transparente (middleware `RefreshSanctumTokenExpiration` aplicado após guard sanctum). Atendente ativo nunca expira; inativo por 30 dias consecutivos re-loga. Token revogado manualmente (logout / `DELETE /tokens/{id}`) NÃO renova.
 
 ### SPA changes
 
 - **FR-007**: Axios instance MUST injetar header `Authorization` quando token presente no Pinia auth store.
 - **FR-008**: Interceptor de response 401 MUST limpar storage + redirect `/login`.
-- **FR-009**: Token persistido em storage (decisão NC-3 — localStorage vs sessionStorage vs in-memory only).
+- **FR-009**: Token persistido em **`localStorage`** (decisão NC-3 resolvida em 2026-05-12) na chave `paciente360.auth.token`. Auth store Pinia carrega no boot da SPA via `localStorage.getItem(...)`. Limpeza no logout via `localStorage.removeItem(...)`. **Mitigações XSS obrigatórias** (gates de release): (a) Content-Security-Policy estrita (sem `unsafe-inline`/`unsafe-eval`); (b) DOMPurify aplicado a qualquer HTML user-provided antes de render; (c) token expira em 30d (NC-2); (d) ESLint plugin `no-unsanitized` enforced em PR.
 - **FR-010**: Reverb client `authorizer` MUST enviar Bearer header em `/broadcasting/auth`.
 
 ### Multi-tenancy
 
-- **FR-011**: `ResolveTenant` middleware MUST resolver tenant via uma das estratégias (NC-1):
-  - (a) Header `X-Tenant-Slug` enviado pelo cliente
-  - (b) Claim `tenant_slug` embutida no token Sanctum (via `tokens.abilities` ou meta)
-  - (c) Subdomínio (legado — quando API e SPA no mesmo domínio)
+- **FR-011**: `ResolveTenant` middleware MUST resolver tenant via **header `X-Tenant-Slug`** (estratégia principal, decisão NC-1) em endpoints autenticados. Subdomínio mantido como fallback para deploys mono-domínio (legado). SPA injeta header automaticamente via axios interceptor; clientes externos (Postman, mobile) injetam manualmente. Header ausente em endpoint autenticado → 400 `tenant_header_required`.
 
 ### CORS
 
@@ -205,35 +216,40 @@ Widget JS continua autenticando por `public_key + Origin whitelist`. Não vira B
 
 ## 7. NEEDS_CLARIFICATION (3 NCs intencionais)
 
-### NC-1 — Estratégia de resolução de tenant em deploy decoupled
+### ✅ NC-1 — Estratégia de resolução de tenant — RESOLVIDO (2026-05-12)
 
-**Contexto**: Hoje `ResolveTenant` usa `$request->getHost()` → subdomínio → tenant slug. Em `app.crm.com.br` (SPA) chamando `api.crm.com.br` (API), o subdomínio da request é `api`, não o slug do tenant.
+**Decisão (Q1.a /clarify)**: **Header `X-Tenant-Slug` obrigatório** em toda request autenticada. Cliente SPA injeta automaticamente via axios interceptor lendo do Pinia auth store (carregado após login). Clientes externos (Postman, mobile, integrações) injetam manualmente. Header ausente → 400 `tenant_header_required`.
 
-**Opções**:
-- (A) **Header `X-Tenant-Slug` obrigatório** em toda request autenticada — cliente SPA injeta automaticamente.
-- (B) **Claim embutida no token** via Sanctum ability `tenant:clinica-alfa` ou tabela auxiliar.
-- (C) **Híbrido**: header default; claim no token como assinatura cruzada de segurança.
+**Implicação prática**:
+- Login flow inclui passo "selecionar/identificar tenant" antes de POST `/login` (decisão de UX na plan — provavelmente combo: digitar email → backend retorna lista de tenants associados → user escolhe).
+- Subdomínio continua aceito como fallback para deploys mono-domínio (legado/dev local com `clinica-alfa.lvh.me`).
+- Validação de pertencimento: token pertence a `user.id` X + `X-Tenant-Slug` indica tenant Y → backend verifica `user.tenant_id === tenant(Y).id`; mismatch → 403. Sem isso, token roubado poderia ser usado em qualquer tenant.
 
-**Recomendação**: (A) — header simples + Spatie team mode existente. Custo de implementação baixo.
+### ✅ NC-2 — Refresh token strategy — RESOLVIDO (2026-05-12)
 
-### NC-2 — Refresh token strategy
+**Decisão (Q3.c /clarify)**: **Sliding expiration** com janela 30 dias.
 
-**Opções**:
-- (A) **Long-lived single token** (default 30d). Quando expira, user re-loga. Simples mas força login frequente.
-- (B) **Refresh token separado** (HttpOnly cookie ou outro Sanctum token) — quando access token expira, cliente troca via refresh. Mais complexo.
-- (C) **Sliding expiration** — toda request renova janela do token automaticamente.
+**Implementação**:
+- Middleware `RefreshSanctumTokenExpiration` aplicado após guard sanctum em rotas autenticadas
+- Update `personal_access_tokens.expires_at = now() + 30d` em toda request bem-sucedida
+- Throttle interno: só renova se `expires_at - now() < 25 dias` (evita 1 UPDATE por request — apenas quando faz sentido renovar; ~5 dias de "buffer")
+- Excludes: revogação manual (logout, DELETE tokens/{id}) NÃO renova
+- Padrão usado por GitHub PAT, Slack tokens
 
-**Recomendação**: (A) para MVP da migração. (B) ou (C) em fase futura se UX exigir.
+**Justificativa vs (B) refresh token separado**: simplicidade arquitetural — sem tabela auxiliar, sem 2 token types, sem `/refresh` endpoint. Atendente que esquecer 30d consecutivos é caso raro o suficiente para justificar re-login. Caso real de exfiltração de token (R1) é mitigado por audit log de uso suspeito + revogação remota — não por short-lived access tokens (que apenas reduzem janela, não eliminam risco).
 
-### NC-3 — Token storage no cliente (XSS vs UX)
+### ✅ NC-3 — Token storage no cliente — RESOLVIDO (2026-05-12)
 
-**Opções**:
-- (A) **localStorage** — persiste entre tabs/reloads. **Vulnerável a XSS** (qualquer script lê o token).
-- (B) **sessionStorage** — persiste só na tab. XSS-vulnerable também.
-- (C) **In-memory only** (Pinia store) — XSS-safe mas perde no reload.
-- (D) **HttpOnly cookie do Bearer** — XSS-safe, mas ironicamente volta a depender de cookie (mistura paradigmas).
+**Decisão (Q2.a /clarify)**: **`localStorage`** na chave `paciente360.auth.token`. Persiste entre tabs e reloads — melhor UX.
 
-**Recomendação**: (C) com fallback de re-login transparente. **Aceita o trade-off de re-login mais frequente em troca de XSS hardening.** Mitigação extra: CSP estrita + DOMPurify em qualquer content de usuário.
+**Trade-off aceito**: localStorage é XSS-vulnerable (qualquer script injetado pode ler). Mitigações obrigatórias **como gate de release**:
+- (a) **CSP estrita** sem `unsafe-inline`/`unsafe-eval`; nonce/hash para scripts inline necessários
+- (b) **DOMPurify** aplicado em qualquer HTML user-provided (mensagens, anotações, quick replies content) antes de render
+- (c) **Token expira em 30d** (NC-2 default — limita janela de exposição)
+- (d) **ESLint plugin `no-unsanitized`** em CI bloqueia PR com sinks DOM diretos
+- (e) **Audit log** de uso de token suspeito (mesmo token, IP/UA diferentes em <5min) — alerta operacional
+
+**Justificativa pela escolha A vs E (híbrido) recomendada**: priorizou UX consistente (zero re-login involuntário) sobre defesa em profundidade adicional. Risco R1 do spec § 10 sobe de 🔴 Alta para **🔴 Alta + obrigatório** (mitigações são gate, não best-effort).
 
 ---
 
@@ -257,7 +273,8 @@ Verificar **antes** de merge para `main`:
 
 - [ ] Constituição amendment v1.4.0 (Princípio VII — aceita auth via Bearer token; mantém argon2id, TLS 1.3, rate limit, brute force lock).
 - [ ] `POST /api/v1/auth/login` retorna token Bearer + user.
-- [ ] `POST /api/v1/auth/logout` revoga token.
+- [ ] `POST /api/v1/auth/logout` revoga **apenas token corrente** (escopo decidido Q5 /clarify).
+- [ ] `POST /api/v1/auth/logout-all` revoga TODOS os tokens do user.
 - [ ] `GET /api/v1/auth/me` aceita Bearer.
 - [ ] `GET/DELETE /api/v1/auth/tokens[/{id}]` para listar/revogar.
 - [ ] Sanctum stateful middleware removido da pipeline da API tenant.
@@ -278,12 +295,13 @@ Verificar **antes** de merge para `main`:
 
 | Risco | Severidade | Mitigação |
 |---|---|---|
-| **R1 — XSS rouba token de localStorage** | 🔴 Alta | NC-3 recomenda in-memory + CSP estrita + DOMPurify. Token expira 30d. |
+| **R1 — XSS rouba token de localStorage** (NC-3 decidiu por localStorage) | 🔴 Alta | **Mitigações obrigatórias (gates de release)**: CSP estrita sem unsafe-inline/eval, DOMPurify em todo HTML user-provided, token expira 30d, ESLint `no-unsanitized` enforced em CI, audit log de uso de token suspeito (mesmo token / IPs distintos em <5min). |
 | **R2 — Quebra de 650 testes ao mudar guard** | 🔴 Alta | Migração mecânica via grep+sed; rodar suite full antes/depois de cada lote. |
 | **R3 — Reverb auth Bearer não funciona em prod** | 🟡 Média | Test E2E manual antes go-live; documentar configuração WSS Origin. |
 | **R4 — Mobile/Postman requer documentação clara** | 🟡 Média | OpenAPI bearerAuth scheme + quickstart com curl examples. |
 | **R5 — Filament e API tenant conflito de session** | 🟡 Média | Filament guard `web` separado; cookies de domínios distintos (`crm.{tld}` vs `app.crm.{tld}`). |
 | **R6 — Constituição amendment rejeitada** | 🟢 Baixa | Discutir antecipadamente; amendment é MINOR (não MAJOR) — apenas aceita formato adicional. |
+| **R7 — Duplicatas de email cross-tenant na base atual** (decisão Q4 /clarify exige UNIQUE global em users.email) | 🟡 Média | Migration de pré-flight: comando `users:dedupe-emails-cross-tenant` lista duplicatas, oferece append de sufixo `.tenant-{slug}`, notifica admins. Bloqueia migration até zero duplicatas. Audit log dedup. |
 
 ---
 

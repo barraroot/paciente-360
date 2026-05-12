@@ -21,6 +21,29 @@ class ConnectChannelRequest extends FormRequest
     }
 
     /**
+     * Normaliza o input antes da validação para tolerar formatos comuns
+     * que o atendente possa digitar (sem prefixo `whatsapp:`, com espaços, etc.).
+     */
+    protected function prepareForValidation(): void
+    {
+        $sender = $this->input('credentials.whatsapp_sender');
+
+        if (is_string($sender) && $sender !== '') {
+            $cleaned = preg_replace('/\s+/', '', $sender);
+
+            if (! str_starts_with($cleaned, 'whatsapp:')) {
+                $cleaned = 'whatsapp:'.ltrim($cleaned, ':');
+            }
+
+            $this->merge([
+                'credentials' => array_merge($this->input('credentials', []), [
+                    'whatsapp_sender' => $cleaned,
+                ]),
+            ]);
+        }
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function rules(): array

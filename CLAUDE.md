@@ -185,8 +185,13 @@ For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
 - **Active feature**: `004-token-auth-migration`
-- **Spec**: [specs/004-token-auth-migration/spec.md](specs/004-token-auth-migration/spec.md) (Draft — 3 NCs pendentes, aguarda `/speckit.clarify`)
-- **Plan**: a ser gerado via `/speckit.plan` após clarify
+- **Spec**: [specs/004-token-auth-migration/spec.md](specs/004-token-auth-migration/spec.md) (Clarified — 5/5 perguntas resolvidas)
+- **Plan**: [specs/004-token-auth-migration/plan.md](specs/004-token-auth-migration/plan.md) (309 linhas, 9 lotes A-I, ~60 tasks)
+- **Research (Phase 0)**: [specs/004-token-auth-migration/research.md](specs/004-token-auth-migration/research.md) (6 decisões R1-R6)
+- **Data model (Phase 1)**: [specs/004-token-auth-migration/data-model.md](specs/004-token-auth-migration/data-model.md) (UNIQUE email + 4 eventos Auditable)
+- **API contracts (Phase 1)**: [specs/004-token-auth-migration/contracts/openapi.yaml](specs/004-token-auth-migration/contracts/openapi.yaml) (6 paths, 9 schemas, bearerAuth scheme)
+- **Quickstart (Phase 1)**: [specs/004-token-auth-migration/quickstart.md](specs/004-token-auth-migration/quickstart.md) (deploy split + CORS + CSP + Postman)
+- **Constitution amendment v1.4.0**: **OBRIGATÓRIO ANTES da implementação** (Lote A T001) — Princípio VII aceita Bearer como formato adicional
 - **Previous features delivered**:
   - `003-omnichannel-inbox` — [spec](specs/003-omnichannel-inbox/spec.md) — 290/290 tasks, 352 tests Fase 3, 47/47 ACs, 7/7 user stories. Mergeado em `main` 2026-05-12.
   - `002-crm-pacientes` — [plan](specs/002-crm-pacientes/plan.md) — 650 testes verdes

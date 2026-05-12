@@ -83,26 +83,58 @@ class ProcessInboundMessageJob implements ShouldQueue
             ? $rawDecrypted
             : (array) json_decode((string) $rawDecrypted, true);
 
-        // Resolve Channel pelo MessagingServiceSid
+        // Resolve Channel com fallback chain:
+        //  1. MessagingServiceSid (Twilio production)
+        //  2. To (Twilio Sandbox que não emite MessagingServiceSid)
+        //  3. AccountSid (último recurso quando só há 1 canal daquela account)
         $messagingServiceSid = $payload['MessagingServiceSid'] ?? null;
+        $toSender = $payload['To'] ?? null;
+        $accountSid = $payload['AccountSid'] ?? null;
 
-        if ($messagingServiceSid === null) {
-            $this->markFailed($webhookEvent, 'MessagingServiceSid ausente no payload');
+        $channel = null;
+        $resolutionPath = null;
 
-            return;
+        if (is_string($messagingServiceSid) && $messagingServiceSid !== '') {
+            $channel = Channel::withoutGlobalScopes()
+                ->where('type', 'whatsapp')
+                ->whereJsonContains('provider_metadata->messaging_service_sid', $messagingServiceSid)
+                ->first();
+            $resolutionPath = $channel ? 'messaging_service_sid' : null;
         }
 
-        /** @var Channel|null $channel */
-        $channel = Channel::withoutGlobalScopes()
-            ->where('type', 'whatsapp')
-            ->whereJsonContains('provider_metadata->messaging_service_sid', $messagingServiceSid)
-            ->first();
+        if ($channel === null && is_string($toSender) && $toSender !== '') {
+            $channel = Channel::withoutGlobalScopes()
+                ->where('type', 'whatsapp')
+                ->whereJsonContains('provider_metadata->whatsapp_sender', $toSender)
+                ->first();
+            $resolutionPath = $channel ? 'to_sender' : null;
+        }
+
+        if ($channel === null && is_string($accountSid) && $accountSid !== '') {
+            $channel = Channel::withoutGlobalScopes()
+                ->where('type', 'whatsapp')
+                ->whereJsonContains('provider_metadata->account_sid', $accountSid)
+                ->first();
+            $resolutionPath = $channel ? 'account_sid' : null;
+        }
 
         if ($channel === null) {
-            $this->markFailed($webhookEvent, "Channel não encontrado para MessagingServiceSid: {$messagingServiceSid}");
+            $hints = array_filter([
+                'messaging_service_sid' => $messagingServiceSid,
+                'to' => $toSender,
+                'account_sid' => $accountSid,
+            ]);
+            $hintsJson = json_encode($hints, JSON_UNESCAPED_SLASHES);
+            $this->markFailed($webhookEvent, "Channel não encontrado para nenhum identificador: {$hintsJson}");
 
             return;
         }
+
+        Log::info('ProcessInboundMessageJob: channel resolved', [
+            'channel_id' => $channel->id,
+            'tenant_id' => $channel->tenant_id,
+            'resolution_path' => $resolutionPath,
+        ]);
 
         // Atualiza webhook event com contexto do canal
         $webhookEvent->update([
@@ -155,28 +187,25 @@ class ProcessInboundMessageJob implements ShouldQueue
             ->first();
 
         if ($existingMessage === null) {
-            // Insere via DB::table para armazenar body em texto claro (não criptografado).
-            // O cast 'encrypted' do Model é intencional para mensagens criadas via
-            // Eloquent (painel, API). Mensagens inbound via webhook usam inserção direta
-            // para que assertDatabaseHas funcione em testes e body_searchable seja indexável.
-            $messageId = DB::table('messaging_messages')->insertGetId([
+            // Persiste via Eloquent para aplicar cast 'encrypted' em body
+            // (Princípio I — LGPD; conteúdo de mensagem cifrado em repouso).
+            // `body_searchable` e `body_preview` permanecem plain text — colunas
+            // dedicadas para trigram indexing e UI preview (vide data-model R4/R5).
+            /** @var Message $message */
+            $message = Message::withoutGlobalScopes()->create([
                 'tenant_id' => $channel->tenant_id,
                 'conversation_id' => $conversation->id,
                 'direction' => 'in',
                 'sender_type' => 'patient',
                 'body' => $dto->body,
                 'body_searchable' => $dto->body,
-                'body_preview' => $dto->body !== null ? substr($dto->body, 0, 140) : null,
+                'body_preview' => $dto->body !== null ? mb_substr($dto->body, 0, 140) : null,
                 'content_type' => $dto->contentType,
                 'external_id' => $dto->externalMessageId,
-                'external_metadata' => '{}',
+                'external_metadata' => [],
                 'status' => 'delivered',
-                'created_at' => ($dto->providerTimestamp ?? now())->toDateTimeString(),
-                'updated_at' => now()->toDateTimeString(),
+                'created_at' => $dto->providerTimestamp ?? now(),
             ]);
-
-            /** @var Message $message */
-            $message = Message::withoutGlobalScopes()->find($messageId);
 
             // Atualiza conversa
             $conversation->update([

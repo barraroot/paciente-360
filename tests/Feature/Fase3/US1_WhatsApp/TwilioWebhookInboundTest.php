@@ -107,12 +107,21 @@ class TwilioWebhookInboundTest extends TestCase
             'patient_id' => null,
         ]);
 
-        // Verifica que mensagem foi persistida
+        // Verifica que mensagem foi persistida.
+        // `body` é cifrado em repouso (cast 'encrypted' — Princípio I LGPD);
+        // assertion direta em DB é feita via `body_searchable` (plain — coluna
+        // dedicada ao índice trigram). Decrypt via Eloquent é validado abaixo.
         $this->assertDatabaseHas('messaging_messages', [
             'direction' => 'in',
             'sender_type' => 'patient',
-            'body' => 'Olá, gostaria de agendar consulta',
+            'body_searchable' => 'Olá, gostaria de agendar consulta',
         ]);
+
+        $message = Message::query()
+            ->withoutGlobalScopes()
+            ->where('external_id', $params['MessageSid'])
+            ->first();
+        $this->assertSame('Olá, gostaria de agendar consulta', $message->body);
     }
 
     /** @test */

@@ -5,6 +5,7 @@ namespace Tests\Feature\Fase3\US4_Inbox;
 use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Models\Paciente;
+use App\Models\Professional;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -85,7 +86,7 @@ class MedicoVisibilityScopeTest extends TestCase
         $response->assertOk();
         // Médico vê apenas as 2 conversas atribuídas a si
         $this->assertCount(2, $response->json('data'));
-        $response->json('data')->each(function ($conv) use ($medico) {
+        collect($response->json('data'))->each(function ($conv) use ($medico) {
             $this->assertSame($medico->id, $conv['assigned_user']['id']);
         });
     }
@@ -114,10 +115,11 @@ class MedicoVisibilityScopeTest extends TestCase
     public function medico_can_open_conversation_with_patient_he_owns_even_unassigned(): void
     {
         $medico = $this->userForRole($this->tenant, 'medico');
+        $professional = Professional::factory()->forTenant($this->tenant)->for($medico, 'user')->create();
 
         $paciente = Paciente::factory()
             ->forTenant($this->tenant)
-            ->state(['profissional_responsavel_id' => $medico->id])
+            ->state(['profissional_responsavel_id' => $professional->id])
             ->create();
 
         // Conversa não atribuída, mas paciente é responsabilidade do médico
@@ -142,10 +144,11 @@ class MedicoVisibilityScopeTest extends TestCase
     {
         $medico1 = $this->userForRole($this->tenant, 'medico');
         $medico2 = $this->userForRole($this->tenant, 'medico');
+        $professional2 = Professional::factory()->forTenant($this->tenant)->for($medico2, 'user')->create();
 
         $paciente = Paciente::factory()
             ->forTenant($this->tenant)
-            ->state(['profissional_responsavel_id' => $medico2->id])
+            ->state(['profissional_responsavel_id' => $professional2->id])
             ->create();
 
         $conv = Conversation::factory()
@@ -169,10 +172,11 @@ class MedicoVisibilityScopeTest extends TestCase
     public function medico_can_send_message_to_visible_conversation_only(): void
     {
         $medico = $this->userForRole($this->tenant, 'medico');
+        $professional = Professional::factory()->forTenant($this->tenant)->for($medico, 'user')->create();
 
         $paciente = Paciente::factory()
             ->forTenant($this->tenant)
-            ->state(['profissional_responsavel_id' => $medico->id])
+            ->state(['profissional_responsavel_id' => $professional->id])
             ->create();
 
         $visibleConv = Conversation::factory()

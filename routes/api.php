@@ -12,6 +12,9 @@ use App\Http\Controllers\Api\V1\Billing\SubscriptionController;
 use App\Http\Controllers\Api\V1\Convenios\ConveniosController;
 use App\Http\Controllers\Api\V1\Inbox\ChannelsController;
 use App\Http\Controllers\Api\V1\Inbox\ChannelTemplatesController;
+use App\Http\Controllers\Api\V1\Inbox\ConversationsController;
+use App\Http\Controllers\Api\V1\Inbox\InboxPollController;
+use App\Http\Controllers\Api\V1\Inbox\MessagesController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
 use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
 use App\Http\Controllers\Api\V1\Pacientes\ExportacaoController;
@@ -253,6 +256,35 @@ Route::middleware(['auth:sanctum', 'throttle:inbox'])->group(function (): void {
     Route::post('inbox/channels/{channel}/templates/sync', [ChannelTemplatesController::class, 'sync'])
         ->name('inbox.channels.templates.sync')
         ->whereNumber('channel');
+});
+
+// Fase 3 — US4: Inbox Conversations + Messages (T114/T115/T120/T121)
+Route::middleware(['auth:sanctum', 'throttle:inbox'])->prefix('inbox')->group(function (): void {
+    Route::get('conversations', [ConversationsController::class, 'index'])
+        ->name('inbox.conversations.index');
+    Route::get('conversations/{conversation}', [ConversationsController::class, 'show'])
+        ->name('inbox.conversations.show')
+        ->whereNumber('conversation');
+    Route::get('conversations/{conversation}/messages', [MessagesController::class, 'index'])
+        ->name('inbox.conversations.messages.index')
+        ->whereNumber('conversation');
+    Route::post('conversations/{conversation}/messages', [MessagesController::class, 'store'])
+        ->name('inbox.conversations.messages.store')
+        ->whereNumber('conversation');
+    Route::post('conversations/{conversation}/read', [ConversationsController::class, 'read'])
+        ->name('inbox.conversations.read')
+        ->whereNumber('conversation');
+    Route::post('conversations/{conversation}/resolve', [ConversationsController::class, 'resolve'])
+        ->name('inbox.conversations.resolve')
+        ->whereNumber('conversation');
+    Route::post('conversations/{conversation}/reopen', [ConversationsController::class, 'reopen'])
+        ->name('inbox.conversations.reopen')
+        ->whereNumber('conversation');
+    Route::post('conversations/{conversation}/link-patient', [ConversationsController::class, 'linkPatient'])
+        ->name('inbox.conversations.link-patient')
+        ->whereNumber('conversation');
+    Route::get('poll', InboxPollController::class)
+        ->name('inbox.poll');
 });
 
 // Fase 3 — Webhooks Twilio (T081)

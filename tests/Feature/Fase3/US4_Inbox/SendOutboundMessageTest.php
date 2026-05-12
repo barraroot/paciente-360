@@ -93,9 +93,10 @@ class SendOutboundMessageTest extends TestCase
         $this->assertSame($idempotencyKey, $response->json('data.idempotency_key'));
 
         // Verifica que a mensagem foi persistida
+        // `body` é criptografado em repouso — não pode ser comparado diretamente via assertDatabaseHas.
+        // A decodificação correta é validada pelo json('data.body') acima via MessageResource.
         $this->assertDatabaseHas('messaging_messages', [
             'conversation_id' => $conversation->id,
-            'body' => 'Olá Maria, como posso ajudar?',
             'idempotency_key' => $idempotencyKey,
             'status' => 'queued',
         ]);
@@ -346,7 +347,7 @@ class SendOutboundMessageTest extends TestCase
         $message = Message::find($response->json('data.id'));
         $this->assertSame('template', $message->content_type);
         $this->assertSame($templateId, $message->template_provider_id);
-        $this->assertSame($variables, $message->template_variables->toArray());
+        $this->assertSame($variables, (array) $message->template_variables);
     }
 
     #[Test]

@@ -7,6 +7,7 @@ use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Models\MessageMedia;
 use App\Models\Paciente;
+use App\Models\Professional;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -300,17 +301,25 @@ class ConversationDetailTest extends TestCase
 
         $downloadUrl = $response->json('data.0.media.0.download_url');
         $this->assertNotEmpty($downloadUrl);
-        $this->assertStringContainsString('s=', $downloadUrl); // Signed URL marker
+        // Signed URL marker — fake disk usa 'expiration=', S3 usa 's='
+        $this->assertTrue(
+            str_contains($downloadUrl, 's=') || str_contains($downloadUrl, 'expiration='),
+            "Expected signed URL marker in: {$downloadUrl}"
+        );
     }
 
     #[Test]
     public function it_messages_filter_by_role_medico_visibility(): void
     {
-        // Cria médico vinculado a um paciente
+        // Cria médico vinculado a um paciente (via Professional para satisfazer FK)
         $medico = $this->userForRole($this->tenant, 'medico');
+        $professional = Professional::factory()
+            ->forTenant($this->tenant)
+            ->for($medico, 'user')
+            ->create();
         $paciente = Paciente::factory()
             ->forTenant($this->tenant)
-            ->state(['profissional_responsavel_id' => $medico->id])
+            ->state(['profissional_responsavel_id' => $professional->id])
             ->create();
 
         // Conversa 1: atribuída ao médico

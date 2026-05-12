@@ -223,9 +223,12 @@ class InboxTrigramSearchTest extends TestCase
             ])
             ->create();
 
+        // Usar direction='out' para que o MessageObserver não reabra conv2 (resolvida).
+        // Mensagem inbound em conversa resolvida dispara auto-reopen (NC-2).
         Message::factory()
             ->forTenant($this->tenant)
             ->for($conv2, 'conversation')
+            ->outbound()
             ->state([
                 'body' => 'Vacina HPV aplicada',
                 'body_searchable' => 'vacina hpv aplicada',

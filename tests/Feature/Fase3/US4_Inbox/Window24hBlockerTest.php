@@ -86,8 +86,8 @@ class Window24hBlockerTest extends TestCase
             'code' => 'mensagem.bloqueada_fora_janela',
             'details' => [
                 'last_inbound_message_at' => $conversation->last_inbound_message_at->toIso8601String(),
-                'hours_since_last_inbound' => 25.0, // Aproximado
-                'available_templates_count' => \Illuminate\Support\Facades\Str::class,
+                'hours_since_last_inbound' => 25,
+                'available_templates_count' => 0,
             ],
         ]);
     }

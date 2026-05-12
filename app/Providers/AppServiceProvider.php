@@ -4,7 +4,11 @@ namespace App\Providers;
 
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Channel\Models\Channel;
+use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Infrastructure\CircuitBreaker\CircuitBreakerService;
+use App\Domain\Messaging\Message\Models\Message;
+use App\Domain\Messaging\Message\Observers\MessageObserver;
+use App\Domain\Messaging\Message\Services\MessageDispatchService;
 use App\Events\TenantResolved;
 use App\Models\Anotacao;
 use App\Models\AuditLog;
@@ -19,8 +23,10 @@ use App\Policies\AnotacaoPolicy;
 use App\Policies\AuditLogPolicy;
 use App\Policies\ChannelPolicy;
 use App\Policies\ConvenioPolicy;
+use App\Policies\ConversationPolicy;
 use App\Policies\FunilPolicy;
 use App\Policies\InvitationPolicy;
+use App\Policies\MessagePolicy;
 use App\Policies\OnboardingPolicy;
 use App\Policies\PacientePolicy;
 use App\Policies\TagPolicy;
@@ -60,6 +66,13 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+        // Fase 3 — MessageDispatchService: singleton com WhatsAppCloudAdapter.
+        $this->app->singleton(MessageDispatchService::class, function () {
+            return new MessageDispatchService(
+                $this->app->make(WhatsAppCloudAdapter::class),
+            );
+        });
+
         // Wrapper do Stripe SDK — permite swap por mock em testes.
         // Só instancia o StripeClient real se a chave secreta estiver configurada.
         $this->app->singleton(StripeClientWrapper::class, function () {
@@ -86,6 +99,10 @@ class AppServiceProvider extends ServiceProvider
         $this->configureSpatieTeamId();
         $this->configureSuperAdminGate();
         $this->registerPolicies();
+
+        // Fase 3 — T108: Observer para reabertura automática de conversa ao criar
+        // mensagem inbound em conversa resolvida (NC-2).
+        Message::observe(MessageObserver::class);
     }
 
     /**
@@ -109,8 +126,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Convenio::class, ConvenioPolicy::class);
         Gate::policy(FunilColuna::class, FunilPolicy::class);
 
-        // Fase 3 — Omnichannel Inbox (T076).
+        // Fase 3 — Omnichannel Inbox (T076 + T119).
         Gate::policy(Channel::class, ChannelPolicy::class);
+        Gate::policy(Conversation::class, ConversationPolicy::class);
+        Gate::policy(Message::class, MessagePolicy::class);
     }
 
     /**

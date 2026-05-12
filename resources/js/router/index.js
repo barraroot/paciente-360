@@ -180,6 +180,21 @@ const routes = [
         meta: { requiresAuth: true, ability: 'inbox.view', title: 'Detalhes do canal' },
     },
 
+    // ─── Inbox Unificada (Omnichannel — US4) ───────────────────────────────────
+    {
+        path: '/panel/inbox',
+        name: 'inbox.index',
+        component: () => import('@/pages/Inbox/Index.vue'),
+        meta: { requiresAuth: true, ability: 'inbox.view', title: 'Inbox' },
+    },
+    {
+        path: '/panel/inbox/conversa/:id',
+        name: 'inbox.conversation',
+        component: () => import('@/pages/Inbox/Index.vue'),
+        props: true,
+        meta: { requiresAuth: true, ability: 'inbox.view', title: 'Conversa' },
+    },
+
     {
         path: '/panel/:pathMatch(.*)*',
         name: 'panel.catchAll',

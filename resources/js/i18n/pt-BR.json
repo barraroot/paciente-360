@@ -494,5 +494,84 @@
             "titulo": "Desconectar canal",
             "descricao": "Ao desconectar, novas mensagens não serão recebidas. As conversas existentes ficam acessíveis em modo leitura. Confirma?"
         }
+    },
+    "inbox": {
+        "titulo": "Inbox",
+        "search_placeholder": "Buscar nome, telefone, conteúdo...",
+        "empty_state": "Selecione uma conversa para ver as mensagens.",
+        "empty_list": "Nenhuma conversa encontrada com os filtros atuais.",
+        "loading": "Carregando conversas...",
+        "contato_anonimo": "Contato anônimo",
+        "filtros": {
+            "status": "Status",
+            "canal": "Canal",
+            "atendente": "Atendente",
+            "profissional": "Profissional vinculado",
+            "tag": "Tag",
+            "midia": "Mídia",
+            "idade": "Idade",
+            "todos": "Todos",
+            "sem_atendente": "Sem atendente",
+            "eu_mesmo": "Eu mesmo",
+            "com_midia": "Com mídia",
+            "sem_midia": "Sem mídia",
+            "menor_1h": "< 1h",
+            "1_a_24h": "1-24h",
+            "1_a_7d": "1-7 dias",
+            "maior_7d": "> 7 dias",
+            "limpar": "Limpar filtros",
+            "ativos": "{count} filtro ativo | {count} filtros ativos"
+        },
+        "status": {
+            "aberta": "Aberta",
+            "pendente": "Pendente",
+            "resolvida": "Resolvida",
+            "reaberta": "Reaberta"
+        },
+        "canal": {
+            "whatsapp": "WhatsApp",
+            "instagram": "Instagram",
+            "web": "Widget Web"
+        },
+        "mensagem": {
+            "input_placeholder": "Digite sua mensagem... (Enter para enviar)",
+            "enviar": "Enviar",
+            "enviado": "Enviado",
+            "entregue": "Entregue",
+            "lido": "Lido",
+            "falhou": "Falha",
+            "fila": "Na fila",
+            "anexar": "Anexar mídia",
+            "anexar_em_breve": "Upload de mídia disponível em breve.",
+            "char_count": "{used} / 4096",
+            "char_excedido": "Mensagem excede o limite de 4096 caracteres.",
+            "preview_lgpd": "Esta mídia pode conter dados sensíveis. Visualização registrada para auditoria.",
+            "lgpd_aceito": "Entendi, visualizar"
+        },
+        "janela_24h": {
+            "aberta_horas": "Janela aberta · {hours}h restantes",
+            "atencao_minutos": "Atenção · {minutes}min restantes",
+            "fechada": "Janela 24h fechada — selecione um template aprovado",
+            "bloqueada": "Janela de 24h expirada; selecione um template aprovado para retomar contato.",
+            "templates_disponiveis": "{count} template aprovado disponível | {count} templates aprovados disponíveis"
+        },
+        "acoes": {
+            "resolver": "Resolver",
+            "reabrir": "Reabrir",
+            "vincular_paciente": "Vincular paciente",
+            "transferir": "Transferir",
+            "atribuir_a_mim": "Atribuir a mim",
+            "marcar_como_lida": "Marcar como lida"
+        },
+        "errors": {
+            "carregar_lista": "Falha ao carregar conversas. Tentar novamente.",
+            "carregar_mensagens": "Falha ao carregar mensagens.",
+            "enviar": "Falha ao enviar mensagem.",
+            "circuit_open": "Provedor indisponível temporariamente. Tente novamente em alguns segundos."
+        },
+        "fallback": {
+            "modo_limitado": "⚠️ Modo limitado — atualizações podem atrasar.",
+            "reconectado": "✓ Conexão restabelecida."
+        }
     }
 }

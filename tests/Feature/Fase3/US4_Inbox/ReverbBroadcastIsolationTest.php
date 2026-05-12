@@ -6,6 +6,7 @@ use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Models\Paciente;
+use App\Models\Professional;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -190,10 +191,11 @@ class ReverbBroadcastIsolationTest extends TestCase
 
         $medicoA = $this->userForRole($this->tenantA, 'medico');
         $medicoB = $this->userForRole($this->tenantA, 'medico');
+        $professionalB = Professional::factory()->forTenant($this->tenantA)->for($medicoB, 'user')->create();
 
         $paciente = Paciente::factory()
             ->forTenant($this->tenantA)
-            ->state(['profissional_responsavel_id' => $medicoB->id])
+            ->state(['profissional_responsavel_id' => $professionalB->id])
             ->create();
 
         $conv = Conversation::factory()

@@ -193,38 +193,38 @@
 
 ### Implementation for US4
 
-- [ ] T104 [P] [US4] Create `app/Domain/Messaging/Conversation/StateMachine/ConversationStatusTransitions.php` enum + transition validation (`aberta → pendente`, `aberta → resolvida`, `pendente → resolvida`, `resolvida → reaberta`, `reaberta → aberta` implicit on next inbound)
-- [ ] T105 [P] [US4] Create `app/Domain/Messaging/Conversation/Services/ConversationService.php` with `findOrCreateForInbound`, `resolve(Conversation, mode)`, `reopen`, `linkToPatient` (fires `ConversaVinculadaAPaciente`)
-- [ ] T106 [P] [US4] Create `app/Domain/Messaging/Conversation/Events/{ConversaResolvida,ConversaReaberta,ConversaVinculadaAPaciente}.php`
-- [ ] T107 [P] [US4] Create `app/Jobs/Messaging/AutoResolveConversationsJob.php` — runs hourly; finds conversations with `status IN (aberta, pendente)` + `last_inbound_message_at < now() - 72h`; transitions to resolvida + fires event
-- [ ] T108 [P] [US4] Create `app/Domain/Messaging/Message/Services/MessageDispatchService.php` with `send(Conversation, OutboundMessage)` — **Princípio VI runtime gate**: throws `WindowExpiredWithoutTemplateException` (mapped to 422 in controller) when last inbound > 24h and not template
-- [ ] T109 [P] [US4] Create `app/Domain/Messaging/Message/Exceptions/{WindowExpiredWithoutTemplateException,ChannelDegradedException,UnsupportedMediaTypeException}.php`
-- [ ] T110 [P] [US4] Create `app/Domain/Messaging/Message/Services/MessageSearchService.php` with hybrid query `WHERE tenant_id=:t AND (body_searchable_normalized % :q OR body_searchable_normalized ILIKE :q_like) ORDER BY similarity(...) DESC LIMIT 50`
-- [ ] T111 [P] [US4] Create `app/Jobs/Messaging/SendOutboundMessageJob.php` (extends `TenantAwareJob`) — calls `ChannelAdapter::send` wrapped in circuit breaker, updates message status, fires `MensagemEnviada`
-- [ ] T112 [P] [US4] Create broadcast events `app/Domain/Messaging/Conversation/Broadcast/{MensagemRecebidaParaInbox,MensagemEnviadaParaInbox,ConversaCriadaParaInbox,ConversaAtribuidaParaInbox,UsuarioDigitando,MensagemLida}.php` — `ShouldBroadcast` only, NOT `Auditable` (separação domínio/transporte per research R1)
-- [ ] T113 [P] [US4] Add listener `app/Domain/Messaging/Infrastructure/Listeners/BroadcastDomainMensagensListener.php` — subscribes to domain `MensagemRecebida`/`MensagemEnviada` events and dispatches paired broadcast events
-- [ ] T114 [US4] Create `app/Http/Controllers/Api/V1/Inbox/ConversationsController.php`: `index` (with filters), `show`, `resolve`, `reopen`, `linkPatient`, `read`
-- [ ] T115 [US4] Create `app/Http/Controllers/Api/V1/Inbox/MessagesController.php`: `index` (cursor-paginated), `store` (with `Idempotency-Key` header) — maps `WindowExpiredWithoutTemplateException` to 422 with `WindowExpiredErrorResponse` schema
-- [ ] T116 [P] [US4] Create Form Request `app/Http/Requests/Inbox/SendMessageRequest.php` (per openapi `SendMessageRequest`)
-- [ ] T117 [P] [US4] Create Form Request `app/Http/Requests/Inbox/ListConversationsRequest.php`
-- [ ] T118 [P] [US4] Create Resources `app/Http/Resources/V1/{ConversationResource,MessageResource,MessageMediaResource}.php` + `ConversationListResource.php` (with aggregations `{by_status, unassigned, mine}` for badges)
-- [ ] T119 [P] [US4] Create Policies `app/Policies/ConversationPolicy.php` + `MessagePolicy.php` enforcing `inbox.view`, `inbox.respond`, médico scope
-- [ ] T120 [US4] Add routes for `/api/v1/inbox/conversations`, `/conversations/{id}`, `/conversations/{id}/messages`, `/conversations/{id}/{read,resolve,reopen,link-patient}` in `routes/api.php`
-- [ ] T121 [US4] Add long-polling fallback route `GET /api/v1/inbox/poll?since={cursor}` in `routes/api.php` (NC-11.c) + `app/Http/Controllers/Api/V1/Inbox/InboxPollController.php`
-- [ ] T122 [US4] Create Vue page `resources/js/pages/Inbox/Index.vue` (3-pane layout: filters/list/conversation-detail)
-- [ ] T123 [P] [US4] Create Vue component `resources/js/components/Inbox/ConversationListItem.vue` (avatar, channel badge, preview, unread count, priority placeholder)
-- [ ] T124 [P] [US4] Create Vue component `resources/js/components/Inbox/MessageBubble.vue` with status icons (sent ✓, delivered ✓✓ gray, read ✓✓ blue) per AC-4.4.7
-- [ ] T125 [P] [US4] Create Vue component `resources/js/components/Inbox/MessageInput.vue` with 4096 char limit (AC-4.4.4) + window 24h badge (AC-4.4.5 + NC-4.a colors verde/amarelo/vermelho/cadeado)
-- [ ] T126 [P] [US4] Create Vue component `resources/js/components/Inbox/InboxFilters.vue` with 7 filter dimensions (canal, status, atendente, profissional, tag, mídia, idade) per AC-4.4.8
-- [ ] T127 [P] [US4] Create Vue component `resources/js/components/Inbox/InboxSearch.vue` with 350ms debounce + highlighted matches per AC-4.4.9
-- [ ] T128 [P] [US4] Create Pinia store `resources/js/stores/inbox.js` with `conversations`, `selectedConversation`, `messages`, `filters`, `cursor` + actions
-- [ ] T129 [P] [US4] Create composable `resources/js/composables/useReverbConnection.js` — subscribes to `tenant.{id}.inbox` on mount, `tenant.{id}.conversa.{cid}` on conversation open, backoff exponencial 1→2→4→8→16→30s infinito per NC-11.b
-- [ ] T130 [P] [US4] Create composable `resources/js/composables/useLongPollingFallback.js` — detects WebSocket failure > 2min, switches to `GET /inbox/poll` every 10s with banner UI per NC-11.c
-- [ ] T131 [P] [US4] Create composable `resources/js/composables/useInboxFilters.js` syncing filters with `useRoute().query` (URL share-friendly)
-- [ ] T132 [US4] Add i18n strings `resources/lang/pt-BR/inbox.json`
-- [ ] T133 [US4] Update `routes/web.php` or SPA router with `/panel/inbox` route + guard `ability:inbox.view`
-- [ ] T133a [P] [US4] **(FR-017 fix)** Write `tests/Feature/Fase3/US4_Inbox/ConversasMigramOnPacienteMescladoTest.php` covering FR-017 + spec § 2.4: dispatch Fase 2 `PacienteMesclado(origem_ids:[7], alvo_id:5)` → todas conversations com `patient_id IN (7)` migram para `patient_id=5`; mensagens preservadas; reversão via `PacienteMesclagemRevertida` restaura `patient_id` original
-- [ ] T133b [US4] **(FR-017 fix)** Create `app/Domain/Messaging/Infrastructure/Listeners/MigraConversasOnPacienteMescladoListener.php` subscribing to Fase 2 `App\Events\Pacientes\PacienteMesclado` and `PacienteMesclagemRevertida`; updates `conversations.patient_id` em lote dentro de transaction; fires `ConversaVinculadaAPaciente` modo=`auto_merge` para cada conversa migrada; bind no `EventServiceProvider`
+- [x] T104 [P] [US4] Create `app/Domain/Messaging/Conversation/StateMachine/ConversationStatusTransitions.php` enum + transition validation (`aberta → pendente`, `aberta → resolvida`, `pendente → resolvida`, `resolvida → reaberta`, `reaberta → aberta` implicit on next inbound)
+- [x] T105 [P] [US4] Create `app/Domain/Messaging/Conversation/Services/ConversationService.php` with `findOrCreateForInbound`, `resolve(Conversation, mode)`, `reopen`, `linkToPatient` (fires `ConversaVinculadaAPaciente`)
+- [x] T106 [P] [US4] Create `app/Domain/Messaging/Conversation/Events/{ConversaResolvida,ConversaReaberta,ConversaVinculadaAPaciente}.php`
+- [x] T107 [P] [US4] Create `app/Jobs/Messaging/AutoResolveConversationsJob.php` — runs hourly; finds conversations with `status IN (aberta, pendente)` + `last_inbound_message_at < now() - 72h`; transitions to resolvida + fires event
+- [x] T108 [P] [US4] Create `app/Domain/Messaging/Message/Services/MessageDispatchService.php` with `send(Conversation, OutboundMessage)` — **Princípio VI runtime gate**: throws `WindowExpiredWithoutTemplateException` (mapped to 422 in controller) when last inbound > 24h and not template
+- [x] T109 [P] [US4] Create `app/Domain/Messaging/Message/Exceptions/{WindowExpiredWithoutTemplateException,ChannelDegradedException,UnsupportedMediaTypeException}.php`
+- [x] T110 [P] [US4] Create `app/Domain/Messaging/Message/Services/MessageSearchService.php` with hybrid query `WHERE tenant_id=:t AND (body_searchable_normalized % :q OR body_searchable_normalized ILIKE :q_like) ORDER BY similarity(...) DESC LIMIT 50`
+- [x] T111 [P] [US4] Create `app/Jobs/Messaging/SendOutboundMessageJob.php` (extends `TenantAwareJob`) — calls `ChannelAdapter::send` wrapped in circuit breaker, updates message status, fires `MensagemEnviada`
+- [x] T112 [P] [US4] Create broadcast events `app/Domain/Messaging/Conversation/Broadcast/{MensagemRecebidaParaInbox,MensagemEnviadaParaInbox,ConversaCriadaParaInbox,ConversaAtribuidaParaInbox,UsuarioDigitando,MensagemLida}.php` — `ShouldBroadcast` only, NOT `Auditable` (separação domínio/transporte per research R1)
+- [x] T113 [P] [US4] Add listener `app/Domain/Messaging/Infrastructure/Listeners/BroadcastDomainMensagensListener.php` — subscribes to domain `MensagemRecebida`/`MensagemEnviada` events and dispatches paired broadcast events
+- [x] T114 [US4] Create `app/Http/Controllers/Api/V1/Inbox/ConversationsController.php`: `index` (with filters), `show`, `resolve`, `reopen`, `linkPatient`, `read`
+- [x] T115 [US4] Create `app/Http/Controllers/Api/V1/Inbox/MessagesController.php`: `index` (cursor-paginated), `store` (with `Idempotency-Key` header) — maps `WindowExpiredWithoutTemplateException` to 422 with `WindowExpiredErrorResponse` schema
+- [x] T116 [P] [US4] Create Form Request `app/Http/Requests/Inbox/SendMessageRequest.php` (per openapi `SendMessageRequest`)
+- [x] T117 [P] [US4] Create Form Request `app/Http/Requests/Inbox/ListConversationsRequest.php`
+- [x] T118 [P] [US4] Create Resources `app/Http/Resources/V1/{ConversationResource,MessageResource,MessageMediaResource}.php` + `ConversationListResource.php` (with aggregations `{by_status, unassigned, mine}` for badges)
+- [x] T119 [P] [US4] Create Policies `app/Policies/ConversationPolicy.php` + `MessagePolicy.php` enforcing `inbox.view`, `inbox.respond`, médico scope
+- [x] T120 [US4] Add routes for `/api/v1/inbox/conversations`, `/conversations/{id}`, `/conversations/{id}/messages`, `/conversations/{id}/{read,resolve,reopen,link-patient}` in `routes/api.php`
+- [x] T121 [US4] Add long-polling fallback route `GET /api/v1/inbox/poll?since={cursor}` in `routes/api.php` (NC-11.c) + `app/Http/Controllers/Api/V1/Inbox/InboxPollController.php`
+- [x] T122 [US4] Create Vue page `resources/js/pages/Inbox/Index.vue` (3-pane layout: filters/list/conversation-detail)
+- [x] T123 [P] [US4] Create Vue component `resources/js/components/Inbox/ConversationListItem.vue` (avatar, channel badge, preview, unread count, priority placeholder)
+- [x] T124 [P] [US4] Create Vue component `resources/js/components/Inbox/MessageBubble.vue` with status icons (sent ✓, delivered ✓✓ gray, read ✓✓ blue) per AC-4.4.7
+- [x] T125 [P] [US4] Create Vue component `resources/js/components/Inbox/MessageInput.vue` with 4096 char limit (AC-4.4.4) + window 24h badge (AC-4.4.5 + NC-4.a colors verde/amarelo/vermelho/cadeado)
+- [x] T126 [P] [US4] Create Vue component `resources/js/components/Inbox/InboxFilters.vue` with 7 filter dimensions (canal, status, atendente, profissional, tag, mídia, idade) per AC-4.4.8
+- [x] T127 [P] [US4] Create Vue component `resources/js/components/Inbox/InboxSearch.vue` with 350ms debounce + highlighted matches per AC-4.4.9
+- [x] T128 [P] [US4] Create Pinia store `resources/js/stores/inbox.js` with `conversations`, `selectedConversation`, `messages`, `filters`, `cursor` + actions
+- [x] T129 [P] [US4] Create composable `resources/js/composables/useReverbConnection.js` — subscribes to `tenant.{id}.inbox` on mount, `tenant.{id}.conversa.{cid}` on conversation open, backoff exponencial 1→2→4→8→16→30s infinito per NC-11.b
+- [x] T130 [P] [US4] Create composable `resources/js/composables/useLongPollingFallback.js` — detects WebSocket failure > 2min, switches to `GET /inbox/poll` every 10s with banner UI per NC-11.c
+- [x] T131 [P] [US4] Create composable `resources/js/composables/useInboxFilters.js` syncing filters with `useRoute().query` (URL share-friendly)
+- [x] T132 [US4] Add i18n strings `resources/lang/pt-BR/inbox.json`
+- [x] T133 [US4] Update `routes/web.php` or SPA router with `/panel/inbox` route + guard `ability:inbox.view`
+- [x] T133a [P] [US4] **(FR-017 fix)** Write `tests/Feature/Fase3/US4_Inbox/ConversasMigramOnPacienteMescladoTest.php` covering FR-017 + spec § 2.4: dispatch Fase 2 `PacienteMesclado(origem_ids:[7], alvo_id:5)` → todas conversations com `patient_id IN (7)` migram para `patient_id=5`; mensagens preservadas; reversão via `PacienteMesclagemRevertida` restaura `patient_id` original
+- [x] T133b [US4] **(FR-017 fix)** Create `app/Domain/Messaging/Infrastructure/Listeners/MigraConversasOnPacienteMescladoListener.php` subscribing to Fase 2 `App\Events\Pacientes\PacienteMesclado` and `PacienteMesclagemRevertida`; updates `conversations.patient_id` em lote dentro de transaction; fires `ConversaVinculadaAPaciente` modo=`auto_merge` para cada conversa migrada; bind no `EventServiceProvider`
 - [ ] T134 [US4] Update `InboxTenantIsolationTest` adding ~10 new conversation/message endpoints
 - [ ] T135 [US4] Run all US4 tests; **all PASS**
 - [ ] T136 [US4] Run `vendor/bin/sail bin pint --dirty --format agent`

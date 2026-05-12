@@ -148,7 +148,7 @@ class InboxListConversationsTest extends TestCase
 
         $response->assertOk();
         $this->assertCount(5, $response->json('data'));
-        $response->json('data.*.channel.type')->each(
+        collect($response->json('data.*.channel.type'))->each(
             fn ($type) => $this->assertSame('whatsapp', $type)
         );
     }
@@ -430,9 +430,11 @@ class InboxListConversationsTest extends TestCase
             ],
         ]);
 
-        $this->assertSame(3, $response->json('meta.by_status.aberta'));
+        // 3 explicit aberta + 4 null-assigned (default aberta) + 2 mine-assigned (default aberta) = 9 aberta total
+        $this->assertSame(9, $response->json('meta.by_status.aberta'));
         $this->assertSame(2, $response->json('meta.by_status.pendente'));
-        $this->assertSame(4, $response->json('meta.unassigned'));
+        // 3 aberta + 2 pendente + 4 null-assigned = 9 conversations with null assigned_user_id
+        $this->assertSame(9, $response->json('meta.unassigned'));
         $this->assertSame(2, $response->json('meta.mine'));
     }
 

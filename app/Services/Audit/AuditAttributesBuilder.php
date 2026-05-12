@@ -91,6 +91,7 @@ final class AuditAttributesBuilder
         return [
             'tenant_id' => $event->auditTenantId() ?? $this->resolveTenantId(),
             'user_id' => $userId,
+            'executor_id' => $userId,
             'actor_type' => $actorType,
             'action' => $event->auditAction(),
             'auditable_type' => $auditable !== null ? $auditable::class : null,

@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\V1\Billing\CheckoutController;
 use App\Http\Controllers\Api\V1\Billing\PlansController;
 use App\Http\Controllers\Api\V1\Billing\SubscriptionController;
 use App\Http\Controllers\Api\V1\Convenios\ConveniosController;
+use App\Http\Controllers\Api\V1\Inbox\ChannelsController;
+use App\Http\Controllers\Api\V1\Inbox\ChannelTemplatesController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
 use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
 use App\Http\Controllers\Api\V1\Pacientes\ExportacaoController;
@@ -25,6 +27,8 @@ use App\Http\Controllers\Api\V1\Tenant\CurrentTenantController;
 use App\Http\Controllers\Api\V1\Tenant\RegisterController as TenantRegisterController;
 use App\Http\Controllers\Api\V1\Users\InvitationsController;
 use App\Http\Controllers\Api\V1\Users\UsersController;
+use App\Http\Controllers\Webhooks\TwilioStatusCallbackController;
+use App\Http\Controllers\Webhooks\TwilioWhatsAppWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -233,4 +237,32 @@ Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->group(function (): 
     Route::post('/convenios', [ConveniosController::class, 'store'])->name('convenios.store');
     Route::patch('/convenios/{id}', [ConveniosController::class, 'update'])->name('convenios.update')->whereNumber('id');
     Route::delete('/convenios/{id}', [ConveniosController::class, 'destroy'])->name('convenios.destroy')->whereNumber('id');
+});
+
+// Fase 3 — US1: Canais de mensageria (T077)
+// Exige auth Sanctum + throttle inbox. `auth:sanctum` já garante tenant via
+// ResolveTenant (roda global no grupo 'api').
+Route::middleware(['auth:sanctum', 'throttle:inbox'])->group(function (): void {
+    Route::apiResource('inbox/channels', ChannelsController::class);
+    Route::post('inbox/channels/{channel}/reconnect', [ChannelsController::class, 'reconnect'])
+        ->name('inbox.channels.reconnect')
+        ->whereNumber('channel');
+    Route::get('inbox/channels/{channel}/templates', [ChannelTemplatesController::class, 'index'])
+        ->name('inbox.channels.templates.index')
+        ->whereNumber('channel');
+    Route::post('inbox/channels/{channel}/templates/sync', [ChannelTemplatesController::class, 'sync'])
+        ->name('inbox.channels.templates.sync')
+        ->whereNumber('channel');
+});
+
+// Fase 3 — Webhooks Twilio (T081)
+// Fora do grupo auth:sanctum — webhooks são públicos mas validados por assinatura HMAC.
+// `ResolveTenant` global ainda executa mas não há tenant resolvido aqui (sem subdomínio tenant).
+Route::middleware(['throttle:webhook-meta'])->group(function (): void {
+    Route::post('webhooks/twilio/whatsapp', TwilioWhatsAppWebhookController::class)
+        ->middleware('twilio.signature')
+        ->name('webhooks.twilio.whatsapp');
+    Route::post('webhooks/twilio/status', TwilioStatusCallbackController::class)
+        ->middleware('twilio.signature')
+        ->name('webhooks.twilio.status');
 });

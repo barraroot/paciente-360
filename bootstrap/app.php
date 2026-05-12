@@ -22,6 +22,7 @@ use App\Http\Middleware\ApplyOverdueRestrictions;
 use App\Http\Middleware\EnsureTenantNotSuspended;
 use App\Http\Middleware\LogStructuredRequestData;
 use App\Http\Middleware\ResolveTenant;
+use App\Http\Middleware\ValidateTwilioSignature;
 use App\Support\Cpf\CpfValidator;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -51,6 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.not-suspended' => EnsureTenantNotSuspended::class,
             'log.structured' => LogStructuredRequestData::class,
             'apply.overdue.restrictions' => ApplyOverdueRestrictions::class,
+            'twilio.signature' => ValidateTwilioSignature::class,
         ]);
 
         // T050 — Sanctum SPA stateful: injeta EnsureFrontendRequestsAreStateful

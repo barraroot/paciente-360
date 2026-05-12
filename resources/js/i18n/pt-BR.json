@@ -406,5 +406,93 @@
         "actions": { "mesclar": "Mesclar com existente", "criar_paralelo": "Criar paciente paralelo", "abrir_existente": "Abrir cadastro existente" },
         "reversivel_ate": "Reversível até {date}",
         "reverter_cta": "Reverter mesclagem"
+    },
+    "canais": {
+        "titulo": "Canais",
+        "conectar": "Conectar canal",
+        "conectar_whatsapp": "Conectar WhatsApp",
+        "conectar_instagram": "Conectar Instagram",
+        "conectar_widget": "Criar Widget Web",
+        "em_breve": "Disponível em breve",
+        "status": {
+            "ativo": "Ativo",
+            "desconectado": "Desconectado",
+            "invalido": "Inválido",
+            "expirado": "Expirado",
+            "degradado": "Atenção",
+            "suspenso": "Suspenso"
+        },
+        "tipo": {
+            "whatsapp": "WhatsApp Business",
+            "instagram": "Instagram Direct",
+            "web": "Widget Web"
+        },
+        "form": {
+            "nome": "Nome do canal",
+            "nome_placeholder": "Ex: Agendamento WhatsApp",
+            "account_sid": "Account SID",
+            "account_sid_placeholder": "AC...",
+            "account_sid_help": "Console → Account → API keys & tokens",
+            "auth_token": "Auth Token",
+            "auth_token_help": "Mantenha seguro — usado apenas pelo backend",
+            "messaging_service_sid": "Messaging Service SID",
+            "messaging_service_sid_placeholder": "MG...",
+            "messaging_service_sid_help": "Console → Messaging → Services",
+            "whatsapp_sender": "WhatsApp Sender",
+            "whatsapp_sender_placeholder": "whatsapp:+5511999999999",
+            "whatsapp_sender_help": "Formato whatsapp:+E164 (ex: whatsapp:+5511999999999)",
+            "submit": "Conectar canal",
+            "show_token": "Mostrar",
+            "hide_token": "Ocultar"
+        },
+        "actions": {
+            "ver_detalhes": "Ver detalhes",
+            "reconectar": "Reconectar",
+            "sincronizar_templates": "Sincronizar templates",
+            "desconectar": "Desconectar"
+        },
+        "errors": {
+            "invalid_credentials": "Credenciais Twilio rejeitadas. Verifique Account SID e Auth Token.",
+            "already_connected": "Este sender WhatsApp já está conectado em outro canal deste tenant.",
+            "no_permission": "Você não tem permissão para gerenciar canais.",
+            "load_failed": "Falha ao carregar canais.",
+            "disconnect_with_active": "Existem conversas ativas neste canal. Confirme para desconectar mesmo assim.",
+            "reconnect_failed": "Falha ao reconectar o canal.",
+            "sync_failed": "Falha ao iniciar sincronização de templates."
+        },
+        "success": {
+            "connected": "Canal conectado com sucesso!",
+            "disconnected": "Canal desconectado.",
+            "templates_synced": "Sincronização de templates iniciada. Verifique em alguns segundos.",
+            "reconnected": "Canal reconectado com sucesso!"
+        },
+        "empty_state": {
+            "titulo": "Nenhum canal conectado",
+            "descricao": "Conecte o WhatsApp Business para começar a centralizar o atendimento.",
+            "cta": "Conectar WhatsApp"
+        },
+        "quality_rating": {
+            "label": "Quality Rating Meta",
+            "high": "Alto",
+            "medium": "Médio",
+            "low": "Baixo · risco de suspensão",
+            "flagged": "Sinalizado · uso restrito"
+        },
+        "detalhe": {
+            "titulo": "Detalhes do canal",
+            "templates_titulo": "Templates aprovados",
+            "templates_vazio": "Nenhum template sincronizado.",
+            "sincronizar_cta": "Sincronizar agora",
+            "voltar": "Voltar para Canais",
+            "status_label": "Status",
+            "tipo_label": "Tipo",
+            "sender_label": "Sender",
+            "criado_em": "Conectado em",
+            "atualizado_em": "Atualizado em"
+        },
+        "disconnect_confirm": {
+            "titulo": "Desconectar canal",
+            "descricao": "Ao desconectar, novas mensagens não serão recebidas. As conversas existentes ficam acessíveis em modo leitura. Confirma?"
+        }
     }
 }

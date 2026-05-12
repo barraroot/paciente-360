@@ -97,7 +97,7 @@ class TwilioStatusCallbackTest extends TestCase
 
         // Verifica atualização
         $message->refresh();
-        $this->assertEqualss('delivered', $message->status);
+        $this->assertEquals('delivered', $message->status);
         $this->assertNotNull($message->delivered_at);
     }
 

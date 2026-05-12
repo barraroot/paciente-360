@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
+use App\Domain\Messaging\Channel\Models\Channel;
+use App\Domain\Messaging\Infrastructure\CircuitBreaker\CircuitBreakerService;
 use App\Events\TenantResolved;
 use App\Models\Anotacao;
 use App\Models\AuditLog;
@@ -14,6 +17,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Policies\AnotacaoPolicy;
 use App\Policies\AuditLogPolicy;
+use App\Policies\ChannelPolicy;
 use App\Policies\ConvenioPolicy;
 use App\Policies\FunilPolicy;
 use App\Policies\InvitationPolicy;
@@ -33,6 +37,7 @@ use Laravel\Cashier\Cashier;
 use Sentry\State\Scope;
 use Spatie\Permission\PermissionRegistrar;
 use Stripe\StripeClient;
+use Twilio\Rest\Client;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +46,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Fase 3 — WhatsAppCloudAdapter: singleton com CircuitBreakerService.
+        // O Twilio Client é instanciado por channel dentro do adapter (send/validateCredentials).
+        // `$clientOverride` fica null em produção; testes injetam via app->instance(Client::class, $mock).
+        $this->app->singleton(WhatsAppCloudAdapter::class, function () {
+            $clientOverride = $this->app->bound(Client::class)
+                ? $this->app->make(Client::class)
+                : null;
+
+            return new WhatsAppCloudAdapter(
+                $this->app->make(CircuitBreakerService::class),
+                $clientOverride,
+            );
+        });
+
         // Wrapper do Stripe SDK — permite swap por mock em testes.
         // Só instancia o StripeClient real se a chave secreta estiver configurada.
         $this->app->singleton(StripeClientWrapper::class, function () {
@@ -89,6 +108,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Tag::class, TagPolicy::class);
         Gate::policy(Convenio::class, ConvenioPolicy::class);
         Gate::policy(FunilColuna::class, FunilPolicy::class);
+
+        // Fase 3 — Omnichannel Inbox (T076).
+        Gate::policy(Channel::class, ChannelPolicy::class);
     }
 
     /**

@@ -136,33 +136,33 @@
 
 ### Implementation for US1
 
-- [ ] T067 [P] [US1] Create events `app/Domain/Messaging/Channel/Events/{CanalConectado,CanalDesconectado,CanalComFalha,CanalDegradado}.php` implementing `Auditable` (Fase 0 contract)
-- [ ] T068 [P] [US1] Create `app/Domain/Messaging/Channel/Adapters/WhatsAppCloudAdapter.php` implementing `ChannelAdapter` using `Twilio\Rest\Client` wrapped in `CircuitBreakerService::for('twilio')`
-- [ ] T069 [US1] Create `app/Domain/Messaging/Channel/Services/ChannelService.php` with `connect(tenantId, type, name, credentials): Channel` — validates via adapter, encrypts `credentials_encrypted`, fires `CanalConectado`
-- [ ] T070 [US1] Create `app/Domain/Messaging/Channel/Services/QualityRatingMonitor.php` — consumes Twilio status webhook, updates `quality_rating`, toggles `auto_send_disabled` per NC-17
-- [ ] T071 [US1] Create `app/Domain/Messaging/Channel/Services/ChannelTemplateSyncService.php` + `app/Jobs/Messaging/SyncChannelTemplatesJob.php` (Horizon queue `default`, schedule daily)
-- [ ] T072 [P] [US1] Create `app/Http/Controllers/Api/V1/Inbox/ChannelsController.php` with `index`, `store`, `show`, `update`, `destroy`, `reconnect` per openapi.yaml `/inbox/channels`
-- [ ] T073 [P] [US1] Create `app/Http/Controllers/Api/V1/Inbox/ChannelTemplatesController.php` with `index`, `sync` actions
-- [ ] T074 [P] [US1] Create Form Requests `app/Http/Requests/Inbox/ConnectChannelRequest.php` (per openapi schema `ConnectChannelRequest` — `oneOf` for `TwilioCredentials`)
-- [ ] T075 [P] [US1] Create Resources `app/Http/Resources/V1/ChannelResource.php`, `ChannelTemplateResource.php`
-- [ ] T076 [P] [US1] Create `app/Policies/ChannelPolicy.php` enforcing `channel.connect`, `channel.disconnect` abilities + tenant ownership
-- [ ] T077 [US1] Add routes `/api/v1/inbox/channels`, `/api/v1/inbox/channels/{id}/reconnect`, `/api/v1/inbox/channels/{id}/templates`, `/api/v1/inbox/channels/{id}/templates/sync` in `routes/api.php` with `inbox` rate limiter + Sanctum stateful + `ResolveTenant` middleware
-- [ ] T078 [P] [US1] Create `app/Http/Controllers/Webhooks/TwilioWhatsAppWebhookController.php` with `__invoke` action: validates `X-Twilio-Signature` (HMAC SHA-256 with `TWILIO_AUTH_TOKEN`), calls `WebhookEventRecorder::recordOnce`, dispatches `ProcessInboundMessageJob`, returns 200 always
-- [ ] T079 [P] [US1] Create `app/Http/Controllers/Webhooks/TwilioStatusCallbackController.php` for status updates (`queued`, `sent`, `delivered`, `read`, `failed`)
-- [ ] T080 [P] [US1] Create `app/Http/Middleware/ValidateTwilioSignature.php` middleware
-- [ ] T081 [US1] Add webhook routes (NO auth, NO subdomain tenant, NO Sanctum) in `routes/api.php` group: POST `/api/v1/webhooks/twilio/whatsapp`, POST `/api/v1/webhooks/twilio/status` — apply `ValidateTwilioSignature` middleware + `webhook-meta` rate limiter
-- [ ] T082 [P] [US1] Create `app/Jobs/Messaging/ProcessInboundMessageJob.php` (extends `TenantAwareJob`) — resolves tenant from `MessagingServiceSid`, delegates to `PatientResolverService` (T082a), finds/creates `Conversation`, creates `Message` (direction=in, sender_type=patient), fires `MensagemRecebida` + `ConversaCriada` if new
-- [ ] T082a [P] [US1] **(FR-011 / NC-1.a fix)** Write `tests/Feature/Fase3/US1_WhatsApp/WhatsAppPatientResolutionTest.php` covering 3 cases: (a) telefone E.164 normalizado → match único → `conversation.patient_id` set + `ConversaVinculadaAPaciente` modo=`auto_telefone`; (b) colisão multi-paciente (caso família NC-1) → `patient_id=null` + entra na fila "Não identificado"; (c) nenhum match → `patient_id=null` sem evento de vínculo
-- [ ] T082b [US1] **(FR-011 / NC-1.a fix)** Create `app/Domain/Messaging/Conversation/Services/PatientResolverService.php` with `resolveForInboundChannel(channel, externalThreadId): ?Paciente` — normaliza E.164 via Fase 2 `PhoneNormalizer`, consulta `App\Services\Pacientes\DedupService::findByPhone` (Fase 2), retorna match único OR null em colisão; emite `ConversaVinculadaAPaciente` modo=`auto_telefone` quando match único; integrar com `ProcessInboundMessageJob` (T082)
-- [ ] T083 [P] [US1] Create `app/Domain/Messaging/Message/Events/{MensagemRecebida,MensagemEnviada}.php` + `app/Domain/Messaging/Conversation/Events/ConversaCriada.php` implementing `Auditable` + `ShouldBroadcast`
-- [ ] T084 [US1] Implement Vue page `resources/js/pages/Canais/Index.vue` and `resources/js/pages/Canais/ConectarWhatsApp.vue` with form fields per AC-4.1.1 + integração com `api.js` axios from Fase 0
-- [ ] T085 [US1] Implement Vue component `resources/js/components/Canais/ChannelStatusBadge.vue` rendering status `ativo`/`desconectado`/`invalido`/`expirado`/`degradado`
-- [ ] T086 [US1] Add Pinia store `resources/js/stores/canais.js` for channel list + connect/disconnect actions
-- [ ] T087 [US1] Add i18n strings to `resources/lang/pt-BR/canais.json` (status labels, error messages, validation)
-- [ ] T088 [US1] Add channel routes to `resources/js/router/index.js` (`/panel/canais`, `/panel/canais/conectar-whatsapp`, `/panel/canais/{id}`)
-- [ ] T089 [US1] Update `tests/Feature/Fase3/InboxTenantIsolationTest.php` adding 8 endpoints from US1 (channels CRUD + templates sync)
-- [ ] T090 [US1] Run all US1 tests; **all must PASS** (`vendor/bin/sail artisan test tests/Feature/Fase3/US1_WhatsApp/ tests/Unit/Messaging/WhatsAppCloudAdapterTest.php --compact`)
-- [ ] T091 [US1] Run `vendor/bin/sail bin pint --dirty --format agent`
+- [x] T067 [P] [US1] Create events `app/Domain/Messaging/Channel/Events/{CanalConectado,CanalDesconectado,CanalComFalha,CanalDegradado}.php` implementing `Auditable` (Fase 0 contract)
+- [x] T068 [P] [US1] Create `app/Domain/Messaging/Channel/Adapters/WhatsAppCloudAdapter.php` implementing `ChannelAdapter` using `Twilio\Rest\Client` wrapped in `CircuitBreakerService::for('twilio')`
+- [x] T069 [US1] Create `app/Domain/Messaging/Channel/Services/ChannelService.php` with `connect(tenantId, type, name, credentials): Channel` — validates via adapter, encrypts `credentials_encrypted`, fires `CanalConectado`
+- [x] T070 [US1] Create `app/Domain/Messaging/Channel/Services/QualityRatingMonitor.php` — consumes Twilio status webhook, updates `quality_rating`, toggles `auto_send_disabled` per NC-17
+- [x] T071 [US1] Create `app/Domain/Messaging/Channel/Services/ChannelTemplateSyncService.php` + `app/Jobs/Messaging/SyncChannelTemplatesJob.php` (Horizon queue `default`, schedule daily)
+- [x] T072 [P] [US1] Create `app/Http/Controllers/Api/V1/Inbox/ChannelsController.php` with `index`, `store`, `show`, `update`, `destroy`, `reconnect` per openapi.yaml `/inbox/channels`
+- [x] T073 [P] [US1] Create `app/Http/Controllers/Api/V1/Inbox/ChannelTemplatesController.php` with `index`, `sync` actions
+- [x] T074 [P] [US1] Create Form Requests `app/Http/Requests/Inbox/ConnectChannelRequest.php` (per openapi schema `ConnectChannelRequest` — `oneOf` for `TwilioCredentials`)
+- [x] T075 [P] [US1] Create Resources `app/Http/Resources/V1/ChannelResource.php`, `ChannelTemplateResource.php`
+- [x] T076 [P] [US1] Create `app/Policies/ChannelPolicy.php` enforcing `channel.connect`, `channel.disconnect` abilities + tenant ownership
+- [x] T077 [US1] Add routes `/api/v1/inbox/channels`, `/api/v1/inbox/channels/{id}/reconnect`, `/api/v1/inbox/channels/{id}/templates`, `/api/v1/inbox/channels/{id}/templates/sync` in `routes/api.php` with `inbox` rate limiter + Sanctum stateful + `ResolveTenant` middleware
+- [x] T078 [P] [US1] Create `app/Http/Controllers/Webhooks/TwilioWhatsAppWebhookController.php` with `__invoke` action: validates `X-Twilio-Signature` (HMAC SHA-256 with `TWILIO_AUTH_TOKEN`), calls `WebhookEventRecorder::recordOnce`, dispatches `ProcessInboundMessageJob`, returns 200 always
+- [x] T079 [P] [US1] Create `app/Http/Controllers/Webhooks/TwilioStatusCallbackController.php` for status updates (`queued`, `sent`, `delivered`, `read`, `failed`)
+- [x] T080 [P] [US1] Create `app/Http/Middleware/ValidateTwilioSignature.php` middleware
+- [x] T081 [US1] Add webhook routes (NO auth, NO subdomain tenant, NO Sanctum) in `routes/api.php` group: POST `/api/v1/webhooks/twilio/whatsapp`, POST `/api/v1/webhooks/twilio/status` — apply `ValidateTwilioSignature` middleware + `webhook-meta` rate limiter
+- [x] T082 [P] [US1] Create `app/Jobs/Messaging/ProcessInboundMessageJob.php` (extends `TenantAwareJob`) — resolves tenant from `MessagingServiceSid`, delegates to `PatientResolverService` (T082a), finds/creates `Conversation`, creates `Message` (direction=in, sender_type=patient), fires `MensagemRecebida` + `ConversaCriada` if new
+- [x] T082a [P] [US1] **(FR-011 / NC-1.a fix)** Write `tests/Feature/Fase3/US1_WhatsApp/WhatsAppPatientResolutionTest.php` covering 3 cases: (a) telefone E.164 normalizado → match único → `conversation.patient_id` set + `ConversaVinculadaAPaciente` modo=`auto_telefone`; (b) colisão multi-paciente (caso família NC-1) → `patient_id=null` + entra na fila "Não identificado"; (c) nenhum match → `patient_id=null` sem evento de vínculo
+- [x] T082b [US1] **(FR-011 / NC-1.a fix)** Create `app/Domain/Messaging/Conversation/Services/PatientResolverService.php` with `resolveForInboundChannel(channel, externalThreadId): ?Paciente` — normaliza E.164 via Fase 2 `PhoneNormalizer`, consulta `App\Services\Pacientes\DedupService::findByPhone` (Fase 2), retorna match único OR null em colisão; emite `ConversaVinculadaAPaciente` modo=`auto_telefone` quando match único; integrar com `ProcessInboundMessageJob` (T082)
+- [x] T083 [P] [US1] Create `app/Domain/Messaging/Message/Events/{MensagemRecebida,MensagemEnviada}.php` + `app/Domain/Messaging/Conversation/Events/ConversaCriada.php` implementing `Auditable` + `ShouldBroadcast`
+- [x] T084 [US1] Implement Vue page `resources/js/pages/Canais/Index.vue` and `resources/js/pages/Canais/ConectarWhatsApp.vue` with form fields per AC-4.1.1 + integração com `api.js` axios from Fase 0
+- [x] T085 [US1] Implement Vue component `resources/js/components/Canais/ChannelStatusBadge.vue` rendering status `ativo`/`desconectado`/`invalido`/`expirado`/`degradado`
+- [x] T086 [US1] Add Pinia store `resources/js/stores/canais.js` for channel list + connect/disconnect actions
+- [x] T087 [US1] Add i18n strings to `resources/lang/pt-BR/canais.json` (status labels, error messages, validation)
+- [x] T088 [US1] Add channel routes to `resources/js/router/index.js` (`/panel/canais`, `/panel/canais/conectar-whatsapp`, `/panel/canais/{id}`)
+- [x] T089 [US1] Update `tests/Feature/Fase3/InboxTenantIsolationTest.php` adding 8 endpoints from US1 (channels CRUD + templates sync)
+- [x] T090 [US1] Run all US1 tests; **all must PASS** (`vendor/bin/sail artisan test tests/Feature/Fase3/US1_WhatsApp/ tests/Unit/Messaging/WhatsAppCloudAdapterTest.php --compact`)
+- [x] T091 [US1] Run `vendor/bin/sail bin pint --dirty --format agent`
 
 **Checkpoint US1**: WhatsApp via Twilio connectable; webhook inbound funcional; templates sincronizam; quality rating monitor ativo. **Não verificável end-to-end ainda — inbox UI vem em US4.**
 

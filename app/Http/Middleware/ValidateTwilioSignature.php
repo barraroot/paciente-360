@@ -86,6 +86,12 @@ class ValidateTwilioSignature
         Log::warning('ValidateTwilioSignature: assinatura inválida', [
             'ip' => $request->ip(),
             'path' => $request->path(),
+            'full_url' => $url,
+            'scheme' => $request->getScheme(),
+            'host' => $request->getHost(),
+            'x_forwarded_proto' => $request->header('X-Forwarded-Proto'),
+            'param_count' => count($params),
+            'has_messaging_service_sid' => $messagingServiceSid !== null,
         ]);
 
         return response()->json(['error' => 'invalid_signature'], 403);

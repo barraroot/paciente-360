@@ -39,6 +39,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Confia em proxies (ngrok local, load balancer prod) para que
+        // `$request->fullUrl()` retorne `https://` quando o proxy faz TLS
+        // termination. Crítico para HMAC do Twilio que assina contra a URL
+        // pública exata.
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO
+                | Request::HEADER_X_FORWARDED_AWS_ELB,
+        );
+
         // Excluir webhooks do CSRF (Stripe envia sem token).
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',

@@ -1,7 +1,9 @@
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useInboxStore } from '@/stores/inbox.js';
+import QuickReplyAutocomplete from '@/components/Inbox/QuickReplyAutocomplete.vue';
+import QuickReplyPreview from '@/components/Inbox/QuickReplyPreview.vue';
 
 const { t } = useI18n();
 
@@ -21,6 +23,67 @@ const props = defineProps({
 const emit = defineEmits(['messageSent']);
 
 const store = useInboxStore();
+
+// ─── Respostas Rápidas (US-4.7) ───────────────────────────────────────────────
+
+const autocompleteRef = ref(null);
+const qrQuery = ref('');
+const showAutocomplete = ref(false);
+const selectedReply = ref(null);
+
+/** Carrega as respostas rápidas quando o componente é montado */
+onMounted(async () => {
+    if (!store.quickReplies.length) {
+        await store.loadQuickReplies().catch(() => {});
+    }
+});
+
+/**
+ * Detecta quando o usuário digita `/` no textarea e ativa o autocomplete.
+ * Atualiza qrQuery com o texto após a barra.
+ */
+function detectQuickReplyTrigger(value) {
+    const slashIdx = value.lastIndexOf('/');
+    if (slashIdx !== -1 && slashIdx === value.trimStart().indexOf('/') && slashIdx === value.indexOf('/')) {
+        const afterSlash = value.slice(slashIdx + 1);
+        // Não exibir se houver espaço após a barra (usuário já terminou o atalho)
+        if (!afterSlash.includes(' ')) {
+            qrQuery.value = afterSlash;
+            showAutocomplete.value = true;
+            return;
+        }
+    }
+    showAutocomplete.value = false;
+    qrQuery.value = '';
+}
+
+function onSelectQuickReply(reply) {
+    showAutocomplete.value = false;
+    qrQuery.value = '';
+    selectedReply.value = reply;
+    // Limpa o campo para o preview assumir
+    body.value = '';
+}
+
+function onConfirmQuickReply(renderedContent) {
+    body.value = renderedContent;
+    selectedReply.value = null;
+    nextTick(() => {
+        autoResize();
+        submit();
+    });
+}
+
+function onDiscardQuickReply() {
+    selectedReply.value = null;
+    body.value = '';
+    nextTick(() => textareaRef.value?.focus());
+}
+
+function closeAutocomplete() {
+    showAutocomplete.value = false;
+    qrQuery.value = '';
+}
 
 // ─── Estado do input ──────────────────────────────────────────────────────────
 
@@ -136,6 +199,7 @@ const TYPING_THROTTLE_MS = 1000;
 
 function onInput() {
     autoResize();
+    detectQuickReplyTrigger(body.value);
 
     if (!props.disabled) {
         if (!typingTimer) {
@@ -201,6 +265,12 @@ async function submit() {
 }
 
 function onKeydown(event) {
+    // Delega para o autocomplete quando estiver aberto
+    if (showAutocomplete.value && autocompleteRef.value) {
+        autocompleteRef.value.onKeydown(event);
+        return;
+    }
+
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
         submit();
@@ -217,6 +287,15 @@ function handleAttach() {
 
 <template>
     <div class="border-t border-border bg-surface-elevated">
+        <!-- Preview de resposta rápida selecionada -->
+        <QuickReplyPreview
+            v-if="selectedReply"
+            :reply="selectedReply"
+            :conversation-id="conversation.id"
+            @confirm="onConfirmQuickReply"
+            @discard="onDiscardQuickReply"
+        />
+
         <!-- Window 24h badge (apenas quando há restrição) -->
         <div
             v-if="hasWindowRestriction && windowLabel"
@@ -243,7 +322,17 @@ function handleAttach() {
         </div>
 
         <!-- Área de input -->
-        <div class="px-4 py-3">
+        <div class="relative px-4 py-3">
+            <!-- Autocomplete de respostas rápidas -->
+            <QuickReplyAutocomplete
+                v-if="showAutocomplete"
+                ref="autocompleteRef"
+                :query="qrQuery"
+                :replies="store.quickReplies"
+                @select="onSelectQuickReply"
+                @close="closeAutocomplete"
+            />
+
             <!-- Campo de texto -->
             <div
                 class="flex items-end gap-2 rounded-xl border transition-colors"

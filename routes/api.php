@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\Inbox\ChannelTemplatesController;
 use App\Http\Controllers\Api\V1\Inbox\ConversationsController;
 use App\Http\Controllers\Api\V1\Inbox\InboxPollController;
 use App\Http\Controllers\Api\V1\Inbox\MessagesController;
+use App\Http\Controllers\Api\V1\Inbox\QuickRepliesController;
 use App\Http\Controllers\Api\V1\Inbox\TakeoverController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
 use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
@@ -33,8 +34,11 @@ use App\Http\Controllers\Api\V1\Tenant\CurrentTenantController;
 use App\Http\Controllers\Api\V1\Tenant\RegisterController as TenantRegisterController;
 use App\Http\Controllers\Api\V1\Users\InvitationsController;
 use App\Http\Controllers\Api\V1\Users\UsersController;
+use App\Http\Controllers\Webhooks\MetaInstagramWebhookController;
 use App\Http\Controllers\Webhooks\TwilioStatusCallbackController;
 use App\Http\Controllers\Webhooks\TwilioWhatsAppWebhookController;
+use App\Http\Controllers\Widget\WidgetConfigController;
+use App\Http\Middleware\ValidateMetaSignature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -259,6 +263,19 @@ Route::middleware(['auth:sanctum', 'throttle:inbox'])->group(function (): void {
     Route::post('inbox/channels/{channel}/templates/sync', [ChannelTemplatesController::class, 'sync'])
         ->name('inbox.channels.templates.sync')
         ->whereNumber('channel');
+
+    // Fase 3 — US3: Widget Web (T213) — Admin endpoints
+    Route::prefix('inbox')->group(function (): void {
+        Route::get('widget-configs/{channelId}', [WidgetConfigController::class, 'show'])
+            ->name('inbox.widget-configs.show')
+            ->whereNumber('channelId');
+        Route::put('widget-configs/{channelId}', [WidgetConfigController::class, 'update'])
+            ->name('inbox.widget-configs.update')
+            ->whereNumber('channelId');
+        Route::get('widget-configs/{channelId}/snippet', [WidgetConfigController::class, 'snippet'])
+            ->name('inbox.widget-configs.snippet')
+            ->whereNumber('channelId');
+    });
 });
 
 // Fase 3 — US4: Inbox Conversations + Messages (T114/T115/T120/T121)
@@ -311,6 +328,19 @@ Route::middleware(['auth:sanctum', 'throttle:inbox'])->prefix('inbox')->group(fu
         ->name('inbox.assignment-rules.index');
     Route::put('assignment-rules', [AssignmentRulesController::class, 'update'])
         ->name('inbox.assignment-rules.update');
+
+    // US-4.7 — Respostas Rápidas (T240)
+    Route::apiResource('quick-replies', QuickRepliesController::class)
+        ->except(['show'])
+        ->names([
+            'index' => 'inbox.quick-replies.index',
+            'store' => 'inbox.quick-replies.store',
+            'update' => 'inbox.quick-replies.update',
+            'destroy' => 'inbox.quick-replies.destroy',
+        ]);
+    Route::post('quick-replies/{quickReply}/render', [QuickRepliesController::class, 'render'])
+        ->name('inbox.quick-replies.render')
+        ->whereNumber('quickReply');
 });
 
 // Fase 3 — Webhooks Twilio (T081)
@@ -323,4 +353,17 @@ Route::middleware(['throttle:webhook-meta'])->group(function (): void {
     Route::post('webhooks/twilio/status', TwilioStatusCallbackController::class)
         ->middleware('twilio.signature')
         ->name('webhooks.twilio.status');
+});
+
+// Fase 3 — Webhooks Meta Instagram (T194)
+// GET: handshake sem assinatura (verificação do URL pelo Meta).
+// POST: inbound DMs — assinatura HMAC SHA256 validada pelo middleware.
+// Ambos fora do grupo auth:sanctum — webhook é público, sem tenant context.
+// Canal resolvido no job via ig_business_account_id do payload.
+Route::middleware(['throttle:webhook-meta'])->group(function (): void {
+    Route::get('webhooks/instagram', [MetaInstagramWebhookController::class, 'verify'])
+        ->name('webhooks.instagram.verify');
+    Route::post('webhooks/instagram', MetaInstagramWebhookController::class)
+        ->middleware(ValidateMetaSignature::class)
+        ->name('webhooks.instagram.inbound');
 });

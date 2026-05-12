@@ -48,19 +48,26 @@ class ConnectChannelRequest extends FormRequest
      */
     public function rules(): array
     {
+        $type = $this->input('type');
+
         $rules = [
             'type' => ['required', 'string', 'in:whatsapp,instagram,web'],
             'name' => ['required', 'string', 'min:2', 'max:100'],
-            'credentials' => ['required', 'array'],
+            // Web channel does not require external credentials — public_key is generated internally
+            'credentials' => $type === 'web' ? ['sometimes', 'nullable', 'array'] : ['required', 'array'],
         ];
-
-        $type = $this->input('type');
 
         if ($type === 'whatsapp') {
             $rules['credentials.account_sid'] = ['required', 'string', 'regex:/^AC[a-f0-9]{32}$/i'];
             $rules['credentials.auth_token'] = ['required', 'string'];
             $rules['credentials.messaging_service_sid'] = ['required', 'string', 'regex:/^MG[a-f0-9]{32}$/i'];
             $rules['credentials.whatsapp_sender'] = ['required', 'string', 'regex:/^whatsapp:\+\d{8,15}$/'];
+        }
+
+        if ($type === 'instagram') {
+            $rules['credentials.page_id'] = ['required', 'string', 'min:5', 'max:30'];
+            $rules['credentials.page_access_token'] = ['required', 'string', 'min:10'];
+            $rules['credentials.ig_business_account_id'] = ['required', 'string', 'min:5', 'max:30'];
         }
 
         return $rules;

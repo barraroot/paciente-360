@@ -28,6 +28,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -37,6 +38,12 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
+        then: function (): void {
+            // Widget public routes — served at root level (no /api/v1 prefix).
+            // No auth, no CSRF (public API keyed by public_key, not subdomain).
+            Route::middleware([])
+                ->group(base_path('routes/widget.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Confia em proxies (ngrok local, load balancer prod) para que

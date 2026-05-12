@@ -12,6 +12,7 @@ use App\Domain\Messaging\Infrastructure\CircuitBreaker\CircuitBreakerService;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Observers\MessageObserver;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
+use App\Domain\Messaging\QuickReply\Models\QuickReply;
 use App\Events\TenantResolved;
 use App\Models\Anotacao;
 use App\Models\AuditLog;
@@ -33,6 +34,7 @@ use App\Policies\InvitationPolicy;
 use App\Policies\MessagePolicy;
 use App\Policies\OnboardingPolicy;
 use App\Policies\PacientePolicy;
+use App\Policies\QuickReplyPolicy;
 use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
 use App\Services\Billing\StripeClientWrapper;
@@ -134,12 +136,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Convenio::class, ConvenioPolicy::class);
         Gate::policy(FunilColuna::class, FunilPolicy::class);
 
-        // Fase 3 — Omnichannel Inbox (T076 + T119 + T154).
+        // Fase 3 — Omnichannel Inbox (T076 + T119 + T154 + T239).
         Gate::policy(Channel::class, ChannelPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);
         Gate::policy(Message::class, MessagePolicy::class);
         // AssignmentPolicy usa Conversation como model (assign/transfer/viewAssignments)
         Gate::policy(AssignmentRule::class, AssignmentPolicy::class);
+        Gate::policy(QuickReply::class, QuickReplyPolicy::class);
     }
 
     /**

@@ -326,26 +326,26 @@
 
 ### Tests for US2
 
-- [ ] T184 [P] [US2] Write `tests/Feature/Fase3/US2_Instagram/ConnectInstagramTest.php` covering AC-4.2.1, AC-4.2.2: rejeita conta pessoal
-- [ ] T185 [P] [US2] Write `tests/Feature/Fase3/US2_Instagram/MetaWebhookVerifyHandshakeTest.php` covering GET `/api/v1/webhooks/instagram?hub.mode=subscribe...`
-- [ ] T186 [P] [US2] Write `tests/Feature/Fase3/US2_Instagram/MetaWebhookInboundTest.php` covering AC-4.2.3, AC-4.2.4: HMAC X-Hub-Signature-256 valid + dedup `message_id`
-- [ ] T187 [P] [US2] Write `tests/Unit/Messaging/InstagramGraphAdapterTest.php` testing send/validateCredentials with mocked Guzzle
-- [ ] T188 [US2] Run US2 tests; all FAIL
+- [x] T184 [P] [US2] Write `tests/Feature/Fase3/US2_Instagram/ConnectInstagramTest.php` covering AC-4.2.1, AC-4.2.2: rejeita conta pessoal
+- [x] T185 [P] [US2] Write `tests/Feature/Fase3/US2_Instagram/MetaWebhookVerifyHandshakeTest.php` covering GET `/api/v1/webhooks/instagram?hub.mode=subscribe...`
+- [x] T186 [P] [US2] Write `tests/Feature/Fase3/US2_Instagram/MetaWebhookInboundTest.php` covering AC-4.2.3, AC-4.2.4: HMAC X-Hub-Signature-256 valid + dedup `message_id`
+- [x] T187 [P] [US2] Write `tests/Unit/Messaging/InstagramGraphAdapterTest.php` testing send/validateCredentials with mocked Guzzle
+- [x] T188 [US2] Run US2 tests; all FAIL
 
 ### Implementation for US2
 
-- [ ] T189 [P] [US2] Create `app/Domain/Messaging/Channel/Adapters/InstagramGraphAdapter.php` implementing `ChannelAdapter` using Guzzle (no official SDK) — pinned `META_GRAPH_API_VERSION=v21.0` per research R7
-- [ ] T190 [P] [US2] Extend `ConnectChannelRequest` `oneOf` schema with `InstagramCredentials` per openapi.yaml
-- [ ] T191 [P] [US2] Update `ChannelService::connect` to dispatch to correct adapter via `type` discriminator
-- [ ] T192 [P] [US2] Create `app/Http/Controllers/Webhooks/MetaInstagramWebhookController.php` with `verify` (handshake GET) + `__invoke` (POST events)
-- [ ] T193 [P] [US2] Create `app/Http/Middleware/ValidateMetaSignature.php` (HMAC SHA-256 with `META_APP_SECRET`)
-- [ ] T194 [US2] Add Instagram webhook routes (GET handshake + POST events) with `ValidateMetaSignature` + `webhook-meta` rate limiter
-- [ ] T195 [P] [US2] Update `ProcessInboundMessageJob` to handle Instagram payload shape (igsid, message text/media)
-- [ ] T196 [P] [US2] Add health-check command `app/Console/Commands/MetaGraphHealthCheckCommand.php` — calls `GET /me` monthly; alert Sentry if `X-Fb-Api-Version-Mismatch` header present (research R7 monitoring)
-- [ ] T197 [P] [US2] Create Vue page `resources/js/pages/Canais/ConectarInstagram.vue` with Facebook Login button (OAuth flow + token exchange to long-lived)
-- [ ] T198 [US2] Add doc string explaining Instagram 24h window in `resources/lang/pt-BR/canais.json` per AC-4.2.5
-- [ ] T199 [US2] Update `InboxTenantIsolationTest` adding 2 webhook endpoints + 1 connect endpoint (Instagram-specific shape)
-- [ ] T200 [US2] Run all US2 tests; all PASS
+- [x] T189 [P] [US2] Create `app/Domain/Messaging/Channel/Adapters/InstagramGraphAdapter.php` implementing `ChannelAdapter` using Guzzle (no official SDK) — pinned `META_GRAPH_API_VERSION=v21.0` per research R7
+- [x] T190 [P] [US2] Extend `ConnectChannelRequest` `oneOf` schema with `InstagramCredentials` per openapi.yaml
+- [x] T191 [P] [US2] Update `ChannelService::connect` to dispatch to correct adapter via `type` discriminator
+- [x] T192 [P] [US2] Create `app/Http/Controllers/Webhooks/MetaInstagramWebhookController.php` with `verify` (handshake GET) + `__invoke` (POST events)
+- [x] T193 [P] [US2] Create `app/Http/Middleware/ValidateMetaSignature.php` (HMAC SHA-256 with `META_APP_SECRET`)
+- [x] T194 [US2] Add Instagram webhook routes (GET handshake + POST events) with `ValidateMetaSignature` + `webhook-meta` rate limiter
+- [x] T195 [P] [US2] Update `ProcessInboundMessageJob` to handle Instagram payload shape (igsid, message text/media)
+- [x] T196 [P] [US2] Add health-check command `app/Console/Commands/MetaGraphHealthCheckCommand.php` — calls `GET /me` monthly; alert Sentry if `X-Fb-Api-Version-Mismatch` header present (research R7 monitoring)
+- [x] T197 [P] [US2] Create Vue page `resources/js/pages/Canais/ConectarInstagram.vue` with Facebook Login button (OAuth flow + token exchange to long-lived)
+- [x] T198 [US2] Add doc string explaining Instagram 24h window in `resources/lang/pt-BR/canais.json` per AC-4.2.5
+- [x] T199 [US2] Update `InboxTenantIsolationTest` adding 2 webhook endpoints + 1 connect endpoint (Instagram-specific shape)
+- [x] T200 [US2] Run all US2 tests; all PASS
 
 **Checkpoint US2**: Instagram DM funcional na inbox.
 
@@ -361,43 +361,43 @@
 
 ### Tests for US3 — Painel admin
 
-- [ ] T201 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/CreateWebChannelTest.php` covering AC-4.3.1: POST `/api/v1/inbox/channels` `type=web` generates `public_key` + creates `WebWidgetConfig` row
-- [ ] T202 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/UpdateWidgetConfigTest.php` covering AC-4.3.5, AC-4.3.6: business hours, outside_hours_behavior, allowed_origins whitelist
-- [ ] T203 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/SnippetEndpointTest.php` for GET `/widget-configs/{channel_id}/snippet` returning HTML/JS
+- [x] T201 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/CreateWebChannelTest.php` covering AC-4.3.1: POST `/api/v1/inbox/channels` `type=web` generates `public_key` + creates `WebWidgetConfig` row
+- [x] T202 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/UpdateWidgetConfigTest.php` covering AC-4.3.5, AC-4.3.6: business hours, outside_hours_behavior, allowed_origins whitelist
+- [x] T203 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/SnippetEndpointTest.php` for GET `/widget-configs/{channel_id}/snippet` returning HTML/JS
 
 ### Tests for US3 — Widget público
 
-- [ ] T204 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/WidgetPublicConfigTest.php` for GET `/widget/v1/{public_key}/config` validates `Origin` against `allowed_origins`
-- [ ] T205 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/WidgetSessionStartTest.php` covering AC-4.3.2, AC-4.3.3: POST `/widget/v1/{public_key}/sessions` cria session + lead provisório com `pre_chat_data`
-- [ ] T206 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/WidgetMessagePublicTest.php` covering AC-4.3.4: POST `/widget/v1/{public_key}/messages` cria mensagem → entra na inbox
-- [ ] T207 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/WidgetOutsideHoursTest.php` covering AC-4.3.5: 3 modos `bloqueia/fila/normal`
-- [ ] T208 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/WidgetRateLimitTest.php` covering Princípio VII: 30 req/min/IP returns 429
-- [ ] T209 [US3] Run US3 tests; all FAIL
+- [x] T204 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/WidgetPublicConfigTest.php` for GET `/widget/v1/{public_key}/config` validates `Origin` against `allowed_origins`
+- [x] T205 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/WidgetSessionStartTest.php` covering AC-4.3.2, AC-4.3.3: POST `/widget/v1/{public_key}/sessions` cria session + lead provisório com `pre_chat_data`
+- [x] T206 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/WidgetMessagePublicTest.php` covering AC-4.3.4: POST `/widget/v1/{public_key}/messages` cria mensagem → entra na inbox
+- [x] T207 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/WidgetOutsideHoursTest.php` covering AC-4.3.5: 3 modos `bloqueia/fila/normal`
+- [x] T208 [P] [US3] Write `tests/Feature/Fase3/US3_Widget/WidgetRateLimitTest.php` covering Princípio VII: 30 req/min/IP returns 429
+- [x] T209 [US3] Run US3 tests; all FAIL
 
 ### Implementation for US3 — Backend
 
-- [ ] T210 [P] [US3] Create `app/Domain/Messaging/Widget/Services/WidgetAuthService.php` (origin validation, public_key resolution)
-- [ ] T211 [P] [US3] Create `app/Domain/Messaging/Widget/Services/WidgetSessionService.php` (start session, persist visitor_token cookie/localStorage flow, 30d expiration job)
-- [ ] T212 [P] [US3] Create `app/Domain/Messaging/Channel/Adapters/WebWidgetAdapter.php` implementing `ChannelAdapter`
-- [ ] T213 [P] [US3] Create `app/Http/Controllers/Widget/WidgetConfigController.php` (admin: index, update, snippet)
-- [ ] T214 [P] [US3] Create `app/Http/Controllers/Widget/WidgetPublicController.php` (public, no auth: js bundle, config, sessions, messages, messages/stream SSE fallback)
-- [ ] T215 [P] [US3] Create `app/Http/Middleware/ValidateWidgetOrigin.php`
-- [ ] T216 [US3] Add widget routes (admin in `routes/api.php`, public in `routes/web.php` or dedicated `routes/widget.php`)
-- [ ] T217 [P] [US3] Create `app/Jobs/Messaging/PurgeExpiredWidgetSessionsJob.php` (mensal — visitor not identified > 30d) per NC-10.c
-- [ ] T218 [P] [US3] Create `app/Domain/Messaging/Widget/Services/BusinessHoursEvaluator.php` (timezone America/Sao_Paulo, 3 modes)
+- [x] T210 [P] [US3] Create `app/Domain/Messaging/Widget/Services/WidgetAuthService.php` (origin validation, public_key resolution)
+- [x] T211 [P] [US3] Create `app/Domain/Messaging/Widget/Services/WidgetSessionService.php` (start session, persist visitor_token cookie/localStorage flow, 30d expiration job)
+- [x] T212 [P] [US3] Create `app/Domain/Messaging/Channel/Adapters/WebWidgetAdapter.php` implementing `ChannelAdapter`
+- [x] T213 [P] [US3] Create `app/Http/Controllers/Widget/WidgetConfigController.php` (admin: index, update, snippet)
+- [x] T214 [P] [US3] Create `app/Http/Controllers/Widget/WidgetPublicController.php` (public, no auth: js bundle, config, sessions, messages, messages/stream SSE fallback)
+- [x] T215 [P] [US3] Create `app/Http/Middleware/ValidateWidgetOrigin.php`
+- [x] T216 [US3] Add widget routes (admin in `routes/api.php`, public in `routes/widget.php`)
+- [x] T217 [P] [US3] Create `app/Jobs/Messaging/PurgeExpiredWidgetSessionsJob.php` (mensal — visitor not identified > 30d) per NC-10.c
+- [x] T218 [P] [US3] Create `app/Domain/Messaging/Widget/Services/BusinessHoursEvaluator.php` (timezone America/Sao_Paulo, 3 modes)
 
 ### Implementation for US3 — Widget JS bundle (Vite library mode)
 
-- [ ] T219 [P] [US3] Create `resources/widget/src/widget.js` (entry point — loads config + boots UI)
-- [ ] T220 [P] [US3] Create `resources/widget/src/ui.js` (vanilla DOM — chat bubble, panel, message bubbles, input)
-- [ ] T221 [P] [US3] Create `resources/widget/src/transport.js` (Reverb client with cross-origin handling + SSE fallback)
-- [ ] T222 [P] [US3] Create `resources/widget/src/auth.js` (visitor_token persistence + Origin header)
-- [ ] T223 [P] [US3] Create `resources/widget/src/i18n.js` (pt-BR strings inline — no external lib)
-- [ ] T224 [P] [US3] Create `resources/widget/vite.config.widget.js` (library mode, Tailwind embedded, target ~30KB gzip)
-- [ ] T225 [US3] Add npm script `widget:build` to `package.json` that outputs to `public/widget/v1/{public_key}.js` (server resolves public_key path at request time)
-- [ ] T226 [P] [US3] Create Vue page `resources/js/pages/Canais/Widget/Editar.vue` for admin config (cores, logo, horário, allowed_origins)
-- [ ] T227 [US3] Update `InboxTenantIsolationTest` adding admin widget endpoints (public endpoints excluded — by design no auth)
-- [ ] T228 [US3] Run all US3 tests; all PASS
+- [x] T219 [P] [US3] Create `resources/widget/src/widget.js` (entry point — loads config + boots UI)
+- [x] T220 [P] [US3] Create `resources/widget/src/ui.js` (vanilla DOM — chat bubble, panel, message bubbles, input)
+- [x] T221 [P] [US3] Create `resources/widget/src/transport.js` (Reverb client with cross-origin handling + SSE fallback)
+- [x] T222 [P] [US3] Create `resources/widget/src/auth.js` (visitor_token persistence + Origin header)
+- [x] T223 [P] [US3] Create `resources/widget/src/i18n.js` (pt-BR strings inline — no external lib)
+- [x] T224 [P] [US3] Create `resources/widget/vite.config.widget.js` (library mode, target ~30KB gzip)
+- [x] T225 [US3] Add npm script `widget:build` to `package.json` that outputs to `public/widget/v1/_bundle/widget.iife.js`
+- [x] T226 [P] [US3] Create Vue page `resources/js/pages/Canais/Widget/Editar.vue` for admin config (cores, logo, horário, allowed_origins)
+- [x] T227 [US3] Update `InboxTenantIsolationTest` adding admin widget endpoints (public endpoints excluded — by design no auth)
+- [x] T228 [US3] Run all US3 tests; all PASS
 
 **Checkpoint US3**: Widget embarcado em HTML externo → mensagem chega na inbox; bundle < 30KB.
 
@@ -413,27 +413,27 @@
 
 ### Tests for US7
 
-- [ ] T229 [P] [US7] Write `tests/Feature/Fase3/US7_QuickReplies/QuickReplyCrudTest.php` covering AC-4.7.1: tenant scope + privada + 409 duplicado
-- [ ] T230 [P] [US7] Write `tests/Feature/Fase3/US7_QuickReplies/QuickReplyPrivateOverridesTenantTest.php` covering AC-4.7.2: privada vence em conflito
-- [ ] T231 [P] [US7] Write `tests/Feature/Fase3/US7_QuickReplies/QuickReplyRenderVariablesTest.php` covering AC-4.7.3 + NC-8.b: 6 variáveis substituídas; `{data_proxima_consulta}` renderiza vazio
-- [ ] T232 [P] [US7] Write `tests/Feature/Fase3/US7_QuickReplies/QuickReplyUsageCountTest.php` covering AC-4.7.6
-- [ ] T233 [P] [US7] Write `tests/Unit/Messaging/VariableSubstitutorTest.php` testing each of the 6 variables in isolation
-- [ ] T234 [US7] Run US7 tests; all FAIL
+- [x] T229 [P] [US7] Write `tests/Feature/Fase3/US7_QuickReplies/QuickReplyCrudTest.php` covering AC-4.7.1: tenant scope + privada + 409 duplicado
+- [x] T230 [P] [US7] Write `tests/Feature/Fase3/US7_QuickReplies/QuickReplyPrivateOverridesTenantTest.php` covering AC-4.7.2: privada vence em conflito
+- [x] T231 [P] [US7] Write `tests/Feature/Fase3/US7_QuickReplies/QuickReplyRenderVariablesTest.php` covering AC-4.7.3 + NC-8.b: 6 variáveis substituídas; `{data_proxima_consulta}` renderiza vazio
+- [x] T232 [P] [US7] Write `tests/Feature/Fase3/US7_QuickReplies/QuickReplyUsageCountTest.php` covering AC-4.7.6
+- [x] T233 [P] [US7] Write `tests/Unit/Messaging/VariableSubstitutorTest.php` testing each of the 6 variables in isolation
+- [x] T234 [US7] Run US7 tests; all FAIL
 
 ### Implementation for US7
 
-- [ ] T235 [P] [US7] Create `app/Domain/Messaging/QuickReply/Services/VariableSubstitutor.php` — 6 variables: `{nome_paciente}`, `{primeiro_nome_paciente}`, `{nome_profissional}`, `{nome_clinica}`, `{nome_atendente}`, `{data_proxima_consulta}` (placeholder Fase 5)
-- [ ] T236 [P] [US7] Create `app/Domain/Messaging/QuickReply/Services/QuickReplyService.php` with `listVisible(user, tenant)` returning tenant scope + private of user, with **private overriding tenant** when same shortcut
-- [ ] T237 [P] [US7] Create `app/Http/Controllers/Api/V1/Inbox/QuickRepliesController.php`: `index`, `store`, `update`, `destroy`, `render`
-- [ ] T238 [P] [US7] Create Form Requests + Resources for quick replies
-- [ ] T239 [P] [US7] Create `app/Policies/QuickReplyPolicy.php` enforcing `quick_reply.manage` (tenant scope) + ownership (private)
-- [ ] T240 [US7] Add routes `/api/v1/inbox/quick-replies/*` in `routes/api.php`
-- [ ] T241 [P] [US7] Create Vue page `resources/js/pages/Inbox/RespostasRapidas.vue` (2 tabs: Da equipe / Minhas)
-- [ ] T242 [P] [US7] Create Vue component `resources/js/components/Inbox/QuickReplyAutocomplete.vue` listening to `/` trigger in `MessageInput.vue`, with private 🔒 / tenant 🏢 indicator
-- [ ] T243 [P] [US7] Create Vue component `resources/js/components/Inbox/QuickReplyPreview.vue` showing rendered variables before send
-- [ ] T244 [US7] Integrate autocomplete with `MessageInput.vue` (US4) — on send, call `/quick-replies/{id}/render` server-side to substitute variables, then send body
-- [ ] T245 [US7] Update `InboxTenantIsolationTest` adding 5 quick-reply endpoints
-- [ ] T246 [US7] Run all US7 tests; all PASS
+- [x] T235 [P] [US7] Create `app/Domain/Messaging/QuickReply/Services/VariableSubstitutor.php` — 6 variables: `{nome_paciente}`, `{primeiro_nome_paciente}`, `{nome_profissional}`, `{nome_clinica}`, `{nome_atendente}`, `{data_proxima_consulta}` (placeholder Fase 5)
+- [x] T236 [P] [US7] Create `app/Domain/Messaging/QuickReply/Services/QuickReplyService.php` with `listVisible(user, tenant)` returning tenant scope + private of user, with **private overriding tenant** when same shortcut
+- [x] T237 [P] [US7] Create `app/Http/Controllers/Api/V1/Inbox/QuickRepliesController.php`: `index`, `store`, `update`, `destroy`, `render`
+- [x] T238 [P] [US7] Create Form Requests + Resources for quick replies
+- [x] T239 [P] [US7] Create `app/Policies/QuickReplyPolicy.php` enforcing `quick_reply.manage` (tenant scope) + ownership (private)
+- [x] T240 [US7] Add routes `/api/v1/inbox/quick-replies/*` in `routes/api.php`
+- [x] T241 [P] [US7] Create Vue page `resources/js/pages/Inbox/RespostasRapidas.vue` (2 tabs: Da equipe / Minhas)
+- [x] T242 [P] [US7] Create Vue component `resources/js/components/Inbox/QuickReplyAutocomplete.vue` listening to `/` trigger in `MessageInput.vue`, with private 🔒 / tenant 🏢 indicator
+- [x] T243 [P] [US7] Create Vue component `resources/js/components/Inbox/QuickReplyPreview.vue` showing rendered variables before send
+- [x] T244 [US7] Integrate autocomplete with `MessageInput.vue` (US4) — on send, call `/quick-replies/{id}/render` server-side to substitute variables, then send body
+- [x] T245 [US7] Update `InboxTenantIsolationTest` adding 5 quick-reply endpoints
+- [x] T246 [US7] Run all US7 tests; all PASS
 
 **Checkpoint US7**: Quick replies funcionam com `/` autocomplete; variáveis renderizam server-side.
 

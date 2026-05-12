@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\Messaging\ExpireAiPausesJob;
+use App\Jobs\Messaging\PurgeExpiredWidgetSessionsJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -27,3 +28,11 @@ Schedule::command('app:purge-old-merge-snapshots')->monthlyOn(2, '04:00');
 // T175 US-4.6 — Expiração de pausas de IA (cross-tenant). Roda a cada minuto.
 // withoutOverlapping garante que execuções longas não se acumulam.
 Schedule::job(new ExpireAiPausesJob)->everyMinute()->withoutOverlapping();
+
+// T196 US-4.2 — Health check dos canais Instagram (Meta Graph API versão pinned).
+// Research R7: detecta mismatch de versão ou depreciação da API.
+Schedule::command('messaging:meta-health-check')->monthly();
+
+// T217 US-4.3 — Purga sessões de widget expiradas e não identificadas (LGPD NC-10.c).
+// Executa diariamente às 03:00 BRT.
+Schedule::job(new PurgeExpiredWidgetSessionsJob)->dailyAt('06:00'); // 03:00 BRT = 06:00 UTC

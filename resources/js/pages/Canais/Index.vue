@@ -250,19 +250,16 @@ function canReconnect(channel) {
                             {{ t('canais.conectar_whatsapp') }}
                         </button>
 
-                        <!-- Instagram — em breve -->
-                        <div
+                        <!-- Instagram — habilitado (Lote K) -->
+                        <button
+                            type="button"
                             role="menuitem"
-                            aria-disabled="true"
-                            class="group relative flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-foreground-muted cursor-not-allowed"
-                            :title="t('canais.em_breve')"
+                            class="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-foreground transition hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
+                            @click="() => { closeConectarDropdown(); router.push({ name: 'canais.conectar_instagram' }); }"
                         >
-                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white text-xs font-bold shrink-0">I</span>
-                            {{ t('canais.conectar_instagram') }}
-                            <span class="ml-auto rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-medium text-foreground-subtle border border-border">
-                                {{ t('canais.em_breve') }}
-                            </span>
-                        </div>
+                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white text-xs font-bold shrink-0">IG</span>
+                            {{ t('canais.conectar_instagram_titulo') }}
+                        </button>
 
                         <!-- Widget Web — em breve -->
                         <div

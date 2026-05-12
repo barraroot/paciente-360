@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Messaging;
 
+use App\Domain\Messaging\Channel\Adapters\InstagramGraphAdapter;
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Messaging\Conversation\Events\ConversaCriada;
@@ -60,9 +61,16 @@ class ProcessInboundMessageJob implements ShouldQueue
 
     /**
      * Processa a mensagem inbound.
+     *
+     * Suporta múltiplos providers:
+     *  - 'twilio'  : WhatsApp via Twilio SDK (payload = form params)
+     *  - 'meta'    : Instagram Direct via Graph API (payload = entry.messaging[0])
      */
-    public function handle(PatientResolverService $resolver, WhatsAppCloudAdapter $adapter): void
-    {
+    public function handle(
+        PatientResolverService $resolver,
+        WhatsAppCloudAdapter $whatsAppAdapter,
+        InstagramGraphAdapter $instagramAdapter,
+    ): void {
         /** @var WebhookEvent|null $webhookEvent */
         $webhookEvent = WebhookEvent::find($this->webhookEventId);
 
@@ -83,56 +91,84 @@ class ProcessInboundMessageJob implements ShouldQueue
             ? $rawDecrypted
             : (array) json_decode((string) $rawDecrypted, true);
 
-        // Resolve Channel com fallback chain:
-        //  1. MessagingServiceSid (Twilio production)
-        //  2. To (Twilio Sandbox que não emite MessagingServiceSid)
-        //  3. AccountSid (último recurso quando só há 1 canal daquela account)
-        $messagingServiceSid = $payload['MessagingServiceSid'] ?? null;
-        $toSender = $payload['To'] ?? null;
-        $accountSid = $payload['AccountSid'] ?? null;
+        // Detecta provider e resolve canal + adapter adequado
+        $provider = $webhookEvent->provider ?? 'twilio';
 
         $channel = null;
         $resolutionPath = null;
 
-        if (is_string($messagingServiceSid) && $messagingServiceSid !== '') {
-            $channel = Channel::withoutGlobalScopes()
-                ->where('type', 'whatsapp')
-                ->whereJsonContains('provider_metadata->messaging_service_sid', $messagingServiceSid)
-                ->first();
-            $resolutionPath = $channel ? 'messaging_service_sid' : null;
-        }
+        if ($provider === 'meta') {
+            // Instagram Direct: payload é entry.messaging[0] gravado pelo controller.
+            // O recipient.id = ig_business_account_id do canal receptor.
+            $recipientId = $payload['recipient']['id'] ?? null;
 
-        if ($channel === null && is_string($toSender) && $toSender !== '') {
-            $channel = Channel::withoutGlobalScopes()
-                ->where('type', 'whatsapp')
-                ->whereJsonContains('provider_metadata->whatsapp_sender', $toSender)
-                ->first();
-            $resolutionPath = $channel ? 'to_sender' : null;
-        }
+            if (is_string($recipientId) && $recipientId !== '') {
+                $channel = Channel::withoutGlobalScopes()
+                    ->where('type', 'instagram')
+                    ->whereJsonContains('provider_metadata->ig_business_account_id', $recipientId)
+                    ->first();
+                $resolutionPath = $channel ? 'ig_business_account_id' : null;
+            }
 
-        if ($channel === null && is_string($accountSid) && $accountSid !== '') {
-            $channel = Channel::withoutGlobalScopes()
-                ->where('type', 'whatsapp')
-                ->whereJsonContains('provider_metadata->account_sid', $accountSid)
-                ->first();
-            $resolutionPath = $channel ? 'account_sid' : null;
-        }
+            if ($channel === null) {
+                $this->markFailed($webhookEvent, "Canal Instagram não encontrado para recipient_id: {$recipientId}");
 
-        if ($channel === null) {
-            $hints = array_filter([
-                'messaging_service_sid' => $messagingServiceSid,
-                'to' => $toSender,
-                'account_sid' => $accountSid,
-            ]);
-            $hintsJson = json_encode($hints, JSON_UNESCAPED_SLASHES);
-            $this->markFailed($webhookEvent, "Channel não encontrado para nenhum identificador: {$hintsJson}");
+                return;
+            }
 
-            return;
+            $adapter = $instagramAdapter;
+        } else {
+            // Twilio WhatsApp: resolve Channel com fallback chain:
+            //  1. MessagingServiceSid (Twilio production)
+            //  2. To (Twilio Sandbox que não emite MessagingServiceSid)
+            //  3. AccountSid (último recurso quando só há 1 canal daquela account)
+            $messagingServiceSid = $payload['MessagingServiceSid'] ?? null;
+            $toSender = $payload['To'] ?? null;
+            $accountSid = $payload['AccountSid'] ?? null;
+
+            if (is_string($messagingServiceSid) && $messagingServiceSid !== '') {
+                $channel = Channel::withoutGlobalScopes()
+                    ->where('type', 'whatsapp')
+                    ->whereJsonContains('provider_metadata->messaging_service_sid', $messagingServiceSid)
+                    ->first();
+                $resolutionPath = $channel ? 'messaging_service_sid' : null;
+            }
+
+            if ($channel === null && is_string($toSender) && $toSender !== '') {
+                $channel = Channel::withoutGlobalScopes()
+                    ->where('type', 'whatsapp')
+                    ->whereJsonContains('provider_metadata->whatsapp_sender', $toSender)
+                    ->first();
+                $resolutionPath = $channel ? 'to_sender' : null;
+            }
+
+            if ($channel === null && is_string($accountSid) && $accountSid !== '') {
+                $channel = Channel::withoutGlobalScopes()
+                    ->where('type', 'whatsapp')
+                    ->whereJsonContains('provider_metadata->account_sid', $accountSid)
+                    ->first();
+                $resolutionPath = $channel ? 'account_sid' : null;
+            }
+
+            if ($channel === null) {
+                $hints = array_filter([
+                    'messaging_service_sid' => $messagingServiceSid,
+                    'to' => $toSender,
+                    'account_sid' => $accountSid,
+                ]);
+                $hintsJson = json_encode($hints, JSON_UNESCAPED_SLASHES);
+                $this->markFailed($webhookEvent, "Channel não encontrado para nenhum identificador: {$hintsJson}");
+
+                return;
+            }
+
+            $adapter = $whatsAppAdapter;
         }
 
         Log::info('ProcessInboundMessageJob: channel resolved', [
             'channel_id' => $channel->id,
             'tenant_id' => $channel->tenant_id,
+            'provider' => $provider,
             'resolution_path' => $resolutionPath,
         ]);
 
@@ -147,7 +183,7 @@ class ProcessInboundMessageJob implements ShouldQueue
         // Define tenant context para Spatie
         app(PermissionRegistrar::class)->setPermissionsTeamId($channel->tenant_id);
 
-        // Parseia payload para DTO normalizado
+        // Parseia payload para DTO normalizado usando o adapter do provider
         $dto = $adapter->parseInboundWebhook($payload);
 
         // Resolve Paciente (pode retornar null se não encontrado ou colisão)

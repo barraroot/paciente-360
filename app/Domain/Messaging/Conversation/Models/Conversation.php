@@ -6,6 +6,7 @@ use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Models\Concerns\BelongsToTenant;
 use App\Models\Paciente;
+use App\Models\Tenant;
 use App\Models\User;
 use Database\Factories\Messaging\ConversationFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -106,6 +107,11 @@ class Conversation extends Model
     public function channel(): BelongsTo
     {
         return $this->belongsTo(Channel::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     public function patient(): BelongsTo

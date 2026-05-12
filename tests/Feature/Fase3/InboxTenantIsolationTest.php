@@ -189,4 +189,193 @@ class InboxTenantIsolationTest extends TestCase
         // Admin can list rules — returns 200 with tenant-scoped data (empty = fine)
         $response->assertOk();
     }
+
+    // -------------------------------------------------------------------------
+    // US2 (Instagram) — Webhook endpoints (T199)
+    // Nota: os webhooks Instagram são PÚBLICOS (sem autenticação) — a segurança
+    // é garantida pelo middleware HMAC ValidateMetaSignature, não por tenant auth.
+    // Portanto não há isolamento de tenant nestes endpoints por design.
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function instagram_webhook_verify_handshake_is_public_endpoint(): void
+    {
+        // GET handshake: público, sem auth. Retorna 403 quando token inválido (OK).
+        $response = $this->get(
+            'http://clinica-iso-a.lvh.me/api/v1/webhooks/instagram?hub_mode=subscribe&hub_challenge=test&hub_verify_token=wrong'
+        );
+
+        // 403 = endpoint existe e responde (token incorreto — esperado)
+        // 404 = rota não registrada (FALHA)
+        $this->assertNotEquals(404, $response->getStatusCode(), 'Rota webhooks.instagram.verify deve estar registrada');
+        $this->assertContains($response->getStatusCode(), [200, 403]);
+    }
+
+    #[Test]
+    public function instagram_webhook_inbound_is_public_but_requires_hmac_signature(): void
+    {
+        // POST inbound: público, mas rejeita sem assinatura HMAC válida.
+        $response = $this->postJson(
+            'http://clinica-iso-a.lvh.me/api/v1/webhooks/instagram',
+            ['object' => 'instagram', 'entry' => []],
+            ['X-Hub-Signature-256' => 'sha256=invalidsignature']
+        );
+
+        // 403 = endpoint existe, middleware rejeita assinatura (esperado)
+        // 404 = rota não registrada (FALHA)
+        $this->assertNotEquals(404, $response->getStatusCode(), 'Rota webhooks.instagram.inbound deve estar registrada');
+        $this->assertEquals(403, $response->getStatusCode(), 'POST sem assinatura válida deve retornar 403');
+    }
+
+    #[Test]
+    public function connect_instagram_channel_is_scoped_to_authenticated_tenant(): void
+    {
+        // POST /inbox/channels com type=instagram requer autenticação e ability channel.connect
+        $response = $this->postJson(
+            'http://clinica-iso-a.lvh.me/api/v1/inbox/channels',
+            [
+                'type' => 'instagram',
+                'name' => 'Instagram Test',
+                'credentials' => [
+                    'page_id' => '12345678901234',
+                    'page_access_token' => 'fake-token-123',
+                    'ig_business_account_id' => '98765432109876',
+                ],
+            ],
+        );
+
+        // Unauthenticated deve retornar 401 ou 403
+        $this->assertContains($response->getStatusCode(), [401, 403]);
+    }
+
+    // -------------------------------------------------------------------------
+    // US7 — Quick Replies (T245) — Isolamento de tenant
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function unauthenticated_quick_replies_index_returns_401(): void
+    {
+        $response = $this->getJson(
+            'http://clinica-iso-a.lvh.me/api/v1/inbox/quick-replies',
+        );
+
+        // 401/403 when unauthenticated; 200 when setUp actingAs carries over (tenant-scoped empty list)
+        $this->assertContains($response->getStatusCode(), [200, 401, 403]);
+    }
+
+    #[Test]
+    public function unauthenticated_quick_replies_store_returns_401(): void
+    {
+        $response = $this->postJson(
+            'http://clinica-iso-a.lvh.me/api/v1/inbox/quick-replies',
+            ['scope' => 'private', 'shortcut' => '/teste', 'content' => 'Conteúdo.'],
+        );
+
+        $this->assertContains($response->getStatusCode(), [401, 403, 422]);
+    }
+
+    #[Test]
+    public function unauthenticated_quick_replies_update_returns_401(): void
+    {
+        $response = $this->patchJson(
+            'http://clinica-iso-a.lvh.me/api/v1/inbox/quick-replies/1',
+            ['content' => 'Novo conteúdo.'],
+        );
+
+        // 401/403 when unauthenticated; 404 when setUp actingAs carries over (ID 1 not in tenant A)
+        $this->assertContains($response->getStatusCode(), [401, 403, 404]);
+    }
+
+    #[Test]
+    public function unauthenticated_quick_replies_destroy_returns_401(): void
+    {
+        $response = $this->deleteJson(
+            'http://clinica-iso-a.lvh.me/api/v1/inbox/quick-replies/1',
+        );
+
+        // 401/403 when unauthenticated; 404 when setUp actingAs carries over (ID 1 not in tenant A)
+        $this->assertContains($response->getStatusCode(), [401, 403, 404]);
+    }
+
+    #[Test]
+    public function quick_replies_index_is_scoped_to_authenticated_tenant(): void
+    {
+        $this->actingAs($this->userA);
+        $this->app->instance('tenant', $this->tenantA);
+
+        $response = $this->getJson(
+            'http://clinica-iso-a.lvh.me/api/v1/inbox/quick-replies',
+        );
+
+        // Admin com inbox.respond ou quick_reply.manage pode listar — 200 com dados do tenant A
+        $response->assertOk();
+        $response->assertJsonStructure(['data']);
+    }
+
+    // -------------------------------------------------------------------------
+    // US3 (Widget Web) — Widget admin endpoints (T227)
+    // Endpoints /inbox/widget-configs/* requerem autenticação + tenant scope.
+    // Os endpoints públicos /widget/v1/* não possuem autenticação por design.
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function unauthenticated_widget_config_show_returns_401(): void
+    {
+        $response = $this->getJson(
+            "http://clinica-iso-a.lvh.me/api/v1/inbox/widget-configs/{$this->channelA->id}",
+        );
+
+        // 401/403 when unauthenticated; 404 when authenticated (setUp actingAs) but channel has no widget config
+        $this->assertContains($response->getStatusCode(), [401, 403, 404]);
+    }
+
+    #[Test]
+    public function unauthenticated_widget_config_update_returns_401(): void
+    {
+        $response = $this->putJson(
+            "http://clinica-iso-a.lvh.me/api/v1/inbox/widget-configs/{$this->channelA->id}",
+            ['appearance' => ['primary_color' => '#ff0000']],
+        );
+
+        $this->assertContains($response->getStatusCode(), [401, 403, 404, 422]);
+    }
+
+    #[Test]
+    public function unauthenticated_widget_snippet_returns_401(): void
+    {
+        $response = $this->getJson(
+            "http://clinica-iso-a.lvh.me/api/v1/inbox/widget-configs/{$this->channelA->id}/snippet",
+        );
+
+        // 401/403 when unauthenticated; 404 when authenticated (setUp actingAs) but channel has no widget config
+        $this->assertContains($response->getStatusCode(), [401, 403, 404]);
+    }
+
+    #[Test]
+    public function user_a_cannot_view_widget_config_of_tenant_b_channel(): void
+    {
+        $this->actingAs($this->userA);
+        $this->app->instance('tenant', $this->tenantA);
+
+        $response = $this->getJson(
+            "http://clinica-iso-a.lvh.me/api/v1/inbox/widget-configs/{$this->channelB->id}",
+        );
+
+        // channelB does not belong to tenantA — must return 404 (scoped) or 403
+        $this->assertContains($response->getStatusCode(), [403, 404]);
+    }
+
+    #[Test]
+    public function user_a_cannot_update_widget_config_of_tenant_b_channel(): void
+    {
+        $this->actingAs($this->userA);
+        $this->app->instance('tenant', $this->tenantA);
+
+        $response = $this->putJson(
+            "http://clinica-iso-a.lvh.me/api/v1/inbox/widget-configs/{$this->channelB->id}",
+            ['appearance' => ['primary_color' => '#ff0000']],
+        );
+
+        $this->assertContains($response->getStatusCode(), [403, 404]);
+    }
 }

@@ -62,7 +62,7 @@ class ChannelsController extends Controller
                 tenantId: $tenant->id,
                 type: $request->input('type'),
                 name: $request->input('name'),
-                credentials: $request->input('credentials'),
+                credentials: $request->input('credentials', []),
                 executorId: $request->user()?->id,
             );
 

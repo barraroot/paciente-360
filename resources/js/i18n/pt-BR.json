@@ -271,15 +271,29 @@
         "no_results": "Nenhum resultado encontrado.",
         "show_more": "Ver mais",
         "show_less": "Ver menos",
-        "save": "Salvar",
-        "error_forbidden": "Você não tem permissão para esta ação."
+        "error_forbidden": "Você não tem permissão para esta ação.",
+        "salvar": "Salvar",
+        "salvando": "Salvando...",
+        "cancelar": "Cancelar",
+        "editar": "Editar",
+        "excluir": "Excluir",
+        "excluindo": "Excluindo...",
+        "fechar": "Fechar",
+        "carregando": "Carregando...",
+        "sem_permissao": "Sem permissão para esta ação."
     },
     "paciente": {
         "list": {
             "title": "Pacientes",
             "search_placeholder": "Buscar por nome ou telefone",
             "new_cta": "Novo Paciente",
-            "filters": { "status": "Status", "tag": "Tag", "profissional": "Profissional", "origem": "Origem", "convenio": "Convênio" },
+            "filters": {
+                "status": "Status",
+                "tag": "Tag",
+                "profissional": "Profissional",
+                "origem": "Origem",
+                "convenio": "Convênio"
+            },
             "empty": "Nenhum paciente encontrado.",
             "anonymized_excluded": "Pacientes anonimizados não aparecem nesta lista."
         },
@@ -303,17 +317,32 @@
             "submit": "Salvar"
         },
         "show": {
-            "tabs": { "detalhes": "Detalhes", "timeline": "Timeline", "anotacoes": "Anotações", "mesclagens": "Mesclagens" },
+            "tabs": {
+                "detalhes": "Detalhes",
+                "timeline": "Timeline",
+                "anotacoes": "Anotações",
+                "mesclagens": "Mesclagens"
+            },
             "anonimizar_cta": "Anonimizar paciente",
             "anonimizar_confirm": "Esta ação remove dados pessoais permanentemente. Continuar?",
             "alterar_status_cta": "Alterar status",
             "alterar_status_modal": "Alterar status do paciente"
         },
-        "status": { "lead": "Lead", "ativo": "Ativo", "inativo": "Inativo", "bloqueado": "Bloqueado" }
+        "status": {
+            "lead": "Lead",
+            "ativo": "Ativo",
+            "inativo": "Inativo",
+            "bloqueado": "Bloqueado"
+        }
     },
     "anotacao": {
         "create": "Adicionar anotação",
-        "tipo": { "geral": "Geral", "clinica": "Clínica", "comportamental": "Comportamental", "financeira": "Financeira" },
+        "tipo": {
+            "geral": "Geral",
+            "clinica": "Clínica",
+            "comportamental": "Comportamental",
+            "financeira": "Financeira"
+        },
         "imutavel": "Anotações são imutáveis. Use retratação se precisar corrigir.",
         "retratacao": "Adicionar retratação",
         "retratada_em": "Retratada em {date}",
@@ -347,8 +376,19 @@
     "funil": {
         "title": "Funil de Leads",
         "config_title": "Configurar Funil",
-        "colunas_default": ["Novo", "Qualificado", "Agendado", "Compareceu", "Perdido"],
-        "motivo": { "sem_interesse": "Sem interesse", "sem_retorno": "Sem retorno", "preco": "Preço", "outro": "Outro" },
+        "colunas_default": [
+            "Novo",
+            "Qualificado",
+            "Agendado",
+            "Compareceu",
+            "Perdido"
+        ],
+        "motivo": {
+            "sem_interesse": "Sem interesse",
+            "sem_retorno": "Sem retorno",
+            "preco": "Preço",
+            "outro": "Outro"
+        },
         "motivo_obrigatorio_title": "Por que este lead foi perdido?",
         "motivo_outro_label": "Descreva o motivo"
     },
@@ -389,8 +429,23 @@
         "resultado_atualizado": "Atualizado",
         "erro_arquivo_obrigatorio": "Selecione um arquivo para importar.",
         "erro_arquivo_grande": "O arquivo é muito grande (máximo 5 MB).",
-        "status": { "pending": "Aguardando", "processing": "Processando", "completed": "Concluída", "partial_failure": "Concluída com erros", "failed": "Falhou", "retrying": "Retentando" },
-        "relatorio": { "linha": "Linha", "status": "Status", "motivo": "Motivo", "importada": "Importada", "atualizada": "Atualizada", "duplicata": "Duplicata", "erro": "Erro" }
+        "status": {
+            "pending": "Aguardando",
+            "processing": "Processando",
+            "completed": "Concluída",
+            "partial_failure": "Concluída com erros",
+            "failed": "Falhou",
+            "retrying": "Retentando"
+        },
+        "relatorio": {
+            "linha": "Linha",
+            "status": "Status",
+            "motivo": "Motivo",
+            "importada": "Importada",
+            "atualizada": "Atualizada",
+            "duplicata": "Duplicata",
+            "erro": "Erro"
+        }
     },
     "convenio": {
         "list_title": "Convênios",
@@ -403,7 +458,11 @@
     "mesclagem": {
         "title": "Mesclar Pacientes",
         "dedup_modal_title": "Possível duplicata detectada",
-        "actions": { "mesclar": "Mesclar com existente", "criar_paralelo": "Criar paciente paralelo", "abrir_existente": "Abrir cadastro existente" },
+        "actions": {
+            "mesclar": "Mesclar com existente",
+            "criar_paralelo": "Criar paciente paralelo",
+            "abrir_existente": "Abrir cadastro existente"
+        },
         "reversivel_ate": "Reversível até {date}",
         "reverter_cta": "Reverter mesclagem"
     },
@@ -451,6 +510,17 @@
             "sincronizar_templates": "Sincronizar templates",
             "desconectar": "Desconectar"
         },
+        "conectar_instagram_titulo": "Conectar Instagram Direct",
+        "conectar_instagram_descricao": "Conecte uma conta Instagram Profissional via Facebook Login para receber DMs na inbox.",
+        "instagram_form": {
+            "page_id": "Facebook Page ID",
+            "page_id_help": "ID da Página Facebook vinculada à conta Instagram",
+            "page_access_token": "Page Access Token (longa duração)",
+            "page_access_token_help": "Token 60d via Graph API Explorer — escopo: instagram_basic + instagram_manage_messages + pages_messaging",
+            "ig_business_account_id": "Instagram Business Account ID",
+            "ig_business_account_id_help": "ID da conta Instagram Business — obtido via GET /{page_id}?fields=instagram_business_account"
+        },
+        "instagram_24h_window": "Instagram permite responder apenas dentro de 24h da última mensagem do paciente. Fora disso, apenas templates aprovados via MESSAGE_TAG.",
         "errors": {
             "invalid_credentials": "Credenciais Twilio rejeitadas. Verifique Account SID e Auth Token.",
             "already_connected": "Este sender WhatsApp já está conectado em outro canal deste tenant.",
@@ -458,7 +528,9 @@
             "load_failed": "Falha ao carregar canais.",
             "disconnect_with_active": "Existem conversas ativas neste canal. Confirme para desconectar mesmo assim.",
             "reconnect_failed": "Falha ao reconectar o canal.",
-            "sync_failed": "Falha ao iniciar sincronização de templates."
+            "sync_failed": "Falha ao iniciar sincronização de templates.",
+            "account_type_invalid": "Conta Instagram precisa ser Profissional (Business ou Creator). Converta no app Instagram → Configurações → Conta → Mudar para conta profissional.",
+            "page_token_invalid": "Page Access Token rejeitado. Verifique escopo e validade no Graph API Explorer."
         },
         "success": {
             "connected": "Canal conectado com sucesso!",
@@ -642,6 +714,35 @@
         "fallback": {
             "modo_limitado": "⚠️ Modo limitado — atualizações podem atrasar.",
             "reconectado": "✓ Conexão restabelecida."
+        },
+        "respostas_rapidas": {
+            "titulo": "Respostas Rápidas",
+            "nova": "+ Nova resposta rápida",
+            "editar": "Editar resposta rápida",
+            "tab_equipe": "Da equipe",
+            "tab_minhas": "Minhas",
+            "buscar_placeholder": "Buscar por atalho ou conteúdo…",
+            "vazio": "Nenhuma resposta rápida da equipe. Clique em \"+ Nova\" para criar.",
+            "vazio_privado": "Você ainda não tem respostas rápidas privadas.",
+            "escopo": "Visibilidade",
+            "escopo_privada": "Privada (só eu)",
+            "escopo_equipe": "Equipe (todos)",
+            "atalho": "Atalho",
+            "conteudo": "Mensagem",
+            "conteudo_placeholder": "Texto da mensagem. Use {nome_paciente}, {nome_clinica}, {nome_atendente}…",
+            "variaveis_disponiveis": "Variáveis disponíveis",
+            "atalho_duplicado": "Já existe um atalho com este nome neste escopo.",
+            "shortcut_deve_comecar_com_barra": "O atalho deve começar com / (ex.: /preco)",
+            "conteudo_obrigatorio": "O conteúdo da mensagem é obrigatório.",
+            "confirmar_excluir": "Excluir resposta rápida?",
+            "confirmar_excluir_descricao": "Esta ação não pode ser desfeita.",
+            "usado_vezes": "Usada {n} vezes",
+            "autocomplete_label": "Respostas rápidas",
+            "autocomplete_hint": "↑↓ navegar · Enter ou Tab confirmar · Esc fechar",
+            "preview_label": "Preview da resposta rápida",
+            "preview_sem_variaveis": "Variáveis serão substituídas ao enviar.",
+            "descartar": "Descartar",
+            "usar": "Usar esta resposta"
         }
     }
 }

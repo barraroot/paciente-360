@@ -41,6 +41,12 @@ export const useInboxStore = defineStore('inbox', {
         /** @type {boolean} */
         savingAssignmentRules: false,
 
+        /** @type {Array<Object>} respostas rápidas visíveis para o usuário (tenant + privadas) */
+        quickReplies: [],
+
+        /** @type {boolean} */
+        loadingQuickReplies: false,
+
         /** @type {Record<string|number, Array<Object>>} mensagens indexadas por conversa id */
         messagesByConversationId: {},
 
@@ -624,6 +630,78 @@ export const useInboxStore = defineStore('inbox', {
             } finally {
                 this.savingAssignmentRules = false;
             }
+        },
+
+        // ─── Quick Replies (US-4.7) ───────────────────────────────────────────────
+
+        /**
+         * Carrega respostas rápidas visíveis: tenant scope + privadas do usuário.
+         * @param {{ scope?: string, q?: string, sort?: string }} options
+         * @returns {Promise<Array<Object>>}
+         */
+        async loadQuickReplies(options = {}) {
+            this.loadingQuickReplies = true;
+            try {
+                const params = {};
+                if (options.scope) { params.scope = options.scope; }
+                if (options.q) { params.q = options.q; }
+                if (options.sort) { params.sort = options.sort; }
+                const { data } = await api.get('/inbox/quick-replies', { params });
+                this.quickReplies = data.data ?? data;
+                return this.quickReplies;
+            } finally {
+                this.loadingQuickReplies = false;
+            }
+        },
+
+        /**
+         * Cria uma resposta rápida.
+         * @param {{ scope: string, shortcut: string, content: string }} payload
+         * @returns {Promise<Object>}
+         */
+        async createQuickReply(payload) {
+            const { data } = await api.post('/inbox/quick-replies', payload);
+            const created = data.data ?? data;
+            this.quickReplies = [...this.quickReplies, created];
+            return created;
+        },
+
+        /**
+         * Atualiza uma resposta rápida existente.
+         * @param {number|string} id
+         * @param {{ shortcut?: string, content?: string }} changes
+         * @returns {Promise<Object>}
+         */
+        async updateQuickReply(id, changes) {
+            const { data } = await api.patch(`/inbox/quick-replies/${id}`, changes);
+            const updated = data.data ?? data;
+            const idx = this.quickReplies.findIndex((r) => String(r.id) === String(id));
+            if (idx !== -1) {
+                this.quickReplies[idx] = updated;
+            }
+            return updated;
+        },
+
+        /**
+         * Remove uma resposta rápida.
+         * @param {number|string} id
+         */
+        async deleteQuickReply(id) {
+            await api.delete(`/inbox/quick-replies/${id}`);
+            this.quickReplies = this.quickReplies.filter((r) => String(r.id) !== String(id));
+        },
+
+        /**
+         * Renderiza variáveis de uma resposta rápida no contexto de uma conversa (server-side).
+         * @param {number|string} quickReplyId
+         * @param {number|string} conversationId
+         * @returns {Promise<{ rendered: string, variables_resolved: Record<string, string> }>}
+         */
+        async renderQuickReply(quickReplyId, conversationId) {
+            const { data } = await api.post(`/inbox/quick-replies/${quickReplyId}/render`, {
+                conversation_id: conversationId,
+            });
+            return data;
         },
 
         // ─── Helpers privados ─────────────────────────────────────────────────────

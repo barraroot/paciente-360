@@ -2,6 +2,9 @@
 
 namespace App\Domain\Messaging\Channel\Services;
 
+use App\Domain\Messaging\Channel\Adapters\ChannelAdapter;
+use App\Domain\Messaging\Channel\Adapters\InstagramGraphAdapter;
+use App\Domain\Messaging\Channel\Adapters\WebWidgetAdapter;
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Channel\Events\CanalConectado;
 use App\Domain\Messaging\Channel\Events\CanalDesconectado;
@@ -9,6 +12,8 @@ use App\Domain\Messaging\Channel\Exceptions\ChannelAlreadyConnectedException;
 use App\Domain\Messaging\Channel\Exceptions\ChannelHasActiveConversationsException;
 use App\Domain\Messaging\Channel\Exceptions\InvalidCredentialsException;
 use App\Domain\Messaging\Channel\Models\Channel;
+use App\Domain\Messaging\Widget\Models\WebWidgetConfig;
+use App\Domain\Messaging\Widget\Services\WidgetAuthService;
 use App\Models\AuditLog;
 use Illuminate\Support\Facades\Crypt;
 
@@ -22,6 +27,9 @@ final class ChannelService
 {
     public function __construct(
         private readonly WhatsAppCloudAdapter $whatsAppAdapter,
+        private readonly InstagramGraphAdapter $instagramAdapter,
+        private readonly WebWidgetAdapter $webWidgetAdapter,
+        private readonly WidgetAuthService $widgetAuthService,
     ) {}
 
     /**
@@ -56,6 +64,17 @@ final class ChannelService
             }
         }
 
+        if ($type === 'instagram') {
+            $existingChannel = Channel::where('tenant_id', $tenantId)
+                ->where('type', 'instagram')
+                ->whereJsonContains('provider_metadata->ig_business_account_id', $credentials['ig_business_account_id'] ?? '')
+                ->first();
+
+            if ($existingChannel !== null) {
+                throw new ChannelAlreadyConnectedException;
+            }
+        }
+
         $providerMetadata = $this->buildProviderMetadata($type, $credentials);
 
         // O cast 'encrypted' do Channel espera uma string já encriptada
@@ -69,9 +88,47 @@ final class ChannelService
             'type' => $type,
             'name' => $name,
             'status' => 'ativo',
-            'credentials_encrypted' => $encryptedCredentials,
+            'credentials_encrypted' => $type !== 'web' ? $encryptedCredentials : null,
             'provider_metadata' => $providerMetadata,
         ]);
+
+        // Web channel: auto-create WebWidgetConfig with generated public_key
+        if ($type === 'web') {
+            $publicKey = $this->widgetAuthService->generatePublicKey();
+
+            WebWidgetConfig::create([
+                'tenant_id' => $tenantId,
+                'channel_id' => $channel->id,
+                'public_key' => $publicKey,
+                'allowed_origins' => [],
+                'appearance' => [
+                    'primary_color' => '#2563eb',
+                    'position' => 'bottom-right',
+                    'button_label' => 'Fale conosco',
+                ],
+                'initial_message' => 'Olá! Como podemos ajudar?',
+                'business_hours' => [
+                    'monday' => '08:00-18:00',
+                    'tuesday' => '08:00-18:00',
+                    'wednesday' => '08:00-18:00',
+                    'thursday' => '08:00-18:00',
+                    'friday' => '08:00-18:00',
+                    'saturday' => null,
+                    'sunday' => null,
+                    'timezone' => 'America/Sao_Paulo',
+                ],
+                'outside_hours_behavior' => 'fila',
+                'pre_chat_form' => 'opcional',
+            ]);
+
+            // Store public_key in channel provider_metadata for fast lookup
+            $channel->update([
+                'provider_metadata' => array_merge(
+                    is_array($channel->provider_metadata) ? $channel->provider_metadata : [],
+                    ['public_key' => $publicKey],
+                ),
+            ]);
+        }
 
         event(new CanalConectado($channel, $executorId));
 
@@ -117,16 +174,21 @@ final class ChannelService
     /**
      * Resolve o adapter correto para o tipo de canal.
      */
-    private function resolveAdapter(string $type): WhatsAppCloudAdapter
+    private function resolveAdapter(string $type): ChannelAdapter
     {
         return match ($type) {
             'whatsapp' => $this->whatsAppAdapter,
+            'instagram' => $this->instagramAdapter,
+            'web' => $this->webWidgetAdapter,
             default => $this->whatsAppAdapter,
         };
     }
 
     /**
      * Constrói os metadados não-secretos do provider.
+     *
+     * Para Instagram: page_id e ig_business_account_id são públicos; ig_username
+     * é buscado na Graph API. O page_access_token vai em credentials_encrypted.
      *
      * @param array<string, mixed> $credentials
      * @return array<string, mixed>
@@ -138,6 +200,16 @@ final class ChannelService
                 'messaging_service_sid' => $credentials['messaging_service_sid'] ?? null,
                 'whatsapp_sender' => $credentials['whatsapp_sender'] ?? null,
                 'account_sid' => $credentials['account_sid'] ?? null,
+            ];
+        }
+
+        if ($type === 'instagram') {
+            $igUsername = $this->instagramAdapter->fetchIgUsername($credentials);
+
+            return [
+                'page_id' => $credentials['page_id'] ?? null,
+                'ig_business_account_id' => $credentials['ig_business_account_id'] ?? null,
+                'ig_username' => $igUsername,
             ];
         }
 

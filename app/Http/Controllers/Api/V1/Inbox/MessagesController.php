@@ -7,6 +7,8 @@ use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Message\Exceptions\WindowExpiredWithoutTemplateException;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
+use App\Domain\Messaging\QuickReply\Models\QuickReply;
+use App\Domain\Messaging\QuickReply\Services\QuickReplyService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inbox\SendMessageRequest;
 use App\Http\Resources\V1\MessageResource;
@@ -124,6 +126,17 @@ final class MessagesController extends Controller
 
         try {
             $message = $dispatch->send($conversation, $outbound, $request->user()?->id);
+
+            // AC-4.7.6 — Incrementa usage_count quando quick_reply_id é fornecido
+            $quickReplyId = $request->integer('quick_reply_id');
+
+            if ($quickReplyId > 0) {
+                $quickReply = QuickReply::find($quickReplyId);
+
+                if ($quickReply !== null && $quickReply->tenant_id === $conversation->tenant_id) {
+                    app(QuickReplyService::class)->incrementUsage($quickReply);
+                }
+            }
 
             Log::info('message.store', [
                 'tenant_id' => $conversation->tenant_id,

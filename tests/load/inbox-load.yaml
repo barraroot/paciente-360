@@ -1,0 +1,111 @@
+config:
+  target: "http://clinica-alfa.lvh.me"
+  phases:
+    - duration: 60
+      arrivalRate: 50
+      name: "Warm up"
+    - duration: 300
+      arrivalRate: 50
+      rampTo: 200
+      name: "Ramp to 200 attendants browsing"
+  defaults:
+    headers:
+      Accept: "application/json"
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Inbox listing with filters"
+    weight: 1
+    flow:
+      # CSRF setup
+      - get:
+          url: "/sanctum/csrf-cookie"
+          capture:
+            - json: "$.token"
+              as: "csrfToken"
+
+      # Login
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "admin@clinica-alfa.test"
+            password: "password123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      # List conversations - initial load with status filter
+      - get:
+          url: "/api/v1/inbox/conversations?status[]=aberta&status[]=pendente&per_page=50"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # Think time - simulate user browsing
+      - think: 2
+
+      # Search conversations by keyword
+      - get:
+          url: "/api/v1/inbox/conversations?q=consulta&per_page=50"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # List with pagination
+      - get:
+          url: "/api/v1/inbox/conversations?page=2&per_page=50"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # Think time between requests
+      - think: 3
+
+  - name: "Inbox assignment operations"
+    weight: 1
+    flow:
+      # CSRF setup
+      - get:
+          url: "/sanctum/csrf-cookie"
+
+      # Login
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "medico@clinica-alfa.test"
+            password: "password123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      # Get conversation to assign
+      - get:
+          url: "/api/v1/inbox/conversations?status[]=pendente&per_page=10"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # Think time
+      - think: 2
+
+      # Update conversation assignment (simulated ID)
+      - patch:
+          url: "/api/v1/inbox/conversations/{{ $randomInt(1, 100) }}/assign"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            assigned_to_id: 1
+          expect:
+            - statusCode: [200, 404, 403]
+
+metrics:
+  - target: "p95 < 2000ms"
+    label: "P95 response time for inbox listing"
+  - target: "p99 < 5000ms"
+    label: "P99 response time"
+  - target: "error_rate < 0.5%"
+    label: "Error rate threshold"

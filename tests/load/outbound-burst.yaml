@@ -1,0 +1,87 @@
+config:
+  target: "http://clinica-alfa.lvh.me"
+  phases:
+    - duration: 60
+      arrivalRate: 100
+      name: "Outbound message burst - 100 msg/s"
+  defaults:
+    headers:
+      Accept: "application/json"
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Outbound message sending burst"
+    weight: 1
+    flow:
+      # CSRF setup
+      - get:
+          url: "/sanctum/csrf-cookie"
+
+      # Login
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "admin@clinica-alfa.test"
+            password: "password123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      # Send outbound message to conversation
+      - post:
+          url: "/api/v1/inbox/conversations/{{ $randomInt(1, 100) }}/messages"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+            Idempotency-Key: "msg-{{ $timestamp }}-{{ $randomString(16) }}"
+          json:
+            content_type: "text"
+            body: "Stress test outbound message from attendant {{ $timestamp }}"
+          expect:
+            - statusCode: [200, 201, 404, 403]
+
+      # Think time between messages
+      - think: 1
+
+  - name: "Outbound message with attachments"
+    weight: 1
+    flow:
+      # CSRF setup
+      - get:
+          url: "/sanctum/csrf-cookie"
+
+      # Login
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "medico@clinica-alfa.test"
+            password: "password123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      # Send message with document metadata
+      - post:
+          url: "/api/v1/inbox/conversations/{{ $randomInt(1, 100) }}/messages"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+            Idempotency-Key: "doc-{{ $timestamp }}-{{ $randomString(16) }}"
+          json:
+            content_type: "document"
+            body: "Prescription or medical document"
+            media_type: "application/pdf"
+            file_size: 102400
+          expect:
+            - statusCode: [200, 201, 404, 403]
+
+      # Think time
+      - think: 2
+
+metrics:
+  - target: "p95 < 2000ms"
+    label: "P95 outbound message endpoint latency"
+  - target: "p99 < 5000ms"
+    label: "P99 outbound message endpoint latency"
+  - target: "error_rate < 1%"
+    label: "Outbound message error rate"
+  - target: "rps >= 50"
+    label: "Minimum requests per second sustained"

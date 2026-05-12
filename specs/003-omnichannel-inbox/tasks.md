@@ -494,23 +494,23 @@
 
 ### Stress test scaffolding (research R8)
 
-- [ ] T274 [P] Create `tests/load/inbox-load.yaml` Artillery scenario (50 tenants × 20 atendentes × 200 conversas → inbox listing tempo real < 2s)
-- [ ] T275 [P] Create `tests/load/webhook-flood.yaml` (1000 webhooks/60s; queue `webhooks-meta` < 100 pending)
-- [ ] T276 [P] Create `tests/load/outbound-burst.yaml` (100 mensagens/s; respect Twilio 5 req/s)
-- [ ] T277 [P] Create `tests/load/reverb-broadcast.yaml` (5000 subscribers; p95 < 2s)
-- [ ] T278 Create `app/Console/Commands/MessagingLoadRunCommand.php` (`messaging:load-run --scenario=...`) that invokes Artillery and stores PDF report in `storage/load-reports/`
+- [x] T274 [P] Create `tests/load/inbox-load.yaml` Artillery scenario (50 tenants × 20 atendentes × 200 conversas → inbox listing tempo real < 2s)
+- [x] T275 [P] Create `tests/load/webhook-flood.yaml` (1000 webhooks/60s; queue `webhooks-meta` < 100 pending)
+- [x] T276 [P] Create `tests/load/outbound-burst.yaml` (100 mensagens/s; respect Twilio 5 req/s)
+- [x] T277 [P] Create `tests/load/reverb-broadcast.yaml` (5000 subscribers; p95 < 2s)
+- [x] T278 Create `app/Console/Commands/MessagingLoadRunCommand.php` (`messaging:load-run --scenario=...`) that invokes Artillery and stores PDF report in `storage/load-reports/`
 
 ### Seeder updates
 
-- [ ] T279 Extend `database/seeders/DevSeeder.php` adding 2 sandbox channels (1 WhatsApp + 1 widget) for `clinica-alfa` for manual quickstart testing
+- [x] T279 Extend `database/seeders/DevSeeder.php` adding 2 sandbox channels (1 WhatsApp + 1 widget) for `clinica-alfa` for manual quickstart testing
 
 ### E2E Playwright
 
-- [ ] T280 Create `tests/e2e/inbox-whatsapp-roundtrip.spec.ts` covering: fixture sends webhook payload Twilio → atendente vê na inbox via Reverb → responde → status sent→delivered→read via fixture status callback
+- [x] T280 Create `tests/e2e/inbox-whatsapp-roundtrip.spec.ts` covering: fixture sends webhook payload Twilio → atendente vê na inbox via Reverb → responde → status sent→delivered→read via fixture status callback
 
 ### Filament super admin widget
 
-- [ ] T281 Create `app/Filament/Resources/Widgets/TenantMessagingStatsWidget.php` showing aggregated message counts per tenant per channel (NO PII per spec § 2.3 — Super Admin sees only counters)
+- [x] T281 Create `app/Filament/Resources/Widgets/TenantMessagingStatsWidget.php` showing aggregated message counts per tenant per channel (NO PII per spec § 2.3 — Super Admin sees only counters)
 
 ### Final regression + cleanup
 

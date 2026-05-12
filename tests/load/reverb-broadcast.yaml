@@ -1,0 +1,62 @@
+config:
+  target: "ws://localhost:8080"
+  phases:
+    - duration: 60
+      arrivalRate: 50
+      name: "Initial subscribers"
+    - duration: 60
+      arrivalRate: 150
+      rampTo: 200
+      name: "Ramp to 5000 subscribers"
+  engines:
+    ws: {}
+
+scenarios:
+  - name: "Reverb subscribers on private tenant channel"
+    weight: 1
+    engine: "ws"
+    flow:
+      # Subscribe to tenant inbox private channel
+      - send: '{"event":"pusher:subscribe","data":{"auth":"PLACEHOLDER_AUTH","channel":"private-tenant.1.inbox"}}'
+
+      # Listen for 30 seconds
+      - think: 30
+
+      # Subscribe to specific conversation channel
+      - send: '{"event":"pusher:subscribe","data":{"auth":"PLACEHOLDER_AUTH","channel":"private-tenant.1.conversa.{{ $randomInt(1,100) }}"}}'
+
+      # Listen for broadcasts
+      - think: 60
+
+      # Unsubscribe from conversation
+      - send: '{"event":"pusher:unsubscribe","data":{"channel":"private-tenant.1.conversa.{{ $randomInt(1,100) }}"}}'
+
+      # Final wait
+      - think: 10
+
+  - name: "Reverb subscribers on multiple channels"
+    weight: 1
+    engine: "ws"
+    flow:
+      # Subscribe to tenant inbox
+      - send: '{"event":"pusher:subscribe","data":{"auth":"PLACEHOLDER_AUTH","channel":"private-tenant.1.inbox"}}'
+
+      # Subscribe to presence channel
+      - send: '{"event":"pusher:subscribe","data":{"auth":"PLACEHOLDER_AUTH","channel":"presence-tenant.1.staff"}}'
+
+      # Listen for mixed broadcasts
+      - think: 45
+
+      # Subscribe to third conversation channel
+      - send: '{"event":"pusher:subscribe","data":{"auth":"PLACEHOLDER_AUTH","channel":"private-tenant.1.conversa.{{ $randomInt(1,50) }}"}}'
+
+      # Extended listen
+      - think: 75
+
+metrics:
+  - target: "connections >= 5000"
+    label: "Minimum concurrent WebSocket connections"
+  - target: "p95 < 2000ms"
+    label: "P95 broadcast latency"
+  - target: "error_rate < 1%"
+    label: "WebSocket connection error rate"

@@ -1,0 +1,57 @@
+config:
+  target: "http://clinica-alfa.lvh.me"
+  phases:
+    - duration: 60
+      arrivalRate: 17
+      name: "Webhook flood - 1000 req/min"
+  defaults:
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+
+scenarios:
+  - name: "Twilio webhook message arrival flood"
+    weight: 1
+    flow:
+      # Simulated Twilio incoming message webhook
+      # Note: X-Twilio-Signature requires valid HMAC-SHA1 of full request body
+      # with Twilio auth_token. In production, this would be computed by Twilio SDK.
+      # For load test, we use a placeholder or pre-computed valid signature.
+      - post:
+          url: "/api/v1/webhooks/twilio/whatsapp"
+          headers:
+            X-Twilio-Signature: "{{ $randomString(43) }}"
+            Content-Type: "application/x-www-form-urlencoded"
+          form:
+            MessageSid: "SM{{ $randomString(32) }}"
+            AccountSid: "AC{{ $randomString(32) }}"
+            From: "whatsapp:+5511{{ $randomNumber(900000000, 999999999) }}"
+            To: "whatsapp:+14155238886"
+            Body: "Stress test message from {{ $timestamp }}"
+            NumMedia: "0"
+            MessageStatus: "received"
+          expect:
+            - statusCode: [200, 401, 403]
+
+  - name: "Twilio webhook status callback flood"
+    weight: 1
+    flow:
+      # Status update callback (sent, delivered, read, failed)
+      - post:
+          url: "/api/v1/webhooks/twilio/status"
+          headers:
+            X-Twilio-Signature: "{{ $randomString(43) }}"
+            Content-Type: "application/x-www-form-urlencoded"
+          form:
+            MessageSid: "SM{{ $randomString(32) }}"
+            MessageStatus: "delivered"
+            Timestamp: "{{ $timestamp }}"
+          expect:
+            - statusCode: [200, 401, 403]
+
+metrics:
+  - target: "p95 < 1000ms"
+    label: "P95 webhook handler latency"
+  - target: "p99 < 3000ms"
+    label: "P99 webhook handler latency"
+  - target: "error_rate < 1%"
+    label: "Webhook error rate (auth failures expected)"

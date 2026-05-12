@@ -191,12 +191,12 @@ shell commands, and other important information, read the current plan:
 - **Data model (Phase 1)**: [specs/004-token-auth-migration/data-model.md](specs/004-token-auth-migration/data-model.md) (UNIQUE email + 4 eventos Auditable)
 - **API contracts (Phase 1)**: [specs/004-token-auth-migration/contracts/openapi.yaml](specs/004-token-auth-migration/contracts/openapi.yaml) (6 paths, 9 schemas, bearerAuth scheme)
 - **Quickstart (Phase 1)**: [specs/004-token-auth-migration/quickstart.md](specs/004-token-auth-migration/quickstart.md) (deploy split + CORS + CSP + Postman)
-- **Constitution amendment v1.4.0**: **OBRIGATÓRIO ANTES da implementação** (Lote A T001) — Princípio VII aceita Bearer como formato adicional
+- **Constitution amendment v1.4.0**: ✅ **APLICADO em 2026-05-12** — Princípio VII expandido para aceitar Bearer Sanctum tokens como formato adicional; 5 novos gates específicos (SHA-256 hash, CORS env, CSP estrita, DOMPurify, audit suspeito). Implementação destravada.
 - **Previous features delivered**:
   - `003-omnichannel-inbox` — [spec](specs/003-omnichannel-inbox/spec.md) — 290/290 tasks, 352 tests Fase 3, 47/47 ACs, 7/7 user stories. Mergeado em `main` 2026-05-12.
   - `002-crm-pacientes` — [plan](specs/002-crm-pacientes/plan.md) — 650 testes verdes
   - `001-fundacao-multitenant` — [plan](specs/001-fundacao-multitenant/plan.md) — 467 testes verdes
-- **Constitution**: [.specify/memory/constitution.md](.specify/memory/constitution.md) (v1.3.0 — amendment v1.4.0 será necessário pela feature 004)
+- **Constitution**: [.specify/memory/constitution.md](.specify/memory/constitution.md) (**v1.4.0** — amendment aplicado em 2026-05-12 para feature 004)
 <!-- SPECKIT END -->
 
 ## CRM Pacientes (Fase 2) — Key Patterns

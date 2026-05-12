@@ -20,6 +20,27 @@ export const useInboxStore = defineStore('inbox', {
         /** @type {Array<Object>} lista de conversas carregadas */
         conversations: [],
 
+        /** @type {Array<Object>} usuários atribuíveis ao tenant (cache) */
+        assignableUsers: [],
+
+        /** @type {boolean} */
+        loadingAssignableUsers: false,
+
+        /** @type {Record<string|number, Array<Object>>} histórico de atribuições indexado por id de conversa */
+        assignmentsByConversationId: {},
+
+        /** @type {boolean} */
+        loadingAssignments: false,
+
+        /** @type {Array<Object>} regras de atribuição automática */
+        assignmentRules: [],
+
+        /** @type {boolean} */
+        loadingAssignmentRules: false,
+
+        /** @type {boolean} */
+        savingAssignmentRules: false,
+
         /** @type {Record<string|number, Array<Object>>} mensagens indexadas por conversa id */
         messagesByConversationId: {},
 
@@ -369,6 +390,34 @@ export const useInboxStore = defineStore('inbox', {
         },
 
         /**
+         * US-4.6 — Pausa a IA na conversa (Modo Humano Assume).
+         * @param {string|number} conversationId
+         * @param {Object} payload — { duration_hours?: number, until?: string, reason?: string }
+         */
+        async takeoverAi(conversationId, payload = {}) {
+            const { data } = await api.post(
+                `/inbox/conversations/${conversationId}/takeover`,
+                payload,
+            );
+            const updated = data.data ?? data;
+            this._updateConversationInList(updated);
+            return updated;
+        },
+
+        /**
+         * US-4.6 — Libera a IA imediatamente na conversa.
+         * @param {string|number} conversationId
+         */
+        async releaseToAi(conversationId) {
+            const { data } = await api.post(
+                `/inbox/conversations/${conversationId}/release-to-ai`,
+            );
+            const updated = data.data ?? data;
+            this._updateConversationInList(updated);
+            return updated;
+        },
+
+        /**
          * Aplica uma mensagem recebida via Reverb broadcast.
          * Atualiza o state local sem nova chamada HTTP.
          * @param {Object} message — MessageResource
@@ -465,6 +514,116 @@ export const useInboxStore = defineStore('inbox', {
                 last_activity_to: null,
                 ai_paused: null,
             };
+        },
+
+        // ─── US-4.5 — Atribuição e Transferência ─────────────────────────────────
+
+        /**
+         * Atribui manualmente uma conversa a um usuário ou via auto-assign.
+         * @param {string|number} conversationId
+         * @param {{ user_id?: number, auto?: boolean }} payload
+         * @returns {Promise<Object>} ConversationResource atualizado
+         */
+        async assign(conversationId, payload) {
+            const { data } = await api.post(
+                `/inbox/conversations/${conversationId}/assign`,
+                payload,
+            );
+            const updated = data.data ?? data;
+            this._updateConversationInList(updated);
+            return updated;
+        },
+
+        /**
+         * Transfere uma conversa para outro usuário ou perfil.
+         * @param {string|number} conversationId
+         * @param {{ user_id?: number, role?: string, transfer_note: string }} payload
+         * @returns {Promise<Object>}
+         */
+        async transfer(conversationId, payload) {
+            const { data } = await api.post(
+                `/inbox/conversations/${conversationId}/transfer`,
+                payload,
+            );
+            const updated = data.data ?? data;
+            this._updateConversationInList(updated);
+            return updated;
+        },
+
+        /**
+         * Carrega o histórico de atribuições de uma conversa.
+         * @param {string|number} conversationId
+         * @returns {Promise<Array<Object>>}
+         */
+        async loadAssignments(conversationId) {
+            this.loadingAssignments = true;
+            try {
+                const { data } = await api.get(
+                    `/inbox/conversations/${conversationId}/assignments`,
+                );
+                const list = data.data ?? data;
+                this.assignmentsByConversationId[String(conversationId)] = list;
+                return list;
+            } finally {
+                this.loadingAssignments = false;
+            }
+        },
+
+        /**
+         * Carrega usuários do tenant com permissão inbox.view (exceto financeiro).
+         * Cacheia no state para evitar chamadas duplicadas por sessão.
+         * @param {{ force?: boolean }} opts
+         * @returns {Promise<Array<Object>>}
+         */
+        async loadAssignableUsers(opts = {}) {
+            if (this.assignableUsers.length > 0 && !opts.force) {
+                return this.assignableUsers;
+            }
+            this.loadingAssignableUsers = true;
+            try {
+                const { data } = await api.get('/users', {
+                    params: { per_page: 200, status: 'active' },
+                });
+                const all = data.data ?? [];
+                // Exclui financeiro pois não tem inbox.view
+                this.assignableUsers = all.filter(
+                    (u) => !(u.roles ?? []).includes('financeiro'),
+                );
+                return this.assignableUsers;
+            } finally {
+                this.loadingAssignableUsers = false;
+            }
+        },
+
+        /**
+         * Carrega as regras de atribuição automática do tenant.
+         * @returns {Promise<Array<Object>>}
+         */
+        async loadAssignmentRules() {
+            this.loadingAssignmentRules = true;
+            try {
+                const { data } = await api.get('/inbox/assignment-rules');
+                this.assignmentRules = data.data ?? data;
+                return this.assignmentRules;
+            } finally {
+                this.loadingAssignmentRules = false;
+            }
+        },
+
+        /**
+         * Salva o conjunto completo de regras (PUT replace).
+         * @param {Array<Object>} rules
+         * @returns {Promise<Array<Object>>}
+         */
+        async updateAssignmentRules(rules) {
+            this.savingAssignmentRules = true;
+            try {
+                const { data } = await api.put('/inbox/assignment-rules', { rules });
+                this.assignmentRules = data.data ?? data;
+                return this.assignmentRules;
+            } finally {
+                this.savingAssignmentRules = false;
+            }
         },
 
         // ─── Helpers privados ─────────────────────────────────────────────────────

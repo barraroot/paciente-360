@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\Messaging\ExpireAiPausesJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -22,3 +23,7 @@ Schedule::command('audit:delete-expired')->monthlyOn(2, '04:00');
 
 // T261 — Purga snapshots de mesclagens antigas (Fase 2, Polish).
 Schedule::command('app:purge-old-merge-snapshots')->monthlyOn(2, '04:00');
+
+// T175 US-4.6 — Expiração de pausas de IA (cross-tenant). Roda a cada minuto.
+// withoutOverlapping garante que execuções longas não se acumulam.
+Schedule::job(new ExpireAiPausesJob)->everyMinute()->withoutOverlapping();

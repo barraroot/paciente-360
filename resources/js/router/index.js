@@ -194,6 +194,13 @@ const routes = [
         props: true,
         meta: { requiresAuth: true, ability: 'inbox.view', title: 'Conversa' },
     },
+    // US-4.5 — Regras de atribuição automática
+    {
+        path: '/panel/inbox/regras-atribuicao',
+        name: 'inbox.regras_atribuicao',
+        component: () => import('@/pages/Inbox/RegrasAtribuicao.vue'),
+        meta: { requiresAuth: true, ability: 'inbox.assign', title: 'Regras de Atribuição' },
+    },
 
     {
         path: '/panel/:pathMatch(.*)*',

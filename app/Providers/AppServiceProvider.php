@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Domain\Messaging\Assignment\Models\AssignmentRule;
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Channel\Models\Channel;
+use App\Domain\Messaging\Conversation\Contracts\ConversaIATogglingContract;
 use App\Domain\Messaging\Conversation\Models\Conversation;
+use App\Domain\Messaging\Conversation\Services\HumanTakeoverService;
 use App\Domain\Messaging\Infrastructure\CircuitBreaker\CircuitBreakerService;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Observers\MessageObserver;
@@ -20,6 +23,7 @@ use App\Models\Tag;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Policies\AnotacaoPolicy;
+use App\Policies\AssignmentPolicy;
 use App\Policies\AuditLogPolicy;
 use App\Policies\ChannelPolicy;
 use App\Policies\ConvenioPolicy;
@@ -72,6 +76,10 @@ class AppServiceProvider extends ServiceProvider
                 $this->app->make(WhatsAppCloudAdapter::class),
             );
         });
+
+        // Fase 3 US-4.6 — HumanTakeoverService: singleton que implementa ConversaIATogglingContract.
+        // Contrato congelado para Fase 4 (Princípio III).
+        $this->app->singleton(ConversaIATogglingContract::class, HumanTakeoverService::class);
 
         // Wrapper do Stripe SDK — permite swap por mock em testes.
         // Só instancia o StripeClient real se a chave secreta estiver configurada.
@@ -126,10 +134,12 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Convenio::class, ConvenioPolicy::class);
         Gate::policy(FunilColuna::class, FunilPolicy::class);
 
-        // Fase 3 — Omnichannel Inbox (T076 + T119).
+        // Fase 3 — Omnichannel Inbox (T076 + T119 + T154).
         Gate::policy(Channel::class, ChannelPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);
         Gate::policy(Message::class, MessagePolicy::class);
+        // AssignmentPolicy usa Conversation como model (assign/transfer/viewAssignments)
+        Gate::policy(AssignmentRule::class, AssignmentPolicy::class);
     }
 
     /**

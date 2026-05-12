@@ -66,6 +66,41 @@ final class ConversationPolicy
     }
 
     /**
+     * Verifica se o usuário pode atribuir a conversa (inbox.assign ability).
+     * T154 — US-4.5.
+     */
+    public function assign(User $user, Conversation $conversation): bool
+    {
+        if (! $user->can('inbox.assign')) {
+            return false;
+        }
+
+        return $conversation->tenant_id === $user->tenant_id;
+    }
+
+    /**
+     * Verifica se o usuário pode transferir a conversa (inbox.transfer ability).
+     * T154 — US-4.5.
+     */
+    public function transfer(User $user, Conversation $conversation): bool
+    {
+        if (! $user->can('inbox.transfer')) {
+            return false;
+        }
+
+        return $conversation->tenant_id === $user->tenant_id;
+    }
+
+    /**
+     * Verifica se o usuário pode ver o histórico de atribuições (inbox.view ability).
+     * T154 — US-4.5.
+     */
+    public function viewAssignments(User $user, Conversation $conversation): bool
+    {
+        return $this->view($user, $conversation);
+    }
+
+    /**
      * Verifica se o médico pode ver a conversa.
      * Condição: atribuída ao médico (assigned_user_id === user.id)
      * OU paciente tem o médico como profissional responsável

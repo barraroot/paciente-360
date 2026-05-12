@@ -82,6 +82,7 @@ class Tenant extends Model
         'terms_accepted_at',
         'terms_version',
         'onboarding_state',
+        'settings',
     ];
 
     /**
@@ -95,7 +96,25 @@ class Tenant extends Model
             'restrictions_applied_at' => 'datetime',
             'terms_accepted_at' => 'datetime',
             'onboarding_state' => AsJsonArray::class,
+            'settings' => AsJsonArray::class,
         ];
+    }
+
+    /**
+     * T181 — Retorna a duração de pausa da IA em minutos para este tenant.
+     *
+     * Lê de `settings.inbox.ai_pause_minutes`, com clamp [5, 240] e
+     * fallback ao config global `messaging.ai_pause.minutes` (default 30).
+     */
+    public function getInboxAiPauseMinutes(): int
+    {
+        $tenantValue = data_get($this->settings ?? [], 'inbox.ai_pause_minutes');
+
+        if ($tenantValue !== null) {
+            return max(5, min(240, (int) $tenantValue));
+        }
+
+        return max(5, min(240, (int) config('messaging.ai_pause.minutes', 30)));
     }
 
     /**

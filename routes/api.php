@@ -10,11 +10,14 @@ use App\Http\Controllers\Api\V1\Billing\CheckoutController;
 use App\Http\Controllers\Api\V1\Billing\PlansController;
 use App\Http\Controllers\Api\V1\Billing\SubscriptionController;
 use App\Http\Controllers\Api\V1\Convenios\ConveniosController;
+use App\Http\Controllers\Api\V1\Inbox\AssignmentRulesController;
+use App\Http\Controllers\Api\V1\Inbox\AssignmentsController;
 use App\Http\Controllers\Api\V1\Inbox\ChannelsController;
 use App\Http\Controllers\Api\V1\Inbox\ChannelTemplatesController;
 use App\Http\Controllers\Api\V1\Inbox\ConversationsController;
 use App\Http\Controllers\Api\V1\Inbox\InboxPollController;
 use App\Http\Controllers\Api\V1\Inbox\MessagesController;
+use App\Http\Controllers\Api\V1\Inbox\TakeoverController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
 use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
 use App\Http\Controllers\Api\V1\Pacientes\ExportacaoController;
@@ -285,6 +288,29 @@ Route::middleware(['auth:sanctum', 'throttle:inbox'])->prefix('inbox')->group(fu
         ->whereNumber('conversation');
     Route::get('poll', InboxPollController::class)
         ->name('inbox.poll');
+
+    // US-4.6 — Modo Humano Assume (T178)
+    Route::post('conversations/{conversation}/takeover', [TakeoverController::class, 'takeover'])
+        ->name('inbox.conversations.takeover')
+        ->whereNumber('conversation');
+    Route::post('conversations/{conversation}/release-to-ai', [TakeoverController::class, 'releaseToAi'])
+        ->name('inbox.conversations.release-to-ai')
+        ->whereNumber('conversation');
+
+    // US-4.5 — Atribuição e transferência (T155)
+    Route::post('conversations/{conversation}/assign', [AssignmentsController::class, 'assign'])
+        ->name('inbox.conversations.assign')
+        ->whereNumber('conversation');
+    Route::post('conversations/{conversation}/transfer', [AssignmentsController::class, 'transfer'])
+        ->name('inbox.conversations.transfer')
+        ->whereNumber('conversation');
+    Route::get('conversations/{conversation}/assignments', [AssignmentsController::class, 'assignments'])
+        ->name('inbox.conversations.assignments')
+        ->whereNumber('conversation');
+    Route::get('assignment-rules', [AssignmentRulesController::class, 'index'])
+        ->name('inbox.assignment-rules.index');
+    Route::put('assignment-rules', [AssignmentRulesController::class, 'update'])
+        ->name('inbox.assignment-rules.update');
 });
 
 // Fase 3 — Webhooks Twilio (T081)

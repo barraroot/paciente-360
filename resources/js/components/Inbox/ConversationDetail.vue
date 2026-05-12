@@ -2,11 +2,19 @@
 import { computed, watch, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useInboxStore } from '@/stores/inbox.js';
+import { useAuthStore } from '@/stores/auth.js';
 import { formatDate } from '@/composables/useI18nFormat.js';
 import MessageBubble from '@/components/Inbox/MessageBubble.vue';
 import MessageInput from '@/components/Inbox/MessageInput.vue';
+import AiPauseBadge from '@/components/Inbox/AiPauseBadge.vue';
+import TakeoverButton from '@/components/Inbox/TakeoverButton.vue';
+import ReleaseAiButton from '@/components/Inbox/ReleaseAiButton.vue';
+import AssignDialog from '@/components/Inbox/AssignDialog.vue';
+import TransferDialog from '@/components/Inbox/TransferDialog.vue';
+import AssignmentHistoryDrawer from '@/components/Inbox/AssignmentHistoryDrawer.vue';
 
 const { t } = useI18n();
+const auth = useAuthStore();
 
 const props = defineProps({
     conversation: {
@@ -23,7 +31,45 @@ const store = useInboxStore();
 const messagesEndRef = ref(null);
 const messagesContainerRef = ref(null);
 
+// ─── US-4.5 — Modais de atribuição/transferência/histórico ───────────────────
+
+const showAssignDialog = ref(false);
+const showTransferDialog = ref(false);
+const showHistoryDrawer = ref(false);
+
+/** Verifica se o usuário tem a ability dada (via permissions na store auth) */
+function can(ability) {
+    return auth.hasPermission(ability);
+}
+
+function onAssigned(updatedConv) {
+    store._updateConversationInList(updatedConv);
+}
+
+function onTransferred(updatedConv) {
+    if (updatedConv) { store._updateConversationInList(updatedConv); }
+}
+
 const messages = computed(() => store.messagesByConversationId[props.conversation.id] ?? []);
+
+/** US-4.6 — Reactive ai_paused_until from selected conversation in store */
+const aiPausedUntil = computed(() => {
+    const conv = store.conversations.find((c) => String(c.id) === String(props.conversation.id));
+    return conv?.ai_paused_until ?? props.conversation.ai_paused_until ?? null;
+});
+
+const isAiPaused = computed(() => {
+    if (!aiPausedUntil.value) return false;
+    return new Date(aiPausedUntil.value).getTime() > Date.now();
+});
+
+function onTakenOver(updatedConv) {
+    store._updateConversationInList(updatedConv);
+}
+
+function onReleased(updatedConv) {
+    store._updateConversationInList(updatedConv);
+}
 
 /**
  * Agrupa mensagens por data para exibir separadores de dia.
@@ -157,8 +203,57 @@ const conversationStatus = computed(() => props.conversation.status ?? 'aberta')
                 </div>
             </div>
 
-            <!-- Ações da conversa (resolver / reabrir) — placeholder para US5 -->
+            <!-- Ações da conversa -->
             <div class="flex items-center gap-2 shrink-0">
+                <!-- US-4.6 — AI Pause controls -->
+                <AiPauseBadge :ai-paused-until="aiPausedUntil" />
+                <TakeoverButton
+                    v-if="!isAiPaused"
+                    :conversation-id="conversation.id"
+                    @taken-over="onTakenOver"
+                />
+                <ReleaseAiButton
+                    v-if="isAiPaused"
+                    :conversation-id="conversation.id"
+                    @released="onReleased"
+                />
+
+                <!-- US-4.5 — Atribuir (visível quando tem inbox.assign) -->
+                <button
+                    v-if="can('inbox.assign')"
+                    type="button"
+                    class="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-surface-elevated focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
+                    :aria-label="t('inbox.acoes.atribuir')"
+                    @click="showAssignDialog = true"
+                >
+                    {{ t('inbox.acoes.atribuir') }}
+                </button>
+
+                <!-- US-4.5 — Transferir (visível quando tem inbox.transfer e conversa atribuída) -->
+                <button
+                    v-if="can('inbox.transfer') && conversation.assigned_user_id"
+                    type="button"
+                    class="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-surface-elevated focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
+                    :aria-label="t('inbox.acoes.transferir')"
+                    @click="showTransferDialog = true"
+                >
+                    {{ t('inbox.acoes.transferir') }}
+                </button>
+
+                <!-- US-4.5 — Histórico (visível para inbox.view) -->
+                <button
+                    v-if="can('inbox.view')"
+                    type="button"
+                    class="rounded-lg border border-border p-1.5 text-foreground-muted transition hover:bg-surface-elevated hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
+                    :aria-label="t('inbox.acoes.historico')"
+                    :title="t('inbox.acoes.historico')"
+                    @click="showHistoryDrawer = true"
+                >
+                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+
                 <button
                     v-if="conversationStatus !== 'resolvida'"
                     type="button"
@@ -257,4 +352,22 @@ const conversationStatus = computed(() => props.conversation.status ?? 'aberta')
             @message-sent="onMessageSent"
         />
     </div>
+
+    <!-- US-4.5 — Dialogs e drawer -->
+    <AssignDialog
+        v-model="showAssignDialog"
+        :conversation-id="conversation.id"
+        @assigned="onAssigned"
+    />
+
+    <TransferDialog
+        v-model="showTransferDialog"
+        :conversation-id="conversation.id"
+        @transferred="onTransferred"
+    />
+
+    <AssignmentHistoryDrawer
+        v-model="showHistoryDrawer"
+        :conversation-id="conversation.id"
+    />
 </template>

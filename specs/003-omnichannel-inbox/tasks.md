@@ -243,35 +243,35 @@
 
 ### Tests for US5
 
-- [ ] T137 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/AssignManualTest.php` covering AC-4.5.1, AC-4.5.8: assign respects `auto_assign_max_per_user`
-- [ ] T138 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/AssignAutoRoundRobinTest.php` covering AC-4.5.2 NC-6: round-robin escolhe next online user com vaga
-- [ ] T139 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/AssignAutoPatientOwnerTest.php` covering AC-4.5.2: estratégia `profissional_vinculado` com fallback round-robin
-- [ ] T140 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/TransferWithNoteTest.php` covering AC-4.5.3, AC-4.5.4: nota mín 10 chars + histórico append-only + 422 quando < 10 chars
-- [ ] T141 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/TransferToRoleTest.php` covering AC-4.5.7: transferir para role → first online with capacity
-- [ ] T142 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/CrossTenantTransferBlockedTest.php` covering AC-4.5.6 (Princípio II): 403 + audit log
-- [ ] T143 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/AssignmentRulesCrudTest.php` for PUT `/api/v1/inbox/assignment-rules`
-- [ ] T144 [P] [US5] Write `tests/Unit/Messaging/RoundRobinStrategyTest.php` + `PatientOwnerStrategyTest.php`
-- [ ] T145 [US5] Run US5 tests; all FAIL
+- [x] T137 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/AssignManualTest.php` covering AC-4.5.1, AC-4.5.8: assign respects `auto_assign_max_per_user`
+- [x] T138 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/AssignAutoRoundRobinTest.php` covering AC-4.5.2 NC-6: round-robin escolhe next online user com vaga
+- [x] T139 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/AssignAutoPatientOwnerTest.php` covering AC-4.5.2: estratégia `profissional_vinculado` com fallback round-robin
+- [x] T140 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/TransferWithNoteTest.php` covering AC-4.5.3, AC-4.5.4: nota mín 10 chars + histórico append-only + 422 quando < 10 chars
+- [x] T141 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/TransferToRoleTest.php` covering AC-4.5.7: transferir para role → first online with capacity
+- [x] T142 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/CrossTenantTransferBlockedTest.php` covering AC-4.5.6 (Princípio II): 403 + audit log
+- [x] T143 [P] [US5] Write `tests/Feature/Fase3/US5_Assignment/AssignmentRulesCrudTest.php` for PUT `/api/v1/inbox/assignment-rules`
+- [x] T144 [P] [US5] Write `tests/Unit/Messaging/RoundRobinStrategyTest.php` + `PatientOwnerStrategyTest.php`
+- [x] T145 [US5] Run US5 tests; all FAIL
 
 ### Implementation for US5
 
-- [ ] T146 [P] [US5] Create `app/Domain/Messaging/Assignment/Services/AssignmentService.php` with `assignManual`, `assignAuto`, `transfer` + pessimistic lock (`DB::transaction + lockForUpdate`) per spec § R9
-- [ ] T147 [P] [US5] Create `app/Domain/Messaging/Assignment/Services/Strategies/RoundRobinStrategy.php` implementing `AssignmentStrategy` interface
-- [ ] T148 [P] [US5] Create `app/Domain/Messaging/Assignment/Services/Strategies/PatientOwnerStrategy.php` (with fallback to RoundRobin)
-- [ ] T149 [P] [US5] Create `app/Domain/Messaging/Assignment/Events/{ConversaAtribuida,ConversaTransferida}.php`
-- [ ] T150 [P] [US5] Create `app/Http/Controllers/Api/V1/Inbox/AssignmentsController.php`: `assign`, `transfer`, `assignments` (history)
-- [ ] T151 [P] [US5] Create `app/Http/Controllers/Api/V1/Inbox/AssignmentRulesController.php`: `index`, `update` (replace set)
-- [ ] T152 [P] [US5] Create Form Requests `app/Http/Requests/Inbox/{AssignConversationRequest,TransferConversationRequest,UpdateAssignmentRulesRequest}.php`
-- [ ] T153 [P] [US5] Create Resources `app/Http/Resources/V1/{AssignmentResource,AssignmentRuleResource}.php`
-- [ ] T154 [P] [US5] Create `app/Policies/AssignmentPolicy.php` enforcing `inbox.assign`, `inbox.transfer` + tenant + ownership
-- [ ] T155 [US5] Add routes for `/conversations/{id}/{assign,transfer,assignments}` + `/assignment-rules` in `routes/api.php`
-- [ ] T156 [P] [US5] Create Vue component `resources/js/components/Inbox/AssignDialog.vue` (manual or auto)
-- [ ] T157 [P] [US5] Create Vue component `resources/js/components/Inbox/TransferDialog.vue` (user OR role + nota obrigatória)
-- [ ] T158 [P] [US5] Create Vue component `resources/js/components/Inbox/AssignmentHistoryDrawer.vue`
-- [ ] T159 [P] [US5] Create Vue page `resources/js/pages/Inbox/RegrasAtribuicao.vue` for `/panel/inbox/regras-atribuicao`
-- [ ] T160 [US5] Add notification dispatch in `AssignmentService` → in-app + Reverb event `ConversaAtribuidaParaInbox` for AC-4.5.5
-- [ ] T161 [US5] Update `InboxTenantIsolationTest` adding 5 new assignment endpoints
-- [ ] T162 [US5] Run all US5 tests; all PASS
+- [x] T146 [P] [US5] Create `app/Domain/Messaging/Assignment/Services/AssignmentService.php` with `assignManual`, `assignAuto`, `transfer` + pessimistic lock (`DB::transaction + lockForUpdate`) per spec § R9
+- [x] T147 [P] [US5] Create `app/Domain/Messaging/Assignment/Services/Strategies/RoundRobinStrategy.php` implementing `AssignmentStrategy` interface
+- [x] T148 [P] [US5] Create `app/Domain/Messaging/Assignment/Services/Strategies/PatientOwnerStrategy.php` (with fallback to RoundRobin)
+- [x] T149 [P] [US5] Create `app/Domain/Messaging/Assignment/Events/{ConversaAtribuida,ConversaTransferida}.php`
+- [x] T150 [P] [US5] Create `app/Http/Controllers/Api/V1/Inbox/AssignmentsController.php`: `assign`, `transfer`, `assignments` (history)
+- [x] T151 [P] [US5] Create `app/Http/Controllers/Api/V1/Inbox/AssignmentRulesController.php`: `index`, `update` (replace set)
+- [x] T152 [P] [US5] Create Form Requests `app/Http/Requests/Inbox/{AssignConversationRequest,TransferConversationRequest,UpdateAssignmentRulesRequest}.php`
+- [x] T153 [P] [US5] Create Resources `app/Http/Resources/V1/{AssignmentResource,AssignmentRuleResource}.php`
+- [x] T154 [P] [US5] Create `app/Policies/AssignmentPolicy.php` enforcing `inbox.assign`, `inbox.transfer` + tenant + ownership
+- [x] T155 [US5] Add routes for `/conversations/{id}/{assign,transfer,assignments}` + `/assignment-rules` in `routes/api.php`
+- [x] T156 [P] [US5] Create Vue component `resources/js/components/Inbox/AssignDialog.vue` (manual or auto)
+- [x] T157 [P] [US5] Create Vue component `resources/js/components/Inbox/TransferDialog.vue` (user OR role + nota obrigatória)
+- [x] T158 [P] [US5] Create Vue component `resources/js/components/Inbox/AssignmentHistoryDrawer.vue`
+- [x] T159 [P] [US5] Create Vue page `resources/js/pages/Inbox/RegrasAtribuicao.vue` for `/panel/inbox/regras-atribuicao`
+- [x] T160 [US5] Add notification dispatch in `AssignmentService` → in-app + Reverb event `ConversaAtribuidaParaInbox` for AC-4.5.5
+- [x] T161 [US5] Update `InboxTenantIsolationTest` adding 5 new assignment endpoints
+- [x] T162 [US5] Run all US5 tests; all PASS
 
 **Checkpoint US5**: Atribuição manual + auto + transferência com nota; cross-tenant bloqueado.
 
@@ -287,30 +287,30 @@
 
 ### Tests for US6
 
-- [ ] T163 [P] [US6] Write `tests/Feature/Fase3/US6_Takeover/TakeoverManualTest.php` covering AC-4.6.1, AC-4.6.4: POST `/conversations/{id}/takeover` sets `ai_paused_until` + emits `ConversaAssumidaPorHumano` motivo=`manual_click`
-- [ ] T164 [P] [US6] Write `tests/Feature/Fase3/US6_Takeover/TakeoverImplicitTest.php` covering AC-4.6.2: enviar mensagem manual seta `ai_paused_until` automaticamente, evento com motivo=`mensagem_enviada`
-- [ ] T165 [P] [US6] Write `tests/Feature/Fase3/US6_Takeover/TakeoverRepriseTest.php` covering AC-4.6.2b: reprise estende timer, não acumula
-- [ ] T166 [P] [US6] Write `tests/Feature/Fase3/US6_Takeover/TakeoverExpirationTest.php` covering AC-4.6.3: job periodic detecta expiração + emite `ConversaRetomadaPelaIA` motivo=`timeout`
-- [ ] T167 [P] [US6] Write `tests/Feature/Fase3/US6_Takeover/ReleaseToAiTest.php` covering AC-4.6.4: zera `ai_paused_until` + motivo=`manual`
-- [ ] T168 [P] [US6] Write `tests/Unit/Messaging/ConversaIATogglingContractTest.php` — **CONGELA contrato para Fase 4**: testa que `ConversaAssumidaPorHumano` e `ConversaRetomadaPelaIA` têm payload schema estável (campos esperados pela Fase 4)
-- [ ] T169 [US6] Run US6 tests; all FAIL
+- [x] T163 [P] [US6] Write `tests/Feature/Fase3/US6_Takeover/TakeoverManualTest.php` covering AC-4.6.1, AC-4.6.4: POST `/conversations/{id}/takeover` sets `ai_paused_until` + emits `ConversaAssumidaPorHumano` motivo=`manual_click`
+- [x] T164 [P] [US6] Write `tests/Feature/Fase3/US6_Takeover/TakeoverImplicitTest.php` covering AC-4.6.2: enviar mensagem manual seta `ai_paused_until` automaticamente, evento com motivo=`mensagem_enviada`
+- [x] T165 [P] [US6] Write `tests/Feature/Fase3/US6_Takeover/TakeoverRepriseTest.php` covering AC-4.6.2b: reprise estende timer, não acumula
+- [x] T166 [P] [US6] Write `tests/Feature/Fase3/US6_Takeover/TakeoverExpirationTest.php` covering AC-4.6.3: job periodic detecta expiração + emite `ConversaRetomadaPelaIA` motivo=`timeout`
+- [x] T167 [P] [US6] Write `tests/Feature/Fase3/US6_Takeover/ReleaseToAiTest.php` covering AC-4.6.4: zera `ai_paused_until` + motivo=`manual`
+- [x] T168 [P] [US6] Write `tests/Unit/Messaging/ConversaIATogglingContractTest.php` — **CONGELA contrato para Fase 4**: testa que `ConversaAssumidaPorHumano` e `ConversaRetomadaPelaIA` têm payload schema estável (campos esperados pela Fase 4)
+- [x] T169 [US6] Run US6 tests; all FAIL
 
 ### Implementation for US6
 
-- [ ] T170 [P] [US6] Create `app/Domain/Messaging/Conversation/Contracts/ConversaIATogglingContract.php` interface defining `pauseAi(conversation, duration|until, reason)`, `resumeAi(conversation, mode)`
-- [ ] T171 [US6] Create `app/Domain/Messaging/Conversation/Services/HumanTakeoverService.php` implementing `ConversaIATogglingContract`
-- [ ] T172 [P] [US6] Create `app/Domain/Messaging/Conversation/Events/{ConversaAssumidaPorHumano,ConversaRetomadaPelaIA}.php` implementing `Auditable`
-- [ ] T173 [P] [US6] Add observer/listener in `app/Domain/Messaging/Infrastructure/Listeners/SetAiPausedOnOutboundMessageListener.php` — subscribes to `MensagemEnviada` event with `sender_type=user`, calls `HumanTakeoverService::pauseAi` with motivo=`mensagem_enviada`
-- [ ] T174 [P] [US6] Create `app/Jobs/Messaging/ExpireAiPausesJob.php` — runs every minute; finds `conversations.ai_paused_until < now() AND ai_paused_until IS NOT NULL`; zeros field + fires `ConversaRetomadaPelaIA` motivo=`timeout`
-- [ ] T175 [US6] Add `ExpireAiPausesJob` to `app/Console/Kernel.php` schedule (every minute)
-- [ ] T176 [P] [US6] Create `app/Http/Controllers/Api/V1/Inbox/TakeoverController.php`: `takeover`, `releaseToAi`
-- [ ] T177 [P] [US6] Create Form Request `app/Http/Requests/Inbox/TakeoverRequest.php` (duration_hours 1-24 OR until)
-- [ ] T178 [US6] Add routes `/conversations/{id}/takeover` + `/release-to-ai` with policy `inbox.takeover_ai`
-- [ ] T179 [P] [US6] Create Vue component `resources/js/components/Inbox/AiPauseBadge.vue` displaying countdown when `ai_paused_until > now()` per AC-4.6.5
-- [ ] T180 [P] [US6] Create Vue component `resources/js/components/Inbox/TakeoverButton.vue` and `ReleaseAiButton.vue`
-- [ ] T181 [US6] Add tenant setting `ai_pause_minutes` (default 30, range 5-240) — extend Fase 0 `tenant_settings` or Fase 2 `inbox_settings` table per existing convention
-- [ ] T182 [US6] Update `InboxTenantIsolationTest` adding 2 new takeover endpoints
-- [ ] T183 [US6] Run all US6 tests; all PASS — especially `ConversaIATogglingContractTest` (gate da Fase 4)
+- [x] T170 [P] [US6] Create `app/Domain/Messaging/Conversation/Contracts/ConversaIATogglingContract.php` interface defining `pauseAi(conversation, duration|until, reason)`, `resumeAi(conversation, mode)`
+- [x] T171 [US6] Create `app/Domain/Messaging/Conversation/Services/HumanTakeoverService.php` implementing `ConversaIATogglingContract`
+- [x] T172 [P] [US6] Create `app/Domain/Messaging/Conversation/Events/{ConversaAssumidaPorHumano,ConversaRetomadaPelaIA}.php` implementing `Auditable`
+- [x] T173 [P] [US6] Add observer/listener in `app/Domain/Messaging/Infrastructure/Listeners/SetAiPausedOnOutboundMessageListener.php` — subscribes to `MensagemEnviada` event with `sender_type=user`, calls `HumanTakeoverService::pauseAi` with motivo=`mensagem_enviada`
+- [x] T174 [P] [US6] Create `app/Jobs/Messaging/ExpireAiPausesJob.php` — runs every minute; finds `conversations.ai_paused_until < now() AND ai_paused_until IS NOT NULL`; zeros field + fires `ConversaRetomadaPelaIA` motivo=`timeout`
+- [x] T175 [US6] Add `ExpireAiPausesJob` to schedule (every minute) — in `routes/console.php`
+- [x] T176 [P] [US6] Create `app/Http/Controllers/Api/V1/Inbox/TakeoverController.php`: `takeover`, `releaseToAi`
+- [x] T177 [P] [US6] Create Form Request `app/Http/Requests/Inbox/TakeoverRequest.php` (duration_hours 1-24 OR until)
+- [x] T178 [US6] Add routes `/conversations/{id}/takeover` + `/release-to-ai` with policy `inbox.takeover_ai`
+- [x] T179 [P] [US6] Create Vue component `resources/js/components/Inbox/AiPauseBadge.vue` displaying countdown when `ai_paused_until > now()` per AC-4.6.5
+- [x] T180 [P] [US6] Create Vue component `resources/js/components/Inbox/TakeoverButton.vue` and `ReleaseAiButton.vue`
+- [x] T181 [US6] Add tenant setting `ai_pause_minutes` (default 30, range 5-240) — migration `add_settings_to_tenants_table` + `Tenant::getInboxAiPauseMinutes()`
+- [x] T182 [US6] Update `InboxTenantIsolationTest` adding 2 new takeover endpoints
+- [x] T183 [US6] Run all US6 tests; all PASS — especially `ConversaIATogglingContractTest` (gate da Fase 4)
 
 **Checkpoint US6**: Takeover funcional; contrato congelado por teste.
 

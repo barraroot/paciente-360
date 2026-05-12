@@ -20,16 +20,16 @@
 
 **Purpose**: Confirmar amendment + provisionar configs + bounded context + dependências.
 
-- [ ] T001 **Confirmar constitution v1.4.0 aplicado** — verificar `.specify/memory/constitution.md` linha `**Version**: 1.4.0` (já feito em commit `2791c54`). Se não, ABORT — não prosseguir
-- [ ] T002 [P] Adicionar deps NPM: `vendor/bin/sail npm install dompurify@^3.0 eslint-plugin-no-unsanitized@^4.0 --save-dev` (DOMPurify runtime + ESLint plugin devDep)
-- [ ] T003 [P] Atualizar `config/sanctum.php` — `expiration = 60 * 24 * 30` (30d em min); `token_prefix = env('SANCTUM_TOKEN_PREFIX', 'paciente360_')`
-- [ ] T004 [P] Atualizar `config/auth.php` — `defaults.guard = 'web'` (preservado, Filament default); confirmar guards `web` (session/users) e `sanctum` (sanctum/users) lado a lado
-- [ ] T005 [P] Criar `config/cors.php` — `paths: ['api/*', 'broadcasting/auth']`, `allowed_origins: explode(',', env('CORS_ALLOWED_ORIGINS', '...'))`, `supports_credentials: false`, `max_age: 3600`, `exposed_headers: ['X-Request-Id', 'Authorization']`
-- [ ] T006 [P] Adicionar variáveis ao `.env.example`: `SANCTUM_TOKEN_PREFIX=paciente360_`, `CORS_ALLOWED_ORIGINS=http://localhost:5173,...`, `FILAMENT_DOMAIN=crm.com.br`, `APP_TENANT_DOMAIN=app.crm.com.br`, `API_TENANT_DOMAIN=api.crm.com.br`, `VITE_API_BASE_URL=http://api.lvh.me/api/v1`, **`SESSION_DOMAIN=null` (dev)** com comment "em prod: SESSION_DOMAIN=crm.com.br para isolar cookie Filament — não cruzar com app.crm.com.br (FR-018 / C4 fix)"
-- [ ] T007 [P] Criar estrutura de diretórios `app/Domain/Auth/{Events,Services,Contracts}` + `.gitkeep` em cada
-- [ ] T008 [P] Criar diretório de testes `tests/Feature/Fase4/{Auth,Migration}` + `tests/Unit/Auth/` com `.gitkeep`
-- [ ] T009 [P] Atualizar `eslint.config.js` — registrar plugin `no-unsanitized` com regras `recommended` + custom rule `vue/no-v-html: 'warn'`
-- [ ] T010 Rodar `vendor/bin/sail composer dump-autoload && vendor/bin/sail npm run build` — confirmar autoload OK e bundle ainda builda
+- [x] T001 **Confirmar constitution v1.4.0 aplicado** — verificar `.specify/memory/constitution.md` linha `**Version**: 1.4.0` (já feito em commit `2791c54`). Se não, ABORT — não prosseguir
+- [x] T002 [P] Adicionar deps NPM: `vendor/bin/sail npm install dompurify@^3.0 eslint-plugin-no-unsanitized@^4.0 --save-dev` (DOMPurify runtime + ESLint plugin devDep)
+- [x] T003 [P] Atualizar `config/sanctum.php` — `expiration = 60 * 24 * 30` (30d em min); `token_prefix = env('SANCTUM_TOKEN_PREFIX', 'paciente360_')`
+- [x] T004 [P] Atualizar `config/auth.php` — `defaults.guard = 'web'` (preservado, Filament default); confirmar guards `web` (session/users) e `sanctum` (sanctum/users) lado a lado
+- [x] T005 [P] Criar `config/cors.php` — `paths: ['api/*', 'broadcasting/auth']`, `allowed_origins: explode(',', env('CORS_ALLOWED_ORIGINS', '...'))`, `supports_credentials: false`, `max_age: 3600`, `exposed_headers: ['X-Request-Id', 'Authorization']`
+- [x] T006 [P] Adicionar variáveis ao `.env.example`: `SANCTUM_TOKEN_PREFIX=paciente360_`, `CORS_ALLOWED_ORIGINS=http://localhost:5173,...`, `FILAMENT_DOMAIN=crm.com.br`, `APP_TENANT_DOMAIN=app.crm.com.br`, `API_TENANT_DOMAIN=api.crm.com.br`, `VITE_API_BASE_URL=http://api.lvh.me/api/v1`, **`SESSION_DOMAIN=null` (dev)** com comment "em prod: SESSION_DOMAIN=crm.com.br para isolar cookie Filament — não cruzar com app.crm.com.br (FR-018 / C4 fix)"
+- [x] T007 [P] Criar estrutura de diretórios `app/Domain/Auth/{Events,Services,Contracts}` + `.gitkeep` em cada
+- [x] T008 [P] Criar diretório de testes `tests/Feature/Fase4/{Auth,Migration}` + `tests/Unit/Auth/` com `.gitkeep`
+- [x] T009 [P] Atualizar `eslint.config.js` — registrar plugin `no-unsanitized` com regras `recommended` + custom rule `vue/no-v-html: 'warn'`
+- [x] T010 Rodar `vendor/bin/sail composer dump-autoload && vendor/bin/sail npm run build` — confirmar autoload OK e bundle ainda builda
 
 ---
 

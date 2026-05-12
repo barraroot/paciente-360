@@ -143,6 +143,25 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ChannelResource' }
         '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [channels]
+      summary: Substitui display name e settings do canal (atualização completa)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 2, maxLength: 100 }
+                auto_send_disabled: { type: boolean, description: 'Toggle manual desabilita envios automáticos (NC-17)' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChannelResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
     patch:
       tags: [channels]
       summary: Atualiza display name ou settings do canal (não troca credenciais)
@@ -667,6 +686,43 @@ paths:
               schema: { $ref: '#/components/schemas/ConversationResource' }
 
   # ──────────────────────────────────────────────────────────────
+  # Long-polling fallback (NC-11)
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/poll:
+    get:
+      tags: [inbox]
+      summary: Long-polling fallback para clientes sem suporte a WebSockets (NC-11)
+      description: |
+        Retorna conversas atualizadas após o cursor `since`. Formato do cursor:
+        `last_message_at_iso|conversation_id`. O cliente deve re-chamar a cada
+        30s enquanto Reverb não estiver disponível.
+
+        Requer ability `inbox.view`. Médicos só veem conversas próprias.
+      parameters:
+        - in: query
+          name: since
+          schema:
+            type: string
+            description: 'Cursor no formato `last_message_at|conversation_id` (ISO 8601 + pipe + ID)'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ConversationResource' }
+                  next_cursor:
+                    type: string
+                    nullable: true
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # ──────────────────────────────────────────────────────────────
   # Respostas rápidas (US-4.7)
   # ──────────────────────────────────────────────────────────────
 
@@ -722,6 +778,21 @@ paths:
   /inbox/quick-replies/{id}:
     parameters:
       - $ref: '#/components/parameters/IdPath'
+    put:
+      tags: [quick-replies]
+      summary: Substitui resposta rápida (atualização completa)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuickReplyRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuickReplyResource' }
     patch:
       tags: [quick-replies]
       summary: Atualiza resposta rápida

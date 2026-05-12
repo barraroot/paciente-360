@@ -6,6 +6,7 @@ use App\Domain\Messaging\Channel\Adapters\OutboundMessage;
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Jobs\TenantAwareJob;
+use App\Support\Metrics\MessagingMetricsContract;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -15,6 +16,10 @@ use Illuminate\Support\Facades\Log;
  * invoca o provider. Atualiza status da mensagem (sent/failed).
  *
  * Idempotente: se a mensagem já estiver com status 'sent', retorna sem reprocessar.
+ *
+ * T270 — métricas Prometheus:
+ *  - `paciente360_outbound_message_total{provider, status='sent'}` — sucesso
+ *  - `paciente360_outbound_message_total{provider, status='failed'}` — falha
  */
 final class SendOutboundMessageJob extends TenantAwareJob
 {
@@ -71,6 +76,10 @@ final class SendOutboundMessageJob extends TenantAwareJob
             idempotencyKey: $message->idempotency_key ?? '',
         );
 
+        $provider = $channel->type;
+        /** @var MessagingMetricsContract $metrics */
+        $metrics = app(MessagingMetricsContract::class);
+
         try {
             $adapter = $this->resolveAdapter($channel->type);
             $result = $adapter->send($channel, $outbound);
@@ -80,6 +89,8 @@ final class SendOutboundMessageJob extends TenantAwareJob
                 'external_id' => $result->externalId,
                 'sent_at' => now(),
             ]);
+
+            $metrics->outboundMessage($provider, 'sent');
 
             Log::info('SendOutboundMessageJob: sent', [
                 'tenant_id' => $this->tenantId,
@@ -91,6 +102,8 @@ final class SendOutboundMessageJob extends TenantAwareJob
                 'status' => 'failed',
                 'failure_reason' => mb_substr($e->getMessage(), 0, 1000),
             ]);
+
+            $metrics->outboundMessage($provider, 'failed');
 
             Log::error('SendOutboundMessageJob: failed', [
                 'tenant_id' => $this->tenantId,

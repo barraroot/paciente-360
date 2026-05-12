@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * @property int $id
  * @property int $tenant_id
- * @property int $message_id
+ * @property int|null $message_id
  * @property string $storage_disk
  * @property string $storage_path
  * @property string $mime_type
@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Storage;
  * @property string $checksum_sha256
  * @property bool $sensitive_hint
  * @property Carbon|null $media_purged_at
+ * @property string|null $media_token
+ * @property Carbon|null $media_token_expires_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
@@ -59,6 +61,8 @@ class MessageMedia extends Model
         'checksum_sha256',
         'sensitive_hint',
         'media_purged_at',
+        'media_token',
+        'media_token_expires_at',
     ];
 
     /**
@@ -68,6 +72,7 @@ class MessageMedia extends Model
     {
         return [
             'media_purged_at' => 'datetime',
+            'media_token_expires_at' => 'datetime',
             'sensitive_hint' => 'boolean',
             'size_bytes' => 'integer',
         ];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Webhooks;
 use App\Domain\Messaging\Infrastructure\Webhook\WebhookEventRecorder;
 use App\Http\Controllers\Controller;
 use App\Jobs\Messaging\ProcessInboundMessageJob;
+use App\Support\Metrics\MessagingMetricsContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +26,9 @@ class TwilioWhatsAppWebhookController extends Controller
     public function __invoke(
         Request $request,
         WebhookEventRecorder $recorder,
+        MessagingMetricsContract $metrics,
     ): JsonResponse {
+        $start = microtime(true);
         $messageSid = $request->input('MessageSid', '');
 
         Log::info('webhook.twilio.whatsapp.received', [
@@ -54,11 +57,17 @@ class TwilioWhatsAppWebhookController extends Controller
                 ProcessInboundMessageJob::dispatch((int) $existingRow->id);
             }
 
+            $metrics->webhookReceived('twilio', 'duplicate');
+            $metrics->webhookProcessingDuration('twilio', microtime(true) - $start);
+
             return response()->json(['ok' => true, 'duplicate' => true]);
         }
 
         // Despacha job de processamento assíncrono
         ProcessInboundMessageJob::dispatch((int) $row['id']);
+
+        $metrics->webhookReceived('twilio', 'received');
+        $metrics->webhookProcessingDuration('twilio', microtime(true) - $start);
 
         return response()->json(['ok' => true]);
     }

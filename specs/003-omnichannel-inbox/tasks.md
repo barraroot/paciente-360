@@ -225,9 +225,9 @@
 - [x] T133 [US4] Update `routes/web.php` or SPA router with `/panel/inbox` route + guard `ability:inbox.view`
 - [x] T133a [P] [US4] **(FR-017 fix)** Write `tests/Feature/Fase3/US4_Inbox/ConversasMigramOnPacienteMescladoTest.php` covering FR-017 + spec § 2.4: dispatch Fase 2 `PacienteMesclado(origem_ids:[7], alvo_id:5)` → todas conversations com `patient_id IN (7)` migram para `patient_id=5`; mensagens preservadas; reversão via `PacienteMesclagemRevertida` restaura `patient_id` original
 - [x] T133b [US4] **(FR-017 fix)** Create `app/Domain/Messaging/Infrastructure/Listeners/MigraConversasOnPacienteMescladoListener.php` subscribing to Fase 2 `App\Events\Pacientes\PacienteMesclado` and `PacienteMesclagemRevertida`; updates `conversations.patient_id` em lote dentro de transaction; fires `ConversaVinculadaAPaciente` modo=`auto_merge` para cada conversa migrada; bind no `EventServiceProvider`
-- [ ] T134 [US4] Update `InboxTenantIsolationTest` adding ~10 new conversation/message endpoints
-- [ ] T135 [US4] Run all US4 tests; **all PASS**
-- [ ] T136 [US4] Run `vendor/bin/sail bin pint --dirty --format agent`
+- [x] T134 [US4] Update `InboxTenantIsolationTest` adding ~10 new conversation/message endpoints
+- [x] T135 [US4] Run all US4 tests; **all PASS**
+- [x] T136 [US4] Run `vendor/bin/sail bin pint --dirty --format agent`
 
 **Checkpoint US4**: Inbox visível em `/panel/inbox`, tempo real funciona com 2 atendentes, busca trigram p95 < 500ms.
 
@@ -443,54 +443,54 @@
 
 ### Media upload flow
 
-- [ ] T247 [P] Write `tests/Feature/Fase3/Media/MediaUploadFlowTest.php` covering FR-020, NC-9: POST `/inbox/media/upload` returns pre-signed S3 URL + `media_token`; rejects MIME outside whitelist + size > limits
-- [ ] T248 [P] Write `tests/Feature/Fase3/Media/MediaSignedDownloadTest.php` for GET `/inbox/media/{id}` returns 24h-signed URL; 410 if `media_purged_at IS NOT NULL`
-- [ ] T249 Create `app/Domain/Messaging/Message/Services/MediaUploadService.php` (pre-signed URL generation, MIME whitelist validation, 16MB/100MB limits per NC-9.a)
-- [ ] T250 Create `app/Http/Controllers/Api/V1/Inbox/MediaController.php`: `upload`, `show`
-- [ ] T251 Create `app/Jobs/Messaging/PurgeExpiredMediaJob.php` (monthly — 1 year retention per NC-14)
-- [ ] T252 Run media tests; all PASS
+- [x] T247 [P] Write `tests/Feature/Fase3/Media/MediaUploadFlowTest.php` covering FR-020, NC-9: POST `/inbox/media/upload` returns pre-signed S3 URL + `media_token`; rejects MIME outside whitelist + size > limits
+- [x] T248 [P] Write `tests/Feature/Fase3/Media/MediaSignedDownloadTest.php` for GET `/inbox/media/{id}` returns 24h-signed URL; 410 if `media_purged_at IS NOT NULL`
+- [x] T249 Create `app/Domain/Messaging/Message/Services/MediaUploadService.php` (pre-signed URL generation, MIME whitelist validation, 16MB/100MB limits per NC-9.a)
+- [x] T250 Create `app/Http/Controllers/Api/V1/Inbox/MediaController.php`: `upload`, `show`
+- [x] T251 Create `app/Jobs/Messaging/PurgeExpiredMediaJob.php` (monthly — 1 year retention per NC-14)
+- [x] T252 Run media tests; all PASS
 
 ### LGPD anonymization listener
 
-- [ ] T253 [P] Write `tests/Feature/Fase3/LGPD/AnonimizaMensagensDoPacienteJobTest.php` covering FR-018, NC-14.b: `PacienteAnonimizado` event triggers job → recebidas apagam content + delete S3 media; enviadas preserved
-- [ ] T254 Create `app/Jobs/Messaging/AnonimizaMensagensDoPacienteJob.php` (extends `TenantAwareJob`)
-- [ ] T255 Add listener `app/Domain/Messaging/Infrastructure/Listeners/AnonimizaMensagensOnPacienteAnonimizadoListener.php` subscribing to Fase 2 `PacienteAnonimizado` event
-- [ ] T256 Run LGPD anonymization test; PASS
+- [x] T253 [P] Write `tests/Feature/Fase3/LGPD/AnonimizaMensagensDoPacienteJobTest.php` covering FR-018, NC-14.b: `PacienteAnonimizado` event triggers job → recebidas apagam content + delete S3 media; enviadas preserved
+- [x] T254 Create `app/Jobs/Messaging/AnonimizaMensagensDoPacienteJob.php` (extends `TenantAwareJob`)
+- [x] T255 Add listener `app/Domain/Messaging/Infrastructure/Listeners/AnonimizaMensagensOnPacienteAnonimizadoListener.php` subscribing to Fase 2 `PacienteAnonimizado` event
+- [x] T256 Run LGPD anonymization test; PASS
 
 ### Retention purge jobs
 
-- [ ] T257 [P] Create `app/Jobs/Messaging/PurgeExpiredMessagesJob.php` (monthly — 2 years default per FR-039)
-- [ ] T258 [P] Create `app/Jobs/Messaging/PurgeWebhookEventsJob.php` (monthly — 30 days per research R9)
-- [ ] T259 Add all 4 purge jobs to `app/Console/Kernel.php` schedule (monthly at 03:00 BRT)
+- [x] T257 [P] Create `app/Jobs/Messaging/PurgeExpiredMessagesJob.php` (monthly — 2 years default per FR-039)
+- [x] T258 [P] Create `app/Jobs/Messaging/PurgeWebhookEventsJob.php` (monthly — 30 days per research R9)
+- [x] T259 Add all 4 purge jobs to `routes/console.php` schedule (monthly at 03:00 BRT)
 
 ### Presence + heartbeat
 
-- [ ] T260 [P] Write `tests/Feature/Fase3/Presence/PresenceHeartbeatTest.php` for POST `/inbox/presence/heartbeat` updates `last_seen_at`
-- [ ] T261 [P] Write `tests/Feature/Fase3/Presence/PresenceListTest.php` for GET `/inbox/presence` returns tenant attendants with `online` inferred ≤ 5min per NC-6.b
-- [ ] T262 Create `app/Domain/Messaging/Presence/Services/PresenceTrackerService.php`
-- [ ] T263 Create `app/Http/Controllers/Api/V1/Inbox/PresenceController.php`: `heartbeat`, `index`, `updateMe`
-- [ ] T264 Create Vue composable `resources/js/composables/usePresenceHeartbeat.js` (calls heartbeat every 60s while inbox open)
-- [ ] T265 Run presence tests; PASS
+- [x] T260 [P] Write `tests/Feature/Fase3/Presence/PresenceHeartbeatTest.php` for POST `/inbox/presence/heartbeat` updates `last_seen_at`
+- [x] T261 [P] Write `tests/Feature/Fase3/Presence/PresenceListTest.php` for GET `/inbox/presence` returns tenant attendants with `online` inferred ≤ 5min per NC-6.b
+- [x] T262 Create `app/Domain/Messaging/Presence/Services/PresenceTrackerService.php`
+- [x] T263 Create `app/Http/Controllers/Api/V1/Inbox/PresenceController.php`: `heartbeat`, `index`, `updateMe`
+- [x] T264 Create Vue composable `resources/js/composables/usePresenceHeartbeat.js` (calls heartbeat every 60s while inbox open)
+- [x] T265 Run presence tests; PASS
 
 ### Reverb timeline integration (Fase 2 reuse)
 
-- [ ] T266 [P] Write `tests/Feature/Fase3/Timeline/MessagingEventsAppearInTimelineTest.php` asserting `RegistraEventoTimelineListener` (Fase 2 wildcard) projects `MensagemRecebida`/`MensagemEnviada` to `eventos_timeline` when paciente_id present
-- [ ] T267 Verify no code change needed (wildcard listener should auto-pick up); add `relatedPacienteId()` method to all conversation/message events that have paciente_id
-- [ ] T268 Run timeline test; PASS
+- [x] T266 [P] Write `tests/Feature/Fase3/Timeline/MessagingEventsAppearInTimelineTest.php` asserting `RegistraEventoTimelineListener` (Fase 2 wildcard) projects `MensagemRecebida`/`MensagemEnviada` to `eventos_timeline` when paciente_id present
+- [x] T267 Verify no code change needed (wildcard listener should auto-pick up); add `relatedPacienteId()` method to all conversation/message events that have paciente_id
+- [x] T268 Run timeline test; PASS
 
 ### Prometheus metrics (research R7)
 
-- [ ] T269 [P] Add 6 metrics to `app/Support/Metrics/MessagingMetrics.php`: `webhook_received_total{provider,status}`, `webhook_processing_duration_seconds{provider}`, `outbound_message_total{provider,status}`, `queue_size{queue}`, `circuit_breaker_state{provider}`, `conversations_active{tenant_id,channel}`
-- [ ] T270 Wire metrics emission in webhook controllers, jobs, circuit breaker, queue listeners
-- [ ] T271 Add to `/metrics` Prometheus endpoint (Fase 0 base)
+- [x] T269 [P] Add 6 metrics to `app/Support/Metrics/MessagingMetrics.php`: `webhook_received_total{provider,status}`, `webhook_processing_duration_seconds{provider}`, `outbound_message_total{provider,status}`, `queue_size{queue}`, `circuit_breaker_state{provider}`, `conversations_active{tenant_id,channel}`
+- [x] T270 Wire metrics emission in webhook controllers, jobs, circuit breaker, queue listeners
+- [x] T271 Add to `/metrics` Prometheus endpoint (Fase 0 base)
 
 ### Sentry context
 
-- [ ] T272 Extend Sentry contexts in `app/Providers/AppServiceProvider.php` with `conversation_id`, `channel_id`, `message_id` whenever set via job/middleware
+- [x] T272 Extend Sentry contexts in `app/Providers/AppServiceProvider.php` with `conversation_id`, `channel_id`, `message_id` whenever set via job/middleware
 
 ### OpenAPI Scribe
 
-- [ ] T273 Run `vendor/bin/sail artisan scribe:generate` and verify all 36 Fase 3 paths documented; run `vendor/bin/sail artisan openapi:check` → exit 0 (Fase 0+2+3 mergeados)
+- [x] T273 Run `vendor/bin/sail artisan scribe:generate` and verify all 36 Fase 3 paths documented; run `vendor/bin/sail artisan openapi:check` → exit 0 (Fase 0+2+3 mergeados)
 
 ### Stress test scaffolding (research R8)
 
@@ -514,11 +514,11 @@
 
 ### Final regression + cleanup
 
-- [ ] T282 Run full regression suite: `vendor/bin/sail artisan test --compact`
-- [ ] T283 Run `vendor/bin/sail bin pint --dirty --format agent`
-- [ ] T284 Run coverage check: `vendor/bin/sail artisan test --coverage --min=70` (global gate) — Fase 3 specific ≥ 75%
-- [ ] T285 Verify `vendor/bin/sail artisan openapi:check` returns exit 0
-- [ ] T286 Update `specs/003-omnichannel-inbox/quickstart.md` § 17 Definição de Pronto with actual results (test counts, coverage %)
+- [x] T282 Run full regression suite: `vendor/bin/sail artisan test --compact`
+- [x] T283 Run `vendor/bin/sail bin pint --dirty --format agent`
+- [x] T284 Run coverage check: `vendor/bin/sail artisan test --coverage --min=70` (global gate) — Fase 3 specific ≥ 75%
+- [x] T285 Verify `vendor/bin/sail artisan openapi:check` returns exit 0
+- [x] T286 Update `specs/003-omnichannel-inbox/quickstart.md` § 17 Definição de Pronto with actual results (test counts, coverage %)
 
 ---
 

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Messaging\Infrastructure\CircuitBreaker;
 
+use App\Support\Metrics\MessagingMetricsContract;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -20,11 +21,22 @@ use Illuminate\Support\Facades\Cache;
  *
  * Leituras de estado são O(1) via Redis GET. Escrita de falha é O(1) via INCR + EXPIRE.
  *
+ * T270 — métricas Prometheus:
+ *  - `paciente360_circuit_breaker_state{provider}` — gauge atualizado em
+ *    toda transição de estado (open, recordSuccess, recordFailure).
+ *
  * @see CircuitBreakerService
  * @see specs/003-omnichannel-inbox/research.md — R6
  */
 final class CircuitBreakerInstance
 {
+    /** Mapeamento de nome de estado para valor numérico da métrica. */
+    private const STATE_METRIC = [
+        'closed' => 0,
+        'half_open' => 1,
+        'open' => 2,
+    ];
+
     public function __construct(
         private readonly string $provider,
         private readonly int $threshold,
@@ -90,6 +102,7 @@ final class CircuitBreakerInstance
 
         if ($currentState === 'half_open') {
             $this->clearState();
+            $this->publishStateMetric('closed');
 
             return;
         }
@@ -139,6 +152,7 @@ final class CircuitBreakerInstance
     private function open(): void
     {
         Cache::forever($this->openedAtKey(), Carbon::now()->timestamp);
+        $this->publishStateMetric('open');
     }
 
     /**
@@ -173,6 +187,25 @@ final class CircuitBreakerInstance
         Cache::add($key, 0, $this->windowSeconds);
 
         return (int) Cache::increment($key);
+    }
+
+    /**
+     * Publica a transição de estado para a métrica Prometheus.
+     *
+     * Captura falhas silenciosamente — o circuit breaker não deve quebrar
+     * porque o exporter de métricas está indisponível.
+     *
+     * @param 'closed'|'open'|'half_open' $stateName
+     */
+    private function publishStateMetric(string $stateName): void
+    {
+        try {
+            /** @var MessagingMetricsContract $metrics */
+            $metrics = app(MessagingMetricsContract::class);
+            $metrics->circuitBreakerState($this->provider, self::STATE_METRIC[$stateName]);
+        } catch (\Throwable) {
+            // falha silenciosa — métricas são observabilidade, não controle de fluxo
+        }
     }
 
     private function openedAtKey(): string

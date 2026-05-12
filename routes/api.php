@@ -16,7 +16,9 @@ use App\Http\Controllers\Api\V1\Inbox\ChannelsController;
 use App\Http\Controllers\Api\V1\Inbox\ChannelTemplatesController;
 use App\Http\Controllers\Api\V1\Inbox\ConversationsController;
 use App\Http\Controllers\Api\V1\Inbox\InboxPollController;
+use App\Http\Controllers\Api\V1\Inbox\MediaController;
 use App\Http\Controllers\Api\V1\Inbox\MessagesController;
+use App\Http\Controllers\Api\V1\Inbox\PresenceController;
 use App\Http\Controllers\Api\V1\Inbox\QuickRepliesController;
 use App\Http\Controllers\Api\V1\Inbox\TakeoverController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
@@ -341,6 +343,21 @@ Route::middleware(['auth:sanctum', 'throttle:inbox'])->prefix('inbox')->group(fu
     Route::post('quick-replies/{quickReply}/render', [QuickRepliesController::class, 'render'])
         ->name('inbox.quick-replies.render')
         ->whereNumber('quickReply');
+
+    // T252 — Media upload/download pré-assinado (NC-9)
+    Route::post('media/upload', [MediaController::class, 'upload'])
+        ->name('inbox.media.upload');
+    Route::get('media/{id}', [MediaController::class, 'show'])
+        ->name('inbox.media.show')
+        ->whereNumber('id');
+
+    // T264 — Presença de atendentes (NC-6.b)
+    Route::post('presence/heartbeat', [PresenceController::class, 'heartbeat'])
+        ->name('inbox.presence.heartbeat');
+    Route::get('presence', [PresenceController::class, 'index'])
+        ->name('inbox.presence.index');
+    Route::patch('presence/me', [PresenceController::class, 'updateMe'])
+        ->name('inbox.presence.me');
 });
 
 // Fase 3 — Webhooks Twilio (T081)

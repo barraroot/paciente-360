@@ -6,9 +6,11 @@ use App\Domain\Messaging\Assignment\Models\AssignmentRule;
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Messaging\Conversation\Contracts\ConversaIATogglingContract;
+use App\Domain\Messaging\Conversation\Events\ConversaCriada;
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Conversation\Services\HumanTakeoverService;
 use App\Domain\Messaging\Infrastructure\CircuitBreaker\CircuitBreakerService;
+use App\Domain\Messaging\Message\Events\MensagemRecebida;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Observers\MessageObserver;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
@@ -38,6 +40,8 @@ use App\Policies\QuickReplyPolicy;
 use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
 use App\Services\Billing\StripeClientWrapper;
+use App\Support\Metrics\MessagingMetrics;
+use App\Support\Metrics\MessagingMetricsContract;
 use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Cache;
@@ -46,6 +50,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
+use Sentry\Breadcrumb;
 use Sentry\State\Scope;
 use Spatie\Permission\PermissionRegistrar;
 use Stripe\StripeClient;
@@ -82,6 +87,12 @@ class AppServiceProvider extends ServiceProvider
         // Fase 3 US-4.6 — HumanTakeoverService: singleton que implementa ConversaIATogglingContract.
         // Contrato congelado para Fase 4 (Princípio III).
         $this->app->singleton(ConversaIATogglingContract::class, HumanTakeoverService::class);
+
+        // T269 — MessagingMetrics: singleton com degradação graceful.
+        // Quando `promphp/prometheus_client_php` não estiver instalado, todas as
+        // chamadas caem em log estruturado (sem lançar exceção).
+        // Bound via contrato (MessagingMetricsContract) para facilitar mocking em testes.
+        $this->app->singleton(MessagingMetricsContract::class, MessagingMetrics::class);
 
         // Wrapper do Stripe SDK — permite swap por mock em testes.
         // Só instancia o StripeClient real se a chave secreta estiver configurada.
@@ -319,6 +330,64 @@ class AppServiceProvider extends ServiceProvider
                     $scope->setTag('tenant.slug', (string) $tenant->slug);
                 }
             });
+        });
+
+        // T272 — Sentry context para eventos de messaging.
+        //
+        // Tags adicionadas ao escopo quando um evento de messaging é disparado:
+        //  - `messaging.conversation_id` — ID da conversa envolvida
+        //  - `messaging.channel_id`      — canal de origem
+        //  - `messaging.message_id`      — ID da mensagem (apenas para MensagemRecebida)
+        //
+        // Tags têm cardinalidade controlada — IDs numéricos são seguros no Sentry.
+        // Breadcrumbs registram o evento para correlação de erros no timeline.
+
+        Event::listen(MensagemRecebida::class, static function (MensagemRecebida $event): void {
+            if (! function_exists('Sentry\\configureScope') || ! function_exists('Sentry\\addBreadcrumb')) {
+                return;
+            }
+
+            \Sentry\configureScope(function (Scope $scope) use ($event): void {
+                $scope->setTag('messaging.conversation_id', (string) $event->conversation->id);
+                $scope->setTag('messaging.channel_id', (string) $event->conversation->channel_id);
+                $scope->setTag('messaging.message_id', (string) $event->message->id);
+            });
+
+            \Sentry\addBreadcrumb(new Breadcrumb(
+                level: Breadcrumb::LEVEL_INFO,
+                type: Breadcrumb::TYPE_DEFAULT,
+                category: 'messaging',
+                message: 'Mensagem inbound recebida',
+                metadata: [
+                    'message_id' => $event->message->id,
+                    'conversation_id' => $event->conversation->id,
+                    'channel_id' => $event->conversation->channel_id,
+                    'content_type' => $event->message->content_type,
+                ],
+            ));
+        });
+
+        Event::listen(ConversaCriada::class, static function (ConversaCriada $event): void {
+            if (! function_exists('Sentry\\configureScope') || ! function_exists('Sentry\\addBreadcrumb')) {
+                return;
+            }
+
+            \Sentry\configureScope(function (Scope $scope) use ($event): void {
+                $scope->setTag('messaging.conversation_id', (string) $event->conversation->id);
+                $scope->setTag('messaging.channel_id', (string) $event->conversation->channel_id);
+            });
+
+            \Sentry\addBreadcrumb(new Breadcrumb(
+                level: Breadcrumb::LEVEL_INFO,
+                type: Breadcrumb::TYPE_DEFAULT,
+                category: 'messaging',
+                message: 'Conversa criada',
+                metadata: [
+                    'conversation_id' => $event->conversation->id,
+                    'channel_id' => $event->conversation->channel_id,
+                    'tenant_id' => $event->conversation->tenant_id,
+                ],
+            ));
         });
     }
 }

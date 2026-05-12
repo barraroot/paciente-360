@@ -27,6 +27,7 @@ final class CheckOpenApiDrift extends Command
         $openApiFiles = [
             base_path('specs/001-fundacao-multitenant/contracts/openapi.yaml'),
             base_path('specs/002-crm-pacientes/contracts/openapi.yaml'),
+            base_path('specs/003-omnichannel-inbox/contracts/openapi.yaml'),
         ];
 
         foreach ($openApiFiles as $openApiFile) {

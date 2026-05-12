@@ -1,7 +1,10 @@
 <?php
 
 use App\Jobs\Messaging\ExpireAiPausesJob;
+use App\Jobs\Messaging\PurgeExpiredMediaJob;
+use App\Jobs\Messaging\PurgeExpiredMessagesJob;
 use App\Jobs\Messaging\PurgeExpiredWidgetSessionsJob;
+use App\Jobs\Messaging\PurgeWebhookEventsJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -34,5 +37,25 @@ Schedule::job(new ExpireAiPausesJob)->everyMinute()->withoutOverlapping();
 Schedule::command('messaging:meta-health-check')->monthly();
 
 // T217 US-4.3 — Purga sessões de widget expiradas e não identificadas (LGPD NC-10.c).
-// Executa diariamente às 03:00 BRT.
-Schedule::job(new PurgeExpiredWidgetSessionsJob)->dailyAt('06:00'); // 03:00 BRT = 06:00 UTC
+// Executa diariamente às 03:00 BRT (= 06:00 UTC).
+Schedule::job(new PurgeExpiredWidgetSessionsJob)->dailyAt('06:45'); // 03:45 BRT = 06:45 UTC
+
+// T257 — Purga conteúdo de mensagens expiradas (FR-039, 2 anos). Preserva metadata.
+// 03:00 BRT = 06:00 UTC. withoutOverlapping previne paralelismo em tabelas grandes.
+Schedule::job(new PurgeExpiredMessagesJob)->monthly()->at('06:00')->withoutOverlapping();
+
+// T251 — Purga mídia expirada do S3 + seta media_purged_at (NC-14, 1 ano).
+// 03:15 BRT = 06:15 UTC.
+Schedule::job(new PurgeExpiredMediaJob)->monthly()->at('06:15')->withoutOverlapping();
+
+// T258 — Hard delete de webhook events expirados (30 dias — log de infra).
+// 03:30 BRT = 06:30 UTC.
+Schedule::job(new PurgeWebhookEventsJob)->monthly()->at('06:30')->withoutOverlapping();
+
+// T270 — Métricas Prometheus: tamanho das filas de messaging (a cada minuto).
+// withoutOverlapping evita acúmulo se Redis estiver lento.
+Schedule::command('messaging:metrics-queue-sizes')->everyMinute()->withoutOverlapping();
+
+// T270 — Métricas Prometheus: conversas ativas por (tenant, canal) (a cada 5min).
+// Agrega cross-tenant via query SQL; sem withoutOverlapping (query rápida, < 50ms).
+Schedule::command('messaging:metrics-conversations')->everyFiveMinutes();

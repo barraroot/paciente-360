@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Webhooks;
 use App\Domain\Messaging\Infrastructure\Webhook\WebhookEventRecorder;
 use App\Http\Controllers\Controller;
 use App\Jobs\Messaging\ProcessInboundMessageJob;
+use App\Support\Metrics\MessagingMetricsContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -68,15 +69,23 @@ class MetaInstagramWebhookController extends Controller
      * um job assíncrono é despachado para processar a mensagem.
      *
      * Sempre responde 200 para evitar retry imediato da Meta.
+     *
+     * T270 — métricas Prometheus registradas após processamento:
+     *  - webhookReceived(provider, status)
+     *  - webhookProcessingDuration(provider, seconds)
      */
-    public function __invoke(Request $request, WebhookEventRecorder $recorder): JsonResponse
+    public function __invoke(Request $request, WebhookEventRecorder $recorder, MessagingMetricsContract $metrics): JsonResponse
     {
+        $start = microtime(true);
         $payload = $request->all();
 
         Log::info('MetaInstagramWebhookController: inbound recebido', [
             'object' => $payload['object'] ?? 'unknown',
             'entry_count' => count($payload['entry'] ?? []),
         ]);
+
+        $dispatched = 0;
+        $duplicates = 0;
 
         foreach ($payload['entry'] ?? [] as $entry) {
             foreach ($entry['messaging'] ?? [] as $event) {
@@ -106,12 +115,19 @@ class MetaInstagramWebhookController extends Controller
                         ProcessInboundMessageJob::dispatch((int) $existingRow->id);
                     }
 
+                    $duplicates++;
+
                     continue;
                 }
 
                 ProcessInboundMessageJob::dispatch((int) $row['id']);
+                $dispatched++;
             }
         }
+
+        $status = $duplicates > 0 && $dispatched === 0 ? 'duplicate' : 'received';
+        $metrics->webhookReceived('meta', $status);
+        $metrics->webhookProcessingDuration('meta', microtime(true) - $start);
 
         return response()->json(['ok' => true]);
     }

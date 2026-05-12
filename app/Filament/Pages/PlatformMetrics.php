@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Widgets\ActiveTenantsWidget;
 use App\Filament\Widgets\SuspensionEligibleTenantsWidget;
+use App\Filament\Widgets\TenantMessagingStatsWidget;
 use Filament\Pages\Page;
 
 /**
@@ -27,6 +28,7 @@ class PlatformMetrics extends Page
         return [
             ActiveTenantsWidget::class,
             SuspensionEligibleTenantsWidget::class,
+            TenantMessagingStatsWidget::class,
         ];
     }
 }

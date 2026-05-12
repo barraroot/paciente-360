@@ -1,0 +1,1742 @@
+openapi: 3.1.0
+info:
+  title: Paciente360 — API v1 (Fase 3 — Omnichannel Inbox)
+  version: 0.3.0
+  description: |
+    Endpoints novos da Fase 3: canais (WhatsApp via Twilio, Instagram via
+    Meta Graph direta, Widget web), inbox unificada, mensagens, atribuição
+    e transferência, modo "Humano Assume", respostas rápidas, presença,
+    webhooks dos providers (Twilio + Meta + Widget) e API pública do widget.
+
+    Convenções herdadas das Fases 0–2:
+    - Subdomínio resolve tenant (`{slug}.crm.com.br`) — exceto rotas de webhook
+      e widget público, que **não** carregam tenant via subdomínio (tenant é
+      resolvido dentro do job via lookup do canal).
+    - Autenticação Sanctum SPA stateful + Spatie team mode.
+    - 8 abilities novas: `inbox.view`, `inbox.respond`, `inbox.assign`,
+      `inbox.transfer`, `inbox.takeover_ai`, `channel.connect`,
+      `channel.disconnect`, `quick_reply.manage`.
+    - Princípio VI (NÃO-NEGOCIÁVEL): envio fora da janela 24h sem template
+      aprovado é **bloqueado em runtime** → 422 `mensagem.bloqueada_fora_janela`.
+    - Princípio II (NÃO-NEGOCIÁVEL): todos os endpoints autenticados são
+      escopados ao tenant; webhooks/widget públicos resolvem tenant via canal.
+  contact:
+    name: Paciente360 Engineering
+
+servers:
+  - url: https://{slug}.crm.com.br/api/v1
+    description: Tenant via subdomínio (rotas autenticadas /inbox/*)
+    variables:
+      slug:
+        default: clinica-exemplo
+  - url: https://{slug}.lvh.me/api/v1
+    description: Dev local
+    variables:
+      slug:
+        default: clinica-alfa
+  - url: https://crm.com.br/api/v1
+    description: Rotas globais (webhooks, widget público) — sem subdomínio de tenant
+  - url: https://crm.com.br/widget/v1
+    description: API pública do widget JS embutível
+
+tags:
+  - name: channels
+    description: Gestão de canais (WhatsApp Twilio, Instagram Meta, Web Widget)
+  - name: channel-templates
+    description: Templates Meta aprovados (sync read-only do Twilio/Meta)
+  - name: widget-config
+    description: Configuração do widget web por tenant
+  - name: inbox
+    description: Listagem e filtros da inbox unificada
+  - name: conversations
+    description: Conversa individual — histórico, resolução, reabertura
+  - name: messages
+    description: Envio e recebimento de mensagens
+  - name: assignment
+    description: Atribuição manual/auto, transferência, regras
+  - name: takeover
+    description: Modo "Humano Assume" — pausa/retomada da IA (preparação contratual Fase 4)
+  - name: quick-replies
+    description: Respostas rápidas com variáveis (escopo dual tenant/privadas)
+  - name: presence
+    description: Presença online dos atendentes
+  - name: media
+    description: Upload e download de mídia (S3 SSE + URLs assinadas 24h)
+  - name: webhooks
+    description: Webhooks públicos dos providers (Twilio + Meta) — assinatura HMAC obrigatória
+  - name: widget-public
+    description: API pública consumida pelo widget JS embarcado em sites de terceiros
+
+security:
+  - sanctumSession: []
+
+paths:
+
+  # ──────────────────────────────────────────────────────────────
+  # Canais (US-4.1 + US-4.2 + US-4.3 admin)
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/channels:
+    get:
+      tags: [channels]
+      summary: Lista canais conectados do tenant
+      parameters:
+        - in: query
+          name: type
+          schema: { type: string, enum: [whatsapp, instagram, web] }
+        - in: query
+          name: status
+          schema: { type: string, enum: [ativo, desconectado, invalido, expirado, degradado, suspenso] }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ChannelResource' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [channels]
+      summary: Conecta um novo canal (WhatsApp Twilio, Instagram Meta, Web Widget)
+      description: |
+        Requer ability `channel.connect`. Comportamento depende de `type`:
+
+        - `whatsapp`: valida credenciais Twilio em runtime (`messages.list({limit:1})`). Aceita `provider_metadata.messaging_service_sid` + `whatsapp_sender` (E.164 com prefixo `whatsapp:`).
+        - `instagram`: valida via Graph API `GET /me?access_token=...` + `GET /{ig_business_account_id}`. Conta IG deve ser **profissional** (Business/Creator) vinculada a Page do FB.
+        - `web`: cria widget config + `public_key` autogerada; não exige credenciais externas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConnectChannelRequest' }
+      responses:
+        '201':
+          description: Canal conectado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChannelResource' }
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: Já existe canal do mesmo tipo com mesmo identificador (AC-4.1.6 / AC-4.2.4)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /inbox/channels/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [channels]
+      summary: Detalha um canal
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChannelResource' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [channels]
+      summary: Substitui display name e settings do canal (atualização completa)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 2, maxLength: 100 }
+                auto_send_disabled: { type: boolean, description: 'Toggle manual desabilita envios automáticos (NC-17)' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChannelResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    patch:
+      tags: [channels]
+      summary: Atualiza display name ou settings do canal (não troca credenciais)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 2, maxLength: 100 }
+                auto_send_disabled: { type: boolean, description: 'Toggle manual desabilita envios automáticos (NC-17)' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChannelResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [channels]
+      summary: Desconecta o canal (soft delete)
+      description: Requer ability `channel.disconnect`. Conversas existentes ficam acessíveis read-only; novos envios bloqueados.
+      responses:
+        '204':
+          description: Desconectado
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: Canal com conversas ativas; confirme via `?force=true`
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /inbox/channels/{id}/reconnect:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [channels]
+      summary: Re-valida credenciais e tenta reconectar canal em status `expirado`/`invalido`
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                credentials_override:
+                  type: object
+                  description: Novas credenciais (mesmo schema do connect)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChannelResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /inbox/channels/{id}/templates:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [channel-templates]
+      summary: Lista templates Meta aprovados do canal (sync read-only)
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [approved, pending, rejected, paused] }
+        - in: query
+          name: category
+          schema: { type: string, enum: [marketing, utility, authentication] }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ChannelTemplateResource' }
+
+  /inbox/channels/{id}/templates/sync:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [channel-templates]
+      summary: Força sync imediato de templates (Twilio Content API ou Meta WhatsApp Manager)
+      responses:
+        '202':
+          description: Sync enfileirado; job retorna em até 30s
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id: { type: string }
+                  enqueued_at: { type: string, format: date-time }
+
+  # ──────────────────────────────────────────────────────────────
+  # Web widget config (US-4.3)
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/widget-configs/{channel_id}:
+    parameters:
+      - in: path
+        name: channel_id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [widget-config]
+      summary: Lê config do widget vinculado ao canal
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WidgetConfigResource' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [widget-config]
+      summary: Atualiza config do widget (aparência, horário, whitelist origens)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateWidgetConfigRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WidgetConfigResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /inbox/widget-configs/{channel_id}/snippet:
+    parameters:
+      - in: path
+        name: channel_id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [widget-config]
+      summary: Retorna o snippet HTML/JS de embed pronto para colar em site externo
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  <script async src="https://widget.crm.com.br/widget/v1/abc123_publickey.js"></script>
+
+  # ──────────────────────────────────────────────────────────────
+  # Inbox listing + filtros (US-4.4)
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/conversations:
+    get:
+      tags: [inbox]
+      summary: Lista paginada da inbox unificada com filtros e busca
+      parameters:
+        - in: query
+          name: status
+          description: Múltiplos via repetição (`?status[]=aberta&status[]=pendente`)
+          schema:
+            type: array
+            items: { type: string, enum: [aberta, pendente, resolvida, reaberta] }
+        - in: query
+          name: channel_id
+          schema: { type: integer }
+        - in: query
+          name: channel_type
+          schema: { type: string, enum: [whatsapp, instagram, web] }
+        - in: query
+          name: assigned_user_id
+          description: '`me` resolve para o user autenticado; `unassigned` filtra fila "Sem atendente"'
+          schema: { type: string }
+        - in: query
+          name: patient_id
+          schema: { type: integer }
+        - in: query
+          name: ai_paused
+          schema: { type: boolean }
+        - in: query
+          name: q
+          description: Busca trigram em conteúdo de mensagem (NC-13). Min. 2 chars; debounce client 350ms.
+          schema: { type: string, minLength: 2 }
+        - in: query
+          name: last_activity_from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: last_activity_to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1, minimum: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, default: 25, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationListResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Conversa individual
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/conversations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [conversations]
+      summary: Detalha conversa (com último estado da máquina + atribuição)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationResource' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /inbox/conversations/{id}/messages:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [messages]
+      summary: Histórico paginado de mensagens da conversa (ordem cronológica reversa)
+      parameters:
+        - in: query
+          name: cursor
+          description: Cursor opaco para paginação infinita scroll-back
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageListResponse' }
+    post:
+      tags: [messages]
+      summary: Envia mensagem (texto, template, mídia ou resposta rápida renderizada)
+      description: |
+        Requer ability `inbox.respond`.
+
+        **Princípio VI (NÃO-NEGOCIÁVEL)**: se `last_inbound_message_at` > 24h
+        e `content_type != template`, backend retorna **422** com erro
+        `mensagem.bloqueada_fora_janela`. UI é defense-in-depth.
+
+        Idempotência via `idempotency_key` (header `Idempotency-Key`).
+        Mesma chave + mesma payload → mesma `message_id` retornada (200 vs 201).
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string, minLength: 16, maxLength: 64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendMessageRequest' }
+      responses:
+        '201':
+          description: Mensagem enfileirada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageResource' }
+        '200':
+          description: Idempotência — mensagem com mesma `Idempotency-Key` já existia
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessageResource' }
+        '422':
+          description: Erro de validação ou bloqueio Princípio VI
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+                  - $ref: '#/components/schemas/WindowExpiredErrorResponse'
+        '503':
+          description: Circuit breaker aberto para provider (Twilio/Meta) — tentar novamente
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /inbox/conversations/{id}/read:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [messages]
+      summary: Marca mensagens recebidas como lidas (zera unread_count) + broadcast Reverb
+      responses:
+        '204':
+          description: Marcado como lido
+
+  /inbox/conversations/{id}/resolve:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [conversations]
+      summary: Resolve a conversa manualmente (transição → `resolvida`)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note: { type: string, maxLength: 500, description: 'Nota interna opcional sobre o motivo' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationResource' }
+        '409':
+          description: Conversa já está em estado terminal
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /inbox/conversations/{id}/reopen:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [conversations]
+      summary: Reabre conversa resolvida → estado `reaberta`
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationResource' }
+
+  /inbox/conversations/{id}/link-patient:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [conversations]
+      summary: Vincula manualmente a conversa a um paciente existente (resolução de ambiguidade NC-1)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patient_id]
+              properties:
+                patient_id: { type: integer }
+      responses:
+        '200':
+          description: OK; emite evento `ConversaVinculadaAPaciente`
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationResource' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Atribuição e transferência (US-4.5)
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/conversations/{id}/assign:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [assignment]
+      summary: Atribui conversa a um atendente (manual)
+      description: Requer ability `inbox.assign`. Aceita `user_id` específico ou `auto` para invocar a regra ativa.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id: { type: integer, description: 'Atendente alvo; mutuamente exclusivo com `auto`' }
+                auto: { type: boolean, default: false, description: 'Aplica regra de auto-atribuição vigente' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationResource' }
+        '422':
+          description: User sem capacidade (`current_assigned_count >= max_concurrent`) ou inativo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationErrorResponse' }
+
+  /inbox/conversations/{id}/transfer:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [assignment]
+      summary: Transfere conversa com nota interna obrigatória (NC-7)
+      description: Requer ability `inbox.transfer`. Nota mínima 10 chars. Aceita transferência para `user_id` ou `role`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransferRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /inbox/conversations/{id}/assignments:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [assignment]
+      summary: Histórico de atribuições/transferências da conversa
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AssignmentResource' }
+
+  /inbox/assignment-rules:
+    get:
+      tags: [assignment]
+      summary: Lista regras de auto-atribuição vigentes do tenant
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AssignmentRuleResource' }
+    put:
+      tags: [assignment]
+      summary: Substitui o conjunto de regras (admin clínica)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rules]
+              properties:
+                rules:
+                  type: array
+                  items: { $ref: '#/components/schemas/AssignmentRuleInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AssignmentRuleResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Modo Humano Assume (US-4.6)
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/conversations/{id}/takeover:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [takeover]
+      summary: Atendente humano assume — define `ai_paused_until` e emite `ConversaAssumidaPorHumano`
+      description: |
+        Requer ability `inbox.takeover_ai`. Default pausa = 4h.
+        Aceita `duration_hours` (1–24) ou `until` (timestamp explícito).
+        **Nenhuma IA está ativa nesta fase** — endpoint serve como contrato
+        para Fase 4. Evento auditável é emitido independente disso.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                duration_hours: { type: integer, minimum: 1, maximum: 24, default: 4 }
+                until: { type: string, format: date-time, description: 'Mutuamente exclusivo com duration_hours' }
+                reason: { type: string, maxLength: 255 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationResource' }
+
+  /inbox/conversations/{id}/release-to-ai:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [takeover]
+      summary: Libera a conversa de volta à IA — zera `ai_paused_until` + emite `ConversaRetomadaPelaIA`
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationResource' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Long-polling fallback (NC-11)
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/poll:
+    get:
+      tags: [inbox]
+      summary: Long-polling fallback para clientes sem suporte a WebSockets (NC-11)
+      description: |
+        Retorna conversas atualizadas após o cursor `since`. Formato do cursor:
+        `last_message_at_iso|conversation_id`. O cliente deve re-chamar a cada
+        30s enquanto Reverb não estiver disponível.
+
+        Requer ability `inbox.view`. Médicos só veem conversas próprias.
+      parameters:
+        - in: query
+          name: since
+          schema:
+            type: string
+            description: 'Cursor no formato `last_message_at|conversation_id` (ISO 8601 + pipe + ID)'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ConversationResource' }
+                  next_cursor:
+                    type: string
+                    nullable: true
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Respostas rápidas (US-4.7)
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/quick-replies:
+    get:
+      tags: [quick-replies]
+      summary: Lista respostas rápidas visíveis para o user (tenant + próprias privadas)
+      parameters:
+        - in: query
+          name: scope
+          schema: { type: string, enum: [all, tenant, mine], default: all }
+        - in: query
+          name: q
+          description: Busca por shortcut ou content
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/QuickReplyResource' }
+    post:
+      tags: [quick-replies]
+      summary: Cria resposta rápida
+      description: |
+        - `tenant`-scope exige ability `quick_reply.manage`.
+        - `private`-scope (NULL owner) qualquer atendente pode criar para si.
+        - Variáveis suportadas (NC-8.c): `{nome_paciente}`, `{primeiro_nome}`,
+          `{atendente}`, `{tenant}`, `{horario_atual}`, `{data_atual}`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateQuickReplyRequest' }
+      responses:
+        '201':
+          description: Criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuickReplyResource' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '409':
+          description: Atalho já existe no escopo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /inbox/quick-replies/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    put:
+      tags: [quick-replies]
+      summary: Substitui resposta rápida (atualização completa)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuickReplyRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuickReplyResource' }
+    patch:
+      tags: [quick-replies]
+      summary: Atualiza resposta rápida
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CreateQuickReplyRequest'
+                - description: Todos os campos opcionais
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuickReplyResource' }
+    delete:
+      tags: [quick-replies]
+      summary: Remove resposta rápida (privada do user ou tenant com ability)
+      responses:
+        '204':
+          description: Removida
+
+  /inbox/quick-replies/{id}/render:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [quick-replies]
+      summary: Renderiza variáveis para preview server-side
+      description: Aplica substituições em contexto de `conversation_id` (que carrega paciente, atendente, tenant).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [conversation_id]
+              properties:
+                conversation_id: { type: integer }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rendered: { type: string }
+                  variables_resolved:
+                    type: object
+                    additionalProperties: { type: string }
+
+  # ──────────────────────────────────────────────────────────────
+  # Presença + atendentes
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/presence/heartbeat:
+    post:
+      tags: [presence]
+      summary: Heartbeat do atendente (≤ 5min de inatividade conta como online — NC-6.b)
+      responses:
+        '204':
+          description: OK
+
+  /inbox/presence:
+    get:
+      tags: [presence]
+      summary: Lista status de presença dos atendentes do tenant
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/PresenceResource' }
+
+  /inbox/presence/me:
+    patch:
+      tags: [presence]
+      summary: Atualiza preferências de notificação ou limite de conversas concorrentes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                max_concurrent_conversations: { type: integer, minimum: 1, maximum: 100 }
+                notification_preferences:
+                  type: object
+                  properties:
+                    sound: { type: boolean }
+                    browser_push: { type: boolean }
+                    sound_volume: { type: integer, minimum: 0, maximum: 100 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PresenceResource' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Mídia
+  # ──────────────────────────────────────────────────────────────
+
+  /inbox/media/upload:
+    post:
+      tags: [media]
+      summary: Upload de mídia para envio outbound (S3 pre-signed URL flow)
+      description: |
+        Etapa 1: cliente chama este endpoint → recebe URL pre-assinada de PUT.
+        Etapa 2: cliente faz `PUT` direto no S3 com o arquivo.
+        Etapa 3: cliente chama `POST /messages` com `media_token` retornado aqui.
+
+        Whitelist MIME (NC-9): image/(jpeg|png|webp), audio/(mp3|ogg|m4a),
+        video/mp4, application/pdf. Limite 16 MB.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mime_type, size_bytes, conversation_id]
+              properties:
+                mime_type: { type: string }
+                size_bytes: { type: integer, maximum: 16777216 }
+                original_filename: { type: string, maxLength: 255 }
+                conversation_id: { type: integer }
+      responses:
+        '201':
+          description: URL pre-assinada emitida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  media_token: { type: string, description: 'Use no `POST /messages.media_token`' }
+                  upload_url: { type: string, format: uri }
+                  upload_headers:
+                    type: object
+                    additionalProperties: { type: string }
+                  expires_at: { type: string, format: date-time }
+        '422':
+          description: MIME bloqueado ou tamanho excedido
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /inbox/media/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [media]
+      summary: Retorna URL pre-assinada de download (TTL 24h)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  download_url: { type: string, format: uri }
+                  expires_at: { type: string, format: date-time }
+                  mime_type: { type: string }
+                  size_bytes: { type: integer }
+                  sensitive_hint: { type: boolean }
+        '410':
+          description: Mídia purgada por retenção
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  # ──────────────────────────────────────────────────────────────
+  # Webhooks públicos (Twilio + Meta) — NÃO autenticados, validação HMAC
+  # ──────────────────────────────────────────────────────────────
+
+  /webhooks/twilio/whatsapp:
+    post:
+      tags: [webhooks]
+      security: []
+      summary: Recebe mensagens inbound do WhatsApp (Twilio Programmable Messaging)
+      description: |
+        Não exige Sanctum — valida assinatura `X-Twilio-Signature` (HMAC SHA-256
+        com `TWILIO_AUTH_TOKEN`). Tenant resolvido via lookup de
+        `messaging_service_sid` em `messaging_channels`.
+
+        Resposta < 5s (limite Twilio). Idempotência via UNIQUE
+        `(provider='twilio', external_id=MessageSid)` em `messaging_webhook_events`.
+      parameters:
+        - in: header
+          name: X-Twilio-Signature
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                MessageSid: { type: string }
+                AccountSid: { type: string }
+                MessagingServiceSid: { type: string }
+                From: { type: string, description: 'whatsapp:+55119...' }
+                To: { type: string }
+                Body: { type: string }
+                NumMedia: { type: string }
+                MediaUrl0: { type: string, format: uri }
+                MediaContentType0: { type: string }
+      responses:
+        '200':
+          description: Recebido (mesmo se duplicado — Twilio precisa de 200 para parar retry)
+        '403':
+          description: Assinatura inválida
+        '422':
+          description: Payload malformado
+
+  /webhooks/twilio/status:
+    post:
+      tags: [webhooks]
+      security: []
+      summary: Status callbacks Twilio (sent/delivered/read/failed)
+      parameters:
+        - in: header
+          name: X-Twilio-Signature
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                MessageSid: { type: string }
+                MessageStatus: { type: string, enum: [queued, sent, delivered, read, failed, undelivered] }
+                ErrorCode: { type: string }
+                ErrorMessage: { type: string }
+      responses:
+        '200':
+          description: OK
+        '403':
+          description: Assinatura inválida
+
+  /webhooks/instagram:
+    get:
+      tags: [webhooks]
+      security: []
+      summary: Handshake de verificação Meta (subscription challenge)
+      parameters:
+        - in: query
+          name: hub.mode
+          required: true
+          schema: { type: string, enum: [subscribe] }
+        - in: query
+          name: hub.challenge
+          required: true
+          schema: { type: string }
+        - in: query
+          name: hub.verify_token
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Retorna `hub.challenge` se `verify_token` bate com `META_WEBHOOK_VERIFY_TOKEN`
+          content:
+            text/plain:
+              schema: { type: string }
+        '403':
+          description: Token inválido
+    post:
+      tags: [webhooks]
+      security: []
+      summary: Recebe eventos Instagram Direct (messages + status)
+      description: |
+        Valida assinatura `X-Hub-Signature-256` (HMAC SHA-256 com `META_APP_SECRET`).
+        Tenant resolvido via lookup de `ig_business_account_id` em `messaging_channels`.
+      parameters:
+        - in: header
+          name: X-Hub-Signature-256
+          required: true
+          schema: { type: string, pattern: '^sha256=[a-f0-9]{64}$' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                object: { type: string, enum: [instagram] }
+                entry:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      time: { type: integer }
+                      messaging:
+                        type: array
+                        items: { type: object }
+      responses:
+        '200':
+          description: Recebido
+        '403':
+          description: Assinatura inválida
+
+  # ──────────────────────────────────────────────────────────────
+  # API pública do widget (consumida pelo bundle JS embarcado em sites externos)
+  # ──────────────────────────────────────────────────────────────
+
+  /widget/v1/{public_key}.js:
+    parameters:
+      - in: path
+        name: public_key
+        required: true
+        schema: { type: string, minLength: 32, maxLength: 64 }
+    get:
+      tags: [widget-public]
+      security: []
+      summary: Bundle JS do widget (servido com CORS abertos e cache 1h)
+      responses:
+        '200':
+          description: Bundle minificado (~30KB gzip)
+          content:
+            application/javascript:
+              schema: { type: string }
+        '404':
+          description: '`public_key` inválida ou canal desativado'
+
+  /widget/v1/{public_key}/config:
+    parameters:
+      - in: path
+        name: public_key
+        required: true
+        schema: { type: string }
+    get:
+      tags: [widget-public]
+      security: []
+      summary: Config visual + business hours (lida pelo widget no boot)
+      parameters:
+        - in: header
+          name: Origin
+          required: true
+          schema: { type: string, format: uri }
+      responses:
+        '200':
+          description: OK; valida `Origin` contra `allowed_origins` do tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appearance: { type: object }
+                  initial_message: { type: string, nullable: true }
+                  business_hours: { type: object }
+                  outside_hours_behavior: { type: string, enum: [bloqueia, fila, normal] }
+                  outside_hours_message: { type: string, nullable: true }
+                  pre_chat_form: { type: string, enum: [opcional, exigido_para_iniciar, exigido_para_enviar] }
+                  reverb:
+                    type: object
+                    properties:
+                      app_key: { type: string }
+                      host: { type: string }
+                      port: { type: integer }
+                      scheme: { type: string }
+        '403':
+          description: '`Origin` não autorizada'
+
+  /widget/v1/{public_key}/sessions:
+    parameters:
+      - in: path
+        name: public_key
+        required: true
+        schema: { type: string }
+    post:
+      tags: [widget-public]
+      security: []
+      summary: Inicia sessão de visitante anônimo (cria `messaging_web_widget_sessions`)
+      parameters:
+        - in: header
+          name: Origin
+          required: true
+          schema: { type: string, format: uri }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                visitor_token:
+                  type: string
+                  description: Se existente em localStorage do visitante, retoma sessão; senão novo é emitido.
+                pre_chat_data:
+                  type: object
+                  properties:
+                    nome: { type: string }
+                    telefone: { type: string }
+                    email: { type: string }
+                referer:
+                  type: string
+                  format: uri
+      responses:
+        '201':
+          description: Sessão criada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  visitor_token: { type: string }
+                  session_id: { type: integer }
+                  conversation_id: { type: integer, nullable: true, description: 'Preenchido apenas se sessão já tem mensagem' }
+                  expires_at: { type: string, format: date-time }
+                  reverb_channel: { type: string, example: 'widget.session.abc123' }
+
+  /widget/v1/{public_key}/messages:
+    parameters:
+      - in: path
+        name: public_key
+        required: true
+        schema: { type: string }
+    post:
+      tags: [widget-public]
+      security: []
+      summary: Envia mensagem do visitante para a inbox do tenant
+      parameters:
+        - in: header
+          name: Origin
+          required: true
+          schema: { type: string, format: uri }
+        - in: header
+          name: X-Visitor-Token
+          required: true
+          schema: { type: string }
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content_type]
+              properties:
+                content_type: { type: string, enum: [text] }
+                body: { type: string, maxLength: 4096 }
+      responses:
+        '201':
+          description: Mensagem aceita; broadcast Reverb para a inbox do tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  event_id: { type: string }
+                  status: { type: string, enum: [queued] }
+                  conversation_id: { type: integer }
+        '429':
+          description: Rate limit IP (`widget-public` limiter)
+
+  /widget/v1/{public_key}/messages/stream:
+    parameters:
+      - in: path
+        name: public_key
+        required: true
+        schema: { type: string }
+    get:
+      tags: [widget-public]
+      security: []
+      summary: SSE fallback caso Reverb cross-origin falhe (long-polling stream)
+      parameters:
+        - in: header
+          name: X-Visitor-Token
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Stream `text/event-stream`
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+# ──────────────────────────────────────────────────────────────
+# Components
+# ──────────────────────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    sanctumSession:
+      type: apiKey
+      in: cookie
+      name: laravel_session
+      description: |
+        Sanctum SPA stateful — cookie de sessão emitido pelo subdomínio do
+        tenant. CSRF token via header `X-XSRF-TOKEN` em mutations.
+
+  parameters:
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer }
+
+  responses:
+    Unauthenticated:
+      description: Sessão não estabelecida (401)
+    Forbidden:
+      description: Sem ability para esta operação (403)
+    NotFound:
+      description: Recurso inexistente ou fora do tenant (404)
+    ValidationError:
+      description: Erros de validação (422)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationErrorResponse' }
+
+  schemas:
+
+    # ──────── Canal ────────
+    ChannelResource:
+      type: object
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [whatsapp, instagram, web] }
+        name: { type: string }
+        status: { type: string, enum: [ativo, desconectado, invalido, expirado, degradado, suspenso] }
+        provider_metadata:
+          type: object
+          description: |
+            Campos públicos por tipo:
+            - whatsapp: `messaging_service_sid`, `whatsapp_sender` (E.164 com prefixo `whatsapp:`)
+            - instagram: `page_id`, `ig_business_account_id`, `ig_username`
+            - web: `public_key`
+        quality_rating: { type: string, enum: [high, medium, low, flagged], nullable: true }
+        quality_rating_updated_at: { type: string, format: date-time, nullable: true }
+        auto_send_disabled: { type: boolean }
+        last_health_check_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ConnectChannelRequest:
+      type: object
+      required: [type, name]
+      properties:
+        type: { type: string, enum: [whatsapp, instagram, web] }
+        name: { type: string, minLength: 2, maxLength: 100 }
+        credentials:
+          oneOf:
+            - $ref: '#/components/schemas/TwilioCredentials'
+            - $ref: '#/components/schemas/InstagramCredentials'
+          description: 'Omitido quando `type=web`; o backend gera `public_key`.'
+
+    TwilioCredentials:
+      type: object
+      required: [account_sid, auth_token, messaging_service_sid, whatsapp_sender]
+      properties:
+        account_sid: { type: string, pattern: '^AC[a-f0-9]{32}$' }
+        auth_token: { type: string, writeOnly: true }
+        messaging_service_sid: { type: string, pattern: '^MG[a-f0-9]{32}$' }
+        whatsapp_sender: { type: string, description: 'E.164 com prefixo `whatsapp:` (ex.: `whatsapp:+5511999999999`)' }
+
+    InstagramCredentials:
+      type: object
+      required: [page_id, page_access_token, ig_business_account_id]
+      properties:
+        page_id: { type: string }
+        page_access_token: { type: string, writeOnly: true }
+        ig_business_account_id: { type: string }
+
+    # ──────── Channel template ────────
+    ChannelTemplateResource:
+      type: object
+      properties:
+        id: { type: integer }
+        channel_id: { type: integer }
+        provider_template_id: { type: string }
+        meta_template_name: { type: string }
+        meta_template_status: { type: string, enum: [approved, pending, rejected, paused] }
+        language: { type: string }
+        category: { type: string, nullable: true, enum: [marketing, utility, authentication] }
+        body_preview: { type: string, nullable: true }
+        variables_schema:
+          type: array
+          items:
+            type: object
+            properties:
+              index: { type: integer }
+              name: { type: string }
+              required: { type: boolean }
+        last_synced_at: { type: string, format: date-time }
+
+    # ──────── Widget ────────
+    WidgetConfigResource:
+      type: object
+      properties:
+        id: { type: integer }
+        channel_id: { type: integer }
+        public_key: { type: string }
+        allowed_origins:
+          type: array
+          items: { type: string, format: uri }
+        appearance:
+          type: object
+          properties:
+            primary_color: { type: string, pattern: '^#[a-f0-9]{6}$' }
+            logo_url: { type: string, format: uri, nullable: true }
+            position: { type: string, enum: [bottom-right, bottom-left] }
+            button_label: { type: string, maxLength: 50 }
+        initial_message: { type: string, nullable: true, maxLength: 500 }
+        business_hours:
+          type: object
+          additionalProperties:
+            type: string
+            example: '08:00-18:00'
+        outside_hours_behavior: { type: string, enum: [bloqueia, fila, normal] }
+        outside_hours_message: { type: string, nullable: true }
+        pre_chat_form: { type: string, enum: [opcional, exigido_para_iniciar, exigido_para_enviar] }
+        snippet_url: { type: string, format: uri, readOnly: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    UpdateWidgetConfigRequest:
+      type: object
+      properties:
+        allowed_origins:
+          type: array
+          maxItems: 50
+          items: { type: string, format: uri }
+        appearance:
+          $ref: '#/components/schemas/WidgetConfigResource/properties/appearance'
+        initial_message: { type: string, nullable: true, maxLength: 500 }
+        business_hours:
+          type: object
+          additionalProperties: { type: string }
+        outside_hours_behavior: { type: string, enum: [bloqueia, fila, normal] }
+        outside_hours_message: { type: string, nullable: true }
+        pre_chat_form: { type: string, enum: [opcional, exigido_para_iniciar, exigido_para_enviar] }
+
+    # ──────── Conversa ────────
+    ConversationResource:
+      type: object
+      properties:
+        id: { type: integer }
+        channel:
+          type: object
+          properties:
+            id: { type: integer }
+            type: { type: string, enum: [whatsapp, instagram, web] }
+            name: { type: string }
+        patient:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+            telefone_primario: { type: string, nullable: true }
+        external_thread_id: { type: string, description: 'Telefone E.164 (WhatsApp), IGSID (Instagram), visitor_token (widget)' }
+        status: { type: string, enum: [aberta, pendente, resolvida, reaberta] }
+        assigned_user:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        assignment_strategy: { type: string, nullable: true, enum: [manual, auto_round_robin, auto_patient_owner, transfer] }
+        priority: { type: string, enum: [alta, normal, baixa] }
+        ai_paused_until: { type: string, format: date-time, nullable: true }
+        ai_pause_set_by:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        last_message_at: { type: string, format: date-time, nullable: true }
+        last_inbound_message_at: { type: string, format: date-time, nullable: true }
+        last_message_preview: { type: string, nullable: true }
+        unread_count: { type: integer, minimum: 0 }
+        window_24h:
+          type: object
+          description: Estado da janela 24h (Princípio VI)
+          properties:
+            open: { type: boolean }
+            seconds_remaining: { type: integer, nullable: true }
+        opened_at: { type: string, format: date-time }
+        resolved_at: { type: string, format: date-time, nullable: true }
+        resolution_mode: { type: string, nullable: true, enum: [manual, auto_inatividade] }
+        received_outside_hours: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    ConversationListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/ConversationResource' }
+        meta:
+          type: object
+          properties:
+            page: { type: integer }
+            per_page: { type: integer }
+            total: { type: integer }
+            last_page: { type: integer }
+            aggregations:
+              type: object
+              description: Counters auxiliares para badges da inbox
+              properties:
+                by_status:
+                  type: object
+                  additionalProperties: { type: integer }
+                unassigned: { type: integer }
+                mine: { type: integer }
+
+    # ──────── Mensagem ────────
+    MessageResource:
+      type: object
+      properties:
+        id: { type: integer }
+        conversation_id: { type: integer }
+        direction: { type: string, enum: [in, out] }
+        sender_type: { type: string, enum: [patient, user, system, ai] }
+        sender:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        body: { type: string, nullable: true, description: 'Decifrado server-side antes de serializar' }
+        content_type: { type: string, enum: [text, image, audio, video, document, template, interactive, location, contact] }
+        media:
+          type: array
+          items: { $ref: '#/components/schemas/MessageMediaResource' }
+        template:
+          type: object
+          nullable: true
+          properties:
+            provider_template_id: { type: string }
+            variables:
+              type: object
+              additionalProperties: { type: string }
+        status: { type: string, enum: [queued, sent, delivered, read, failed] }
+        failure_reason: { type: string, nullable: true }
+        sent_at: { type: string, format: date-time, nullable: true }
+        delivered_at: { type: string, format: date-time, nullable: true }
+        read_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    MessageListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/MessageResource' }
+        meta:
+          type: object
+          properties:
+            next_cursor: { type: string, nullable: true }
+            has_more: { type: boolean }
+
+    SendMessageRequest:
+      type: object
+      required: [content_type]
+      properties:
+        content_type: { type: string, enum: [text, image, audio, video, document, template] }
+        body: { type: string, maxLength: 4096, description: 'Obrigatório se content_type=text ou template (com variáveis)' }
+        media_token:
+          type: string
+          description: 'Token retornado por `POST /inbox/media/upload`. Obrigatório se content_type ∈ {image, audio, video, document}.'
+        template:
+          type: object
+          description: 'Obrigatório se content_type=template. Princípio VI: única forma de enviar fora janela 24h.'
+          required: [provider_template_id]
+          properties:
+            provider_template_id: { type: string }
+            variables:
+              type: object
+              additionalProperties: { type: string }
+        quick_reply_id:
+          type: integer
+          description: 'Opcional — para auditoria/estatística da resposta rápida usada. Conteúdo deve estar em `body` (já renderizado client-side).'
+
+    MessageMediaResource:
+      type: object
+      properties:
+        id: { type: integer }
+        mime_type: { type: string }
+        size_bytes: { type: integer }
+        original_filename: { type: string, nullable: true }
+        sensitive_hint: { type: boolean }
+        download_url: { type: string, format: uri, description: 'URL pre-assinada TTL 24h' }
+
+    # ──────── Atribuição ────────
+    AssignmentResource:
+      type: object
+      properties:
+        id: { type: integer }
+        conversation_id: { type: integer }
+        user:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        assignment_role: { type: string, nullable: true }
+        assigned_by:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        reason: { type: string, enum: [inicial, manual, transferencia, reassign_offline, auto_atribuicao] }
+        transfer_note: { type: string, nullable: true }
+        assigned_at: { type: string, format: date-time }
+        unassigned_at: { type: string, format: date-time, nullable: true }
+
+    TransferRequest:
+      type: object
+      required: [transfer_note]
+      properties:
+        user_id: { type: integer, description: 'Alvo individual; mutuamente exclusivo com `role`' }
+        role: { type: string, description: 'Transferir para fila de uma role; primeiro online assume' }
+        transfer_note: { type: string, minLength: 10, maxLength: 500 }
+
+    AssignmentRuleResource:
+      type: object
+      properties:
+        id: { type: integer }
+        channel_id: { type: integer, nullable: true, description: 'NULL = aplica a todos os canais' }
+        strategy: { type: string, enum: [round_robin, patient_owner, manual] }
+        priority: { type: integer }
+        is_active: { type: boolean }
+        config:
+          type: object
+          properties:
+            exclude_user_ids:
+              type: array
+              items: { type: integer }
+            fallback:
+              type: string
+              enum: [round_robin, unassigned]
+              description: Quando estratégia primária não acha candidato
+
+    AssignmentRuleInput:
+      type: object
+      required: [strategy]
+      properties:
+        channel_id: { type: integer, nullable: true }
+        strategy: { type: string, enum: [round_robin, patient_owner, manual] }
+        priority: { type: integer, default: 100 }
+        is_active: { type: boolean, default: true }
+        config: { type: object }
+
+    # ──────── Quick reply ────────
+    QuickReplyResource:
+      type: object
+      properties:
+        id: { type: integer }
+        scope: { type: string, enum: [tenant, private] }
+        owner:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        shortcut: { type: string, description: 'Sempre começa com `/`' }
+        content: { type: string }
+        variables_used:
+          type: array
+          items: { type: string }
+        usage_count: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    CreateQuickReplyRequest:
+      type: object
+      required: [shortcut, content, scope]
+      properties:
+        scope: { type: string, enum: [tenant, private] }
+        shortcut:
+          type: string
+          minLength: 2
+          maxLength: 50
+          pattern: '^/[a-zA-Z0-9_-]+$'
+        content: { type: string, minLength: 1, maxLength: 4096 }
+
+    # ──────── Presença ────────
+    PresenceResource:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id: { type: integer }
+            nome: { type: string }
+        status: { type: string, enum: [online, away, offline] }
+        last_seen_at: { type: string, format: date-time }
+        max_concurrent_conversations: { type: integer }
+        current_assigned_count: { type: integer }
+        notification_preferences:
+          type: object
+          properties:
+            sound: { type: boolean }
+            browser_push: { type: boolean }
+            sound_volume: { type: integer }
+
+    # ──────── Erros ────────
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+        code: { type: string, description: 'Código simbólico (ex.: `canal.ja_conectado`)' }
+        details:
+          type: object
+          additionalProperties: true
+
+    ValidationErrorResponse:
+      type: object
+      required: [message, errors]
+      properties:
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+
+    WindowExpiredErrorResponse:
+      type: object
+      description: 422 quando Princípio VI bloqueia envio fora janela 24h sem template
+      required: [message, code]
+      properties:
+        message: { type: string, example: 'Janela de 24h expirada; selecione um template aprovado para retomar contato.' }
+        code: { type: string, enum: [mensagem.bloqueada_fora_janela] }
+        details:
+          type: object
+          properties:
+            last_inbound_message_at: { type: string, format: date-time, nullable: true }
+            hours_since_last_inbound: { type: number }
+            available_templates_count: { type: integer }

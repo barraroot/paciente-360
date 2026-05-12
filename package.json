@@ -5,6 +5,7 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
+        "widget:build": "vite build --config resources/widget/vite.config.widget.js",
         "lint": "prettier --check \"resources/{js,css}/**/*.{js,ts,vue,css}\"",
         "format": "prettier --write \"resources/{js,css}/**/*.{js,ts,vue,css}\"",
         "test:e2e": "playwright test --pass-with-no-tests"

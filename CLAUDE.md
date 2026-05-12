@@ -184,14 +184,16 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `002-crm-pacientes`
-- **Plan**: [specs/002-crm-pacientes/plan.md](specs/002-crm-pacientes/plan.md)
-- **Spec**: [specs/002-crm-pacientes/spec.md](specs/002-crm-pacientes/spec.md)
-- **Research (Phase 0)**: [specs/002-crm-pacientes/research.md](specs/002-crm-pacientes/research.md)
-- **Data model (Phase 1)**: [specs/002-crm-pacientes/data-model.md](specs/002-crm-pacientes/data-model.md)
-- **API contracts (Phase 1)**: [specs/002-crm-pacientes/contracts/openapi.yaml](specs/002-crm-pacientes/contracts/openapi.yaml)
-- **Quickstart (Phase 1)**: [specs/002-crm-pacientes/quickstart.md](specs/002-crm-pacientes/quickstart.md)
-- **Previous feature (delivered)**: `001-fundacao-multitenant` — [plan](specs/001-fundacao-multitenant/plan.md) — 467 testes verdes, 77.2% cobertura
+- **Active feature**: `003-omnichannel-inbox`
+- **Plan**: [specs/003-omnichannel-inbox/plan.md](specs/003-omnichannel-inbox/plan.md)
+- **Spec**: [specs/003-omnichannel-inbox/spec.md](specs/003-omnichannel-inbox/spec.md) (Clarified — 17/17 NCs)
+- **Research (Phase 0)**: [specs/003-omnichannel-inbox/research.md](specs/003-omnichannel-inbox/research.md) (9 decisões)
+- **Data model (Phase 1)**: [specs/003-omnichannel-inbox/data-model.md](specs/003-omnichannel-inbox/data-model.md) (12 entidades)
+- **API contracts (Phase 1)**: [specs/003-omnichannel-inbox/contracts/openapi.yaml](specs/003-omnichannel-inbox/contracts/openapi.yaml) (36 paths, 23 schemas)
+- **Quickstart (Phase 1)**: [specs/003-omnichannel-inbox/quickstart.md](specs/003-omnichannel-inbox/quickstart.md) (provisioning Twilio + Meta + ngrok)
+- **Previous features delivered**:
+  - `002-crm-pacientes` — [plan](specs/002-crm-pacientes/plan.md) — 650 testes verdes
+  - `001-fundacao-multitenant` — [plan](specs/001-fundacao-multitenant/plan.md) — 467 testes verdes
 - **Constitution**: [.specify/memory/constitution.md](.specify/memory/constitution.md) (v1.2.0)
 <!-- SPECKIT END -->
 

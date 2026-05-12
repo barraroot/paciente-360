@@ -22,11 +22,13 @@ use App\Http\Middleware\ApplyOverdueRestrictions;
 use App\Http\Middleware\EnsureTenantNotSuspended;
 use App\Http\Middleware\LogStructuredRequestData;
 use App\Http\Middleware\ResolveTenant;
+use App\Http\Middleware\ValidateTwilioSignature;
 use App\Support\Cpf\CpfValidator;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -36,8 +38,27 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
+        then: function (): void {
+            // Widget public routes — served at root level (no /api/v1 prefix).
+            // No auth, no CSRF (public API keyed by public_key, not subdomain).
+            Route::middleware([])
+                ->group(base_path('routes/widget.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Confia em proxies (ngrok local, load balancer prod) para que
+        // `$request->fullUrl()` retorne `https://` quando o proxy faz TLS
+        // termination. Crítico para HMAC do Twilio que assina contra a URL
+        // pública exata.
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO
+                | Request::HEADER_X_FORWARDED_AWS_ELB,
+        );
+
         // Excluir webhooks do CSRF (Stripe envia sem token).
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
@@ -51,6 +72,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.not-suspended' => EnsureTenantNotSuspended::class,
             'log.structured' => LogStructuredRequestData::class,
             'apply.overdue.restrictions' => ApplyOverdueRestrictions::class,
+            'twilio.signature' => ValidateTwilioSignature::class,
         ]);
 
         // T050 — Sanctum SPA stateful: injeta EnsureFrontendRequestsAreStateful

@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Domain\Messaging\Infrastructure\Listeners\AnonimizaMensagensOnPacienteAnonimizadoListener;
+use App\Domain\Messaging\Infrastructure\Listeners\SetAiPausedOnOutboundMessageListener;
+use App\Domain\Messaging\Message\Events\MensagemEnviada;
 use App\Events\Contracts\Auditable;
+use App\Events\Paciente\PacienteAnonimizado;
 use App\Events\Professional\ProfessionalDeactivated;
 use App\Listeners\Paciente\RegistraEventoTimelineListener;
 use App\Listeners\PersistAuditLogListener;
@@ -38,5 +42,13 @@ class EventServiceProvider extends ServiceProvider
         // T260 — listener específico para o evento ProfessionalDeactivated.
         // Cria TarefaReatribuicao e dispara ReassignOrphansJob.
         Event::listen(ProfessionalDeactivated::class, ProfessionalDeactivatedListener::class);
+
+        // T173 US-4.6 — Pausa implícita da IA quando um humano envia mensagem outbound.
+        // Filtra sender_type === 'user'; ignora 'system' e 'ai'.
+        Event::listen(MensagemEnviada::class, SetAiPausedOnOutboundMessageListener::class);
+
+        // T255 — Anonimização de mensagens ao anonimizar paciente (LGPD FR-018, NC-14.b).
+        // Mensagens recebidas têm conteúdo zerado; enviadas são preservadas.
+        Event::listen(PacienteAnonimizado::class, AnonimizaMensagensOnPacienteAnonimizadoListener::class);
     }
 }

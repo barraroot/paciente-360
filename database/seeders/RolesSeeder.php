@@ -65,6 +65,17 @@ class RolesSeeder extends Seeder
         'paciente.note.view:clinica',
         'paciente.note.view:comportamental',
         'paciente.note.view:financeira',
+
+        // Fase 3 — Omnichannel Inbox (§ 2.3 do spec — tabela de abilities)
+        // Financeiro e Super Admin NÃO recebem essas abilities (Princípio I LGPD — minimização de acesso a mensagens).
+        'inbox.view',
+        'inbox.respond',
+        'inbox.assign',
+        'inbox.transfer',
+        'inbox.takeover_ai',
+        'channel.connect',
+        'channel.disconnect',
+        'quick_reply.manage',
     ];
 
     /**
@@ -92,6 +103,15 @@ class RolesSeeder extends Seeder
             'paciente.note.view:clinica',
             'paciente.note.view:comportamental',
             'paciente.note.view:financeira',
+            // Fase 3 — admin clínica tem TODAS as abilities de inbox + canal.
+            'inbox.view',
+            'inbox.respond',
+            'inbox.assign',
+            'inbox.transfer',
+            'inbox.takeover_ai',
+            'channel.connect',
+            'channel.disconnect',
+            'quick_reply.manage',
         ],
         'medico' => [
             'paciente.view',
@@ -101,6 +121,12 @@ class RolesSeeder extends Seeder
             'paciente.note.view:geral',
             'paciente.note.view:clinica',
             'paciente.note.view:comportamental',
+            // Fase 3 — médico: inbox (escopo "próprio + designado" imposto na policy).
+            // channel.connect / channel.disconnect: apenas admin-clinica.
+            'inbox.view',
+            'inbox.respond',
+            'inbox.takeover_ai',
+            'quick_reply.manage',
         ],
         'atendente' => [
             'paciente.view',
@@ -109,6 +135,13 @@ class RolesSeeder extends Seeder
             'paciente.note.write',
             'paciente.note.view:geral',
             'paciente.note.view:comportamental',
+            // Fase 3 — atendente: inbox completa, sem channel.connect/disconnect.
+            'inbox.view',
+            'inbox.respond',
+            'inbox.assign',
+            'inbox.transfer',
+            'inbox.takeover_ai',
+            'quick_reply.manage',
         ],
         'recepcionista' => [
             'paciente.view',
@@ -117,6 +150,13 @@ class RolesSeeder extends Seeder
             'paciente.note.write',
             'paciente.note.view:geral',
             'paciente.note.view:comportamental',
+            // Fase 3 — recepcionista: inbox completa, sem channel.connect/disconnect.
+            'inbox.view',
+            'inbox.respond',
+            'inbox.assign',
+            'inbox.transfer',
+            'inbox.takeover_ai',
+            'quick_reply.manage',
         ],
         'financeiro' => [
             // Fase 0
@@ -124,6 +164,7 @@ class RolesSeeder extends Seeder
             'view-ai-usage',
             'view-audit-logs',
             // Fase 2 — financeiro NÃO recebe abilities de paciente.
+            // Fase 3 — financeiro NÃO recebe abilities de inbox (Princípio I LGPD — minimização).
         ],
     ];
 

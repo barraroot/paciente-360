@@ -1,26 +1,28 @@
 <?php
 
+use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
+use Spatie\Permission\PermissionRegistrar;
 
 /*
 |--------------------------------------------------------------------------
-| Broadcast Channel Authorization — T046 (Princípio II)
+| Broadcast Channel Authorization (Princípio II)
 |--------------------------------------------------------------------------
 |
-| Canais privados de tenant. NÃO emitimos eventos nesta fase — apenas
-| registramos a authorization para que, quando começarmos a publicar
-| (notificações, presença), o isolamento já esteja garantido.
+| Canais privados de tenant. Toda autorização valida:
+|   (a) pertencimento ao tenant (tenant_id do user === parâmetro do canal)
+|   (b) ability `inbox.view` via Spatie team mode (canais de inbox)
+|   (c) visibilidade da conversa para role `medico` (spec § 2.3 + § 11)
 |
-| Convenção:
-|   - `tenant.{tenantId}`             → broadcast para todo o tenant
-|     (ex.: anúncios da clínica). User precisa pertencer ao tenant.
-|   - `tenant.{tenantId}.user.{userId}` → broadcast direcionado a um
-|     usuário específico, escopado ao tenant. Garante que User não
-|     consegue subscrever em canal de outro tenant nem do user errado.
+| Convenção de nomes:
+|   - `tenant.{tenantId}`                      → broadcast global do tenant
+|   - `tenant.{tenantId}.user.{userId}`        → broadcast por usuário
+|   - `tenant.{tenantId}.inbox`                → inbox omnichannel (T041)
+|   - `tenant.{tenantId}.conversa.{id}`        → sala de conversa (T041)
 |
 | O canal default `App.Models.User.{id}` (notificações Laravel) fica
-| inalterado — mas valida pertencimento por id, não por tenant.
+| inalterado — valida pertencimento por id, não por tenant.
 */
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
@@ -38,4 +40,86 @@ Broadcast::channel('tenant.{tenantId}.user.{userId}', function ($user, $tenantId
         && $user->tenant_id !== null
         && (int) $user->tenant_id === (int) $tenantId
         && (int) $user->id === (int) $userId;
+});
+
+/*
+|--------------------------------------------------------------------------
+| T041 — Canais Omnichannel Inbox (Fase 3)
+|--------------------------------------------------------------------------
+|
+| `tenant.{tenantId}.inbox` — presence channel da lista de atendimento.
+|   Qualquer user com `inbox.view` no tenant pode ingressar.
+|   Retorna array com id+name para o presence payload.
+|
+| `tenant.{tenantId}.conversa.{conversationId}` — sala privada da conversa.
+|   Além de `inbox.view`, verifica visibilidade por role:
+|     - medico: somente conversas atribuídas a si OU cujo paciente tem
+|       `profissional_responsavel_id` apontando para um `Professional`
+|       cujo `user_id === $user->id` (spec § 2.3).
+|     - demais roles com inbox.view: vê todas conversas do tenant.
+*/
+
+Broadcast::channel('tenant.{tenantId}.inbox', function (User $user, int $tenantId) {
+    // (a) Pertencimento ao tenant
+    if ((int) $user->tenant_id !== $tenantId) {
+        return false;
+    }
+
+    // (b) Ability inbox.view (Spatie team mode — tenant_id como team).
+    //     ResolveTenant middleware seta o team_id antes do callback; em
+    //     ambiente de cold-start (fila, listener pré-roteamento) pode não
+    //     estar setado — fallback explícito garante consistência.
+    $teamId = app(PermissionRegistrar::class)->getPermissionsTeamId();
+
+    if ($teamId !== $user->tenant_id) {
+        app(PermissionRegistrar::class)->setPermissionsTeamId($user->tenant_id);
+        $user->unsetRelation('roles')->unsetRelation('permissions');
+    }
+
+    return $user->can('inbox.view')
+        ? ['id' => $user->id, 'name' => $user->name]
+        : false;
+});
+
+Broadcast::channel('tenant.{tenantId}.conversa.{conversationId}', function (User $user, int $tenantId, int $conversationId) {
+    // (a) Pertencimento ao tenant
+    if ((int) $user->tenant_id !== $tenantId) {
+        return false;
+    }
+
+    // (b) Ability inbox.view
+    if (! $user->can('inbox.view')) {
+        return false;
+    }
+
+    // (c) Conversa existe e pertence ao tenant
+    /** @var Conversation|null $conversation */
+    $conversation = Conversation::query()
+        ->withoutTenantScope()
+        ->where('id', $conversationId)
+        ->where('tenant_id', $tenantId)
+        ->first();
+
+    if ($conversation === null) {
+        return false;
+    }
+
+    // Spec § 2.3: médico enxerga apenas conversas atribuídas a si OU
+    // cujo paciente tem como profissional responsável um Professional
+    // vinculado a este usuário (Professional.user_id === $user->id).
+    if ($user->hasRole('medico')) {
+        $isAssigned = (int) $conversation->assigned_user_id === $user->id;
+
+        $isPatientOwner = $conversation->patient_id !== null
+            && $conversation->patient !== null
+            && $conversation->patient->profissionalResponsavel !== null
+            && (int) $conversation->patient->profissionalResponsavel->user_id === $user->id;
+
+        return ($isAssigned || $isPatientOwner)
+            ? ['id' => $user->id, 'name' => $user->name]
+            : false;
+    }
+
+    // Demais roles com inbox.view enxergam todas as conversas do tenant
+    return ['id' => $user->id, 'name' => $user->name];
 });

@@ -271,15 +271,29 @@
         "no_results": "Nenhum resultado encontrado.",
         "show_more": "Ver mais",
         "show_less": "Ver menos",
-        "save": "Salvar",
-        "error_forbidden": "Você não tem permissão para esta ação."
+        "error_forbidden": "Você não tem permissão para esta ação.",
+        "salvar": "Salvar",
+        "salvando": "Salvando...",
+        "cancelar": "Cancelar",
+        "editar": "Editar",
+        "excluir": "Excluir",
+        "excluindo": "Excluindo...",
+        "fechar": "Fechar",
+        "carregando": "Carregando...",
+        "sem_permissao": "Sem permissão para esta ação."
     },
     "paciente": {
         "list": {
             "title": "Pacientes",
             "search_placeholder": "Buscar por nome ou telefone",
             "new_cta": "Novo Paciente",
-            "filters": { "status": "Status", "tag": "Tag", "profissional": "Profissional", "origem": "Origem", "convenio": "Convênio" },
+            "filters": {
+                "status": "Status",
+                "tag": "Tag",
+                "profissional": "Profissional",
+                "origem": "Origem",
+                "convenio": "Convênio"
+            },
             "empty": "Nenhum paciente encontrado.",
             "anonymized_excluded": "Pacientes anonimizados não aparecem nesta lista."
         },
@@ -303,17 +317,32 @@
             "submit": "Salvar"
         },
         "show": {
-            "tabs": { "detalhes": "Detalhes", "timeline": "Timeline", "anotacoes": "Anotações", "mesclagens": "Mesclagens" },
+            "tabs": {
+                "detalhes": "Detalhes",
+                "timeline": "Timeline",
+                "anotacoes": "Anotações",
+                "mesclagens": "Mesclagens"
+            },
             "anonimizar_cta": "Anonimizar paciente",
             "anonimizar_confirm": "Esta ação remove dados pessoais permanentemente. Continuar?",
             "alterar_status_cta": "Alterar status",
             "alterar_status_modal": "Alterar status do paciente"
         },
-        "status": { "lead": "Lead", "ativo": "Ativo", "inativo": "Inativo", "bloqueado": "Bloqueado" }
+        "status": {
+            "lead": "Lead",
+            "ativo": "Ativo",
+            "inativo": "Inativo",
+            "bloqueado": "Bloqueado"
+        }
     },
     "anotacao": {
         "create": "Adicionar anotação",
-        "tipo": { "geral": "Geral", "clinica": "Clínica", "comportamental": "Comportamental", "financeira": "Financeira" },
+        "tipo": {
+            "geral": "Geral",
+            "clinica": "Clínica",
+            "comportamental": "Comportamental",
+            "financeira": "Financeira"
+        },
         "imutavel": "Anotações são imutáveis. Use retratação se precisar corrigir.",
         "retratacao": "Adicionar retratação",
         "retratada_em": "Retratada em {date}",
@@ -347,8 +376,19 @@
     "funil": {
         "title": "Funil de Leads",
         "config_title": "Configurar Funil",
-        "colunas_default": ["Novo", "Qualificado", "Agendado", "Compareceu", "Perdido"],
-        "motivo": { "sem_interesse": "Sem interesse", "sem_retorno": "Sem retorno", "preco": "Preço", "outro": "Outro" },
+        "colunas_default": [
+            "Novo",
+            "Qualificado",
+            "Agendado",
+            "Compareceu",
+            "Perdido"
+        ],
+        "motivo": {
+            "sem_interesse": "Sem interesse",
+            "sem_retorno": "Sem retorno",
+            "preco": "Preço",
+            "outro": "Outro"
+        },
         "motivo_obrigatorio_title": "Por que este lead foi perdido?",
         "motivo_outro_label": "Descreva o motivo"
     },
@@ -389,8 +429,23 @@
         "resultado_atualizado": "Atualizado",
         "erro_arquivo_obrigatorio": "Selecione um arquivo para importar.",
         "erro_arquivo_grande": "O arquivo é muito grande (máximo 5 MB).",
-        "status": { "pending": "Aguardando", "processing": "Processando", "completed": "Concluída", "partial_failure": "Concluída com erros", "failed": "Falhou", "retrying": "Retentando" },
-        "relatorio": { "linha": "Linha", "status": "Status", "motivo": "Motivo", "importada": "Importada", "atualizada": "Atualizada", "duplicata": "Duplicata", "erro": "Erro" }
+        "status": {
+            "pending": "Aguardando",
+            "processing": "Processando",
+            "completed": "Concluída",
+            "partial_failure": "Concluída com erros",
+            "failed": "Falhou",
+            "retrying": "Retentando"
+        },
+        "relatorio": {
+            "linha": "Linha",
+            "status": "Status",
+            "motivo": "Motivo",
+            "importada": "Importada",
+            "atualizada": "Atualizada",
+            "duplicata": "Duplicata",
+            "erro": "Erro"
+        }
     },
     "convenio": {
         "list_title": "Convênios",
@@ -403,8 +458,291 @@
     "mesclagem": {
         "title": "Mesclar Pacientes",
         "dedup_modal_title": "Possível duplicata detectada",
-        "actions": { "mesclar": "Mesclar com existente", "criar_paralelo": "Criar paciente paralelo", "abrir_existente": "Abrir cadastro existente" },
+        "actions": {
+            "mesclar": "Mesclar com existente",
+            "criar_paralelo": "Criar paciente paralelo",
+            "abrir_existente": "Abrir cadastro existente"
+        },
         "reversivel_ate": "Reversível até {date}",
         "reverter_cta": "Reverter mesclagem"
+    },
+    "canais": {
+        "titulo": "Canais",
+        "conectar": "Conectar canal",
+        "conectar_whatsapp": "Conectar WhatsApp",
+        "conectar_instagram": "Conectar Instagram",
+        "conectar_widget": "Criar Widget Web",
+        "em_breve": "Disponível em breve",
+        "status": {
+            "ativo": "Ativo",
+            "desconectado": "Desconectado",
+            "invalido": "Inválido",
+            "expirado": "Expirado",
+            "degradado": "Atenção",
+            "suspenso": "Suspenso"
+        },
+        "tipo": {
+            "whatsapp": "WhatsApp Business",
+            "instagram": "Instagram Direct",
+            "web": "Widget Web"
+        },
+        "form": {
+            "nome": "Nome do canal",
+            "nome_placeholder": "Ex: Agendamento WhatsApp",
+            "account_sid": "Account SID",
+            "account_sid_placeholder": "AC...",
+            "account_sid_help": "Console → Account → API keys & tokens",
+            "auth_token": "Auth Token",
+            "auth_token_help": "Mantenha seguro — usado apenas pelo backend",
+            "messaging_service_sid": "Messaging Service SID",
+            "messaging_service_sid_placeholder": "MG...",
+            "messaging_service_sid_help": "Console → Messaging → Services",
+            "whatsapp_sender": "WhatsApp Sender",
+            "whatsapp_sender_placeholder": "whatsapp:+5511999999999",
+            "whatsapp_sender_help": "Formato whatsapp:+E164 (ex: whatsapp:+5511999999999)",
+            "submit": "Conectar canal",
+            "show_token": "Mostrar",
+            "hide_token": "Ocultar"
+        },
+        "actions": {
+            "ver_detalhes": "Ver detalhes",
+            "reconectar": "Reconectar",
+            "sincronizar_templates": "Sincronizar templates",
+            "desconectar": "Desconectar"
+        },
+        "conectar_instagram_titulo": "Conectar Instagram Direct",
+        "conectar_instagram_descricao": "Conecte uma conta Instagram Profissional via Facebook Login para receber DMs na inbox.",
+        "instagram_form": {
+            "page_id": "Facebook Page ID",
+            "page_id_help": "ID da Página Facebook vinculada à conta Instagram",
+            "page_access_token": "Page Access Token (longa duração)",
+            "page_access_token_help": "Token 60d via Graph API Explorer — escopo: instagram_basic + instagram_manage_messages + pages_messaging",
+            "ig_business_account_id": "Instagram Business Account ID",
+            "ig_business_account_id_help": "ID da conta Instagram Business — obtido via GET /{page_id}?fields=instagram_business_account"
+        },
+        "instagram_24h_window": "Instagram permite responder apenas dentro de 24h da última mensagem do paciente. Fora disso, apenas templates aprovados via MESSAGE_TAG.",
+        "errors": {
+            "invalid_credentials": "Credenciais Twilio rejeitadas. Verifique Account SID e Auth Token.",
+            "already_connected": "Este sender WhatsApp já está conectado em outro canal deste tenant.",
+            "no_permission": "Você não tem permissão para gerenciar canais.",
+            "load_failed": "Falha ao carregar canais.",
+            "disconnect_with_active": "Existem conversas ativas neste canal. Confirme para desconectar mesmo assim.",
+            "reconnect_failed": "Falha ao reconectar o canal.",
+            "sync_failed": "Falha ao iniciar sincronização de templates.",
+            "account_type_invalid": "Conta Instagram precisa ser Profissional (Business ou Creator). Converta no app Instagram → Configurações → Conta → Mudar para conta profissional.",
+            "page_token_invalid": "Page Access Token rejeitado. Verifique escopo e validade no Graph API Explorer."
+        },
+        "success": {
+            "connected": "Canal conectado com sucesso!",
+            "disconnected": "Canal desconectado.",
+            "templates_synced": "Sincronização de templates iniciada. Verifique em alguns segundos.",
+            "reconnected": "Canal reconectado com sucesso!"
+        },
+        "empty_state": {
+            "titulo": "Nenhum canal conectado",
+            "descricao": "Conecte o WhatsApp Business para começar a centralizar o atendimento.",
+            "cta": "Conectar WhatsApp"
+        },
+        "quality_rating": {
+            "label": "Quality Rating Meta",
+            "high": "Alto",
+            "medium": "Médio",
+            "low": "Baixo · risco de suspensão",
+            "flagged": "Sinalizado · uso restrito"
+        },
+        "detalhe": {
+            "titulo": "Detalhes do canal",
+            "templates_titulo": "Templates aprovados",
+            "templates_vazio": "Nenhum template sincronizado.",
+            "sincronizar_cta": "Sincronizar agora",
+            "voltar": "Voltar para Canais",
+            "status_label": "Status",
+            "tipo_label": "Tipo",
+            "sender_label": "Sender",
+            "criado_em": "Conectado em",
+            "atualizado_em": "Atualizado em"
+        },
+        "disconnect_confirm": {
+            "titulo": "Desconectar canal",
+            "descricao": "Ao desconectar, novas mensagens não serão recebidas. As conversas existentes ficam acessíveis em modo leitura. Confirma?"
+        }
+    },
+    "inbox": {
+        "titulo": "Inbox",
+        "search_placeholder": "Buscar nome, telefone, conteúdo...",
+        "empty_state": "Selecione uma conversa para ver as mensagens.",
+        "empty_list": "Nenhuma conversa encontrada com os filtros atuais.",
+        "loading": "Carregando conversas...",
+        "contato_anonimo": "Contato anônimo",
+        "filtros": {
+            "status": "Status",
+            "canal": "Canal",
+            "atendente": "Atendente",
+            "profissional": "Profissional vinculado",
+            "tag": "Tag",
+            "midia": "Mídia",
+            "idade": "Idade",
+            "todos": "Todos",
+            "sem_atendente": "Sem atendente",
+            "eu_mesmo": "Eu mesmo",
+            "com_midia": "Com mídia",
+            "sem_midia": "Sem mídia",
+            "menor_1h": "< 1h",
+            "1_a_24h": "1-24h",
+            "1_a_7d": "1-7 dias",
+            "maior_7d": "> 7 dias",
+            "limpar": "Limpar filtros",
+            "ativos": "{count} filtro ativo | {count} filtros ativos"
+        },
+        "status": {
+            "aberta": "Aberta",
+            "pendente": "Pendente",
+            "resolvida": "Resolvida",
+            "reaberta": "Reaberta"
+        },
+        "canal": {
+            "whatsapp": "WhatsApp",
+            "instagram": "Instagram",
+            "web": "Widget Web"
+        },
+        "mensagem": {
+            "input_placeholder": "Digite sua mensagem... (Enter para enviar)",
+            "enviar": "Enviar",
+            "enviado": "Enviado",
+            "entregue": "Entregue",
+            "lido": "Lido",
+            "falhou": "Falha",
+            "fila": "Na fila",
+            "anexar": "Anexar mídia",
+            "anexar_em_breve": "Upload de mídia disponível em breve.",
+            "char_count": "{used} / 4096",
+            "char_excedido": "Mensagem excede o limite de 4096 caracteres.",
+            "preview_lgpd": "Esta mídia pode conter dados sensíveis. Visualização registrada para auditoria.",
+            "lgpd_aceito": "Entendi, visualizar"
+        },
+        "janela_24h": {
+            "aberta_horas": "Janela aberta · {hours}h restantes",
+            "atencao_minutos": "Atenção · {minutes}min restantes",
+            "fechada": "Janela 24h fechada — selecione um template aprovado",
+            "bloqueada": "Janela de 24h expirada; selecione um template aprovado para retomar contato.",
+            "templates_disponiveis": "{count} template aprovado disponível | {count} templates aprovados disponíveis"
+        },
+        "acoes": {
+            "resolver": "Resolver",
+            "reabrir": "Reabrir",
+            "vincular_paciente": "Vincular paciente",
+            "transferir": "Transferir",
+            "atribuir": "Atribuir",
+            "historico": "Histórico",
+            "atribuir_a_mim": "Atribuir a mim",
+            "marcar_como_lida": "Marcar como lida"
+        },
+        "atribuir": {
+            "titulo": "Atribuir conversa",
+            "atribuir_a_mim": "Atribuir a mim",
+            "auto": "Atribuir automaticamente",
+            "auto_tooltip": "Aplica a regra ativa de atribuição",
+            "outro_atendente": "Atribuir a outro atendente",
+            "atendente_no_limite": "Atendente no limite de conversas",
+            "carga": "{atual}/{max} conversas",
+            "sucesso": "Conversa atribuída a {nome}",
+            "erro_at_max": "Atendente no limite de conversas",
+            "erro_403": "Sem permissão para atribuir"
+        },
+        "transferir": {
+            "titulo": "Transferir conversa",
+            "para_usuario": "Para usuário",
+            "para_perfil": "Para perfil",
+            "primeiro_online": "Primeiro online disponível assume",
+            "nota_interna": "Nota interna",
+            "nota_placeholder": "Ex: Encaminhando para avaliação clínica do exame anexado...",
+            "nota_min": "Mínimo 10 caracteres",
+            "nota_chars": "{used} / 500",
+            "submit": "Transferir conversa",
+            "sucesso": "Conversa transferida com nota interna"
+        },
+        "historico": {
+            "titulo": "Histórico de atendimento",
+            "tipo": {
+                "inicial": "Inicial",
+                "manual": "Manual",
+                "transferencia": "Transferência",
+                "reassign_offline": "Reatribuído (offline)",
+                "auto_atribuicao": "Auto-atribuído"
+            },
+            "por": "por {nome}",
+            "sistema": "Sistema",
+            "sem_atendente": "Sem atendente",
+            "nota_interna": "Nota interna",
+            "vazio": "Nenhuma atribuição registrada",
+            "erro": "Falha ao carregar histórico"
+        },
+        "regras": {
+            "titulo": "Regras de Atribuição",
+            "descricao": "Configura como conversas são distribuídas automaticamente aos atendentes",
+            "adicionar": "Adicionar regra",
+            "estrategia": {
+                "round_robin": "Round-robin",
+                "patient_owner": "Profissional Vinculado",
+                "manual": "Manual"
+            },
+            "todos_canais": "Todos os canais",
+            "ativa": "Ativa",
+            "editar": "Editar",
+            "excluir": "Excluir",
+            "salvar": "Salvar",
+            "cancelar": "Cancelar",
+            "config_json": "Configuração JSON (opcional)",
+            "config_json_invalid": "JSON inválido",
+            "salvas": "Regras salvas",
+            "salvando": "Salvando...",
+            "vazio": "Nenhuma regra configurada. Auto-atribuição vai cair no fallback do round-robin global.",
+            "adicionar_primeira": "Adicionar primeira regra",
+            "perfis": {
+                "medico": "Médico",
+                "atendente": "Atendente",
+                "recepcionista": "Recepcionista",
+                "admin-clinica": "Admin Clínica"
+            }
+        },
+        "errors": {
+            "carregar_lista": "Falha ao carregar conversas. Tentar novamente.",
+            "carregar_mensagens": "Falha ao carregar mensagens.",
+            "enviar": "Falha ao enviar mensagem.",
+            "circuit_open": "Provedor indisponível temporariamente. Tente novamente em alguns segundos."
+        },
+        "fallback": {
+            "modo_limitado": "⚠️ Modo limitado — atualizações podem atrasar.",
+            "reconectado": "✓ Conexão restabelecida."
+        },
+        "respostas_rapidas": {
+            "titulo": "Respostas Rápidas",
+            "nova": "+ Nova resposta rápida",
+            "editar": "Editar resposta rápida",
+            "tab_equipe": "Da equipe",
+            "tab_minhas": "Minhas",
+            "buscar_placeholder": "Buscar por atalho ou conteúdo…",
+            "vazio": "Nenhuma resposta rápida da equipe. Clique em \"+ Nova\" para criar.",
+            "vazio_privado": "Você ainda não tem respostas rápidas privadas.",
+            "escopo": "Visibilidade",
+            "escopo_privada": "Privada (só eu)",
+            "escopo_equipe": "Equipe (todos)",
+            "atalho": "Atalho",
+            "conteudo": "Mensagem",
+            "conteudo_placeholder": "Texto da mensagem. Use {nome_paciente}, {nome_clinica}, {nome_atendente}…",
+            "variaveis_disponiveis": "Variáveis disponíveis",
+            "atalho_duplicado": "Já existe um atalho com este nome neste escopo.",
+            "shortcut_deve_comecar_com_barra": "O atalho deve começar com / (ex.: /preco)",
+            "conteudo_obrigatorio": "O conteúdo da mensagem é obrigatório.",
+            "confirmar_excluir": "Excluir resposta rápida?",
+            "confirmar_excluir_descricao": "Esta ação não pode ser desfeita.",
+            "usado_vezes": "Usada {n} vezes",
+            "autocomplete_label": "Respostas rápidas",
+            "autocomplete_hint": "↑↓ navegar · Enter ou Tab confirmar · Esc fechar",
+            "preview_label": "Preview da resposta rápida",
+            "preview_sem_variaveis": "Variáveis serão substituídas ao enviar.",
+            "descartar": "Descartar",
+            "usar": "Usar esta resposta"
+        }
     }
 }

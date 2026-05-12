@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -41,4 +42,12 @@ Route::view('/panel/{any}', 'app')->where('any', '.*');
 // STRIPE_WEBHOOK_SECRET está configurado.
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handleWebhook'])
     ->name('webhooks.stripe')
+    ->withoutMiddleware([VerifyCsrfToken::class, ResolveTenant::class]);
+
+// T271 — Endpoint Prometheus /metrics.
+// Protegido por rede privada em produção (firewall/nginx allow_list).
+// Sem autenticação Sanctum — scrapers Prometheus não enviam cookies.
+// Content-Type: text/plain; version=0.0.4 (formato Prometheus text).
+Route::get('/metrics', MetricsController::class)
+    ->name('metrics')
     ->withoutMiddleware([VerifyCsrfToken::class, ResolveTenant::class]);

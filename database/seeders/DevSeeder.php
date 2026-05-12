@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Messaging\Channel\Models\Channel;
+use App\Domain\Messaging\Widget\Models\WebWidgetConfig;
 use App\Models\Paciente;
 use App\Models\Permission;
 use App\Models\Role;
@@ -55,9 +57,16 @@ class DevSeeder extends Seeder
         // T039 — popular pacientes apenas em clinica-alfa (tenant ativo).
         $this->seedPacientesClinicaAlfa();
 
+        // T279 — criar canais sandbox para clinica-alfa (WhatsApp + Widget).
+        $alfaTenant = Tenant::where('slug', 'clinica-alfa')->first();
+        if ($alfaTenant !== null) {
+            $this->seedMessagingChannelsClinicaAlfa($alfaTenant);
+        }
+
         if (isset($this->command)) {
             $this->command->info('DevSeeder: tenants navegáveis em http://clinica-alfa.lvh.me e http://clinica-beta.lvh.me');
             $this->command->info('Senha padrão de todos os usuários de dev: '.self::PASSWORD);
+            $this->command->info('Canais de mensageria (WhatsApp + Widget) criados em clinica-alfa');
         }
     }
 
@@ -413,5 +422,89 @@ class DevSeeder extends Seeder
         }
 
         return $cpf;
+    }
+
+    /**
+     * T279 — Cria 2 canais sandbox em `clinica-alfa` para testes manuais:
+     *   1. WhatsApp via Twilio (sandbox)
+     *   2. Widget Web embutível
+     *
+     * Idempotente: `->firstOrCreate()` com `tenant_id + type` para evitar duplicações.
+     * Credenciais do Twilio lidas do `.env` ou preenchidas com valores dev.
+     *
+     * Nota: Em produção, canais são conectados via UI de admin ou API.
+     * Este seeder é apenas para quickstart local e CI.
+     */
+    private function seedMessagingChannelsClinicaAlfa(Tenant $tenant): void
+    {
+        // Skip se já existem canais
+        if (Channel::withoutGlobalScopes()->where('tenant_id', $tenant->id)->exists()) {
+            return;
+        }
+
+        // Canal WhatsApp Sandbox (Twilio)
+        Channel::factory()
+            ->whatsapp()
+            ->forTenant($tenant)
+            ->create([
+                'name' => 'WhatsApp Sandbox',
+                'status' => 'ativo',
+                'credentials_encrypted' => encrypt([
+                    'account_sid' => env('TWILIO_ACCOUNT_SID', 'AC'.str_repeat('a', 32)),
+                    'auth_token' => env('TWILIO_AUTH_TOKEN', 'dev-token-sandbox'),
+                    'messaging_service_sid' => 'MG'.str_repeat('b', 32),
+                    'whatsapp_sender' => env('TWILIO_WHATSAPP_FROM_DEFAULT', 'whatsapp:+14155238886'),
+                ]),
+                'provider_metadata' => [
+                    'messaging_service_sid' => 'MG'.str_repeat('b', 32),
+                    'whatsapp_sender' => env('TWILIO_WHATSAPP_FROM_DEFAULT', 'whatsapp:+14155238886'),
+                    'phone_number_id' => 'dev_pn_'.uniqid(),
+                ],
+            ]);
+
+        // Canal Web Widget
+        $widgetChannel = Channel::factory()
+            ->web()
+            ->forTenant($tenant)
+            ->create([
+                'name' => 'Site Principal',
+                'status' => 'ativo',
+                'provider_metadata' => [
+                    'public_key' => bin2hex(random_bytes(32)),
+                ],
+            ]);
+
+        // Configuração do widget web
+        WebWidgetConfig::factory()
+            ->forTenant($tenant)
+            ->create([
+                'channel_id' => $widgetChannel->id,
+                'public_key' => $widgetChannel->provider_metadata['public_key'],
+                'allowed_origins' => [
+                    'http://clinica-alfa.lvh.me',
+                    'http://localhost:8000',
+                    'http://localhost:3000',
+                ],
+                'appearance' => [
+                    'primary_color' => '#3B82F6',
+                    'logo_url' => null,
+                    'position' => 'bottom-right',
+                    'button_label' => 'Fale conosco',
+                ],
+                'initial_message' => 'Olá! Como posso ajudar você?',
+                'business_hours' => [
+                    'monday' => '08:00-18:00',
+                    'tuesday' => '08:00-18:00',
+                    'wednesday' => '08:00-18:00',
+                    'thursday' => '08:00-18:00',
+                    'friday' => '08:00-18:00',
+                    'saturday' => null,
+                    'sunday' => null,
+                    'timezone' => 'America/Sao_Paulo',
+                ],
+                'outside_hours_behavior' => 'fila',
+                'pre_chat_form' => 'opcional',
+                'outside_hours_message' => null,
+            ]);
     }
 }

@@ -15,7 +15,7 @@ Construir o módulo de atendimento omnichannel do Paciente360 sobre as fundaçõ
 - **Respostas Rápidas** (texto livre + 6 variáveis) com escopo dual (tenant + privadas) e dispatch por atalho `/`.
 - **Compliance Meta (Princípio VI não-negociável)**: bloqueio runtime de envio fora da janela 24h sem template aprovado; templates sync read-only do Twilio.
 - **LGPD em mídia**: S3 + AES-256, URLs assinadas 24h, retenção 1 ano (mídia) / 2 anos (texto), anonimização granular.
-- **14 eventos de domínio** publicados como contrato público para Fases 4 (IA), 5 (Agenda) e 7 (Campanhas) consumirem.
+- **15 eventos de domínio** publicados como contrato público para Fases 4 (IA), 5 (Agenda) e 7 (Campanhas) consumirem.
 - **8 abilities Spatie** novas (inbox.view/respond/assign/transfer/takeover_ai + channel.connect/disconnect + quick_reply.manage).
 
 Abordagem técnica privilegia **reuso da Fase 0** (Auditable interface, TenantAwareJob, ResolveTenant middleware, AuditAttributesBuilder com mascaramento de CPF) e da **Fase 2** (`PacienteService`, `DedupService`, `eventos_timeline`, listener wildcard que popula timeline). Decisão arquitetural marcante: **Twilio substitui Meta Cloud API direta como provedor de WhatsApp Business API** (NC-1/Q1). Instagram Direct permanece via Meta Graph API direta porque Twilio não tem produto equivalente para IG DM em escala B2B.
@@ -116,7 +116,7 @@ Abordagem técnica privilegia **reuso da Fase 0** (Auditable interface, TenantAw
 ### Princípio V — Observabilidade
 
 - ✅ **Logs estruturados** com `tenant_id, user_id, request_id, conversation_id, channel_id, message_id` em toda request HTTP, job de fila e callback de webhook.
-- ✅ **Eventos auditáveis**: 14 eventos `Auditable` publicados → listener wildcard grava em `audit_logs` automaticamente.
+- ✅ **Eventos auditáveis**: 15 eventos `Auditable` publicados → listener wildcard grava em `audit_logs` automaticamente.
 - ✅ **Métricas Prometheus novas** (research R7):
   - `paciente360_webhook_received_total{provider, status}` — counter de webhooks por provider.
   - `paciente360_webhook_processing_duration_seconds{provider}` — histogram `webhook recebido → mensagem visível na UI`.

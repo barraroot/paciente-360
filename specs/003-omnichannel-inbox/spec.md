@@ -665,13 +665,14 @@ Em **qualquer canal** (WhatsApp, Instagram, Web) e em **qualquer momento** da co
 
 ## 6. Eventos de Domínio Emitidos
 
-Contrato público publicado por esta fase para fases futuras (4, 5, 7) consumirem.
+Contrato público publicado por esta fase para fases futuras (4, 5, 7) consumirem. **Total: 15 eventos `Auditable`** (todos gravam em `audit_logs` via listener wildcard Fase 0; 14 também projetam para `eventos_timeline` Fase 2 — `WebhookFalhou` fica só em `audit_logs` por ser infraestrutural).
 
 | Evento                          | Disparado em                                                | Payload (campos lógicos)                                                                          | Audit action                          |
 |---------------------------------|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------|---------------------------------------|
 | `CanalConectado`                | Conexão de canal externo bem-sucedida                       | `canal_id, tipo, executor_id, external_account_id (mascarado)`                                    | `channel.connected`                   |
 | `CanalDesconectado`             | Desconexão manual ou expiração                              | `canal_id, motivo (manual|expirado|invalidado_pela_meta)`                                          | `channel.disconnected`                |
 | `CanalComFalha`                 | Webhook handshake falha / Quality Rating despenca / API ban | `canal_id, tipo_falha, detalhes_sanitizados`                                                      | `channel.failed`                      |
+| `CanalDegradado`                | Quality Rating Meta cai para `Low`/`Flagged` (NC-17)        | `canal_id, rating_anterior, rating_novo, executor_id (sistema)`                                   | `channel.degraded`                    |
 | `ConversaCriada`                | Primeira mensagem cria conversa nova                        | `conversa_id, canal_id, paciente_id|null, origem (canal externo iniciou|atendente iniciou|web visitor)` | `conversa.criada`                |
 | `MensagemRecebida`              | Mensagem do paciente chega via webhook ou widget            | `mensagem_id, conversa_id, paciente_id|null, tipo (texto|midia), tem_midia: bool`                  | `mensagem.recebida`                   |
 | `MensagemEnviada`               | Atendente ou IA (futuro) envia                              | `mensagem_id, conversa_id, autor_id, autor_tipo (user|ia), tipo`                                  | `mensagem.enviada`                    |
@@ -1064,7 +1065,7 @@ Checklist verificável antes de declarar Fase 3 entregue:
 - [ ] Todos os 17 NEEDS_CLARIFICATION resolvidos via `/speckit.clarify` e refletidos no spec.
 - [ ] Todos os ACs numerados (AC-4.x.y) cobertos por pelo menos 1 teste automatizado.
 - [ ] `TenantIsolationTest` expandido cobrindo 100% dos endpoints novos.
-- [ ] 13 eventos de domínio emitidos conforme contrato e gravados em `audit_logs`.
+- [ ] 15 eventos de domínio emitidos conforme contrato (14 mapeados em timeline + `WebhookFalhou`) e gravados em `audit_logs`.
 - [ ] 8 abilities Spatie aplicadas e validadas (incluindo 403 para Financeiro/Super Admin).
 - [ ] Cobertura ≥ 75%, global ≥ 70%.
 - [ ] Pint clean; OpenAPI drift exit 0; Scribe gerado.
@@ -1153,7 +1154,7 @@ Itens decididos por inferência razoável (não levantados como NEEDS_CLARIFICAT
 - **Limites de mensagem por dia (Meta tier inicial 1.000/dia/número)** documentados no quickstart; throttle interno respeita.
 - **Token public do widget** rotacionável manualmente pelo admin; sem rotação automática no MVP.
 - **Timezone** continua `America/Sao_Paulo` para horário de funcionamento do widget.
-- **WebSocket** roda em mesmo domínio do app principal (ou subdomain `ws.*`); fallback se bloqueado é aviso UI ("modo offline").
+- **WebSocket** roda em mesmo domínio do app principal (ou subdomain `ws.*`); fallback se bloqueado é "modo limitado" (long polling com banner UI — vide FR-043 e NC-11.c).
 - **Notificação browser push** opt-in pelo usuário; sem push mobile nesta fase.
 - **Atendente é considerado "online"** se tem sessão ativa nos últimos 5 minutos OU se está com inbox aberta no WebSocket. Política fina em NC-6.
 - **Mensagem do paciente NUNCA é sanitizada** (preserva fidelidade do que foi dito); apenas conteúdo de **logs de aplicação** filtra.

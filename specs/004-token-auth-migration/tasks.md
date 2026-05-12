@@ -25,7 +25,7 @@
 - [ ] T003 [P] Atualizar `config/sanctum.php` — `expiration = 60 * 24 * 30` (30d em min); `token_prefix = env('SANCTUM_TOKEN_PREFIX', 'paciente360_')`
 - [ ] T004 [P] Atualizar `config/auth.php` — `defaults.guard = 'web'` (preservado, Filament default); confirmar guards `web` (session/users) e `sanctum` (sanctum/users) lado a lado
 - [ ] T005 [P] Criar `config/cors.php` — `paths: ['api/*', 'broadcasting/auth']`, `allowed_origins: explode(',', env('CORS_ALLOWED_ORIGINS', '...'))`, `supports_credentials: false`, `max_age: 3600`, `exposed_headers: ['X-Request-Id', 'Authorization']`
-- [ ] T006 [P] Adicionar variáveis ao `.env.example`: `SANCTUM_TOKEN_PREFIX=paciente360_`, `CORS_ALLOWED_ORIGINS=http://localhost:5173,...`, `FILAMENT_DOMAIN=crm.com.br`, `APP_TENANT_DOMAIN=app.crm.com.br`, `API_TENANT_DOMAIN=api.crm.com.br`, `VITE_API_BASE_URL=http://api.lvh.me/api/v1`
+- [ ] T006 [P] Adicionar variáveis ao `.env.example`: `SANCTUM_TOKEN_PREFIX=paciente360_`, `CORS_ALLOWED_ORIGINS=http://localhost:5173,...`, `FILAMENT_DOMAIN=crm.com.br`, `APP_TENANT_DOMAIN=app.crm.com.br`, `API_TENANT_DOMAIN=api.crm.com.br`, `VITE_API_BASE_URL=http://api.lvh.me/api/v1`, **`SESSION_DOMAIN=null` (dev)** com comment "em prod: SESSION_DOMAIN=crm.com.br para isolar cookie Filament — não cruzar com app.crm.com.br (FR-018 / C4 fix)"
 - [ ] T007 [P] Criar estrutura de diretórios `app/Domain/Auth/{Events,Services,Contracts}` + `.gitkeep` em cada
 - [ ] T008 [P] Criar diretório de testes `tests/Feature/Fase4/{Auth,Migration}` + `tests/Unit/Auth/` com `.gitkeep`
 - [ ] T009 [P] Atualizar `eslint.config.js` — registrar plugin `no-unsanitized` com regras `recommended` + custom rule `vue/no-v-html: 'warn'`
@@ -95,12 +95,15 @@
 
 ### Tests for US1 (TDD red)
 
-- [ ] T035 [P] [US1] Write `tests/Feature/Fase4/Auth/LoginEmitsTokenTest.php` covering AC-A.1.1, AC-A.1.2, AC-A.1.5:
+- [ ] T035 [P] [US1] Write `tests/Feature/Fase4/Auth/LoginEmitsTokenTest.php` covering AC-A.1.1, AC-A.1.2, AC-A.1.5 + FR-024 rate limit (gate Princípio VII):
   - login_success_returns_token_with_user_and_tenant
   - login_rejects_invalid_credentials_401
-  - login_respects_rate_limit_after_5_failed_attempts (423)
+  - **login_blocks_after_5_failed_attempts_in_60s_returns_423** (FR-024 / C1 fix — gate Princípio VII)
+  - **login_locked_until_timestamp_returned_in_423_response**
+  - login_rate_limit_isolated_per_ip (não global)
   - login_resolves_tenant_via_email_lookup_globally_unique
   - login_records_TokenEmitido_audit
+  - login_failure_records_LoginFalhouViaToken_audit
   - token_expires_at_is_30d_from_now
 - [ ] T036 [P] [US1] Write `tests/Feature/Fase4/Auth/MeEndpointTest.php` covering AC-A.1.4:
   - me_returns_user_and_tenant_when_bearer_valid
@@ -121,6 +124,11 @@
   - delete_token_by_id_revokes
   - delete_token_of_other_user_returns_403
   - is_current_flag_marks_request_token
+- [ ] T039a [P] [US1] **(C2 fix — Princípio II gate)** Write `tests/Feature/Fase4/Auth/CrossTenantTokenAbuseTest.php` covering FR-011 + amendment v1.4.0 triple-check:
+  - token_with_X_Tenant_Slug_mismatch_returns_403_tenant_mismatch (user1 do tenant A apresenta token + X-Tenant-Slug=tenant B → 403)
+  - missing_X_Tenant_Slug_header_returns_400_tenant_header_required
+  - matching_X_Tenant_Slug_passes_to_controller
+  - cross_tenant_attempt_records_audit_log_with_executor_id
 - [ ] T040 [US1] Run all US1 tests; **all must FAIL** — `vendor/bin/sail artisan test --compact tests/Feature/Fase4/Auth/`
 
 ### Implementation for US1
@@ -241,6 +249,15 @@
   - options_preflight_no_headers_for_disallowed_origin
   - max_age_3600_in_response
   - reverb_wss_path_included_in_cors
+- [ ] T065a [P] [US4] **(C3 fix — Princípio VII gate)** Write `tests/Feature/Fase4/Auth/SecurityHeadersTest.php` covering CSP + outros gates de SetSecurityHeaders middleware (T030):
+  - prod_response_includes_csp_strict_without_unsafe_inline
+  - prod_response_includes_csp_strict_without_unsafe_eval
+  - prod_response_includes_hsts_max_age_1y_include_subdomains
+  - prod_response_includes_x_frame_options_deny
+  - prod_response_includes_x_content_type_options_nosniff
+  - prod_response_includes_referrer_policy_strict_origin
+  - local_env_allows_relaxed_csp_with_unsafe_inline_for_vite_hmr
+  - csp_nonce_generated_per_request_when_strict
 
 ### Implementation for US4
 
@@ -373,7 +390,7 @@
 
 ### Final regression + coverage
 
-- [ ] T100 Run full suite: `vendor/bin/sail artisan test --compact` — target: **940+ tests verdes** (882 baseline + ~58 novos Fase 4)
+- [ ] T100 Run full suite: `vendor/bin/sail artisan test --compact` — target: **≥1100 tests verdes** (baseline 1044 pós-Fase 3 commit `1cf2304` + ~58 novos Fase 4; I1 fix corrigiu estimativa anterior de "940+" que estava desatualizada)
 - [ ] T101 Pint clean: `vendor/bin/sail bin pint --dirty --format agent`
 - [ ] T102 Coverage check (se driver disponível): `vendor/bin/sail artisan test --coverage --min=70`
 - [ ] T103 OpenAPI drift 0: `vendor/bin/sail artisan openapi:check`

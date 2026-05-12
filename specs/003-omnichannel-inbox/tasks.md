@@ -178,18 +178,18 @@
 
 ### Tests for US4
 
-- [ ] T092 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/InboxListConversationsTest.php` covering AC-4.4.1 + AC-4.4.8: GET `/api/v1/inbox/conversations` with status/channel/assigned_user/patient/q filters
-- [ ] T093 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/InboxTrigramSearchTest.php` covering AC-4.4.9: 50k messages seeded, `q=consulta retorno` returns p95 < 500ms (assert via `microtime`), match highlight in `body_preview`
-- [ ] T094 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/ConversationDetailTest.php` covering AC-4.4.3: GET `/api/v1/inbox/conversations/{id}` + GET `/messages` cursor pagination
-- [ ] T095 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/SendOutboundMessageTest.php` covering AC-4.4.4: POST `/messages` with `content_type=text` enqueues job + creates message status `queued`
-- [ ] T096 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/Window24hBlockerTest.php` covering AC-4.4.5 (Princípio VI): conversation with `last_inbound_message_at > 24h` + text message → 422 `mensagem.bloqueada_fora_janela` + audit log; template message → 201
-- [ ] T097 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/MarkAsReadTest.php` for POST `/conversations/{id}/read` + Reverb broadcast
-- [ ] T098 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/ConversationStateMachineTest.php` covering NC-2: resolve manual + auto-resolve after 72h + reopen on new inbound message
-- [ ] T099 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/ReverbBroadcastIsolationTest.php` covering AC-4.4.12: tenant A subscriber receives only `tenant.A.*` events, never `tenant.B.*` (100% endpoint coverage)
-- [ ] T100 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/MedicoVisibilityScopeTest.php` covering spec § 2.3 nuance: médico vê apenas conversas atribuídas a ele OR com paciente cujo `profissional_responsavel_id = médico.id`
-- [ ] T101 [P] [US4] Write `tests/Unit/Messaging/MessageDispatchServicePrincipioVITest.php` covering Princípio VI in isolation (domain service layer)
-- [ ] T102 [P] [US4] Write `tests/Unit/Messaging/ConversationStatusTransitionsTest.php` testing all state machine paths
-- [ ] T103 [US4] Run US4 test suite; **all must FAIL**
+- [x] T092 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/InboxListConversationsTest.php` covering AC-4.4.1 + AC-4.4.8: GET `/api/v1/inbox/conversations` with status/channel/assigned_user/patient/q filters
+- [x] T093 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/InboxTrigramSearchTest.php` covering AC-4.4.9: 50k messages seeded, `q=consulta retorno` returns p95 < 500ms (assert via `microtime`), match highlight in `body_preview`
+- [x] T094 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/ConversationDetailTest.php` covering AC-4.4.3: GET `/api/v1/inbox/conversations/{id}` + GET `/messages` cursor pagination
+- [x] T095 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/SendOutboundMessageTest.php` covering AC-4.4.4: POST `/messages` with `content_type=text` enqueues job + creates message status `queued`
+- [x] T096 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/Window24hBlockerTest.php` covering AC-4.4.5 (Princípio VI): conversation with `last_inbound_message_at > 24h` + text message → 422 `mensagem.bloqueada_fora_janela` + audit log; template message → 201
+- [x] T097 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/MarkAsReadTest.php` for POST `/conversations/{id}/read` + Reverb broadcast
+- [x] T098 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/ConversationStateMachineTest.php` covering NC-2: resolve manual + auto-resolve after 72h + reopen on new inbound message
+- [x] T099 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/ReverbBroadcastIsolationTest.php` covering AC-4.4.12: tenant A subscriber receives only `tenant.A.*` events, never `tenant.B.*` (100% endpoint coverage)
+- [x] T100 [P] [US4] Write `tests/Feature/Fase3/US4_Inbox/MedicoVisibilityScopeTest.php` covering spec § 2.3 nuance: médico vê apenas conversas atribuídas a ele OR com paciente cujo `profissional_responsavel_id = médico.id`
+- [x] T101 [P] [US4] Write `tests/Unit/Messaging/MessageDispatchServicePrincipioVITest.php` covering Princípio VI in isolation (domain service layer)
+- [x] T102 [P] [US4] Write `tests/Unit/Messaging/ConversationStatusTransitionsTest.php` testing all state machine paths
+- [x] T103 [US4] Run US4 test suite; **all must FAIL**
 
 ### Implementation for US4
 

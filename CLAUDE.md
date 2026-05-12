@@ -184,17 +184,14 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `003-omnichannel-inbox`
-- **Plan**: [specs/003-omnichannel-inbox/plan.md](specs/003-omnichannel-inbox/plan.md)
-- **Spec**: [specs/003-omnichannel-inbox/spec.md](specs/003-omnichannel-inbox/spec.md) (Clarified — 17/17 NCs)
-- **Research (Phase 0)**: [specs/003-omnichannel-inbox/research.md](specs/003-omnichannel-inbox/research.md) (9 decisões)
-- **Data model (Phase 1)**: [specs/003-omnichannel-inbox/data-model.md](specs/003-omnichannel-inbox/data-model.md) (12 entidades)
-- **API contracts (Phase 1)**: [specs/003-omnichannel-inbox/contracts/openapi.yaml](specs/003-omnichannel-inbox/contracts/openapi.yaml) (36 paths, 23 schemas)
-- **Quickstart (Phase 1)**: [specs/003-omnichannel-inbox/quickstart.md](specs/003-omnichannel-inbox/quickstart.md) (provisioning Twilio + Meta + ngrok)
+- **Active feature**: `004-token-auth-migration`
+- **Spec**: [specs/004-token-auth-migration/spec.md](specs/004-token-auth-migration/spec.md) (Draft — 3 NCs pendentes, aguarda `/speckit.clarify`)
+- **Plan**: a ser gerado via `/speckit.plan` após clarify
 - **Previous features delivered**:
+  - `003-omnichannel-inbox` — [spec](specs/003-omnichannel-inbox/spec.md) — 290/290 tasks, 352 tests Fase 3, 47/47 ACs, 7/7 user stories. Mergeado em `main` 2026-05-12.
   - `002-crm-pacientes` — [plan](specs/002-crm-pacientes/plan.md) — 650 testes verdes
   - `001-fundacao-multitenant` — [plan](specs/001-fundacao-multitenant/plan.md) — 467 testes verdes
-- **Constitution**: [.specify/memory/constitution.md](.specify/memory/constitution.md) (v1.2.0)
+- **Constitution**: [.specify/memory/constitution.md](.specify/memory/constitution.md) (v1.3.0 — amendment v1.4.0 será necessário pela feature 004)
 <!-- SPECKIT END -->
 
 ## CRM Pacientes (Fase 2) — Key Patterns

@@ -5,6 +5,7 @@ namespace Tests\Feature\Fase2\Pacientes;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
 
@@ -37,7 +38,7 @@ class PacienteIsolationTest extends TestCase
     private function criarPacienteTenant(Tenant $tenant, User $user, string $nome, ?string $cpf = null): int
     {
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $payload = [
             'nome' => $nome,
@@ -63,7 +64,7 @@ class PacienteIsolationTest extends TestCase
 
         // User A lista pacientes — só vê o seu
         $this->app->instance('tenant', $this->tenantA);
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         $response = $this->getJson($this->tenantUrl($this->tenantA, '/pacientes'));
         $response->assertOk();
@@ -80,7 +81,7 @@ class PacienteIsolationTest extends TestCase
 
         // User A tenta acessar paciente do tenant B pelo ID
         $this->app->instance('tenant', $this->tenantA);
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         $response = $this->getJson($this->tenantUrl($this->tenantA, "/pacientes/{$idPacienteB}"));
         // 404 — não revela existência do paciente
@@ -96,7 +97,7 @@ class PacienteIsolationTest extends TestCase
 
         // User A busca pelo CPF do paciente de B
         $this->app->instance('tenant', $this->tenantA);
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         $response = $this->getJson($this->tenantUrl($this->tenantA, '/pacientes?q=52998224725'));
         $response->assertOk();

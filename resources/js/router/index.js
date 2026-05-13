@@ -159,6 +159,14 @@ const routes = [
         meta: { requiresAuth: true },
     },
 
+    // ─── Configurações → Sessões (US2 — Bearer token management) ──────────────
+    {
+        path: '/panel/configuracoes/sessoes',
+        name: 'auth.tokens',
+        component: () => import('@/pages/auth/TokensPage.vue'),
+        meta: { requiresAuth: true },
+    },
+
     // ─── Canais (Omnichannel Inbox — US1) ──────────────────────────────────────
     {
         path: '/panel/canais',
@@ -170,20 +178,32 @@ const routes = [
         path: '/panel/canais/conectar-whatsapp',
         name: 'canais.conectar_whatsapp',
         component: () => import('@/pages/Canais/ConectarWhatsApp.vue'),
-        meta: { requiresAuth: true, ability: 'channel.connect', title: 'Conectar WhatsApp' },
+        meta: {
+            requiresAuth: true,
+            ability: 'channel.connect',
+            title: 'Conectar WhatsApp',
+        },
     },
     {
         path: '/panel/canais/conectar-instagram',
         name: 'canais.conectar_instagram',
         component: () => import('@/pages/Canais/ConectarInstagram.vue'),
-        meta: { requiresAuth: true, ability: 'channel.connect', title: 'Conectar Instagram' },
+        meta: {
+            requiresAuth: true,
+            ability: 'channel.connect',
+            title: 'Conectar Instagram',
+        },
     },
     {
         path: '/panel/canais/:id',
         name: 'canais.show',
         component: () => import('@/pages/Canais/Detalhe.vue'),
         props: true,
-        meta: { requiresAuth: true, ability: 'inbox.view', title: 'Detalhes do canal' },
+        meta: {
+            requiresAuth: true,
+            ability: 'inbox.view',
+            title: 'Detalhes do canal',
+        },
     },
 
     // ─── Inbox Unificada (Omnichannel — US4) ───────────────────────────────────
@@ -205,14 +225,22 @@ const routes = [
         path: '/panel/inbox/regras-atribuicao',
         name: 'inbox.regras_atribuicao',
         component: () => import('@/pages/Inbox/RegrasAtribuicao.vue'),
-        meta: { requiresAuth: true, ability: 'inbox.assign', title: 'Regras de Atribuição' },
+        meta: {
+            requiresAuth: true,
+            ability: 'inbox.assign',
+            title: 'Regras de Atribuição',
+        },
     },
     // US-4.7 — Respostas Rápidas
     {
         path: '/panel/inbox/respostas-rapidas',
         name: 'inbox.respostas_rapidas',
         component: () => import('@/pages/Inbox/RespostasRapidas.vue'),
-        meta: { requiresAuth: true, ability: 'inbox.view', title: 'Respostas Rápidas' },
+        meta: {
+            requiresAuth: true,
+            ability: 'inbox.view',
+            title: 'Respostas Rápidas',
+        },
     },
 
     {

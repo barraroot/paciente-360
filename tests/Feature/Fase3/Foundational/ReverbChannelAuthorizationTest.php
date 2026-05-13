@@ -5,8 +5,11 @@ namespace Tests\Feature\Fase3\Foundational;
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Models\Paciente;
 use App\Models\Professional;
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -20,6 +23,11 @@ use Tests\TestCase;
  * Princípio II: isolamento multi-tenant rigoroso — user de tenant B
  * não consegue subscrever canal do tenant A; role sem `inbox.view`
  * é rejeitado; médico acessa apenas conversas visíveis a ele (spec § 2.3).
+ *
+ * Fase 4 Lote F (T062 — broadcasting Bearer): este teste foi migrado de
+ * `actingAs($user)` (cookie-session) para Bearer Sanctum + X-Tenant-Slug,
+ * antecipando o trabalho do Lote I (T083-T089) para manter a suite verde
+ * após a troca de middleware de `/broadcasting/auth` para `auth:sanctum`.
  */
 class ReverbChannelAuthorizationTest extends TestCase
 {
@@ -55,6 +63,31 @@ class ReverbChannelAuthorizationTest extends TestCase
         $this->seedRoles();
     }
 
+    /**
+     * Autentica o user via Sanctum::actingAs (preserva a instância com cache
+     * de roles do Spatie carregado) e retorna o header X-Tenant-Slug exigido
+     * pelo middleware `tenant.slug` em /broadcasting/auth.
+     *
+     * Por que NÃO usar Bearer real aqui:
+     *   `$user->createToken()` + Authorization header faz Sanctum recarregar
+     *   o User do DB sem o cache de relations do Spatie. O channel callback
+     *   tenta `$user->can('inbox.view')` que depende de team_id correto —
+     *   no ciclo HTTP de teste o PermissionRegistrar é reinjetado e o team_id
+     *   setado em setUp pode ser perdido, levando a falso 403.
+     *
+     *   Sanctum::actingAs usa TransientToken e setUser direto no guard, sem
+     *   passar pelo PersonalAccessTokenAuthGuard, preservando a instância
+     *   exata do `$user` com suas relations já hidratadas.
+     *
+     * @return array<string, string>
+     */
+    private function tenantSlugHeader(User $user, Tenant $tenant): array
+    {
+        Sanctum::actingAs($user, ['*']);
+
+        return ['X-Tenant-Slug' => $tenant->slug];
+    }
+
     // -------------------------------------------------------------------------
     // Cenário 1 — user com inbox.view autorizado no próprio tenant
     // -------------------------------------------------------------------------
@@ -66,10 +99,11 @@ class ReverbChannelAuthorizationTest extends TestCase
 
         $this->setPermissionsTeamIdForTenant($tenantA->id);
 
-        $response = $this->actingAs($user)->postJson('/broadcasting/auth', [
-            'socket_id' => '123.456',
-            'channel_name' => "private-tenant.{$tenantA->id}.inbox",
-        ]);
+        $response = $this->withHeaders($this->tenantSlugHeader($user, $tenantA))
+            ->postJson('/broadcasting/auth', [
+                'socket_id' => '123.456',
+                'channel_name' => "private-tenant.{$tenantA->id}.inbox",
+            ]);
 
         $response->assertOk();
         $response->assertJsonStructure(['auth']);
@@ -86,10 +120,11 @@ class ReverbChannelAuthorizationTest extends TestCase
 
         $this->setPermissionsTeamIdForTenant($tenant->id);
 
-        $response = $this->actingAs($user)->postJson('/broadcasting/auth', [
-            'socket_id' => '123.456',
-            'channel_name' => "private-tenant.{$tenant->id}.inbox",
-        ]);
+        $response = $this->withHeaders($this->tenantSlugHeader($user, $tenant))
+            ->postJson('/broadcasting/auth', [
+                'socket_id' => '123.456',
+                'channel_name' => "private-tenant.{$tenant->id}.inbox",
+            ]);
 
         $response->assertForbidden();
     }
@@ -107,10 +142,13 @@ class ReverbChannelAuthorizationTest extends TestCase
 
         $this->setPermissionsTeamIdForTenant($tenantA->id);
 
-        $response = $this->actingAs($userA)->postJson('/broadcasting/auth', [
-            'socket_id' => '123.456',
-            'channel_name' => "private-tenant.{$tenantB->id}.inbox",
-        ]);
+        // userA do tenant A com X-Tenant-Slug=A tenta subscrever canal de B
+        // → channel callback rejeita (user.tenant_id !== tenantId do canal) → 403.
+        $response = $this->withHeaders($this->tenantSlugHeader($userA, $tenantA))
+            ->postJson('/broadcasting/auth', [
+                'socket_id' => '123.456',
+                'channel_name' => "private-tenant.{$tenantB->id}.inbox",
+            ]);
 
         $response->assertForbidden();
     }
@@ -171,26 +209,29 @@ class ReverbChannelAuthorizationTest extends TestCase
         // -- Sub-cenário 4a: U1 (atribuído) → 200 --
         $this->setPermissionsTeamIdForTenant($tenantA->id);
 
-        $responseU1 = $this->actingAs($userU1)->postJson('/broadcasting/auth', [
-            'socket_id' => '100.001',
-            'channel_name' => "private-tenant.{$tenantA->id}.conversa.{$conversation->id}",
-        ]);
+        $responseU1 = $this->withHeaders($this->tenantSlugHeader($userU1, $tenantA))
+            ->postJson('/broadcasting/auth', [
+                'socket_id' => '100.001',
+                'channel_name' => "private-tenant.{$tenantA->id}.conversa.{$conversation->id}",
+            ]);
 
         $responseU1->assertOk();
 
         // -- Sub-cenário 4b: U2 (médico sem assignment nem responsabilidade) → 403 --
-        $responseU2 = $this->actingAs($userU2)->postJson('/broadcasting/auth', [
-            'socket_id' => '100.002',
-            'channel_name' => "private-tenant.{$tenantA->id}.conversa.{$conversation->id}",
-        ]);
+        $responseU2 = $this->withHeaders($this->tenantSlugHeader($userU2, $tenantA))
+            ->postJson('/broadcasting/auth', [
+                'socket_id' => '100.002',
+                'channel_name' => "private-tenant.{$tenantA->id}.conversa.{$conversation->id}",
+            ]);
 
         $responseU2->assertForbidden();
 
         // -- Sub-cenário 4c: U3 (admin-clinica) → 200 --
-        $responseU3 = $this->actingAs($userU3)->postJson('/broadcasting/auth', [
-            'socket_id' => '100.003',
-            'channel_name' => "private-tenant.{$tenantA->id}.conversa.{$conversation->id}",
-        ]);
+        $responseU3 = $this->withHeaders($this->tenantSlugHeader($userU3, $tenantA))
+            ->postJson('/broadcasting/auth', [
+                'socket_id' => '100.003',
+                'channel_name' => "private-tenant.{$tenantA->id}.conversa.{$conversation->id}",
+            ]);
 
         $responseU3->assertOk();
     }
@@ -251,10 +292,11 @@ class ReverbChannelAuthorizationTest extends TestCase
 
         $this->setPermissionsTeamIdForTenant($tenant->id);
 
-        $response = $this->actingAs($medicoUser)->postJson('/broadcasting/auth', [
-            'socket_id' => '200.001',
-            'channel_name' => "private-tenant.{$tenant->id}.conversa.{$conversation->id}",
-        ]);
+        $response = $this->withHeaders($this->tenantSlugHeader($medicoUser, $tenant))
+            ->postJson('/broadcasting/auth', [
+                'socket_id' => '200.001',
+                'channel_name' => "private-tenant.{$tenant->id}.conversa.{$conversation->id}",
+            ]);
 
         $response->assertOk();
     }

@@ -7,6 +7,7 @@ use App\Domain\Messaging\Channel\Models\Channel;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -114,7 +115,7 @@ class AssignmentRulesCrudTest extends TestCase
     public function attendant_without_admin_role_cannot_modify_rules(): void
     {
         $atendente = $this->userForRole($this->tenant, 'atendente');
-        $this->actingAs($atendente);
+        Sanctum::actingAs($atendente, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $response = $this->putJson($this->baseUrl('/inbox/assignment-rules'), [
@@ -209,7 +210,7 @@ class AssignmentRulesCrudTest extends TestCase
         $adminB = $this->userForRole($tenantB, 'admin-clinica');
 
         // Admin B creates rule for Tenant B
-        $this->actingAs($adminB);
+        Sanctum::actingAs($adminB, ['*']);
         $this->app->instance('tenant', $tenantB);
 
         $this->putJson($this->tenantUrl($tenantB, '/inbox/assignment-rules'), [
@@ -219,7 +220,7 @@ class AssignmentRulesCrudTest extends TestCase
         ])->assertOk();
 
         // Admin A only sees their own rules (none)
-        $this->actingAs($this->admin);
+        Sanctum::actingAs($this->admin, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $response = $this->getJson($this->baseUrl('/inbox/assignment-rules'));

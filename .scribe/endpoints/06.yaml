@@ -1,0 +1,2395 @@
+name: 'CRM Pacientes'
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/pacientes/exportar
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/pacientes/importacao/template
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Baixa o template de importação em CSV ou XLSX.'
+      description: 'GET /pacientes/importacao/template?formato=csv|xlsx'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/pacientes/importacao
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Inicia uma importação assíncrona de pacientes.'
+      description: 'POST /pacientes/importacao'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: multipart/form-data
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      arquivo:
+        custom: []
+        name: arquivo
+        description: 'Must be a file. Must not be greater than 5120 kilobytes.'
+        required: true
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      status_inicial:
+        custom: []
+        name: status_inicial
+        description: ''
+        required: true
+        example: ativo
+        type: string
+        enumValues:
+          - lead
+          - ativo
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      status_inicial: ativo
+    fileParameters:
+      arquivo: null
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/pacientes/importacao/{id}'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Consulta o status de uma importação.'
+      description: 'GET /pacientes/importacao/{id}'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the importacao.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/funil/colunas
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        Lista as colunas do funil do tenant, criando o template padrão na
+        primeira chamada (lazy init — AC-3.4.1).
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/funil/colunas/{id}'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualiza configuração de uma coluna (Admin only).'
+      description: |-
+        Retorna 409 se `posicao` colidir com outra coluna do mesmo tenant
+        (UNIQUE constraint em `(tenant_id, posicao)`).
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the coluna.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      nome:
+        custom: []
+        name: nome
+        description: 'Must not be greater than 80 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      cor:
+        custom: []
+        name: cor
+        description: 'Must not be greater than 7 characters.'
+        required: false
+        example: ngzmiyv
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      motivo_obrigatorio:
+        custom: []
+        name: motivo_obrigatorio
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      posicao:
+        custom: []
+        name: posicao
+        description: 'Must be at least 1.'
+        required: false
+        example: 26
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      nome: b
+      cor: ngzmiyv
+      motivo_obrigatorio: true
+      posicao: 26
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/pacientes/mesclagens
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Executa a mesclagem de pacientes.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      paciente_alvo_id:
+        custom: []
+        name: paciente_alvo_id
+        description: 'The <code>id</code> of an existing record in the pacientes table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pacientes_origem_ids:
+        custom: []
+        name: pacientes_origem_ids
+        description: 'The value and <code>paciente_alvo_id</code> must be different. The <code>id</code> of an existing record in the pacientes table.'
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      resolucoes:
+        custom: []
+        name: resolucoes
+        description: ''
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      paciente_alvo_id: 16
+      pacientes_origem_ids:
+        - 16
+      resolucoes:
+        - 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/pacientes/mesclagens/{id}/reverter'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Reverte uma mesclagem dentro do prazo de 30 dias.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the mesclagen.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/pacientes
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Lista pacientes com filtros e busca por similaridade.'
+      description: |-
+        Query params:
+         - `q`: busca fuzzy por nome ou telefone (mín. 2 chars)
+         - `status`: filtro por status
+         - `per_page`: tamanho da página (max 100)
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      q:
+        custom: []
+        name: q
+        description: 'Must be at least 2 characters.'
+        required: false
+        example: bngz
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: false
+        example: ativo
+        type: string
+        enumValues:
+          - lead
+          - ativo
+          - inativo
+          - bloqueado
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      origem:
+        custom: []
+        name: origem
+        description: ''
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      funil_coluna_id:
+        custom: []
+        name: funil_coluna_id
+        description: ''
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      profissional_responsavel_id:
+        custom: []
+        name: profissional_responsavel_id
+        description: ''
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      tag:
+        custom: []
+        name: tag
+        description: 'Must be at least 1 character.'
+        required: false
+        example: ngzmiyvdljnikhwa
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Must be at least 1. Must not be greater than 500.'
+        required: false
+        example: 24
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      q: bngz
+      status: ativo
+      origem: architecto
+      funil_coluna_id: 16
+      profissional_responsavel_id: 16
+      tag: ngzmiyvdljnikhwa
+      per_page: 24
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/pacientes
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Cria um novo paciente.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      nome:
+        custom: []
+        name: nome
+        description: 'Must be at least 2 characters. Must not be greater than 150 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      cpf:
+        custom: []
+        name: cpf
+        description: 'Must be 11 characters.'
+        required: false
+        example: ngzmiyvdljn
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      documento_estrangeiro:
+        custom: []
+        name: documento_estrangeiro
+        description: 'Must not be greater than 30 characters.'
+        required: false
+        example: i
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      data_nascimento:
+        custom: []
+        name: data_nascimento
+        description: 'Must be a valid date. Must be a date before <code>today</code>.'
+        required: false
+        example: '2022-06-06'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      telefone_primario:
+        custom: []
+        name: telefone_primario
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: ngzmiyvdljnikhwa
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      telefones_secundarios:
+        custom: []
+        name: telefones_secundarios
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example:
+          - ykcmyuwpwlvqwrsi
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: 'Must be a valid email address. Must not be greater than 254 characters.'
+        required: false
+        example: pfritsch@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco:
+        custom: []
+        name: endereco
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.logradouro:
+        custom: []
+        name: endereco.logradouro
+        description: 'Must not be greater than 200 characters.'
+        required: false
+        example: c
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.numero:
+        custom: []
+        name: endereco.numero
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: qldzsnrwtujwvlxj
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.complemento:
+        custom: []
+        name: endereco.complemento
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: k
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.bairro:
+        custom: []
+        name: endereco.bairro
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: l
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.cidade:
+        custom: []
+        name: endereco.cidade
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: q
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.estado:
+        custom: []
+        name: endereco.estado
+        description: 'Must be 2 characters.'
+        required: false
+        example: pp
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.cep:
+        custom: []
+        name: endereco.cep
+        description: 'Must not be greater than 10 characters.'
+        required: false
+        example: wqbewt
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: false
+        example: lead
+        type: string
+        enumValues:
+          - lead
+          - ativo
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      origem:
+        custom: []
+        name: origem
+        description: ''
+        required: false
+        example: indicacao
+        type: string
+        enumValues:
+          - site
+          - indicacao
+          - whatsapp
+          - instagram
+          - telefone
+          - presencial
+          - outro
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      origem_detalhe:
+        custom: []
+        name: origem_detalhe
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      profissional_responsavel_id:
+        custom: []
+        name: profissional_responsavel_id
+        description: 'The <code>id</code> of an existing record in the professionals table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      convenios:
+        custom: []
+        name: convenios
+        description: 'Must not have more than 2 items.'
+        required: false
+        example: null
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      tags:
+        custom: []
+        name: tags
+        description: 'The <code>id</code> of an existing record in the tags table.'
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      ignorar_duplicata:
+        custom: []
+        name: ignorar_duplicata
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      q:
+        custom: []
+        name: q
+        description: ''
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'convenios[].convenio_id':
+        custom: []
+        name: 'convenios[].convenio_id'
+        description: 'This field is required when <code>convenios</code> is present. The <code>id</code> of an existing record in the convenios table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'convenios[].papel':
+        custom: []
+        name: 'convenios[].papel'
+        description: ''
+        required: false
+        example: secundario
+        type: string
+        enumValues:
+          - principal
+          - secundario
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'convenios[].numero_carteirinha':
+        custom: []
+        name: 'convenios[].numero_carteirinha'
+        description: 'Must not be greater than 30 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      nome: b
+      cpf: ngzmiyvdljn
+      documento_estrangeiro: i
+      data_nascimento: '2022-06-06'
+      telefone_primario: ngzmiyvdljnikhwa
+      telefones_secundarios:
+        - ykcmyuwpwlvqwrsi
+      email: pfritsch@example.com
+      endereco:
+        logradouro: c
+        numero: qldzsnrwtujwvlxj
+        complemento: k
+        bairro: l
+        cidade: q
+        estado: pp
+        cep: wqbewt
+      status: lead
+      origem: indicacao
+      origem_detalhe: 'n'
+      profissional_responsavel_id: 16
+      tags:
+        - 16
+      ignorar_duplicata: false
+      q: architecto
+      convenios:
+        -
+          convenio_id: 16
+          papel: secundario
+          numero_carteirinha: 'n'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/pacientes/{id}'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Retorna um paciente pelo ID (404 se não existe no tenant).'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/pacientes/{id}'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualiza parcialmente um paciente (PATCH).'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      nome:
+        custom: []
+        name: nome
+        description: 'Must be at least 2 characters. Must not be greater than 150 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      cpf:
+        custom: []
+        name: cpf
+        description: 'Must be 11 characters.'
+        required: false
+        example: ngzmiyvdljn
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      documento_estrangeiro:
+        custom: []
+        name: documento_estrangeiro
+        description: 'Must not be greater than 30 characters.'
+        required: false
+        example: i
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      data_nascimento:
+        custom: []
+        name: data_nascimento
+        description: 'Must be a valid date. Must be a date before <code>today</code>.'
+        required: false
+        example: '2022-06-06'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      telefone_primario:
+        custom: []
+        name: telefone_primario
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: ngzmiyvdljnikhwa
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      telefones_secundarios:
+        custom: []
+        name: telefones_secundarios
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example:
+          - ykcmyuwpwlvqwrsi
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: 'Must be a valid email address. Must not be greater than 254 characters.'
+        required: false
+        example: pfritsch@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco:
+        custom: []
+        name: endereco
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.logradouro:
+        custom: []
+        name: endereco.logradouro
+        description: 'Must not be greater than 200 characters.'
+        required: false
+        example: c
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.numero:
+        custom: []
+        name: endereco.numero
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: qldzsnrwtujwvlxj
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.complemento:
+        custom: []
+        name: endereco.complemento
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: k
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.bairro:
+        custom: []
+        name: endereco.bairro
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: l
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.cidade:
+        custom: []
+        name: endereco.cidade
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: q
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.estado:
+        custom: []
+        name: endereco.estado
+        description: 'Must be 2 characters.'
+        required: false
+        example: pp
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      endereco.cep:
+        custom: []
+        name: endereco.cep
+        description: 'Must not be greater than 10 characters.'
+        required: false
+        example: wqbewt
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      origem:
+        custom: []
+        name: origem
+        description: ''
+        required: false
+        example: instagram
+        type: string
+        enumValues:
+          - site
+          - indicacao
+          - whatsapp
+          - instagram
+          - telefone
+          - presencial
+          - outro
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      origem_detalhe:
+        custom: []
+        name: origem_detalhe
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      profissional_responsavel_id:
+        custom: []
+        name: profissional_responsavel_id
+        description: 'The <code>id</code> of an existing record in the professionals table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      convenios:
+        custom: []
+        name: convenios
+        description: 'Must not have more than 2 items.'
+        required: false
+        example: null
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      tags:
+        custom: []
+        name: tags
+        description: 'The <code>id</code> of an existing record in the tags table.'
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'convenios[].convenio_id':
+        custom: []
+        name: 'convenios[].convenio_id'
+        description: 'This field is required when <code>convenios</code> is present. The <code>id</code> of an existing record in the convenios table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'convenios[].papel':
+        custom: []
+        name: 'convenios[].papel'
+        description: ''
+        required: false
+        example: principal
+        type: string
+        enumValues:
+          - principal
+          - secundario
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'convenios[].numero_carteirinha':
+        custom: []
+        name: 'convenios[].numero_carteirinha'
+        description: 'Must not be greater than 30 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      nome: b
+      cpf: ngzmiyvdljn
+      documento_estrangeiro: i
+      data_nascimento: '2022-06-06'
+      telefone_primario: ngzmiyvdljnikhwa
+      telefones_secundarios:
+        - ykcmyuwpwlvqwrsi
+      email: pfritsch@example.com
+      endereco:
+        logradouro: c
+        numero: qldzsnrwtujwvlxj
+        complemento: k
+        bairro: l
+        cidade: q
+        estado: pp
+        cep: wqbewt
+      origem: instagram
+      origem_detalhe: 'n'
+      profissional_responsavel_id: 16
+      tags:
+        - 16
+      convenios:
+        -
+          convenio_id: 16
+          papel: principal
+          numero_carteirinha: 'n'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/pacientes/{id}'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Soft-delete do paciente.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/pacientes/{id}/status'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: true
+        example: inativo
+        type: string
+        enumValues:
+          - lead
+          - ativo
+          - inativo
+          - bloqueado
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      motivo:
+        custom: []
+        name: motivo
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      status: inativo
+      motivo: b
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/pacientes/{id}/anonimizar'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Anonimiza o paciente (LGPD — FR-035). Apenas Admin Clínica.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/pacientes/{id}/timeline'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/pacientes/{id}/anotacoes'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Lista anotações do paciente visíveis para o usuário autenticado.'
+      description: 'GET /pacientes/{id}/anotacoes'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/pacientes/{id}/anotacoes'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Cria nova anotação para o paciente.'
+      description: 'POST /pacientes/{id}/anotacoes'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      tipo:
+        custom: []
+        name: tipo
+        description: ''
+        required: true
+        example: geral
+        type: string
+        enumValues:
+          - geral
+          - clinica
+          - comportamental
+          - financeira
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      texto:
+        custom: []
+        name: texto
+        description: 'Must be at least 1 character. Must not be greater than 5000 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      tipo: geral
+      texto: b
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/pacientes/{id}/anotacoes/{anotacao_id}/retratacao'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Retrata uma anotação existente (cria nova anotação linkada).'
+      description: 'POST /pacientes/{id}/anotacoes/{anotacao_id}/retratacao'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      anotacao_id:
+        custom: []
+        name: anotacao_id
+        description: 'The ID of the anotacao.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+      anotacao_id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      texto:
+        custom: []
+        name: texto
+        description: 'Must be at least 10 characters. Must not be greater than 5000 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      texto: b
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/pacientes/{id}/funil'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Move um paciente para outra coluna do funil (drag-and-drop ou automático).'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      coluna_id:
+        custom: []
+        name: coluna_id
+        description: 'The <code>id</code> of an existing record in the funil_colunas table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      posicao:
+        custom: []
+        name: posicao
+        description: 'Must be at least 0.'
+        required: false
+        example: 39
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      motivo:
+        custom: []
+        name: motivo
+        description: ''
+        required: false
+        example: outro
+        type: string
+        enumValues:
+          - sem_interesse
+          - sem_retorno
+          - preco
+          - outro
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      motivo_outro:
+        custom: []
+        name: motivo_outro
+        description: 'This field is required when <code>motivo</code> is <code>outro</code>. Must be at least 10 characters. Must not be greater than 255 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      coluna_id: 16
+      posicao: 39
+      motivo: outro
+      motivo_outro: g
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/pacientes/{id}/tags'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      tag_id:
+        custom: []
+        name: tag_id
+        description: ''
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      tag_id: 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/pacientes/{id}/tags/{tag_id}'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the paciente.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      tag_id:
+        custom: []
+        name: tag_id
+        description: 'The ID of the tag.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+      tag_id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/tags
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      tipo:
+        custom: []
+        name: tipo
+        description: ''
+        required: false
+        example: sistemica
+        type: string
+        enumValues:
+          - livre
+          - sistemica
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      q:
+        custom: []
+        name: q
+        description: 'Must be at least 1 character.'
+        required: false
+        example: bngzmiyvdljnikhw
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      tipo: sistemica
+      q: bngzmiyvdljnikhw
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/tags
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      nome:
+        custom: []
+        name: nome
+        description: 'Must be at least 2 characters. Must not be greater than 50 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      cor:
+        custom: []
+        name: cor
+        description: 'Must match the regex /^#[0-9A-Fa-f]{6}$/.'
+        required: false
+        example: '#fEEeDb'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      descricao:
+        custom: []
+        name: descricao
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: l
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      nome: b
+      cor: '#fEEeDb'
+      descricao: l
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/convenios
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/convenios
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      nome:
+        custom: []
+        name: nome
+        description: 'Must be at least 2 characters. Must not be greater than 150 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      codigo_ans:
+        custom: []
+        name: codigo_ans
+        description: 'Must not be greater than 10 characters.'
+        required: false
+        example: ngzmiy
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      is_active:
+        custom: []
+        name: is_active
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      nome: b
+      codigo_ans: ngzmiy
+      is_active: false
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/convenios/{id}'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the convenio.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      nome:
+        custom: []
+        name: nome
+        description: 'Must be at least 2 characters. Must not be greater than 150 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      codigo_ans:
+        custom: []
+        name: codigo_ans
+        description: 'Must not be greater than 10 characters.'
+        required: false
+        example: ngzmiy
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      is_active:
+        custom: []
+        name: is_active
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      nome: b
+      codigo_ans: ngzmiy
+      is_active: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/convenios/{id}'
+    metadata:
+      custom: []
+      groupName: 'CRM Pacientes'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the convenio.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

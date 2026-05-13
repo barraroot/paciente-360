@@ -8,6 +8,7 @@ use App\Models\Paciente;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -443,7 +444,7 @@ class InboxListConversationsTest extends TestCase
     {
         // Usuário sem ability inbox.view
         $user = $this->createUserForTenant($this->tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->getJson($this->baseUrl('/inbox/conversations'));
 

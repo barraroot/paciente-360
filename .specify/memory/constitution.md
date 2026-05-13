@@ -1,7 +1,82 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.2.0 → 1.3.0
+Version change: 1.3.0 → 1.4.0
+Bump rationale (escolha do owner): MINOR — expansão material do
+Princípio VII (Segurança Operacional). Aceita formato de
+autenticação adicional (Bearer Sanctum Personal Access Tokens) para
+a API tenant, sem reduzir nenhum gate existente. Filament super
+admin permanece em cookie session (guard `web` próprio). Adiciona 5
+novos gates específicos do flow Bearer (token hash SHA-256 DB, CORS
+env-driven, CSP estrita em prod, DOMPurify em HTML user-provided,
+audit log de uso suspeito de token).
+
+Justificativa do trade-off de produto:
+  - Fase 3 (Omnichannel Inbox) revelou tensões com cookie SPA stateful
+    em deploys cross-domain (CORS, same-site, broadcasting auth) e
+    bloqueava ngrok/load balancer setups sem trustProxies. Mobile e
+    integrações third-party precisariam de fluxo paralelo, criando
+    duplicação.
+  - Bearer tokens Sanctum (já instalados, tabela personal_access_tokens
+    existente) viabilizam deploy decoupled (api.crm.com.br +
+    app.crm.com.br via CDN) sem retrabalho de auth, abrem caminho
+    para mobile e Postman/integradores.
+  - Trade-off de XSS (localStorage vulnerável) é mitigado por gates
+    obrigatórios (CSP + DOMPurify + ESLint + audit suspeito +
+    expiração 30d). R1 do spec 004 detalhado.
+  - Filament admin isolado em cookie no domínio crm.com.br
+    (sem cruzamento com app.crm.com.br) preserva o paradigma
+    server-rendered onde ele funciona melhor.
+
+Modified principles:
+  - VII. Segurança Operacional (NON-NEGOTIABLE) — EXPANDIDO. Os 4
+        bullets v1.3.0 permanecem inalterados (argon2id, TLS 1.3,
+        rate limiting, brute force lock). Adicionados:
+        - Aceite de Bearer Sanctum Personal Access Tokens como
+          formato de autenticação para API tenant
+        - Filament super admin permanece com guard `web` (cookie
+          session) por design isolado
+        - Tokens armazenados via SHA-256 hash no DB
+        - CORS configurável via CORS_ALLOWED_ORIGINS env, audit em PR
+        - CSP estrita em produção (sem unsafe-inline/eval; nonce-based)
+        - DOMPurify obrigatório em HTML user-provided
+        - Audit log de uso suspeito de token (mesmo token, IPs/UAs
+          distintos em janela <5min)
+
+Added sections: nenhuma seção nova; expansão dentro de VII.
+
+Removed sections: nenhuma.
+
+Templates requiring updates:
+  - .specify/templates/plan-template.md             ✅ aligned
+  - .specify/templates/spec-template.md             ✅ aligned
+  - .specify/templates/tasks-template.md            ✅ aligned
+  - .specify/templates/checklist-template.md        ✅ aligned
+
+Artefatos da feature 004 (referenciam este amendment como pré-requisito):
+  ✓ specs/004-token-auth-migration/plan.md          (Constitution Check
+       já marca Princípio VII como CONDICIONADO a v1.4.0)
+  ✓ specs/004-token-auth-migration/spec.md          (Definição de
+       Pronto lista amendment como gate)
+  ✓ specs/004-token-auth-migration/quickstart.md    (Seção 1 documenta
+       amendment como pré-requisito bloqueante)
+
+Follow-up TODOs: nenhum bloqueante. /speckit.tasks da Fase 004 pode
+prosseguir; Lote A T001 = aplicar este amendment (já cumprido por
+este commit).
+
+----------------------------------------------------------------------
+PRIOR REPORTS
+----------------------------------------------------------------------
+v1.3.0 (2026-05-10) — MINOR (com leitura alternativa MAJOR registrada):
+diluição do bullet "2FA via TOTP (RFC 6238)" do Princípio VII. Os
+4 bullets restantes (argon2id, TLS 1.3, rate limiting, brute force
+lock) preservados. 2FA pode reentrar como opt-in voluntário em
+fase futura sem amendment.
+
+==================
+HISTORICAL: v1.2.0 → v1.3.0 RATIONALE (PRESERVED FOR AUDIT)
+==================
 Bump rationale (escolha do owner): MINOR — diluição de um requisito
 específico (2FA TOTP) dentro do Princípio VII (Segurança Operacional),
 mantendo o princípio em pé com 4 dos 5 bullets originais (argon2id,
@@ -271,6 +346,8 @@ operacional humano.
 Controles de segurança aplicados a toda a stack, complementando o
 princípio I (que cobre os requisitos LGPD de proteção de dados):
 
+**Gates de senha e transporte** (inalterados desde v1.2.0):
+
 - Hash de senhas: argon2id (preferencial) ou bcrypt com cost ≥ 12.
   Hashes existentes MUST ser recomputados no próximo login válido
   quando o algoritmo/custo configurado mudar.
@@ -281,22 +358,72 @@ princípio I (que cobre os requisitos LGPD de proteção de dados):
   configuração versionada.
 - Bloqueio temporário de login após 5 tentativas falhas consecutivas
   (já presente em US-2.1) MUST ser ativo em produção e cobrir
-  qualquer endpoint de autenticação (web, API, painel Filament).
+  qualquer endpoint de autenticação (API tenant, painel Filament,
+  webhooks autenticados).
 
-**Nota sobre 2FA** (decisão de escopo, v1.3.0): a obrigatoriedade de
-2FA TOTP foi **removida** do MVP. O fator único (senha forte +
-argon2id + rate limit + bloqueio por brute force + TLS 1.3) é o
-piso aceito para a versão atual. 2FA pode ser reintroduzido como
-**opt-in voluntário** em fase futura sem violar este princípio nem
-quebrar contratos existentes; a decisão de torná-lo obrigatório
-novamente exige novo amendment com justificativa formal.
+**Formatos de autenticação aceitos** (expandido em v1.4.0):
+
+- **API tenant** (Vue SPA + mobile + integrações externas) MUST
+  autenticar via **Sanctum Personal Access Tokens (Bearer)**.
+  Tokens emitidos no login com expiração configurável (default 30d
+  com sliding expiration). Header `Authorization: Bearer <token>`
+  obrigatório em endpoints autenticados.
+- **Filament super admin** MUST permanecer com **session cookie**
+  (guard `web` próprio) por design — server-rendered Blade. Cookies
+  do Filament em `crm.com.br` MUST ser isolados de qualquer
+  subdomínio de tenant (`app.crm.com.br` não compartilha session).
+- Webhooks providers (Twilio, Meta, Widget público) MUST validar via
+  HMAC signature — não cookie nem Bearer.
+
+**Gates específicos de tokens Bearer** (novos em v1.4.0):
+
+- Tokens MUST ser armazenados via **SHA-256 hash** no banco
+  (Sanctum default). Plain text token retornado ao cliente APENAS
+  no momento da emissão (login response); nunca recuperável depois.
+- Multi-tenant cross-check obrigatório: middleware MUST validar que
+  `user(token).tenant_id === tenant(X-Tenant-Slug header).id` em
+  TODA request autenticada da API tenant. Mismatch → 403. Mitigação
+  anti-token-roubo cross-tenant.
+- **CORS** MUST ser configurável via env `CORS_ALLOWED_ORIGINS` com
+  audit em PR. Mudanças de origin whitelist passam por code review.
+  `supports_credentials: false` para API tenant (Bearer-only, sem
+  cookies cross-origin).
+- **CSP (Content-Security-Policy)** estrita obrigatória em produção:
+  sem `unsafe-inline` ou `unsafe-eval` em `script-src`/`style-src`;
+  nonce-based para scripts inline legítimos quando necessário. CSP
+  relaxada permitida apenas em ambientes `local`/`testing` para
+  acomodar dev tooling (Vite HMR).
+- **DOMPurify** (ou equivalente verificado) obrigatório em todo HTML
+  user-provided antes de render (`v-html` em Vue, `dangerouslySetInnerHTML`
+  em React etc.). ESLint plugin `no-unsanitized` MUST estar ativo no CI
+  para bloquear DOM sinks diretos sem sanitização.
+- **Audit log de uso suspeito de token**: middleware MUST detectar
+  mesmo token apresentado de IPs OU User-Agents distintos em janela
+  ≤ 5 minutos (via cache Redis) e emitir evento `Auditable`
+  `TokenUsoSuspeito`. Side effect: alerta Sentry com prioridade
+  `error` + notificação in-app ao admin do tenant. Token NÃO é
+  auto-revogado (false positive risk com NAT/CGNAT/VPN); revogação
+  fica como ação humana via gestão de sessões.
+- **Logout scope**: `POST /auth/logout` MUST revogar APENAS o token
+  do `Authorization` header da request (não todos os tokens do user).
+  Revogação de todos os tokens fica como ação explícita via
+  `POST /auth/logout-all`.
+
+**Nota sobre 2FA** (decisão de escopo, v1.3.0 preservada em v1.4.0):
+a obrigatoriedade de 2FA TOTP permanece removida do MVP. 2FA pode ser
+reintroduzido como **opt-in voluntário** em fase futura sem violar
+este princípio nem quebrar contratos existentes (a infra Sanctum
+tokens torna isso ainda mais simples — basta marcar tokens com
+ability `2fa-verified`).
 
 **Rationale**: O conjunto acima é o piso operacional para um SaaS
 multi-tenant que carrega dados clínicos pseudonimizados, credenciais de
-canais Meta e tokens de pagamento. Mesmo sem 2FA obrigatório, a
-combinação de hash forte, rate limiting agressivo, lock por brute
-force e logs auditáveis (Princípio I + V) preserva uma postura de
-defesa em profundidade verificável por configuração e testes.
+canais Meta e tokens de pagamento. A migração para Bearer (v1.4.0)
+desacopla deploy api/SPA sem reduzir nenhum gate existente; ao
+contrário, adiciona 5 novos gates específicos do novo formato que
+preservam defesa em profundidade. Filament permanece em cookie por
+design — server-rendered admin não ganha nada com Bearer e seria
+fricção desnecessária para os ~5 super admins.
 
 ## Restrições Técnicas e Arquiteturais
 
@@ -472,4 +599,4 @@ delegadas a CLAUDE.md/AGENTS.md).
   vive em `CLAUDE.md` e `AGENTS.md`; estes arquivos MUST ser mantidos
   consistentes com esta constituição.
 
-**Version**: 1.3.0 | **Ratified**: 2026-05-10 | **Last Amended**: 2026-05-10
+**Version**: 1.4.0 | **Ratified**: 2026-05-10 | **Last Amended**: 2026-05-12

@@ -12,6 +12,7 @@ use App\Services\Tenant\TenantStateService;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\Sanctum;
 use Livewire\Livewire;
 use Mockery;
 use Spatie\Permission\PermissionRegistrar;
@@ -58,7 +59,7 @@ class FilamentReusesServicesTest extends TestCase
 
         $this->app->instance(TenantStateService::class, $spy);
 
-        $this->actingAs($this->superAdmin);
+        Sanctum::actingAs($this->superAdmin, ['*']);
 
         Livewire::test(ListTenants::class)
             ->callTableAction('suspend', $tenant);
@@ -78,7 +79,7 @@ class FilamentReusesServicesTest extends TestCase
 
         $this->app->instance(TenantStateService::class, $spy);
 
-        $this->actingAs($this->superAdmin);
+        Sanctum::actingAs($this->superAdmin, ['*']);
 
         Livewire::test(ListTenants::class)
             ->callTableAction('reactivate', $tenant);
@@ -98,7 +99,7 @@ class FilamentReusesServicesTest extends TestCase
 
         $this->app->instance(PlanService::class, $spy);
 
-        $this->actingAs($this->superAdmin);
+        Sanctum::actingAs($this->superAdmin, ['*']);
 
         Livewire::test(ListPlans::class)
             ->callTableAction('toggle_active', $plan);

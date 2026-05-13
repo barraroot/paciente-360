@@ -12,6 +12,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -340,7 +341,7 @@ class ConversationDetailTest extends TestCase
             ->for($otherPaciente, 'patient')
             ->create();
 
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         // Médico pode acessar conversa 1
         $response = $this->getJson(
@@ -366,7 +367,7 @@ class ConversationDetailTest extends TestCase
             ->for($this->channel, 'channel')
             ->create();
 
-        $this->actingAs($financeiro);
+        Sanctum::actingAs($financeiro, ['*']);
 
         $response = $this->getJson(
             $this->baseUrl("/inbox/conversations/{$conversation->id}")

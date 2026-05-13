@@ -6,6 +6,7 @@ use App\Domain\Messaging\Presence\Models\UserPresence;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -89,7 +90,7 @@ class PresenceHeartbeatTest extends TestCase
         $response->assertStatus(204);
 
         // Volta para tenant A
-        $this->actingAs($this->attendant);
+        Sanctum::actingAs($this->attendant, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $response = $this->postJson('/api/v1/inbox/presence/heartbeat');
@@ -110,7 +111,7 @@ class PresenceHeartbeatTest extends TestCase
     #[Test]
     public function unauthenticated_heartbeat_returns_401(): void
     {
-        auth()->logout();
+        auth()->forgetGuards();
 
         $response = $this->postJson('/api/v1/inbox/presence/heartbeat');
 

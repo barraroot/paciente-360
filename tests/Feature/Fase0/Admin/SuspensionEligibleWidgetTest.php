@@ -9,6 +9,7 @@ use App\Services\Tenant\TenantStateService;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\Sanctum;
 use Livewire\Livewire;
 use Mockery;
 use Spatie\Permission\PermissionRegistrar;
@@ -55,7 +56,7 @@ class SuspensionEligibleWidgetTest extends TestCase
             'overdue_since' => now()->subDays(5),
         ]);
 
-        $this->actingAs($this->superAdmin);
+        Sanctum::actingAs($this->superAdmin, ['*']);
 
         Livewire::test(SuspensionEligibleTenantsWidget::class)
             ->assertCanSeeTableRecords([$eligibleTenant])
@@ -80,7 +81,7 @@ class SuspensionEligibleWidgetTest extends TestCase
 
         $this->app->instance(TenantStateService::class, $mock);
 
-        $this->actingAs($this->superAdmin);
+        Sanctum::actingAs($this->superAdmin, ['*']);
 
         Livewire::test(SuspensionEligibleTenantsWidget::class)
             ->mountTableAction('suspend', $tenant)

@@ -10,6 +10,7 @@ use App\Models\Professional;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -77,7 +78,7 @@ class ReverbBroadcastIsolationTest extends TestCase
         // deve ser broadcast apenas para tenant.{A}.inbox
         // userB (mesmo logado em sua aba) NÃO deve receber este evento
 
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         // UserA faz request para inbox (subscreveria ao Reverb)
         $response = $this->getJson(
@@ -106,7 +107,7 @@ class ReverbBroadcastIsolationTest extends TestCase
 
         // Quando outbound é enviado em tenantA, broadcast vai para tenant.{A}.inbox
         // Jamais para tenant.{B}.inbox
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         Message::factory()
             ->forTenant($this->tenantA)
@@ -127,7 +128,7 @@ class ReverbBroadcastIsolationTest extends TestCase
             ->create();
 
         // Broadcast vai para tenant.{A}.inbox, nunca para tenant.{B}.inbox
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         $response = $this->getJson(
             $this->baseUrl($this->tenantA, '/inbox/conversations')
@@ -144,7 +145,7 @@ class ReverbBroadcastIsolationTest extends TestCase
             ->create();
 
         // Atribuição em tenantA
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         // Simula atribuição (será POST /assign em Lote G)
         // Evento ConversaAtribuida é broadcast para tenant.{A}.inbox
@@ -156,7 +157,7 @@ class ReverbBroadcastIsolationTest extends TestCase
         // UserB tenta subscribir ao canal Reverb de tenantA via payload manipulado
         // Ex: tentaria conectar a: private-tenant.{A}.inbox
 
-        $this->actingAs($this->userB);
+        Sanctum::actingAs($this->userB, ['*']);
 
         // Reverb auth deve rejeitar (ao validar Authorization header + tenant scope)
         // Response: 403 Forbidden
@@ -176,7 +177,7 @@ class ReverbBroadcastIsolationTest extends TestCase
         // UserB tenta subscribir a: private-tenant.{A}.conversa.{A_conv_id}
         // Mesmo que o conversation_id seja público, o tenant não é dele
 
-        $this->actingAs($this->userB);
+        Sanctum::actingAs($this->userB, ['*']);
 
         // Reverb auth invalida (tenant mismatch)
         // Response: 403 Forbidden
@@ -208,7 +209,7 @@ class ReverbBroadcastIsolationTest extends TestCase
         // MedicoA tenta subscribir a: private-tenant.{A}.conversa.{conv_id}
         // MedicoA não é atendente da conversa, nem profissional responsável do paciente
 
-        $this->actingAs($medicoA);
+        Sanctum::actingAs($medicoA, ['*']);
 
         // Reverb auth rejeita: 403
         // (Implementação: BroadcastingChannelMiddleware verifica abilities Spatie)

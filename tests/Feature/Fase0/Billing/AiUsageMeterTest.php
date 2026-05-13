@@ -12,6 +12,7 @@ use App\Services\Billing\AiUsageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenants;
 use Tests\TestCase;
@@ -85,7 +86,7 @@ class AiUsageMeterTest extends TestCase
         $user = $this->setUpAdminUser($tenant);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $yearMonth = Carbon::now('America/Sao_Paulo')->format('Y-m');
 
@@ -126,7 +127,7 @@ class AiUsageMeterTest extends TestCase
 
         $user = $this->setUpAdminUser($tenant);
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->getJson($this->aiUsageUrl($tenant->slug));
 
@@ -200,7 +201,7 @@ class AiUsageMeterTest extends TestCase
 
         $user = $this->setUpAdminUser($tenant);
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->getJson($this->aiUsageUrl($tenant->slug));
 

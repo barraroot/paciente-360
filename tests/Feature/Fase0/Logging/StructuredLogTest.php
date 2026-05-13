@@ -43,7 +43,7 @@ class StructuredLogTest extends TestCase
 
         // Injeta tenant no container (simula o ResolveTenant).
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $middleware = new LogStructuredRequestData;
         $request = Request::create('/api/v1/_ping', 'GET');

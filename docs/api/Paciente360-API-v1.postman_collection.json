@@ -1,0 +1,220 @@
+{
+  "info": {
+    "_postman_id": "p360-api-v1-bearer",
+    "name": "Paciente360 API v1 (Bearer)",
+    "description": "Coleção oficial da API REST do Paciente360 — Fase 4 Token Auth Migration.\n\n## Autenticação\n\n- `POST /auth/login` — emite Bearer Sanctum token. Salva automaticamente em `{{token}}` e o `slug` do tenant em `{{tenant_slug}}` via post-response script.\n- Demais requests injetam `Authorization: Bearer {{token}}` + `X-Tenant-Slug: {{tenant_slug}}` via pre-request script (collection-level).\n\nO header `X-Tenant-Slug` é obrigatório em rotas autenticadas (exceto `/auth/login`) — triple-check anti-token-roubo cross-tenant (FR-011 / Princípio II).\n\n## Variáveis\n\n- `base_url` — default `http://api.lvh.me/api/v1` (dev local)\n- `token` — preenchido automaticamente pelo login\n- `tenant_slug` — preenchido automaticamente pelo login\n- `email`, `password` — credenciais usadas no login (substitua pelos seus)\n\n## Renovação\n\nTokens expiram em 30 dias. *Sliding expiration* renova `expires_at` em toda request quando restam < 5 dias — sem ação do cliente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script (collection-level) — injeta Authorization + X-Tenant-Slug",
+          "// em TODAS as requests da coleção (exceto rotas com {{noAuth}} no path).",
+          "//",
+          "// Para pular a injeção em uma request específica, defina a variável local",
+          "// `skipAuth = true` antes do envio.",
+          "if (pm.variables.get('skipAuth')) { return; }",
+          "",
+          "const token = pm.collectionVariables.get('token');",
+          "const tenantSlug = pm.collectionVariables.get('tenant_slug');",
+          "",
+          "if (token) {",
+          "    pm.request.headers.upsert({ key: 'Authorization', value: `Bearer ${token}` });",
+          "}",
+          "if (tenantSlug) {",
+          "    pm.request.headers.upsert({ key: 'X-Tenant-Slug', value: tenantSlug });",
+          "}",
+          "",
+          "// Correlação para debug — backend ecoa este X-Request-Id em log + Sentry.",
+          "pm.request.headers.upsert({",
+          "    key: 'X-Request-Id',",
+          "    value: 'postman-' + Math.random().toString(36).slice(2, 10),",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://api.lvh.me/api/v1", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "tenant_slug", "value": "", "type": "string" },
+    { "key": "email", "value": "admin@clinica-alfa.com.br", "type": "string" },
+    { "key": "password", "value": "p@ssw0rd123", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Endpoints de autenticação Bearer Sanctum.",
+      "item": [
+        {
+          "name": "POST /auth/login",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// /auth/login não exige Authorization nem X-Tenant-Slug.",
+                  "pm.variables.set('skipAuth', true);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Auto-salva token + tenant.slug em variáveis da coleção",
+                  "// para que as próximas requests injetem automaticamente.",
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.token) {",
+                  "        pm.collectionVariables.set('token', body.token);",
+                  "    }",
+                  "    if (body.tenant && body.tenant.slug) {",
+                  "        pm.collectionVariables.set('tenant_slug', body.tenant.slug);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"device_name\": \"Postman\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET /auth/me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 204) {",
+                  "    pm.collectionVariables.set('token', '');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/logout-all",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/logout-all",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout-all"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 204) {",
+                  "    pm.collectionVariables.set('token', '');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /auth/tokens",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/tokens",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "tokens"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /auth/tokens/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/auth/tokens/:tokenId",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "tokens", ":tokenId"],
+              "variable": [
+                { "key": "tokenId", "value": "1", "description": "Id do token (de GET /auth/tokens)" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Broadcasting",
+      "description": "Autorização de canais Reverb com Bearer (US3 — Lote F).",
+      "item": [
+        {
+          "name": "POST /broadcasting/auth",
+          "description": "Autoriza subscription em canal privado/presence. Backend valida Bearer + X-Tenant-Slug + channel callback (routes/channels.php).",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/../broadcasting/auth",
+              "host": ["{{base_url}}"],
+              "path": ["..", "broadcasting", "auth"]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "socket_id", "value": "1234.5678" },
+                { "key": "channel_name", "value": "private-tenant.1.user.1" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

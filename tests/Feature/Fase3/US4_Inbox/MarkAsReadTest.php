@@ -8,6 +8,7 @@ use App\Domain\Messaging\Message\Models\Message;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -117,7 +118,7 @@ class MarkAsReadTest extends TestCase
             ->state(['unread_count' => 3])
             ->create();
 
-        $this->actingAs($financeiro);
+        Sanctum::actingAs($financeiro, ['*']);
 
         $response = $this->postJson(
             $this->baseUrl("/inbox/conversations/{$conversation->id}/read")

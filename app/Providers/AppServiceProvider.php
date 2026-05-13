@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Auth\Contracts\BearerAuthContract;
+use App\Domain\Auth\Services\SuspiciousTokenUsageDetector;
+use App\Domain\Auth\Services\TokenIssuerService;
 use App\Domain\Messaging\Assignment\Models\AssignmentRule;
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Channel\Models\Channel;
@@ -40,6 +43,8 @@ use App\Policies\QuickReplyPolicy;
 use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
 use App\Services\Billing\StripeClientWrapper;
+use App\Support\Metrics\AuthMetrics;
+use App\Support\Metrics\AuthMetricsContract;
 use App\Support\Metrics\MessagingMetrics;
 use App\Support\Metrics\MessagingMetricsContract;
 use Illuminate\Auth\Events\Authenticated;
@@ -50,6 +55,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
+use Laravel\Sanctum\Events\TokenAuthenticated;
+use Laravel\Sanctum\PersonalAccessToken;
 use Sentry\Breadcrumb;
 use Sentry\State\Scope;
 use Spatie\Permission\PermissionRegistrar;
@@ -94,6 +101,16 @@ class AppServiceProvider extends ServiceProvider
         // Bound via contrato (MessagingMetricsContract) para facilitar mocking em testes.
         $this->app->singleton(MessagingMetricsContract::class, MessagingMetrics::class);
 
+        // T092 (Fase 4 Lote J) — AuthMetrics: 4 métricas Prometheus do domínio Auth.
+        // Mesma estratégia graceful do MessagingMetrics: degrada para Log::debug
+        // quando o pacote Prometheus não está disponível (CI / dev sem exporter).
+        $this->app->singleton(AuthMetricsContract::class, AuthMetrics::class);
+
+        // T034 — Fase 4: BearerAuthContract → TokenIssuerService (singleton).
+        // Injeta em LoginController, LogoutAllController e qualquer consumer que
+        // resolva via contrato (facilita mocking em testes de feature).
+        $this->app->singleton(BearerAuthContract::class, TokenIssuerService::class);
+
         // Wrapper do Stripe SDK — permite swap por mock em testes.
         // Só instancia o StripeClient real se a chave secreta estiver configurada.
         $this->app->singleton(StripeClientWrapper::class, function () {
@@ -124,6 +141,23 @@ class AppServiceProvider extends ServiceProvider
         // Fase 3 — T108: Observer para reabertura automática de conversa ao criar
         // mensagem inbound em conversa resolvida (NC-2).
         Message::observe(MessageObserver::class);
+
+        // T034 — Fase 4: Detecta uso suspeito de Bearer token pós-autenticação.
+        // `Laravel\Sanctum\Events\TokenAuthenticated` é disparado pelo guard Sanctum
+        // em cada request autenticada via Bearer (Sanctum v4.3+).
+        // O detector compara IP/UA com cache Redis (TTL 5min) e dispara `TokenUsoSuspeito`
+        // se detectar troca de contexto em janela suspeita (NC-3 gate R1 mitigação).
+        Event::listen(
+            TokenAuthenticated::class,
+            static function (TokenAuthenticated $event): void {
+                $request = request();
+                app(SuspiciousTokenUsageDetector::class)->detect(
+                    $event->token,
+                    (string) $request->ip(),
+                    (string) $request->userAgent(),
+                );
+            }
+        );
     }
 
     /**
@@ -312,6 +346,19 @@ class AppServiceProvider extends ServiceProvider
                 $tenantId = $user->tenant_id ?? null;
                 if ($tenantId !== null && $tenantId !== '') {
                     $scope->setTag('tenant.id', (string) $tenantId);
+                }
+
+                // T094 (Fase 4 Lote J) — Auth Sanctum context.
+                // Quando autenticado via Bearer (PersonalAccessToken), adiciona
+                // ID do token + 8-char prefix do plain text para correlação
+                // sem leak da chave (FR-023 / Princípio I LGPD).
+                if (method_exists($user, 'currentAccessToken')) {
+                    $token = $user->currentAccessToken();
+
+                    if ($token instanceof PersonalAccessToken) {
+                        $scope->setTag('auth.token_id', (string) $token->id);
+                        $scope->setTag('auth.token_name', (string) $token->name);
+                    }
                 }
             });
         });

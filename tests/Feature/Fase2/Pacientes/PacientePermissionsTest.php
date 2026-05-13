@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenants;
 use Tests\TestCase;
@@ -284,7 +285,7 @@ class PacientePermissionsTest extends TestCase
         $superAdmin = User::factory()->create(['tenant_id' => null]);
         $superAdmin->assignRole('super-admin');
 
-        $this->actingAs($superAdmin);
+        Sanctum::actingAs($superAdmin, ['*']);
 
         $response = $this->getJson('http://localhost/api/v1/pacientes');
 

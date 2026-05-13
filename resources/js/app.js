@@ -7,10 +7,19 @@ import App from './App.vue';
 
 import './echo';
 
+import { useAuthStore } from '@/stores/auth.js';
+
 const app = createApp(App);
 
-app.use(createPinia());
+const pinia = createPinia();
+app.use(pinia);
 app.use(router);
 app.use(i18n);
 
-app.mount('#app');
+// Boot auth ANTES do mount: rehidrata token de localStorage + valida via /auth/me.
+// Se o token estiver inválido/expirado, clearToken() é chamado silenciosamente.
+// O app monta deslogado e o router guard redireciona para /login se necessário.
+const authStore = useAuthStore();
+authStore.boot().finally(() => {
+    app.mount('#app');
+});

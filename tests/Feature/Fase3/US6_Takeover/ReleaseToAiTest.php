@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -126,7 +127,7 @@ class ReleaseToAiTest extends TestCase
     public function requires_inbox_takeover_ai_ability(): void
     {
         $financeiro = $this->userForRole($this->tenant, 'financeiro');
-        $this->actingAs($financeiro);
+        Sanctum::actingAs($financeiro, ['*']);
 
         $conversation = Conversation::factory()
             ->forTenant($this->tenant)

@@ -38,8 +38,16 @@ return [
     */
 
     'guards' => [
+        // Guard web: session cookie — usado pelo Filament super admin (guard preservado).
         'web' => [
             'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        // Guard sanctum: Personal Access Tokens (Bearer) — usado pela API tenant (Fase 4).
+        // Filament permanece no guard 'web'; estes guards são completamente isolados.
+        'sanctum' => [
+            'driver' => 'sanctum',
             'provider' => 'users',
         ],
     ],

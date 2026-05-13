@@ -6,6 +6,7 @@ use App\Domain\Messaging\QuickReply\Models\QuickReply;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenantWithRoles;
@@ -49,7 +50,7 @@ class QuickReplyCrudTest extends TestCase
     #[Test]
     public function atendente_can_create_private_quick_reply(): void
     {
-        $this->actingAs($this->atendente);
+        Sanctum::actingAs($this->atendente, ['*']);
 
         $response = $this->postJson($this->url(), [
             'scope' => 'private',
@@ -71,7 +72,7 @@ class QuickReplyCrudTest extends TestCase
     #[Test]
     public function admin_clinica_can_create_tenant_scope_quick_reply(): void
     {
-        $this->actingAs($this->admin);
+        Sanctum::actingAs($this->admin, ['*']);
 
         $response = $this->postJson($this->url(), [
             'scope' => 'tenant',
@@ -96,7 +97,7 @@ class QuickReplyCrudTest extends TestCase
         // Um usuário com inbox.respond mas sem quick_reply.manage recebe 403 ao tentar criar tenant scope.
         // Usamos o financeiro (não tem inbox.respond nem quick_reply.manage) para verificar 403.
         $financeiro = $this->userForRole($this->tenant, 'financeiro');
-        $this->actingAs($financeiro);
+        Sanctum::actingAs($financeiro, ['*']);
 
         $response = $this->postJson($this->url(), [
             'scope' => 'tenant',
@@ -110,7 +111,7 @@ class QuickReplyCrudTest extends TestCase
     #[Test]
     public function creates_with_shortcut_starting_with_slash(): void
     {
-        $this->actingAs($this->atendente);
+        Sanctum::actingAs($this->atendente, ['*']);
 
         $response = $this->postJson($this->url(), [
             'scope' => 'private',
@@ -125,7 +126,7 @@ class QuickReplyCrudTest extends TestCase
     #[Test]
     public function rejects_shortcut_without_leading_slash_422(): void
     {
-        $this->actingAs($this->atendente);
+        Sanctum::actingAs($this->atendente, ['*']);
 
         $response = $this->postJson($this->url(), [
             'scope' => 'private',
@@ -145,7 +146,7 @@ class QuickReplyCrudTest extends TestCase
             ->tenantScope()
             ->create(['shortcut' => '/duplicado']);
 
-        $this->actingAs($this->admin);
+        Sanctum::actingAs($this->admin, ['*']);
 
         $response = $this->postJson($this->url(), [
             'scope' => 'tenant',
@@ -165,7 +166,7 @@ class QuickReplyCrudTest extends TestCase
             ->tenantScope()
             ->create(['shortcut' => '/preco']);
 
-        $this->actingAs($this->atendente);
+        Sanctum::actingAs($this->atendente, ['*']);
 
         // Privada com mesmo atalho — deve ser permitida (escopos diferentes)
         $response = $this->postJson($this->url(), [
@@ -189,7 +190,7 @@ class QuickReplyCrudTest extends TestCase
             ->tenantScope()
             ->create(['shortcut' => '/teste']);
 
-        $this->actingAs($this->admin);
+        Sanctum::actingAs($this->admin, ['*']);
 
         $response = $this->patchJson($this->url("/{$reply->id}"), [
             'content' => 'Conteúdo atualizado.',
@@ -207,7 +208,7 @@ class QuickReplyCrudTest extends TestCase
             ->privateOf($this->atendente)
             ->create(['shortcut' => '/minha']);
 
-        $this->actingAs($this->atendente);
+        Sanctum::actingAs($this->atendente, ['*']);
 
         $response = $this->patchJson($this->url("/{$reply->id}"), [
             'content' => 'Conteúdo novo.',
@@ -225,7 +226,7 @@ class QuickReplyCrudTest extends TestCase
             ->privateOf($outro)
             ->create(['shortcut' => '/dele']);
 
-        $this->actingAs($this->atendente);
+        Sanctum::actingAs($this->atendente, ['*']);
 
         $response = $this->patchJson($this->url("/{$reply->id}"), [
             'content' => 'Tentativa indevida.',
@@ -254,7 +255,7 @@ class QuickReplyCrudTest extends TestCase
             ]);
 
         // Reautenticar como admin do tenant original (tenant A)
-        $this->actingAs($this->admin);
+        Sanctum::actingAs($this->admin, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $response = $this->patchJson($this->url("/{$reply->id}"), [
@@ -283,7 +284,7 @@ class QuickReplyCrudTest extends TestCase
         // Privada de outro — NÃO visível para atendente
         QuickReply::factory()->forTenant($this->tenant)->privateOf($outro)->create(['shortcut' => '/outro-priv']);
 
-        $this->actingAs($this->atendente);
+        Sanctum::actingAs($this->atendente, ['*']);
 
         $response = $this->getJson($this->url());
 

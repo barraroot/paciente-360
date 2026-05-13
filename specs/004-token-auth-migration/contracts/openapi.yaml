@@ -1,0 +1,385 @@
+openapi: 3.1.0
+info:
+  title: Paciente360 — API v1 (Fase 4 — Token Auth Migration)
+  version: 0.4.0
+  description: |
+    Endpoints de autenticação migrados para **Sanctum Personal Access Tokens
+    (Bearer)**. API tenant fica stateless. Filament super admin permanece
+    cookie-based em `crm.com.br` (não documentado neste contrato — fora da
+    API REST).
+
+    **Mudanças principais vs Fase 3**:
+    - `POST /auth/login` retorna `{token, token_expires_at, user, tenant}` ao
+      invés de apenas setar cookie
+    - Todos endpoints autenticados exigem header `Authorization: Bearer <token>`
+    - **Todos** endpoints autenticados (exceto `/auth/*`) exigem header
+      `X-Tenant-Slug: <slug>` (anti-token-roubo cross-tenant)
+    - Novo `POST /auth/logout-all`, `GET /auth/tokens`, `DELETE /auth/tokens/{id}`
+    - CORS configurável via env `CORS_ALLOWED_ORIGINS`
+    - Sliding expiration: toda request renova `expires_at` por mais 30 dias
+      (throttle interno: só atualiza se < 5d buffer)
+
+  contact:
+    name: Paciente360 Engineering
+
+servers:
+  - url: https://api.crm.com.br/api/v1
+    description: Production API (decoupled — SPA em app.crm.com.br)
+  - url: https://staging-api.crm.com.br/api/v1
+    description: Staging
+  - url: http://api.lvh.me/api/v1
+    description: Dev local (mono-domínio, subdomínio fallback aceito)
+
+tags:
+  - name: auth
+    description: Login, logout, gestão de tokens
+  - name: tenant-context
+    description: Multi-tenant resolution via X-Tenant-Slug header
+
+# Security schemes — adicionar bearerAuth global; manter sanctumSession legado
+# em endpoints específicos (Filament documenta separadamente se necessário)
+security:
+  - bearerAuth: []
+  - {}  # Permite endpoints públicos (login não exige token)
+
+paths:
+
+  # ──────────────────────────────────────────────────────────────
+  # Auth — emissão e revogação de tokens
+  # ──────────────────────────────────────────────────────────────
+
+  /auth/login:
+    post:
+      tags: [auth]
+      security:
+        - {}  # Público (não exige token; emite um)
+      summary: Login com email + senha; emite Sanctum Personal Access Token
+      description: |
+        Resolve tenant via lookup de email (email globalmente único — UNIQUE
+        cross-tenant). Aplica rate limit por IP (5 tentativas → bloqueio
+        temporário). Sucesso emite token de 30d com sliding expiration.
+
+        Não exige header `X-Tenant-Slug` — o backend deriva o tenant do
+        email. SPA persiste `tenant.slug` da response para uso em requests
+        subsequentes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '201':
+          description: Token emitido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '423':
+          description: Conta bloqueada (rate limit excedido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountLockedResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Revoga **apenas** o token corrente (Authorization header desta request)
+      description: |
+        Outros tokens do mesmo user em outros dispositivos permanecem ativos.
+        Para revogar todos, use `POST /auth/logout-all`.
+      responses:
+        '204':
+          description: Token revogado
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /auth/logout-all:
+    post:
+      tags: [auth]
+      summary: Revoga **TODOS** os tokens do user autenticado
+      description: |
+        Útil para "Sair de todos os dispositivos" após suspeita de
+        comprometimento. Dispara `TokenRevogado` event por token afetado
+        com `motivo=logout_all`.
+      responses:
+        '204':
+          description: Todos os tokens revogados
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Retorna user autenticado + tenant atual
+      description: |
+        Usado pelo SPA no boot para validar token persistido em localStorage
+        + carregar dados de user/tenant no Pinia store.
+      parameters:
+        - in: header
+          name: X-Tenant-Slug
+          required: true
+          schema: { type: string }
+          description: Slug do tenant (validação cross-check com token.user.tenant_id)
+      responses:
+        '200':
+          description: User + tenant info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/TenantMismatch'
+
+  /auth/tokens:
+    get:
+      tags: [auth]
+      summary: Lista tokens ativos do user autenticado
+      description: |
+        Retorna os tokens ativos com metadata (nome, last_used_at,
+        expires_at). NÃO retorna o token plain (apenas hash prefix
+        para identificação visual).
+
+        UX: "Settings → Sessões" mostra a lista, permite revogar individualmente.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlugHeader'
+      responses:
+        '200':
+          description: Lista de tokens ativos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TokenResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /auth/tokens/{tokenId}:
+    delete:
+      tags: [auth]
+      summary: Revoga um token específico (do user autenticado)
+      description: |
+        User só pode revogar seus próprios tokens. Admin clínica pode
+        revogar tokens de qualquer user do tenant via endpoint admin
+        (futuro — fora do MVP desta fase).
+
+        Útil para "Sair deste dispositivo" no flow de gestão de sessões.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlugHeader'
+        - in: path
+          name: tokenId
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Token revogado
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: Token pertence a outro user
+        '404':
+          description: Token não encontrado
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: sanctum-token
+      description: |
+        Sanctum Personal Access Token. Formato:
+        `Authorization: Bearer paciente360_<random-string>`
+
+        Token obtido via `POST /auth/login`. Validade default 30 dias com
+        sliding expiration. Storage no cliente: localStorage chave
+        `paciente360.auth.token`.
+
+  parameters:
+    TenantSlugHeader:
+      in: header
+      name: X-Tenant-Slug
+      required: true
+      schema:
+        type: string
+        example: clinica-alfa
+      description: |
+        Slug do tenant que a request quer acessar. Backend valida que o user
+        do token pertence ao tenant (anti-token-roubo cross-tenant).
+        Ausente em endpoint autenticado → 400 `tenant_header_required`.
+
+  responses:
+    Unauthenticated:
+      description: Token ausente, inválido ou expirado (401)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TenantMismatch:
+      description: Token válido mas X-Tenant-Slug aponta para tenant diferente do owner (403)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: Erro de validação (422)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+
+  schemas:
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email globalmente único (UNIQUE cross-tenant)
+          example: admin@clinica-alfa.com.br
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: 'p@ssw0rd123'
+        device_name:
+          type: string
+          maxLength: 100
+          description: Nome amigável do device/cliente (mostrado em /auth/tokens)
+          example: 'Chrome on MacBook Pro'
+
+    LoginResponse:
+      type: object
+      required: [token, token_expires_at, user, tenant]
+      properties:
+        token:
+          type: string
+          description: |
+            Plain text token (apenas retornado uma vez no login).
+            Cliente persiste em storage. Backend armazena hash SHA-256.
+          example: 'paciente360_a8b3c9d1e7f2...'
+        token_expires_at:
+          type: string
+          format: date-time
+          description: Expiração inicial (sliding — renova em uso)
+        user:
+          $ref: '#/components/schemas/UserResource'
+        tenant:
+          $ref: '#/components/schemas/TenantResource'
+
+    MeResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserResource'
+        tenant:
+          $ref: '#/components/schemas/TenantResource'
+        token:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            abilities:
+              type: array
+              items: { type: string }
+            last_used_at: { type: string, format: date-time, nullable: true }
+            expires_at: { type: string, format: date-time, nullable: true }
+
+    UserResource:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string, format: email }
+        roles:
+          type: array
+          items: { type: string }
+        permissions:
+          type: array
+          items: { type: string }
+
+    TenantResource:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string, example: 'clinica-alfa' }
+        name: { type: string }
+        status: { type: string, enum: [active, trial, suspended] }
+        plan:
+          type: object
+          nullable: true
+          properties:
+            id: { type: integer }
+            slug: { type: string }
+            name: { type: string }
+
+    TokenResource:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        token_id_prefix:
+          type: string
+          description: Primeiros 8 chars do token (para identificação visual sem leak)
+          example: 'paciente'
+        abilities:
+          type: array
+          items: { type: string }
+        last_used_at: { type: string, format: date-time, nullable: true }
+        expires_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        is_current:
+          type: boolean
+          description: True se este é o token usado na request atual
+
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          example: 'invalid_credentials'
+        message:
+          type: string
+          example: 'Credenciais inválidas'
+        request_id:
+          type: string
+          description: Correlation ID para debug
+
+    AccountLockedResponse:
+      type: object
+      required: [error, message, locked_until]
+      properties:
+        error:
+          type: string
+          enum: [account_locked]
+        message: { type: string }
+        locked_until: { type: string, format: date-time }
+
+    ValidationErrorResponse:
+      type: object
+      required: [message, errors]
+      properties:
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }

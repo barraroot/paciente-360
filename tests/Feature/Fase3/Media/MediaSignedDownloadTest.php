@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -136,7 +137,7 @@ class MediaSignedDownloadTest extends TestCase
             ->create(['message_id' => $msgB->id]);
 
         // Volta para o usuário A
-        $this->actingAs($this->attendant);
+        Sanctum::actingAs($this->attendant, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $response = $this->getJson("/api/v1/inbox/media/{$mediaB->id}");
@@ -147,7 +148,7 @@ class MediaSignedDownloadTest extends TestCase
     #[Test]
     public function unauthenticated_request_returns_401(): void
     {
-        auth()->logout();
+        auth()->forgetGuards();
 
         $media = MessageMedia::factory()
             ->forTenant($this->tenant)

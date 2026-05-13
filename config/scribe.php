@@ -14,14 +14,17 @@ return [
     'title' => config('app.name').' API Documentation',
 
     // A short description of your API. Will be included in the docs webpage, Postman collection and OpenAPI spec.
-    'description' => 'API REST do Paciente360 — CRM médico SaaS multi-tenant. Todos os endpoints autenticados são escopados ao tenant resolvido pelo subdomínio.',
+    'description' => 'API REST do Paciente360 — CRM médico SaaS multi-tenant. A partir da Fase 4 (token auth migration), todos os endpoints autenticados usam Bearer Sanctum tokens e exigem o header `X-Tenant-Slug` para resolver o tenant alvo da request.',
 
     // Text to place in the "Introduction" section, right after the `description`. Markdown and HTML are supported.
     'intro_text' => <<<'INTRO'
-            This documentation aims to provide all the information you need to work with our API.
+            Esta documentação cobre o pipeline pós-Fase 4 (Bearer). Para integrar:
 
-            <aside>As you scroll, you'll see code examples for working with the API in different programming languages in the dark area to the right (or as part of the content on mobile).
-            You can switch the language used with the tabs at the top right (or from the nav menu at the top left on mobile).</aside>
+            1. `POST /api/v1/auth/login` — receba o token Bearer.
+            2. Envie `Authorization: Bearer <token>` + `X-Tenant-Slug: <slug>` em todas as requests autenticadas.
+            3. Gerencie sessões em `/api/v1/auth/tokens` (listagem) e `DELETE /api/v1/auth/tokens/{id}` (revogação).
+
+            Uma collection Postman oficial com pre-request scripts está disponível em `docs/api/Paciente360-API-v1.postman_collection.json` (auto-injeta Bearer + X-Tenant-Slug + salva o token após login).
         INTRO,
 
     // The base URL displayed in the docs.
@@ -112,12 +115,15 @@ return [
         // You can then use @unauthenticated or @authenticated on individual endpoints to change their status from the default.
         'default' => true,
 
-        // Where is the auth value meant to be sent in a request?
-        // Paciente360 usa sessão Sanctum SPA com X-XSRF-TOKEN header.
-        'in' => AuthIn::HEADER->value,
+        // Fase 4 — Token Auth Migration: Bearer (Sanctum Personal Access Tokens).
+        // Cookie-session SPA flow descontinuado para a API tenant em prol de
+        // Bearer stateless (Filament super-admin continua cookie, mas em
+        // domínio separado e fora deste contrato).
+        'in' => AuthIn::BEARER->value,
 
-        // The name of the auth parameter (e.g. token, key, apiKey) or header (e.g. Authorization, Api-Key).
-        'name' => 'X-XSRF-TOKEN',
+        // O nome do header é fixado como 'Authorization' (Bearer scheme); a
+        // chave 'name' aqui sinaliza o parâmetro lógico para o template.
+        'name' => 'Authorization',
 
         // The value of the parameter to be used by Scribe to authenticate response calls.
         // This will NOT be included in the generated documentation. If empty, Scribe will use a random value.
@@ -125,10 +131,21 @@ return [
 
         // Placeholder your users will see for the auth parameter in the example requests.
         // Set this to null if you want Scribe to use a random value as placeholder instead.
-        'placeholder' => '{YOUR_AUTH_KEY}',
+        'placeholder' => 'paciente360_<seu-token>',
 
         // Any extra authentication-related info for your users. Markdown and HTML are supported.
-        'extra_info' => 'You can retrieve your token by visiting your dashboard and clicking <b>Generate API token</b>.',
+        'extra_info' => <<<'EOT'
+            Autentique-se com `POST /api/v1/auth/login` enviando `email` + `password`. A resposta inclui um campo `token` (Sanctum Personal Access Token, prefixo `paciente360_`). Inclua-o em **todas** as requests autenticadas:
+
+            ```
+            Authorization: Bearer paciente360_<seu-token>
+            X-Tenant-Slug: <slug-da-clinica>
+            ```
+
+            O header `X-Tenant-Slug` é obrigatório em rotas autenticadas (exceto `/auth/login`) — triple-check anti-token-roubo cross-tenant (FR-011 / Princípio II).
+
+            Tokens expiram em 30 dias com *sliding expiration*: cada request renova `expires_at` quando restam < 5 dias.
+            EOT,
     ],
 
     // Example requests for each endpoint will be shown in each of these languages.

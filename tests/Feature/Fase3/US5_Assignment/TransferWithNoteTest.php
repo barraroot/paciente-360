@@ -11,6 +11,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -269,7 +270,7 @@ class TransferWithNoteTest extends TestCase
         )->assertOk();
 
         // Re-auth as destino1 for second transfer
-        $this->actingAs($destino1);
+        Sanctum::actingAs($destino1, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $this->postJson(
@@ -293,7 +294,7 @@ class TransferWithNoteTest extends TestCase
     public function requires_inbox_transfer_ability(): void
     {
         $financeiro = $this->userForRole($this->tenant, 'financeiro');
-        $this->actingAs($financeiro);
+        Sanctum::actingAs($financeiro, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $conversation = Conversation::factory()

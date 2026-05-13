@@ -6,6 +6,7 @@ use App\Domain\Messaging\Presence\Models\UserPresence;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -111,7 +112,7 @@ class PresenceListTest extends TestCase
             ]);
 
         // Consulta como usuário do tenant A
-        $this->actingAs($this->attendant);
+        Sanctum::actingAs($this->attendant, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $response = $this->getJson('/api/v1/inbox/presence');
@@ -126,7 +127,7 @@ class PresenceListTest extends TestCase
     #[Test]
     public function unauthenticated_request_returns_401(): void
     {
-        auth()->logout();
+        auth()->forgetGuards();
 
         $response = $this->getJson('/api/v1/inbox/presence');
 

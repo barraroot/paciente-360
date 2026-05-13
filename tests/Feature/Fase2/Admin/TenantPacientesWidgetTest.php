@@ -9,6 +9,7 @@ use App\Models\User;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\Sanctum;
 use Livewire\Livewire;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenantWithRoles;
@@ -57,7 +58,7 @@ class TenantPacientesWidgetTest extends TestCase
             'anonimizado_em' => now(),
         ]);
 
-        $this->actingAs($this->superAdmin);
+        Sanctum::actingAs($this->superAdmin, ['*']);
 
         Livewire::test(TenantPacientesWidget::class)
             ->assertSuccessful();
@@ -89,7 +90,7 @@ class TenantPacientesWidgetTest extends TestCase
 
         Paciente::factory()->count(2)->forTenant($tenant)->create(['status' => 'ativo']);
 
-        $this->actingAs($this->superAdmin);
+        Sanctum::actingAs($this->superAdmin, ['*']);
 
         $component = Livewire::test(TenantPacientesWidget::class);
 

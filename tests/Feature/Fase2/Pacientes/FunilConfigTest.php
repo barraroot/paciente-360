@@ -6,6 +6,7 @@ use App\Models\FunilColuna;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
 
@@ -93,7 +94,7 @@ class FunilConfigTest extends TestCase
     public function test_medico_nao_pode_configurar_coluna(): void
     {
         $medico = $this->userForRole($this->tenant, 'medico');
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $coluna = FunilColuna::where('tenant_id', $this->tenant->id)->where('slug', 'novo')->first();
 

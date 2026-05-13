@@ -61,6 +61,29 @@ class User extends Authenticatable implements FilamentUser
     use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /**
+     * Pina o guard usado pelo Spatie Permission para `web` (Fase 4 Lote F).
+     *
+     * Quando o `auth:sanctum` middleware autentica via Bearer, Laravel chama
+     * `Auth::shouldUse('sanctum')` que muta `config('auth.defaults.guard')`
+     * para `sanctum`. O Spatie, por default, usaria esse novo guard para
+     * resolver as permissions — e como TODAS as permissions seedadas têm
+     * `guard_name='web'` (RolesSeeder), a busca falharia silenciosamente
+     * (PermissionDoesNotExist → caught → `can()` retorna false).
+     *
+     * Pinando `guardName()` em `'web'`, o Spatie usa esse guard para o
+     * lookup independente do estado de `Auth::shouldUse(...)`. Cookie-session
+     * (Filament) continua funcional — também roda em `web`. Bearer Sanctum
+     * passa a ter `can()` correto.
+     *
+     * @see vendor/spatie/laravel-permission/src/Guard.php::getNames()
+     * @see specs/004-token-auth-migration/spec.md §FR-001 (compat permissions)
+     */
+    public function guardName(): string
+    {
+        return 'web';
+    }
+
+    /**
      * Autoriza o acesso ao painel Filament (T282).
      *
      * O painel `admin` é restrito a usuários com role `super-admin` e sem

@@ -16,6 +16,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenants;
 use Tests\TestCase;
@@ -75,7 +76,7 @@ class HardCapTest extends TestCase
 
         $user = $this->setUpTenantWithRole($tenant, 'admin-clinica');
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->patchJson($this->hardCapUrl($tenant->slug), ['hard_cap' => 5000]);
 
@@ -109,7 +110,7 @@ class HardCapTest extends TestCase
 
         $user = $this->setUpTenantWithRole($tenant, 'admin-clinica');
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->patchJson($this->hardCapUrl($tenant->slug), ['hard_cap' => null]);
 
@@ -132,7 +133,7 @@ class HardCapTest extends TestCase
 
         $user = $this->setUpTenantWithRole($tenant, 'admin-clinica');
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->patchJson($this->hardCapUrl($tenant->slug), ['hard_cap' => 0]);
 
@@ -236,7 +237,7 @@ class HardCapTest extends TestCase
         $medico->assignRole($medicoRole);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $response = $this->patchJson($this->hardCapUrl($tenant->slug), ['hard_cap' => 5000]);
 
@@ -250,7 +251,7 @@ class HardCapTest extends TestCase
 
         $user = $this->setUpTenantWithRole($tenant, 'admin-clinica');
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->patchJson($this->hardCapUrl($tenant->slug), ['hard_cap' => -100]);
 

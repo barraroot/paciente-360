@@ -7,6 +7,7 @@ use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -90,7 +91,7 @@ class InboxTenantIsolationTest extends TestCase
     public function user_a_cannot_assign_conversation_belonging_to_tenant_b(): void
     {
         // userA is authenticated as tenant A admin
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
         $this->app->instance('tenant', $this->tenantA);
 
         // Attempt to assign a conversation that belongs to tenant B
@@ -122,7 +123,7 @@ class InboxTenantIsolationTest extends TestCase
     #[Test]
     public function user_a_cannot_transfer_conversation_belonging_to_tenant_b(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
         $this->app->instance('tenant', $this->tenantA);
 
         $response = $this->postJson(
@@ -151,7 +152,7 @@ class InboxTenantIsolationTest extends TestCase
     #[Test]
     public function user_a_cannot_view_assignment_history_of_tenant_b_conversation(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
         $this->app->instance('tenant', $this->tenantA);
 
         $response = $this->getJson(
@@ -179,7 +180,7 @@ class InboxTenantIsolationTest extends TestCase
     #[Test]
     public function assignment_rules_list_is_scoped_to_authenticated_tenant(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
         $this->app->instance('tenant', $this->tenantA);
 
         $response = $this->getJson(
@@ -300,7 +301,7 @@ class InboxTenantIsolationTest extends TestCase
     #[Test]
     public function quick_replies_index_is_scoped_to_authenticated_tenant(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
         $this->app->instance('tenant', $this->tenantA);
 
         $response = $this->getJson(
@@ -354,7 +355,7 @@ class InboxTenantIsolationTest extends TestCase
     #[Test]
     public function user_a_cannot_view_widget_config_of_tenant_b_channel(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
         $this->app->instance('tenant', $this->tenantA);
 
         $response = $this->getJson(
@@ -368,7 +369,7 @@ class InboxTenantIsolationTest extends TestCase
     #[Test]
     public function user_a_cannot_update_widget_config_of_tenant_b_channel(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
         $this->app->instance('tenant', $this->tenantA);
 
         $response = $this->putJson(
@@ -377,5 +378,48 @@ class InboxTenantIsolationTest extends TestCase
         );
 
         $this->assertContains($response->getStatusCode(), [403, 404]);
+    }
+
+    // -------------------------------------------------------------------------
+    // T089 (Lote I) — Fase 4 amendment v1.4.0: enforcement do X-Tenant-Slug
+    // sobre rotas /api/v1/auth/* (Bearer triple-check anti-token-roubo).
+    //
+    // NOTA: O rollout do middleware `tenant.slug` para TODAS as rotas
+    // autenticadas (incluindo /inbox/*) é trabalho separado (afetaria ~227
+    // testes legados que não enviam o header). Em Lote I, fixamos apenas o
+    // contrato sobre /auth/me que já está protegido pelo middleware, como
+    // canary do invariant amendment v1.4.0.
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function user_a_bearer_with_x_tenant_slug_b_blocked_by_middleware_on_auth_route(): void
+    {
+        // Triple-check anti-token-roubo: userA tem token válido, mas envia
+        // X-Tenant-Slug do tenantB → tenant.slug middleware rejeita com 403.
+        // Usa /auth/me como canary (rota já protegida pelo middleware).
+        //
+        // setUp encadeia 2x tenantAndUserForRole — Sanctum::actingAs(userB) é o
+        // último, então o user efetivo é userB. Re-actingAs explícito em userA.
+        Sanctum::actingAs($this->userA, ['*']);
+
+        $response = $this->withHeaders([
+            'X-Tenant-Slug' => $this->tenantB->slug,
+        ])->getJson('/api/v1/auth/me');
+
+        $response->assertStatus(403)
+            ->assertJsonFragment(['error' => 'tenant_mismatch']);
+    }
+
+    #[Test]
+    public function user_a_bearer_without_x_tenant_slug_blocked_by_middleware_on_auth_route(): void
+    {
+        // X-Tenant-Slug é obrigatório em rotas autenticadas — middleware
+        // tenant.slug rejeita ausência com 400 tenant_header_required.
+        Sanctum::actingAs($this->userA, ['*']);
+
+        $response = $this->getJson('/api/v1/auth/me');
+
+        $response->assertStatus(400)
+            ->assertJsonFragment(['error' => 'tenant_header_required']);
     }
 }

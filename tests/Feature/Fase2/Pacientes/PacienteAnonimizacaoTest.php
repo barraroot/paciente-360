@@ -6,6 +6,7 @@ use App\Models\Paciente;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
 
@@ -137,7 +138,7 @@ class PacienteAnonimizacaoTest extends TestCase
         $pacienteId = $this->criarPaciente();
 
         $medico = $this->userForRole($this->tenant, 'medico');
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $response = $this->postJson($this->baseUrl("/pacientes/{$pacienteId}/anonimizar"));
         $response->assertForbidden();

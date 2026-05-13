@@ -1,0 +1,2836 @@
+name: Endpoints
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/inbox/channels
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/inbox/channels
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      type:
+        custom: []
+        name: type
+        description: ''
+        required: true
+        example: instagram
+        type: string
+        enumValues:
+          - whatsapp
+          - instagram
+          - web
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'Must be at least 2 characters. Must not be greater than 100 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      credentials:
+        custom: []
+        name: credentials
+        description: ''
+        required: true
+        example: []
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      type: instagram
+      name: b
+      credentials: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/inbox/channels/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the channel.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+      - PATCH
+    uri: 'api/v1/inbox/channels/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the channel.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must be at least 2 characters. Must not be greater than 100 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      auto_send_disabled:
+        custom: []
+        name: auto_send_disabled
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      name: b
+      auto_send_disabled: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/inbox/channels/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the channel.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/channels/{channel}/reconnect'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      channel:
+        custom: []
+        name: channel
+        description: 'The channel.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      channel: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      credentials_override:
+        custom: []
+        name: credentials_override
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/inbox/channels/{channel_id}/templates'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      channel_id:
+        custom: []
+        name: channel_id
+        description: 'The ID of the channel.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      channel_id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+              "message": "The route api/v1/inbox/channels/architecto/templates could not be found."
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/channels/{channel}/templates/sync'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      channel:
+        custom: []
+        name: channel
+        description: 'The channel.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      channel: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/inbox/widget-configs/{channelId}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      channelId:
+        custom: []
+        name: channelId
+        description: ''
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      channelId: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/inbox/widget-configs/{channelId}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      channelId:
+        custom: []
+        name: channelId
+        description: ''
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      channelId: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      appearance:
+        custom: []
+        name: appearance
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      appearance.primary_color:
+        custom: []
+        name: appearance.primary_color
+        description: 'Must match the regex /^#[0-9a-fA-F]{3,6}$/.'
+        required: false
+        example: '#FeeEd'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      appearance.logo_url:
+        custom: []
+        name: appearance.logo_url
+        description: 'Must be a valid URL. Must not be greater than 500 characters.'
+        required: false
+        example: 'http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      appearance.position:
+        custom: []
+        name: appearance.position
+        description: ''
+        required: false
+        example: bottom-left
+        type: string
+        enumValues:
+          - bottom-right
+          - bottom-left
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      appearance.button_label:
+        custom: []
+        name: appearance.button_label
+        description: 'Must not be greater than 50 characters.'
+        required: false
+        example: m
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      initial_message:
+        custom: []
+        name: initial_message
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'y'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      business_hours:
+        custom: []
+        name: business_hours
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      business_hours.monday:
+        custom: []
+        name: business_hours.monday
+        description: 'Must match the regex /^\d{2}:\d{2}-\d{2}:\d{2}$/.'
+        required: false
+        example: '25:59-31:42'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      business_hours.tuesday:
+        custom: []
+        name: business_hours.tuesday
+        description: 'Must match the regex /^\d{2}:\d{2}-\d{2}:\d{2}$/.'
+        required: false
+        example: '25:59-31:42'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      business_hours.wednesday:
+        custom: []
+        name: business_hours.wednesday
+        description: 'Must match the regex /^\d{2}:\d{2}-\d{2}:\d{2}$/.'
+        required: false
+        example: '25:59-31:42'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      business_hours.thursday:
+        custom: []
+        name: business_hours.thursday
+        description: 'Must match the regex /^\d{2}:\d{2}-\d{2}:\d{2}$/.'
+        required: false
+        example: '25:59-31:42'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      business_hours.friday:
+        custom: []
+        name: business_hours.friday
+        description: 'Must match the regex /^\d{2}:\d{2}-\d{2}:\d{2}$/.'
+        required: false
+        example: '25:59-31:42'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      business_hours.saturday:
+        custom: []
+        name: business_hours.saturday
+        description: 'Must match the regex /^\d{2}:\d{2}-\d{2}:\d{2}$/.'
+        required: false
+        example: '25:59-31:42'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      business_hours.sunday:
+        custom: []
+        name: business_hours.sunday
+        description: 'Must match the regex /^\d{2}:\d{2}-\d{2}:\d{2}$/.'
+        required: false
+        example: '25:59-31:42'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      business_hours.timezone:
+        custom: []
+        name: business_hours.timezone
+        description: 'Must be a valid time zone, such as <code>Africa/Accra</code>.'
+        required: false
+        example: Asia/Sakhalin
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      outside_hours_behavior:
+        custom: []
+        name: outside_hours_behavior
+        description: ''
+        required: false
+        example: bloqueia
+        type: string
+        enumValues:
+          - bloqueia
+          - fila
+          - normal
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      outside_hours_message:
+        custom: []
+        name: outside_hours_message
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: w
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      pre_chat_form:
+        custom: []
+        name: pre_chat_form
+        description: ''
+        required: false
+        example: exigido_para_enviar
+        type: string
+        enumValues:
+          - opcional
+          - exigido_para_iniciar
+          - exigido_para_enviar
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      allowed_origins:
+        custom: []
+        name: allowed_origins
+        description: 'Must be a valid URL. Must not be greater than 255 characters.'
+        required: false
+        example:
+          - a
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      appearance:
+        primary_color: '#FeeEd'
+        logo_url: 'http://www.dach.com/mollitia-modi-deserunt-aut-ab-provident-perspiciatis-quo.html'
+        position: bottom-left
+        button_label: m
+      initial_message: 'y'
+      business_hours:
+        monday: '25:59-31:42'
+        tuesday: '25:59-31:42'
+        wednesday: '25:59-31:42'
+        thursday: '25:59-31:42'
+        friday: '25:59-31:42'
+        saturday: '25:59-31:42'
+        sunday: '25:59-31:42'
+        timezone: Asia/Sakhalin
+      outside_hours_behavior: bloqueia
+      outside_hours_message: w
+      pre_chat_form: exigido_para_enviar
+      allowed_origins:
+        - a
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/inbox/widget-configs/{channelId}/snippet'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      channelId:
+        custom: []
+        name: channelId
+        description: ''
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      channelId: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/inbox/conversations
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        GET /inbox/conversations
+        Lista conversas do tenant com filtros e aggregations.
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: false
+        example:
+          - aberta
+        type: 'string[]'
+        enumValues:
+          - aberta
+          - pendente
+          - resolvida
+          - reaberta
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      channel_id:
+        custom: []
+        name: channel_id
+        description: ''
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      channel_type:
+        custom: []
+        name: channel_type
+        description: ''
+        required: false
+        example: web
+        type: string
+        enumValues:
+          - whatsapp
+          - instagram
+          - web
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      assigned_user_id:
+        custom: []
+        name: assigned_user_id
+        description: ''
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      patient_id:
+        custom: []
+        name: patient_id
+        description: ''
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      ai_paused:
+        custom: []
+        name: ai_paused
+        description: ''
+        required: false
+        example: 'true'
+        type: string
+        enumValues:
+          - 'true'
+          - 'false'
+          - '1'
+          - '0'
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      last_activity_from:
+        custom: []
+        name: last_activity_from
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      last_activity_to:
+        custom: []
+        name: last_activity_to
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      q:
+        custom: []
+        name: q
+        description: 'Must be at least 2 characters.'
+        required: false
+        example: ngzm
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Must be at least 1. Must not be greater than 100.'
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      page:
+        custom: []
+        name: page
+        description: 'Must be at least 1.'
+        required: false
+        example: 43
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      status:
+        - aberta
+      channel_id: 16
+      channel_type: web
+      assigned_user_id: architecto
+      patient_id: 16
+      ai_paused: 'true'
+      q: ngzm
+      per_page: 15
+      page: 43
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/inbox/conversations/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'GET /inbox/conversations/{conversation}'
+      description: |-
+        Returns 404 (instead of 403) when the user is a medico who cannot see the conversation.
+        This hides existence of the record (privacy by design).
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/inbox/conversations/{conversation_id}/messages'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        GET /inbox/conversations/{conversation}/messages
+        Lista mensagens cursor-paginadas (DESC).
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      conversation_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/conversations/{conversation_id}/messages'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        POST /inbox/conversations/{conversation}/messages
+        Envia mensagem outbound.
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      conversation_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      idempotency_key:
+        custom: []
+        name: idempotency_key
+        description: 'Must be at least 1 character.'
+        required: true
+        example: bngzmiyvdljnikhw
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      content_type:
+        custom: []
+        name: content_type
+        description: ''
+        required: true
+        example: text
+        type: string
+        enumValues:
+          - text
+          - template
+          - image
+          - audio
+          - video
+          - document
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      body:
+        custom: []
+        name: body
+        description: 'Must not be greater than 4096 characters.'
+        required: false
+        example: a
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      media_token:
+        custom: []
+        name: media_token
+        description: ''
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      template:
+        custom: []
+        name: template
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      template.provider_template_id:
+        custom: []
+        name: template.provider_template_id
+        description: ''
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      template.variables:
+        custom: []
+        name: template.variables
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      idempotency_key: bngzmiyvdljnikhw
+      content_type: text
+      body: a
+      media_token: architecto
+      template:
+        provider_template_id: architecto
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/conversations/{conversation_id}/read'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /inbox/conversations/{conversation}/read'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      conversation_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/conversations/{conversation_id}/resolve'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /inbox/conversations/{conversation}/resolve'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      conversation_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/conversations/{conversation_id}/reopen'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /inbox/conversations/{conversation}/reopen'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      conversation_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/inbox/poll
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/conversations/{conversation_id}/takeover'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /inbox/conversations/{conversation}/takeover'
+      description: |-
+        Pausa a IA na conversa pelo tempo especificado (ou padrão do tenant).
+        Aceita:
+         - {} (padrão do config/tenant — clamped 5-240 min)
+         - {"duration_hours": 4} (clamped 5-240 min)
+         - {"until": "2026-05-12T18:00:00Z"} (timestamp explícito, sem clamp)
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      conversation_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      duration_hours:
+        custom: []
+        name: duration_hours
+        description: 'Must be at least 1. Must not be greater than 24.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      until:
+        custom: []
+        name: until
+        description: 'Must be a valid date in the format <code>Y-m-d\TH:i:sP</code>. Must be a date after <code>now</code>.'
+        required: false
+        example: '2052-06-05'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      reason:
+        custom: []
+        name: reason
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      duration_hours: 16
+      until: '2052-06-05'
+      reason: 'n'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/conversations/{conversation_id}/release-to-ai'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /inbox/conversations/{conversation}/release-to-ai'
+      description: 'Libera a IA imediatamente. Idempotente.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      conversation_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      duration_hours:
+        custom: []
+        name: duration_hours
+        description: 'Must be at least 1. Must not be greater than 24.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      until:
+        custom: []
+        name: until
+        description: 'Must be a valid date in the format <code>Y-m-d\TH:i:sP</code>. Must be a date after <code>now</code>.'
+        required: false
+        example: '2052-06-05'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      reason:
+        custom: []
+        name: reason
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      duration_hours: 16
+      until: '2052-06-05'
+      reason: 'n'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/conversations/{conversation_id}/assign'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /inbox/conversations/{conversation}/assign'
+      description: 'Atribuição manual (`user_id`) ou auto (`auto: true`).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      conversation_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      user_id:
+        custom: []
+        name: user_id
+        description: ''
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      auto:
+        custom: []
+        name: auto
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      strategy:
+        custom: []
+        name: strategy
+        description: ''
+        required: false
+        example: patient_owner
+        type: string
+        enumValues:
+          - round_robin
+          - patient_owner
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      user_id: 16
+      auto: false
+      strategy: patient_owner
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/conversations/{conversation_id}/transfer'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /inbox/conversations/{conversation}/transfer'
+      description: 'Transferência para usuário (`user_id`) ou role (`role`).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      conversation_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      user_id:
+        custom: []
+        name: user_id
+        description: ''
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      role:
+        custom: []
+        name: role
+        description: ''
+        required: false
+        example: medico
+        type: string
+        enumValues:
+          - medico
+          - atendente
+          - recepcionista
+          - admin-clinica
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      transfer_note:
+        custom: []
+        name: transfer_note
+        description: 'Must be at least 10 characters. Must not be greater than 500 characters.'
+        required: true
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      user_id: 16
+      role: medico
+      transfer_note: 'n'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/inbox/conversations/{conversation_id}/assignments'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'GET /inbox/conversations/{conversation}/assignments'
+      description: 'Histórico cronológico de atribuições da conversa (DESC).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The ID of the conversation.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      conversation_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/inbox/assignment-rules
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'GET /inbox/assignment-rules'
+      description: 'Lista regras ativas ordenadas por priority (asc = maior prioridade).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: api/v1/inbox/assignment-rules
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'PUT /inbox/assignment-rules'
+      description: |-
+        Substitui todas as regras do tenant em uma única transação.
+        Atomicamente: apaga as antigas, insere as novas.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      rules:
+        custom: []
+        name: rules
+        description: ''
+        required: true
+        example:
+          - []
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'rules[].strategy':
+        custom: []
+        name: 'rules[].strategy'
+        description: ''
+        required: true
+        example: patient_owner
+        type: string
+        enumValues:
+          - round_robin
+          - patient_owner
+          - manual
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'rules[].priority':
+        custom: []
+        name: 'rules[].priority'
+        description: 'Must be at least 1.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'rules[].is_active':
+        custom: []
+        name: 'rules[].is_active'
+        description: ''
+        required: true
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'rules[].config':
+        custom: []
+        name: 'rules[].config'
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'rules[].channel_id':
+        custom: []
+        name: 'rules[].channel_id'
+        description: 'The <code>id</code> of an existing record in the messaging_channels table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      rules:
+        -
+          strategy: patient_owner
+          priority: 16
+          is_active: false
+          channel_id: 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/inbox/quick-replies
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'GET /inbox/quick-replies'
+      description: |-
+        Lista respostas rápidas visíveis para o usuário (tenant + próprias privadas).
+        Private overrides tenant quando shortcut coincide.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/inbox/quick-replies
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /inbox/quick-replies'
+      description: |-
+        Cria resposta rápida (scope=tenant exige quick_reply.manage;
+        scope=private qualquer inbox.respond).
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      scope:
+        custom: []
+        name: scope
+        description: ''
+        required: true
+        example: private
+        type: string
+        enumValues:
+          - tenant
+          - private
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      shortcut:
+        custom: []
+        name: shortcut
+        description: 'Must match the regex /^\/[a-zA-Z0-9_-]+$/. Must be at least 2 characters. Must not be greater than 50 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      content:
+        custom: []
+        name: content
+        description: 'Must be at least 1 character. Must not be greater than 4096 characters.'
+        required: true
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      scope: private
+      shortcut: b
+      content: 'n'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+      - PATCH
+    uri: 'api/v1/inbox/quick-replies/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'PATCH /inbox/quick-replies/{quickReply}'
+      description: 'Atualiza resposta rápida (policy: tenant-scope exige quick_reply.manage; privada = owner).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the quick reply.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      shortcut:
+        custom: []
+        name: shortcut
+        description: 'Must match the regex /^\/[a-zA-Z0-9_-]+$/. Must be at least 2 characters. Must not be greater than 50 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      content:
+        custom: []
+        name: content
+        description: 'Must be at least 1 character. Must not be greater than 4096 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      shortcut: b
+      content: 'n'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/inbox/quick-replies/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'DELETE /inbox/quick-replies/{quickReply}'
+      description: 'Remove resposta rápida (policy: tenant-scope exige quick_reply.manage; privada = owner).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the quick reply.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/inbox/quick-replies/{quickReply_id}/render'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /inbox/quick-replies/{quickReply}/render'
+      description: 'Renderiza variáveis em contexto de uma conversa para preview server-side.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      quickReply_id:
+        custom: []
+        name: quickReply_id
+        description: 'The ID of the quickReply.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      quickReply_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'The <code>id</code> of an existing record in the messaging_conversations table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      conversation_id: 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/inbox/media/upload
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /api/v1/inbox/media/upload'
+      description: |-
+        Solicita URL pré-assinada PUT para upload direto ao S3.
+        Retorna `media_token` que deve ser incluído no payload da mensagem.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      conversation_id:
+        custom: []
+        name: conversation_id
+        description: 'Must be at least 1.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      mime_type:
+        custom: []
+        name: mime_type
+        description: ''
+        required: true
+        example: video/mp4
+        type: string
+        enumValues:
+          - image/jpeg
+          - image/png
+          - image/webp
+          - audio/mpeg
+          - audio/ogg
+          - audio/mp4
+          - video/mp4
+          - application/pdf
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      size_bytes:
+        custom: []
+        name: size_bytes
+        description: 'Must be at least 1.'
+        required: true
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      original_filename:
+        custom: []
+        name: original_filename
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      conversation_id: 16
+      mime_type: video/mp4
+      size_bytes: 22
+      original_filename: g
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/inbox/media/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'GET /api/v1/inbox/media/{id}'
+      description: 'Retorna URL de download assinada (24h) ou 410 se mídia foi purgada.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the medium.'
+        required: true
+        example: '564'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '564'
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/inbox/presence/heartbeat
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /api/v1/inbox/presence/heartbeat'
+      description: |-
+        Registra heartbeat — atualiza `last_seen_at` para agora.
+        Cria linha se não existir. Retorna 204 No Content.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/inbox/presence
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'GET /api/v1/inbox/presence'
+      description: 'Lista atendentes do tenant com status inferido (online/offline).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: api/v1/inbox/presence/me
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'PATCH /api/v1/inbox/presence/me'
+      description: 'Atualiza preferências do atendente atual.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      max_concurrent_conversations:
+        custom: []
+        name: max_concurrent_conversations
+        description: 'Must be at least 1. Must not be greater than 50.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      notification_preferences:
+        custom: []
+        name: notification_preferences
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      notification_preferences.new_conversation:
+        custom: []
+        name: notification_preferences.new_conversation
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      notification_preferences.new_message:
+        custom: []
+        name: notification_preferences.new_message
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      notification_preferences.assignment:
+        custom: []
+        name: notification_preferences.assignment
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      max_concurrent_conversations: 1
+      notification_preferences:
+        new_conversation: false
+        new_message: false
+        assignment: false
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/webhooks/twilio/whatsapp
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/webhooks/twilio/status
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/webhooks/instagram
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'GET handshake — Meta confirma a URL do webhook antes de entregar eventos.'
+      description: |-
+        Meta envia: hub.mode=subscribe, hub.challenge=<token>, hub.verify_token=<secret>
+        Deve responder: 200 com o challenge em PLAIN TEXT (não JSON).
+
+        Atenção: PHP converte pontos em parâmetros de query para underscores.
+        hub.mode → hub_mode, hub.verify_token → hub_verify_token, etc.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 403
+        content: forbidden
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          strict-transport-security: 'max-age=31536000; includeSubDomains; preload'
+          x-frame-options: DENY
+          x-content-type-options: nosniff
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; connect-src 'self' ws: wss:; frame-ancestors 'none'; base-uri 'self'"
+          x-request-id: 01KRGJAJR0VXHE3WAP216CFMH1
+          x-ratelimit-limit: '1000'
+          x-ratelimit-remaining: '999'
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/webhooks/instagram
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST inbound — processa DMs Instagram entregues pela Meta.'
+      description: |-
+        O payload pode conter múltiplos entry[] e cada entry múltiplos messaging[].
+        Cada evento é gravado de forma idempotente pelo WebhookEventRecorder e
+        um job assíncrono é despachado para processar a mensagem.
+
+        Sempre responde 200 para evitar retry imediato da Meta.
+
+        T270 — métricas Prometheus registradas após processamento:
+         - webhookReceived(provider, status)
+         - webhookProcessingDuration(provider, seconds)
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer paciente360_<seu-token>'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

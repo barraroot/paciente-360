@@ -30,6 +30,15 @@ return [
     | are able to authenticate the request, Sanctum will use the bearer
     | token that's present on an incoming request for authentication.
     |
+    | Fase 4 Lote I — `'guard' => ['web']` mantido por compatibilidade com
+    | tests legados que ainda usam chained `$this->actingAs($user)->getJson(...)`
+    | (Sanctum::actingAs retorna User, quebraria o chain). Migrar essas chains
+    | manualmente e depois trocar para `'guard' => []` para enforce Bearer-only
+    | (gate de segurança para deploy prod isolado app↔api).
+    |
+    | @see app/Console/Commands/TestsMigrateActingAsCommand.php (lista chains
+    |      pendentes via --preview)
+    |
     */
 
     'guard' => ['web'],
@@ -45,7 +54,10 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Tokens expiram em 30 dias (60 min × 24h × 30d).
+    // Sliding expiration: o middleware SlideTokenExpiration renova expires_at
+    // em toda request autenticada quando restam < 5 dias de janela.
+    'expiration' => 60 * 24 * 30,
 
     /*
     |--------------------------------------------------------------------------
@@ -60,7 +72,7 @@ return [
     |
     */
 
-    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
+    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', 'paciente360_'),
 
     /*
     |--------------------------------------------------------------------------

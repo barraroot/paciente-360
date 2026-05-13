@@ -10,6 +10,7 @@ use App\Services\Audit\AuditService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\CreatesTenants;
 use Tests\TestCase;
 
@@ -105,7 +106,7 @@ class AuditServiceTest extends TestCase
         $user = $this->createUserForTenant($tenant);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $action = 'test.service.vs.listener';
 

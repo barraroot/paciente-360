@@ -7,6 +7,7 @@ use App\Domain\Messaging\Widget\Models\WebWidgetConfig;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
 
@@ -182,7 +183,7 @@ class UpdateWidgetConfigTest extends TestCase
             ->create(['channel_id' => $otherChannel->id, 'public_key' => str_repeat('b', 64)]);
 
         // Acting as tenant A admin, try to update tenant B's widget config
-        $this->actingAs($this->adminUser);
+        Sanctum::actingAs($this->adminUser, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $response = $this->putJson(

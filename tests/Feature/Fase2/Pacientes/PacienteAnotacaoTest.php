@@ -7,6 +7,7 @@ use App\Models\Paciente;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
 
@@ -68,7 +69,7 @@ class PacienteAnotacaoTest extends TestCase
     public function test_medico_pode_criar_anotacao_de_qualquer_tipo(): void
     {
         $medico = $this->userForRole($this->tenant, 'medico');
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         // Médico tem paciente.note.write — pode criar qualquer tipo
         foreach (['geral', 'clinica', 'comportamental'] as $tipo) {
@@ -84,7 +85,7 @@ class PacienteAnotacaoTest extends TestCase
     public function test_atendente_pode_criar_anotacao_de_qualquer_tipo_se_tiver_write(): void
     {
         $atendente = $this->userForRole($this->tenant, 'atendente');
-        $this->actingAs($atendente);
+        Sanctum::actingAs($atendente, ['*']);
 
         // Atendente com paciente.note.write pode criar qualquer tipo
         // (visibilidade é granular apenas na leitura)
@@ -119,7 +120,7 @@ class PacienteAnotacaoTest extends TestCase
 
         // Autentica como atendente
         $atendente = $this->userForRole($this->tenant, 'atendente');
-        $this->actingAs($atendente);
+        Sanctum::actingAs($atendente, ['*']);
 
         $response = $this->getJson($this->anotacoesUrl());
         $response->assertOk();
@@ -145,7 +146,7 @@ class PacienteAnotacaoTest extends TestCase
 
         // Médico deve ver clínica
         $medico = $this->userForRole($this->tenant, 'medico');
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $response = $this->getJson($this->anotacoesUrl());
         $response->assertOk();
@@ -154,7 +155,7 @@ class PacienteAnotacaoTest extends TestCase
 
         // Atendente NÃO deve ver clínica
         $atendente = $this->userForRole($this->tenant, 'atendente');
-        $this->actingAs($atendente);
+        Sanctum::actingAs($atendente, ['*']);
 
         $response2 = $this->getJson($this->anotacoesUrl());
         $response2->assertOk();
@@ -181,7 +182,7 @@ class PacienteAnotacaoTest extends TestCase
 
         // Médico NÃO deve ver financeira (não tem paciente.note.view:financeira)
         $medico = $this->userForRole($this->tenant, 'medico');
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $responseMedico = $this->getJson($this->anotacoesUrl());
         $responseMedico->assertOk();
@@ -210,7 +211,7 @@ class PacienteAnotacaoTest extends TestCase
 
         // Atendente NÃO deve ver o evento de anotação clínica na timeline
         $atendente = $this->userForRole($this->tenant, 'atendente');
-        $this->actingAs($atendente);
+        Sanctum::actingAs($atendente, ['*']);
 
         $responseAtendente = $this->getJson(
             $this->baseUrl("/pacientes/{$this->paciente->id}/timeline"),

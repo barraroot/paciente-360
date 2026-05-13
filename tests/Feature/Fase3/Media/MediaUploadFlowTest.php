@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -200,7 +201,7 @@ class MediaUploadFlowTest extends TestCase
     {
         // Usuário financeiro não tem inbox.respond
         $financeiro = $this->userForRole($this->tenant, 'financeiro');
-        $this->actingAs($financeiro);
+        Sanctum::actingAs($financeiro, ['*']);
 
         $response = $this->postJson('/api/v1/inbox/media/upload', [
             'conversation_id' => $this->conversation->id,
@@ -215,7 +216,7 @@ class MediaUploadFlowTest extends TestCase
     #[Test]
     public function unauthenticated_request_returns_401(): void
     {
-        auth()->logout();
+        auth()->forgetGuards();
 
         $response = $this->postJson('/api/v1/inbox/media/upload', [
             'conversation_id' => $this->conversation->id,

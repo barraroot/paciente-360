@@ -6,6 +6,8 @@ use App\Models\Paciente;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenants;
 use Tests\TestCase;
 
@@ -24,10 +26,15 @@ class Fase2TenantIsolationTest extends TestCase
     use RefreshDatabase;
 
     private Tenant $tenantA;
+
     private Tenant $tenantB;
+
     private User $userA;
+
     private User $userB;
+
     private Paciente $pacienteA;
+
     private Paciente $pacienteB;
 
     protected function setUp(): void
@@ -47,10 +54,10 @@ class Fase2TenantIsolationTest extends TestCase
         $this->pacienteB = Paciente::factory()->forTenant($this->tenantB)->create();
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function user_cannot_list_pacientes_from_other_tenant(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         $response = $this->getJson('http://tenant-a.lvh.me/api/v1/pacientes');
 
@@ -58,10 +65,10 @@ class Fase2TenantIsolationTest extends TestCase
         $this->assertTrue(in_array($response->getStatusCode(), [200, 401, 403]));
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function user_cannot_view_paciente_from_other_tenant(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         // UserA tenta acessar paciente de tenant B
         $response = $this->getJson("http://tenant-a.lvh.me/api/v1/pacientes/{$this->pacienteB->id}");
@@ -70,10 +77,10 @@ class Fase2TenantIsolationTest extends TestCase
         $this->assertSame(404, $response->getStatusCode());
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function user_cannot_update_paciente_from_other_tenant(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         $response = $this->patchJson(
             "http://tenant-a.lvh.me/api/v1/pacientes/{$this->pacienteB->id}",
@@ -83,30 +90,30 @@ class Fase2TenantIsolationTest extends TestCase
         $this->assertSame(404, $response->getStatusCode());
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function user_cannot_delete_paciente_from_other_tenant(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         $response = $this->deleteJson("http://tenant-a.lvh.me/api/v1/pacientes/{$this->pacienteB->id}");
 
         $this->assertSame(404, $response->getStatusCode());
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function user_cannot_view_timeline_from_other_tenant(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         $response = $this->getJson("http://tenant-a.lvh.me/api/v1/pacientes/{$this->pacienteB->id}/timeline");
 
         $this->assertSame(404, $response->getStatusCode());
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function user_cannot_export_other_tenant_pacientes(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         // Export endpoint ainda pode estar livre ou filtrado
         // Mas se filtered por tenant via scope, nunca vaza dados
@@ -116,7 +123,7 @@ class Fase2TenantIsolationTest extends TestCase
         $this->assertTrue(in_array($response->getStatusCode(), [200, 401, 403]));
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function switching_subdomain_shows_correct_tenant(): void
     {
         // UserA no subdomain de tenant A
@@ -136,10 +143,10 @@ class Fase2TenantIsolationTest extends TestCase
         $this->assertStringContainsString('tenant-b', $responseB->getContent());
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    #[Test]
     public function cross_tenant_request_in_wrong_subdomain_returns_404(): void
     {
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         // UserA tenta acessar recurso de tenant B usando subdomain tenant-a
         // O middleware ResolveTenant vai usar tenant-a, não tenant-b

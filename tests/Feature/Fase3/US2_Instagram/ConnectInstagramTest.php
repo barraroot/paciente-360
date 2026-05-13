@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Laravel\Sanctum\Sanctum;
 use Mockery;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -231,7 +232,7 @@ class ConnectInstagramTest extends TestCase
         // Tenant B tenta listar canais — NÃO deve ver o canal do tenant A
         [$tenantB, $userB] = $this->tenantAndUserForRole('clinica-instagram-b', 'admin-clinica');
         $this->app->instance('tenant', $tenantB);
-        $this->actingAs($userB);
+        Sanctum::actingAs($userB, ['*']);
 
         $response = $this->getJson($this->tenantUrl($tenantB, '/inbox/channels'));
         $response->assertOk();

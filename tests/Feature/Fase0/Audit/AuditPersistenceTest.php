@@ -100,7 +100,7 @@ class AuditPersistenceTest extends TestCase
         $user = $this->createUserForTenant($tenant);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $event = $this->makeDummyEvent('test.dummy.event', ['key' => 'value']);
         event($event);
@@ -179,7 +179,7 @@ class AuditPersistenceTest extends TestCase
     public function test_actor_type_is_system_when_no_authenticated_user(): void
     {
         // Garante que nenhum usuário está autenticado
-        auth()->logout();
+        auth()->forgetGuards();
 
         $event = $this->makeDummyEvent('test.system.actor', [], null, null);
         event($event);

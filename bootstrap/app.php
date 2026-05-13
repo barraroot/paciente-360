@@ -20,8 +20,11 @@ use App\Exceptions\Users\LastAdminClinicaException;
 use App\Exceptions\Users\PlanLimitReachedException;
 use App\Http\Middleware\ApplyOverdueRestrictions;
 use App\Http\Middleware\EnsureTenantNotSuspended;
+use App\Http\Middleware\EnsureTenantSlugHeader;
 use App\Http\Middleware\LogStructuredRequestData;
 use App\Http\Middleware\ResolveTenant;
+use App\Http\Middleware\SetSecurityHeaders;
+use App\Http\Middleware\SlideTokenExpiration;
 use App\Http\Middleware\ValidateTwilioSignature;
 use App\Support\Cpf\CpfValidator;
 use Illuminate\Foundation\Application;
@@ -36,7 +39,10 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         apiPrefix: 'api/v1',
         commands: __DIR__.'/../routes/console.php',
-        channels: __DIR__.'/../routes/channels.php',
+        // `channels` removido daqui — registrado abaixo via `withBroadcasting()`
+        // com middleware Bearer (Fase 4 Lote F — T061). Manter aqui faria o
+        // framework chamar `Broadcast::routes()` SEM atributos (default 'web'),
+        // sobrescrevendo nossa configuração com auth de sessão.
         health: '/up',
         then: function (): void {
             // Widget public routes — served at root level (no /api/v1 prefix).
@@ -44,6 +50,14 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware([])
                 ->group(base_path('routes/widget.php'));
         },
+    )
+    // T061 — /broadcasting/auth com Bearer Sanctum + triple-check tenant slug.
+    // Substitui o default 'web' (cookie-session) por:
+    //   auth:sanctum  → autentica via Authorization: Bearer <token>
+    //   tenant.slug   → exige X-Tenant-Slug bate com user.tenant_id (FR-011)
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        ['middleware' => ['auth:sanctum', 'tenant.slug']],
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Confia em proxies (ngrok local, load balancer prod) para que
@@ -67,17 +81,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // Aliases dos middlewares de tenancy. O `tenant.not-suspended`
         // é opt-in por rota (rotas de billing/onboarding aceitam tenant
         // suspenso para regularização — ver T043).
+        // Lote D (Fase 4): novos aliases Bearer — `tenant.slug` + `slide.token`.
         $middleware->alias([
             'resolve.tenant' => ResolveTenant::class,
             'tenant.not-suspended' => EnsureTenantNotSuspended::class,
             'log.structured' => LogStructuredRequestData::class,
             'apply.overdue.restrictions' => ApplyOverdueRestrictions::class,
             'twilio.signature' => ValidateTwilioSignature::class,
+            // Fase 4 Bearer — validação de X-Tenant-Slug + cross-check anti-token-roubo (Princípio II).
+            'tenant.slug' => EnsureTenantSlugHeader::class,
+            // Fase 4 Bearer — sliding expiration 30d: renova token se expires_at < 5d.
+            'slide.token' => SlideTokenExpiration::class,
         ]);
-
-        // T050 — Sanctum SPA stateful: injeta EnsureFrontendRequestsAreStateful
-        // no grupo 'api' antes dos demais middlewares customizados.
-        $middleware->statefulApi();
 
         // `ResolveTenant` roda em TODA request da API. Deve rodar ANTES
         // de qualquer Controller mas APÓS o middleware do Sanctum (para
@@ -91,6 +106,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Como prependToGroup empilha LIFO, chamamos depois do
         // ResolveTenant para que LogStructured rode ANTES na cadeia real.
         $middleware->appendToGroup('api', LogStructuredRequestData::class);
+
+        // T030 (Lote G — T065a wiring) — headers de segurança (HSTS, CSP, X-Frame,
+        // X-Content-Type, Referrer-Policy) em todas as responses da API.
+        // CSP estrita em prod, permissiva em local/test (Vite HMR).
+        $middleware->appendToGroup('api', SetSecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Credenciais inválidas → 401 genérico (FR-032 — sem revelar existência).

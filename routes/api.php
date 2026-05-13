@@ -392,3 +392,26 @@ Route::middleware(['throttle:webhook-meta'])->group(function (): void {
         ->middleware(ValidateMetaSignature::class)
         ->name('webhooks.instagram.inbound');
 });
+
+/*
+|--------------------------------------------------------------------------
+| T026 (Fase 5) — Agenda de Consultas (US-6.1..6.7)
+|--------------------------------------------------------------------------
+|
+| Rotas autenticadas: Bearer + X-Tenant-Slug (Fase 4 triple-check) +
+| feature flag opcional `agenda.enabled` (T028 EnsureAgendaModuleEnabled).
+|
+| Filled per US:
+|   T046 (US1 schedules), T057 (US2 types), T084 (US3 appointments+slots),
+|   T113 (US4 confirm+attendance), T124 (US5 cancel),
+|   T137 (US6 waitlist), T168 (US7 sync).
+|
+| Webhook Google Calendar fica fora deste grupo — validado por HMAC do header
+| X-Goog-Channel-Token em routes/web.php (T164).
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'agenda.enabled'])
+    ->prefix('v1/agenda')
+    ->name('agenda.')
+    ->group(function (): void {
+        // Endpoints registrados nas tasks específicas de cada US (Phase 3-9).
+    });

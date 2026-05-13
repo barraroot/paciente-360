@@ -19,6 +19,7 @@ use App\Exceptions\Users\InvalidInvitationException;
 use App\Exceptions\Users\LastAdminClinicaException;
 use App\Exceptions\Users\PlanLimitReachedException;
 use App\Http\Middleware\ApplyOverdueRestrictions;
+use App\Http\Middleware\EnsureAgendaModuleEnabled;
 use App\Http\Middleware\EnsureTenantNotSuspended;
 use App\Http\Middleware\EnsureTenantSlugHeader;
 use App\Http\Middleware\LogStructuredRequestData;
@@ -92,6 +93,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.slug' => EnsureTenantSlugHeader::class,
             // Fase 4 Bearer — sliding expiration 30d: renova token se expires_at < 5d.
             'slide.token' => SlideTokenExpiration::class,
+            // Fase 5 (T028) — feature flag opcional para o módulo Agenda.
+            'agenda.enabled' => EnsureAgendaModuleEnabled::class,
         ]);
 
         // `ResolveTenant` roda em TODA request da API. Deve rodar ANTES

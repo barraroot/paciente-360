@@ -44,6 +44,35 @@ Broadcast::channel('tenant.{tenantId}.user.{userId}', function ($user, $tenantId
 
 /*
 |--------------------------------------------------------------------------
+| T027 (Fase 5) — Canal de Agenda do tenant
+|--------------------------------------------------------------------------
+|
+| `tenant.{tenantId}.agenda` — broadcast de mudanças na agenda
+| (ConsultaCriada / ConsultaReagendada / ConsultaCancelada) para sync
+| multi-aba do calendário FullCalendar (US-6.3).
+|
+| Canal privado (não-presence). Qualquer user com `appointment.view` no tenant
+| pode ingressar; verificação por team_id Spatie segue o mesmo pattern do
+| canal de inbox (cold-start safety com fallback explícito).
+*/
+
+Broadcast::channel('tenant.{tenantId}.agenda', function (User $user, int $tenantId) {
+    if ((int) $user->tenant_id !== $tenantId) {
+        return false;
+    }
+
+    $teamId = app(PermissionRegistrar::class)->getPermissionsTeamId();
+
+    if ($teamId !== $user->tenant_id) {
+        app(PermissionRegistrar::class)->setPermissionsTeamId($user->tenant_id);
+        $user->unsetRelation('roles')->unsetRelation('permissions');
+    }
+
+    return $user->can('appointment.view');
+});
+
+/*
+|--------------------------------------------------------------------------
 | T041 — Canais Omnichannel Inbox (Fase 3)
 |--------------------------------------------------------------------------
 |

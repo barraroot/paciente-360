@@ -43,6 +43,8 @@ use App\Policies\QuickReplyPolicy;
 use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
 use App\Services\Billing\StripeClientWrapper;
+use App\Support\Metrics\AgendaMetrics;
+use App\Support\Metrics\AgendaMetricsContract;
 use App\Support\Metrics\AuthMetrics;
 use App\Support\Metrics\AuthMetricsContract;
 use App\Support\Metrics\MessagingMetrics;
@@ -105,6 +107,10 @@ class AppServiceProvider extends ServiceProvider
         // Mesma estratégia graceful do MessagingMetrics: degrada para Log::debug
         // quando o pacote Prometheus não está disponível (CI / dev sem exporter).
         $this->app->singleton(AuthMetricsContract::class, AuthMetrics::class);
+
+        // T024 (Fase 5) — AgendaMetrics: 7 métricas Prometheus do domínio Agenda.
+        // Mesma estratégia graceful — degrada para Log::debug sem o pacote Prometheus.
+        $this->app->singleton(AgendaMetricsContract::class, AgendaMetrics::class);
 
         // T034 — Fase 4: BearerAuthContract → TokenIssuerService (singleton).
         // Injeta em LoginController, LogoutAllController e qualquer consumer que

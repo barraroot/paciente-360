@@ -45,47 +45,47 @@ Web app multi-tenant Laravel + Vue (Option 2 do plan):
 
 ### Migrations (14 — ordem obrigatória)
 
-- [ ] T006 Migration 01 `database/migrations/2026_05_14_000001_create_appointment_types_table.php` (entidade 1; UNIQUE `(tenant_id, slug)`, INDEX `(tenant_id, is_active)`)
-- [ ] T007 Migration 02 `database/migrations/2026_05_14_000002_create_appointment_type_professional_table.php` (pivot M2M, PK composite)
-- [ ] T008 Migration 03 `database/migrations/2026_05_14_000003_create_professional_schedules_table.php` (UNIQUE `(tenant_id, professional_id, day_of_week, effective_from)`)
-- [ ] T009 Migration 04 `database/migrations/2026_05_14_000004_create_schedule_exceptions_table.php` (GiST tsrange index)
-- [ ] T010 Migration 05 `database/migrations/2026_05_14_000005_create_appointments_table.php` (UNIQUE PARTIAL `(tenant_id, professional_id, starts_at) WHERE status IN ('scheduled', 'confirmed')` — gate FR-011a / SC-008; encrypted cast em `notes`)
-- [ ] T011 Migration 06 `database/migrations/2026_05_14_000006_create_appointment_reschedules_table.php` (FK appointment_id, INDEX `(appointment_id, created_at DESC)`)
-- [ ] T012 Migration 07 `database/migrations/2026_05_14_000007_create_slot_reservations_table.php` (PARTIAL UNIQUE `(tenant_id, professional_id, starts_at) WHERE released_at IS NULL` + PARTIAL INDEX em `expires_at WHERE released_at IS NULL`) — clarify nº 2 / R4
-- [ ] T013 Migration 08 `database/migrations/2026_05_14_000008_create_waitlist_entries_table.php` (PARTIAL INDEX `(status, expires_at) WHERE status='notified'`)
-- [ ] T014 Migration 09 `database/migrations/2026_05_14_000009_create_confirmation_dispatches_table.php` (UNIQUE `(appointment_id, kind)`)
-- [ ] T015 Migration 10 `database/migrations/2026_05_14_000010_create_calendar_sync_accounts_table.php` (UNIQUE `(tenant_id, professional_id)` — gate FR-036c / clarify nº 15; encrypted cast em `encrypted_access_token`/`encrypted_refresh_token`)
-- [ ] T016 Migration 11 `database/migrations/2026_05_14_000011_create_calendar_synced_events_table.php` (UNIQUE `(appointment_id, calendar_sync_account_id)`)
-- [ ] T017 Migration 12 `database/migrations/2026_05_14_000012_create_external_calendar_busy_table.php` (UNIQUE `(calendar_sync_account_id, external_event_id)` — clarify nº 10)
-- [ ] T018 Migration 13 `database/migrations/2026_05_14_000013_add_timezone_to_professionals_table.php` (`timezone VARCHAR(64) NULLABLE` — clarify nº 13)
-- [ ] T019 Migration 14 `database/migrations/2026_05_14_000014_extend_tenants_settings_with_agenda_keys.php` (UPDATE jsonb_set com defaults `agenda.{min_cancellation_hours:4, max_reschedules_per_appointment:2, waitlist_confirmation_minutes:15, calendar_sync_window_days:60, slot_reservation_ttl_user_minutes:5, slot_reservation_ttl_ia_minutes:2, auto_close_stale_appointments_days:7, attendance_revert_window_hours:48}`)
-- [ ] T020 Rodar `vendor/bin/sail artisan migrate` em ambiente local; validar 14 migrations aplicadas (`migrations` table tem novos rows)
+- [X] T006 Migration 01 `database/migrations/2026_05_14_000001_create_appointment_types_table.php` (entidade 1; UNIQUE `(tenant_id, slug)`, INDEX `(tenant_id, is_active)`)
+- [X] T007 Migration 02 `database/migrations/2026_05_14_000002_create_appointment_type_professional_table.php` (pivot M2M, PK composite)
+- [X] T008 Migration 03 `database/migrations/2026_05_14_000003_create_professional_schedules_table.php` (UNIQUE `(tenant_id, professional_id, day_of_week, effective_from)`)
+- [X] T009 Migration 04 `database/migrations/2026_05_14_000004_create_schedule_exceptions_table.php` (GiST tsrange index)
+- [X] T010 Migration 05 `database/migrations/2026_05_14_000005_create_appointments_table.php` (UNIQUE PARTIAL `(tenant_id, professional_id, starts_at) WHERE status IN ('scheduled', 'confirmed')` — gate FR-011a / SC-008; encrypted cast em `notes`)
+- [X] T011 Migration 06 `database/migrations/2026_05_14_000006_create_appointment_reschedules_table.php` (FK appointment_id, INDEX `(appointment_id, created_at DESC)`)
+- [X] T012 Migration 07 `database/migrations/2026_05_14_000007_create_slot_reservations_table.php` (PARTIAL UNIQUE `(tenant_id, professional_id, starts_at) WHERE released_at IS NULL` + PARTIAL INDEX em `expires_at WHERE released_at IS NULL`) — clarify nº 2 / R4
+- [X] T013 Migration 08 `database/migrations/2026_05_14_000008_create_waitlist_entries_table.php` (PARTIAL INDEX `(status, expires_at) WHERE status='notified'`)
+- [X] T014 Migration 09 `database/migrations/2026_05_14_000009_create_confirmation_dispatches_table.php` (UNIQUE `(appointment_id, kind)`)
+- [X] T015 Migration 10 `database/migrations/2026_05_14_000010_create_calendar_sync_accounts_table.php` (UNIQUE `(tenant_id, professional_id)` — gate FR-036c / clarify nº 15; encrypted cast em `encrypted_access_token`/`encrypted_refresh_token`)
+- [X] T016 Migration 11 `database/migrations/2026_05_14_000011_create_calendar_synced_events_table.php` (UNIQUE `(appointment_id, calendar_sync_account_id)`)
+- [X] T017 Migration 12 `database/migrations/2026_05_14_000012_create_external_calendar_busy_table.php` (UNIQUE `(calendar_sync_account_id, external_event_id)` — clarify nº 10)
+- [X] T018 Migration 13 `database/migrations/2026_05_14_000013_add_timezone_to_professionals_table.php` (`timezone VARCHAR(64) NULLABLE` — clarify nº 13)
+- [X] T019 Migration 14 `database/migrations/2026_05_14_000014_extend_tenants_settings_with_agenda_keys.php` (UPDATE jsonb_set com defaults `agenda.{min_cancellation_hours:4, max_reschedules_per_appointment:2, waitlist_confirmation_minutes:15, calendar_sync_window_days:60, slot_reservation_ttl_user_minutes:5, slot_reservation_ttl_ia_minutes:2, auto_close_stale_appointments_days:7, attendance_revert_window_hours:48}`)
+- [X] T020 Rodar `vendor/bin/sail artisan migrate` em ambiente local; validar 14 migrations aplicadas (`migrations` table tem novos rows)
 
 ### Abilities + Permissions
 
-- [ ] T021 Criar `database/seeders/AgendaPermissionsSeeder.php` com 9 abilities (`appointment.view`, `appointment.create`, `appointment.update`, `appointment.cancel`, `appointment.override_block`, `appointment.manage_own_schedule`, `appointment.revert_attendance_marking`, `schedule.configure`, `appointment_type.manage`, `waitlist.manage`, `calendar_sync.configure`) + atribuição por role (Admin Clínica/Médico/Atendente/Recepcionista/Financeiro) conforme spec § Contratos Herdados
-- [ ] T022 Rodar `vendor/bin/sail artisan db:seed --class=AgendaPermissionsSeeder` e atualizar `DatabaseSeeder.php` para incluir o seeder em `run()`
+- [X] T021 Criar `database/seeders/AgendaPermissionsSeeder.php` com 9 abilities (`appointment.view`, `appointment.create`, `appointment.update`, `appointment.cancel`, `appointment.override_block`, `appointment.manage_own_schedule`, `appointment.revert_attendance_marking`, `schedule.configure`, `appointment_type.manage`, `waitlist.manage`, `calendar_sync.configure`) + atribuição por role (Admin Clínica/Médico/Atendente/Recepcionista/Financeiro) conforme spec § Contratos Herdados
+- [X] T022 Rodar `vendor/bin/sail artisan db:seed --class=AgendaPermissionsSeeder` e atualizar `DatabaseSeeder.php` para incluir o seeder em `run()`
 
 ### Base support classes (reutilizadas por todas as US)
 
-- [ ] T023 [P] Criar `app/Support/IanaTimezoneCity.php` (mapping IANA → cidade canônica BR + fallback genérico) com método `canonicalLabel(string $iana): string` — clarify nº 13 / R6
-- [ ] T024 [P] Criar `app/Support/AgendaMetrics.php` com 6 contadores/gauges Prometheus (`appointment_created_total{type,channel_origin}`, `appointment_canceled_total{quem}`, `appointment_no_show_total`, `confirmation_response_total{kind,result}`, `waitlist_notification_total{result}`, `calendar_sync_status{provider,status}`, `calendar_sync_latency_seconds{operation}` histogram); registrar em `MetricsRegistry` da Fase 0
-- [ ] T025 [P] Criar `app/Services/Agenda/TimezoneResolverService.php` com método `resolve(Professional $prof): string` retornando IANA TZ (override do prof OU tenant) — clarify nº 13
+- [X] T023 [P] Criar `app/Support/IanaTimezoneCity.php` (mapping IANA → cidade canônica BR + fallback genérico) com método `canonicalLabel(string $iana): string` — clarify nº 13 / R6
+- [X] T024 [P] Criar `app/Support/AgendaMetrics.php` com 6 contadores/gauges Prometheus (`appointment_created_total{type,channel_origin}`, `appointment_canceled_total{quem}`, `appointment_no_show_total`, `confirmation_response_total{kind,result}`, `waitlist_notification_total{result}`, `calendar_sync_status{provider,status}`, `calendar_sync_latency_seconds{operation}` histogram); registrar em `MetricsRegistry` da Fase 0
+- [X] T025 [P] Criar `app/Services/Agenda/TimezoneResolverService.php` com método `resolve(Professional $prof): string` retornando IANA TZ (override do prof OU tenant) — clarify nº 13
 
 ### Routing + Middleware (group base)
 
-- [ ] T026 Editar `routes/api.php` adicionando group `Route::prefix('v1/agenda')->middleware(['auth:sanctum', 'tenant.slug'])->group(...)` com rotas vazias (filled per US); confirmar prefix Fase 4 ainda funciona
-- [ ] T027 Editar `routes/channels.php` adicionando canal `Broadcast::channel('tenant.{tenantId}.agenda', fn($user, $tenantId) => $user->tenant_id === $tenantId)` (Reverb broadcast multi-aba)
-- [ ] T028 [P] Criar middleware opcional `app/Http/Middleware/EnsureAgendaModuleEnabled.php` (feature flag `config('features.agenda_module', true)` — quickstart § 11.2); registrar em `bootstrap/app.php`
+- [X] T026 Editar `routes/api.php` adicionando group `Route::prefix('v1/agenda')->middleware(['auth:sanctum', 'tenant.slug'])->group(...)` com rotas vazias (filled per US); confirmar prefix Fase 4 ainda funciona
+- [X] T027 Editar `routes/channels.php` adicionando canal `Broadcast::channel('tenant.{tenantId}.agenda', fn($user, $tenantId) => $user->tenant_id === $tenantId)` (Reverb broadcast multi-aba)
+- [X] T028 [P] Criar middleware opcional `app/Http/Middleware/EnsureAgendaModuleEnabled.php` (feature flag `config('features.agenda_module', true)` — quickstart § 11.2); registrar em `bootstrap/app.php`
 
 ### Schedule (cron — preparado, jobs criados nas US correspondentes)
 
-- [ ] T029 Editar `routes/console.php` registrando 6 schedule entries: `agenda:cleanup-expired-reservations` (everyMinute), `agenda:expire-waitlist-notifications` (everyMinute), `agenda:dispatch-confirmations` (everyFiveMinutes), `agenda:auto-close-stale-appointments` (dailyAt 00:30), `agenda:google-poll-fallback` (everyFiveMinutes), `agenda:google-renew-watch-channels` (dailyAt 02:00); todos `->onOneServer()`
+- [X] T029 Editar `routes/console.php` registrando 6 schedule entries: `agenda:cleanup-expired-reservations` (everyMinute), `agenda:expire-waitlist-notifications` (everyMinute), `agenda:dispatch-confirmations` (everyFiveMinutes), `agenda:auto-close-stale-appointments` (dailyAt 00:30), `agenda:google-poll-fallback` (everyFiveMinutes), `agenda:google-renew-watch-channels` (dailyAt 02:00); todos `->onOneServer()`
 
 ### Test infrastructure
 
-- [ ] T030 [P] Criar `database/factories/Agenda/` com factories para `Appointment`, `AppointmentType`, `ProfessionalSchedule`, `ScheduleException`, `SlotReservation`, `WaitlistEntry`, `ConfirmationDispatch`, `CalendarSyncAccount`, `ExternalCalendarBusy` — usados por todos os testes
-- [ ] T031 [P] Criar `tests/Feature/Agenda/CrossTenantAgendaTest.php` com 5 cenários (Princípio II — gate obrigatório): tenant A não enxerga `Appointment`/`SlotReservation`/`WaitlistEntry`/`AppointmentType`/`CalendarSyncAccount` do tenant B. Test deve estar 🔴 RED no momento da escrita.
+- [X] T030 [P] Criar `database/factories/Agenda/` com factories para `Appointment`, `AppointmentType`, `ProfessionalSchedule`, `ScheduleException`, `SlotReservation`, `WaitlistEntry`, `ConfirmationDispatch`, `CalendarSyncAccount`, `ExternalCalendarBusy` — usados por todos os testes
+- [X] T031 [P] Criar `tests/Feature/Agenda/CrossTenantAgendaTest.php` com 5 cenários (Princípio II — gate obrigatório): tenant A não enxerga `Appointment`/`SlotReservation`/`WaitlistEntry`/`AppointmentType`/`CalendarSyncAccount` do tenant B. Test deve estar 🔴 RED no momento da escrita.
 
 **Checkpoint**: 14 migrations verdes + 9 abilities + suport classes + routing scaffold + schedule registrado + factories + cross-tenant test 🔴 — pronto para US começarem em paralelo.
 

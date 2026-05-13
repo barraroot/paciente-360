@@ -64,7 +64,7 @@ class AppointmentType extends Model
             'appointment_type_professional',
             'appointment_type_id',
             'professional_id'
-        )->withPivot('tenant_id')->withTimestamps();
+        )->withPivot(['tenant_id', 'created_at']);
     }
 
     public function scopeActive(Builder $query): Builder

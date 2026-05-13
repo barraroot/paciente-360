@@ -19,15 +19,19 @@ use App\Domain\Messaging\Message\Observers\MessageObserver;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
 use App\Domain\Messaging\QuickReply\Models\QuickReply;
 use App\Events\TenantResolved;
+use App\Models\Agenda\AppointmentType;
 use App\Models\Anotacao;
 use App\Models\AuditLog;
 use App\Models\Convenio;
 use App\Models\FunilColuna;
 use App\Models\Invitation;
 use App\Models\Paciente;
+use App\Models\Professional;
 use App\Models\Tag;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Policies\Agenda\AppointmentTypePolicy;
+use App\Policies\Agenda\ProfessionalSchedulePolicy;
 use App\Policies\AnotacaoPolicy;
 use App\Policies\AssignmentPolicy;
 use App\Policies\AuditLogPolicy;
@@ -194,6 +198,10 @@ class AppServiceProvider extends ServiceProvider
         // AssignmentPolicy usa Conversation como model (assign/transfer/viewAssignments)
         Gate::policy(AssignmentRule::class, AssignmentPolicy::class);
         Gate::policy(QuickReply::class, QuickReplyPolicy::class);
+
+        // Fase 5 — Agenda de Consultas.
+        Gate::policy(Professional::class, ProfessionalSchedulePolicy::class);
+        Gate::policy(AppointmentType::class, AppointmentTypePolicy::class);
     }
 
     /**

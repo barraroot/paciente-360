@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Agenda\AppointmentTypeController;
+use App\Http\Controllers\Api\V1\Agenda\ProfessionalScheduleController;
+use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
 use App\Http\Controllers\Api\V1\Audit\AuditLogsController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutAllController;
@@ -410,8 +413,30 @@ Route::middleware(['throttle:webhook-meta'])->group(function (): void {
 | X-Goog-Channel-Token em routes/web.php (T164).
 */
 Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'agenda.enabled'])
-    ->prefix('v1/agenda')
+    ->prefix('agenda')
     ->name('agenda.')
     ->group(function (): void {
-        // Endpoints registrados nas tasks específicas de cada US (Phase 3-9).
+        // T046 (US-6.1) — Agenda recorrente + bloqueios pontuais
+        Route::get('professionals/{professional}/schedules', [ProfessionalScheduleController::class, 'show'])
+            ->name('schedules.show');
+        Route::put('professionals/{professional}/schedules', [ProfessionalScheduleController::class, 'update'])
+            ->name('schedules.update');
+        Route::get('professionals/{professional}/schedule-exceptions', [ScheduleExceptionController::class, 'index'])
+            ->name('schedule-exceptions.index');
+        Route::post('professionals/{professional}/schedule-exceptions', [ScheduleExceptionController::class, 'store'])
+            ->name('schedule-exceptions.store');
+        Route::delete('schedule-exceptions/{schedule_exception}', [ScheduleExceptionController::class, 'destroy'])
+            ->name('schedule-exceptions.destroy');
+
+        // T057 (US-6.2) — Tipos de atendimento
+        Route::get('appointment-types', [AppointmentTypeController::class, 'index'])
+            ->name('appointment-types.index');
+        Route::post('appointment-types', [AppointmentTypeController::class, 'store'])
+            ->name('appointment-types.store');
+        Route::get('appointment-types/{appointment_type}', [AppointmentTypeController::class, 'show'])
+            ->name('appointment-types.show');
+        Route::patch('appointment-types/{appointment_type}', [AppointmentTypeController::class, 'update'])
+            ->name('appointment-types.update');
+        Route::delete('appointment-types/{appointment_type}', [AppointmentTypeController::class, 'destroy'])
+            ->name('appointment-types.destroy');
     });

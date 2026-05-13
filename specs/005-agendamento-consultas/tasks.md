@@ -99,36 +99,36 @@ Web app multi-tenant Laravel + Vue (Option 2 do plan):
 
 ### Tests for User Story 1 ⚠️ (Princípio IV — RED before GREEN)
 
-- [ ] T032 [P] [US1] Test `tests/Feature/Agenda/ProfessionalScheduleTest.php` cobrindo AC-6.1.1, AC-6.1.2, AC-6.1.5, AC-6.1.6 (configurar agenda, listar slots respeitando intervalo, médico edita própria agenda, visualização lado-a-lado)
-- [ ] T033 [P] [US1] Test `tests/Feature/Agenda/ScheduleExceptionTest.php` cobrindo AC-6.1.3 (bloqueio 10/06-20/06 + override de bloqueio com `appointment.override_block` + notificação push+email — clarify nº 5)
-- [ ] T034 [P] [US1] Test `tests/Feature/Agenda/ProfessionalSchedulePolicyAuthorizationTest.php` validando `appointment.manage_own_schedule` (médico só edita a própria) vs `schedule.configure` (admin qualquer prof)
+- [X] T032 [P] [US1] Test `tests/Feature/Agenda/ProfessionalScheduleTest.php` cobrindo AC-6.1.1, AC-6.1.2, AC-6.1.5, AC-6.1.6 (configurar agenda, listar slots respeitando intervalo, médico edita própria agenda, visualização lado-a-lado)
+- [X] T033 [P] [US1] Test `tests/Feature/Agenda/ScheduleExceptionTest.php` cobrindo AC-6.1.3 (bloqueio 10/06-20/06 + override de bloqueio com `appointment.override_block` + notificação push+email — clarify nº 5)
+- [X] T034 [P] [US1] Test `tests/Feature/Agenda/ProfessionalSchedulePolicyAuthorizationTest.php` validando `appointment.manage_own_schedule` (médico só edita a própria) vs `schedule.configure` (admin qualquer prof)
 
 ### Models for User Story 1
 
-- [ ] T035 [P] [US1] Criar `app/Models/Agenda/ProfessionalSchedule.php` com relations (`professional`, `tenant`, `acceptedAppointmentTypes` via pivot), cast `blocks` AsJsonArray, scope `BelongsToTenant`
-- [ ] T036 [P] [US1] Criar `app/Models/Agenda/ScheduleException.php` com relations (`professional`, `creator`), scope `BelongsToTenant`
-- [ ] T037 [P] [US1] Criar `app/Models/Agenda/AppointmentTypeProfessional.php` (pivot model — necessário porque carrega `tenant_id` denormalizado, cast `created_at`)
+- [X] T035 [P] [US1] Criar `app/Models/Agenda/ProfessionalSchedule.php` com relations (`professional`, `tenant`, `acceptedAppointmentTypes` via pivot), cast `blocks` AsJsonArray, scope `BelongsToTenant`
+- [X] T036 [P] [US1] Criar `app/Models/Agenda/ScheduleException.php` com relations (`professional`, `creator`), scope `BelongsToTenant`
+- [X] T037 [P] [US1] Criar `app/Models/Agenda/AppointmentTypeProfessional.php` (pivot model — necessário porque carrega `tenant_id` denormalizado, cast `created_at`)
 
 ### Form Requests + Policy + Service for US1
 
-- [ ] T038 [US1] Criar `app/Policies/ProfessionalSchedulePolicy.php` com `viewAny`, `update` (verifica `appointment.manage_own_schedule` próprio OU `schedule.configure` qualquer); registrar em `AuthServiceProvider`
-- [ ] T039 [P] [US1] Criar `app/Http/Requests/Agenda/UpdateProfessionalScheduleRequest.php` validando `schedules[].day_of_week`, `blocks[]`, `accepted_appointment_type_ids[]`, `timezone` IANA; autorização via policy
-- [ ] T040 [P] [US1] Criar `app/Http/Requests/Agenda/StoreScheduleExceptionRequest.php` validando `starts_at`, `ends_at` (after starts_at), `reason` opcional
-- [ ] T041 [US1] Criar `app/Services/Agenda/ScheduleConfigurationService.php` com métodos `updateSchedule(Professional, array $data, User $actor)`, `createException(Professional, array, User)`; emite `ProfissionalAgendaConfigurada` (Auditable); ao criar exceção que sobrepõe consultas, chama `AppointmentService::cancelOverlappingAppointments(...)` (FR-028c)
-- [ ] T042 [P] [US1] Criar evento `app/Events/Agenda/ProfissionalAgendaConfigurada.php` implementando `Auditable` (Fase 0)
+- [X] T038 [US1] Criar `app/Policies/ProfessionalSchedulePolicy.php` com `viewAny`, `update` (verifica `appointment.manage_own_schedule` próprio OU `schedule.configure` qualquer); registrar em `AuthServiceProvider`
+- [X] T039 [P] [US1] Criar `app/Http/Requests/Agenda/UpdateProfessionalScheduleRequest.php` validando `schedules[].day_of_week`, `blocks[]`, `accepted_appointment_type_ids[]`, `timezone` IANA; autorização via policy
+- [X] T040 [P] [US1] Criar `app/Http/Requests/Agenda/StoreScheduleExceptionRequest.php` validando `starts_at`, `ends_at` (after starts_at), `reason` opcional
+- [X] T041 [US1] Criar `app/Services/Agenda/ScheduleConfigurationService.php` com métodos `updateSchedule(Professional, array $data, User $actor)`, `createException(Professional, array, User)`; emite `ProfissionalAgendaConfigurada` (Auditable); ao criar exceção que sobrepõe consultas, chama `AppointmentService::cancelOverlappingAppointments(...)` (FR-028c)
+- [X] T042 [P] [US1] Criar evento `app/Events/Agenda/ProfissionalAgendaConfigurada.php` implementando `Auditable` (Fase 0)
 
 ### Controllers + Resources + Routes for US1
 
-- [ ] T043 [P] [US1] Criar `app/Http/Resources/Agenda/ProfessionalScheduleResource.php` (envelope com `professional_id`, `timezone`, `schedules[]`, `accepted_appointment_type_ids[]`)
-- [ ] T044 [US1] Criar `app/Http/Controllers/Api/V1/Agenda/ProfessionalScheduleController.php` (`show`, `update` apenas — não cria/deleta; é PUT batch)
-- [ ] T045 [US1] Criar `app/Http/Controllers/Api/V1/Agenda/ScheduleExceptionController.php` (`index`, `store`, `destroy`)
-- [ ] T046 [US1] Editar `routes/api.php` adicionando rotas: `GET /agenda/professionals/{p}/schedules`, `PUT /agenda/professionals/{p}/schedules`, `GET /agenda/professionals/{p}/schedule-exceptions`, `POST /agenda/professionals/{p}/schedule-exceptions`, `DELETE /agenda/schedule-exceptions/{id}`
+- [X] T043 [P] [US1] Criar `app/Http/Resources/Agenda/ProfessionalScheduleResource.php` (envelope com `professional_id`, `timezone`, `schedules[]`, `accepted_appointment_type_ids[]`)
+- [X] T044 [US1] Criar `app/Http/Controllers/Api/V1/Agenda/ProfessionalScheduleController.php` (`show`, `update` apenas — não cria/deleta; é PUT batch)
+- [X] T045 [US1] Criar `app/Http/Controllers/Api/V1/Agenda/ScheduleExceptionController.php` (`index`, `store`, `destroy`)
+- [X] T046 [US1] Editar `routes/api.php` adicionando rotas: `GET /agenda/professionals/{p}/schedules`, `PUT /agenda/professionals/{p}/schedules`, `GET /agenda/professionals/{p}/schedule-exceptions`, `POST /agenda/professionals/{p}/schedule-exceptions`, `DELETE /agenda/schedule-exceptions/{id}`
 
 ### Frontend for US1
 
-- [ ] T047 [P] [US1] Criar `resources/js/pages/agenda/ScheduleConfigPage.vue` (config horários por dia da semana + lista de exceções + wizard "Configurar agenda agora?" / "Copiar de outro profissional" — clarify nº 5)
-- [ ] T048 [P] [US1] Criar `resources/js/components/agenda/ScheduleExceptionForm.vue` (modal criar bloqueio com `starts_at`, `ends_at`, `reason`)
-- [ ] T049 [P] [US1] Criar `resources/js/lib/agendaApi.js` com helpers `getSchedule(profId)`, `updateSchedule(profId, payload)`, `listExceptions(profId, range)`, `createException(profId, payload)`, `deleteException(id)`
+- [X] T047 [P] [US1] Criar `resources/js/pages/agenda/ScheduleConfigPage.vue` (config horários por dia da semana + lista de exceções + wizard "Configurar agenda agora?" / "Copiar de outro profissional" — clarify nº 5)
+- [X] T048 [P] [US1] Criar `resources/js/components/agenda/ScheduleExceptionForm.vue` (modal criar bloqueio com `starts_at`, `ends_at`, `reason`)
+- [X] T049 [P] [US1] Criar `resources/js/lib/agendaApi.js` com helpers `getSchedule(profId)`, `updateSchedule(profId, payload)`, `listExceptions(profId, range)`, `createException(profId, payload)`, `deleteException(id)`
 
 **Checkpoint**: US-6.1 verde — agenda configurável, bloqueios + override, abilities respeitadas. Cross-tenant test e Schedule policy test passam.
 
@@ -142,22 +142,22 @@ Web app multi-tenant Laravel + Vue (Option 2 do plan):
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T050 [P] [US2] Test `tests/Feature/Agenda/AppointmentTypeTest.php` cobrindo AC-6.2.1, AC-6.2.2, AC-6.2.3, AC-6.2.5 (CRUD, inativação preserva histórico, cor retornada, multi-tenant scoping)
+- [X] T050 [P] [US2] Test `tests/Feature/Agenda/AppointmentTypeTest.php` cobrindo AC-6.2.1, AC-6.2.2, AC-6.2.3, AC-6.2.5 (CRUD, inativação preserva histórico, cor retornada, multi-tenant scoping)
 
 ### Implementation for US2
 
-- [ ] T051 [P] [US2] Criar `app/Models/Agenda/AppointmentType.php` com casts (`valor_particular` decimal:2, `valor_convenio_default` decimal:2 nullable, `buffer_minutes` integer, `min_cancellation_hours` integer nullable, `is_active` boolean), scope `BelongsToTenant`, scope `active()`, relation `professionals` via pivot
-- [ ] T052 [P] [US2] Criar `app/Policies/AppointmentTypePolicy.php` (ability `appointment_type.manage` para create/update/delete; `appointment.view` para viewAny/view); registrar em `AuthServiceProvider`
-- [ ] T053 [P] [US2] Criar `app/Http/Requests/Agenda/StoreAppointmentTypeRequest.php` + `UpdateAppointmentTypeRequest.php` (validação per OpenAPI schema `AppointmentTypeCreate`)
-- [ ] T054 [P] [US2] Criar `app/Http/Resources/Agenda/AppointmentTypeResource.php`
-- [ ] T055 [US2] Criar `app/Http/Controllers/Api/V1/Agenda/AppointmentTypeController.php` (`index`, `store`, `show`, `update`, `destroy` — destroy faz soft inactivate `is_active=false`, FR-007)
-- [ ] T056 [US2] Criar `database/seeders/AppointmentTypeSeeder.php` com 3 tipos default (Consulta 30min/R$200, Retorno 15min/R$100, Exame 60min/R$300) idempotentes (usar `firstOrCreate`)
-- [ ] T057 [US2] Editar `routes/api.php` adicionando rotas REST `/agenda/appointment-types/*` (5 endpoints)
+- [X] T051 [P] [US2] Criar `app/Models/Agenda/AppointmentType.php` com casts (`valor_particular` decimal:2, `valor_convenio_default` decimal:2 nullable, `buffer_minutes` integer, `min_cancellation_hours` integer nullable, `is_active` boolean), scope `BelongsToTenant`, scope `active()`, relation `professionals` via pivot
+- [X] T052 [P] [US2] Criar `app/Policies/AppointmentTypePolicy.php` (ability `appointment_type.manage` para create/update/delete; `appointment.view` para viewAny/view); registrar em `AuthServiceProvider`
+- [X] T053 [P] [US2] Criar `app/Http/Requests/Agenda/StoreAppointmentTypeRequest.php` + `UpdateAppointmentTypeRequest.php` (validação per OpenAPI schema `AppointmentTypeCreate`)
+- [X] T054 [P] [US2] Criar `app/Http/Resources/Agenda/AppointmentTypeResource.php`
+- [X] T055 [US2] Criar `app/Http/Controllers/Api/V1/Agenda/AppointmentTypeController.php` (`index`, `store`, `show`, `update`, `destroy` — destroy faz soft inactivate `is_active=false`, FR-007)
+- [X] T056 [US2] Criar `database/seeders/AppointmentTypeSeeder.php` com 3 tipos default (Consulta 30min/R$200, Retorno 15min/R$100, Exame 60min/R$300) idempotentes (usar `firstOrCreate`)
+- [X] T057 [US2] Editar `routes/api.php` adicionando rotas REST `/agenda/appointment-types/*` (5 endpoints)
 
 ### Frontend for US2
 
-- [ ] T058 [P] [US2] Criar `resources/js/pages/agenda/AppointmentTypesPage.vue` (lista + criar/editar via modal)
-- [ ] T059 [P] [US2] Criar `resources/js/components/agenda/AppointmentTypeForm.vue` (campos nome, duration, buffer, valores, min_cancellation_hours, cor color picker, descricao, intent_ia); tooltip "Tipo: Retorno (categoria de consulta)" para evitar confusão com cadência Fase 6 (clarify nº 4 — AC-6.2.4)
+- [X] T058 [P] [US2] Criar `resources/js/pages/agenda/AppointmentTypesPage.vue` (lista + criar/editar via modal)
+- [X] T059 [P] [US2] Criar `resources/js/components/agenda/AppointmentTypeForm.vue` (campos nome, duration, buffer, valores, min_cancellation_hours, cor color picker, descricao, intent_ia); tooltip "Tipo: Retorno (categoria de consulta)" para evitar confusão com cadência Fase 6 (clarify nº 4 — AC-6.2.4)
 
 **Checkpoint**: US-6.2 verde — tipos CRUD, inativação, cor, RBAC. Independente de US1 (não bloqueia).
 

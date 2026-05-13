@@ -5,6 +5,7 @@ namespace App\Domain\Auth\Services;
 use App\Domain\Auth\Enums\MotivoRevogacaoToken;
 use App\Domain\Auth\Events\TokenRevogado;
 use App\Models\User;
+use App\Support\Metrics\AuthMetricsContract;
 use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -26,6 +27,10 @@ use Laravel\Sanctum\PersonalAccessToken;
  */
 class TokenRevocationService
 {
+    public function __construct(
+        private readonly AuthMetricsContract $metrics,
+    ) {}
+
     /**
      * Revoga apenas o token corrente do usuário (FR-004 — logout do dispositivo atual).
      *
@@ -47,6 +52,8 @@ class TokenRevocationService
             tokenId: $tokenId,
             motivo: MotivoRevogacaoToken::Manual,
         ));
+
+        $this->metrics->tokenRevogadoTotal(MotivoRevogacaoToken::Manual->value);
     }
 
     /**
@@ -68,6 +75,8 @@ class TokenRevocationService
                 tokenId: $token->id,
                 motivo: $motivo,
             ));
+
+            $this->metrics->tokenRevogadoTotal($motivo->value);
         }
 
         return $count;
@@ -98,5 +107,7 @@ class TokenRevocationService
             motivo: $motivo,
             executorId: $executorId,
         ));
+
+        $this->metrics->tokenRevogadoTotal($motivo->value);
     }
 }

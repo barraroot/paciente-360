@@ -61,12 +61,21 @@ class SetSecurityHeaders
             $nonce = bin2hex(random_bytes(16));
             $request->attributes->set('csp_nonce', $nonce);
 
+            // T095/T096 (Fase 4 Lote J) — connect-src estendido para cobrir:
+            //  - Reverb WSS (definido via env CSP_REVERB_HOST)
+            //  - S3 media presigned URLs (envCSP_MEDIA_HOST — ex.: *.amazonaws.com)
+            //  - API self (CDN SPA → API decoupled em domínios distintos)
+            // Defaults seguros para o domain prod alvo do Paciente360.
+            $reverbHost = (string) config('csp.reverb_host', 'wss://reverb.crm.com.br');
+            $mediaHost = (string) config('csp.media_host', 'https://*.amazonaws.com');
+            $apiHost = (string) config('csp.api_host', 'https://api.crm.com.br');
+
             $csp = implode('; ', [
                 "default-src 'self'",
                 "script-src 'self' 'nonce-{$nonce}'",
                 "style-src 'self' 'nonce-{$nonce}'",
                 "img-src 'self' data: https:",
-                "connect-src 'self' wss://reverb.crm.com.br",
+                "connect-src 'self' {$reverbHost} {$mediaHost} {$apiHost}",
                 "frame-ancestors 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",

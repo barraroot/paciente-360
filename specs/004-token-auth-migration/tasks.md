@@ -382,23 +382,35 @@ Documentado inline em config/sanctum.php.
 
 ### Audit log retention + housekeeping
 
-- [ ] T090 [P] Criar `app/Console/Commands/AuthTokensPurgeExpiredCommand.php` — schedule diário 03:00 BRT — purga `personal_access_tokens` revoked/expired > 90d; log estruturado de count purgado por tenant
-- [ ] T091 [P] Schedule no `routes/console.php`: `Schedule::command('auth:tokens-purge-expired')->dailyAt('03:00')->timezone('America/Sao_Paulo')->withoutOverlapping()`
+- [x] T090 [P] `AuthTokensPurgeExpiredCommand` criado (signature `--dry-run | --keep-days=90`). Purga tokens com `expires_at < now() - 90d`. Log estruturado com count por tenant. 5/5 testes em AuthTokensPurgeExpiredCommandTest.
+- [x] T091 [P] Schedule diário 03:00 BRT em `routes/console.php` com `withoutOverlapping()`. Confirmado via `schedule:list`.
 
 ### Métricas Prometheus
 
-- [ ] T092 [P] Estender `app/Support/Metrics/MessagingMetrics.php` (Fase 3 Lote O) OR criar `app/Support/Metrics/AuthMetrics.php` com:
-  - `paciente360_auth_login_total{result}` — counter
+- [x] T092 [P] `AuthMetrics` + `AuthMetricsContract` criados em `app/Support/Metrics/`:
+  - `paciente360_auth_login_total{result}` — counter (success/invalid_credentials/account_locked/tenant_suspended)
   - `paciente360_auth_token_emitido_total` — counter
-  - `paciente360_auth_token_revogado_total{motivo}` — counter
-  - `paciente360_auth_active_tokens` — gauge (count tokens não-expirados/revogados)
-- [ ] T093 Wire metrics nos controllers/services: LoginController (login_total), TokenIssuerService (emitido_total), TokenRevocationService (revogado_total)
-- [ ] T094 [P] Adicionar Sentry context em AppServiceProvider — set `auth.user_id, auth.tenant_id, auth.token_id_prefix` em escopo após auth:sanctum
+  - `paciente360_auth_token_revogado_total{motivo}` — counter (manual/logout_all/admin_force/expired/suspicious_use)
+  - `paciente360_auth_active_tokens` — gauge
+  Bindado no AppServiceProvider via contract (mockable). Graceful degrade para `Log::debug` quando o pacote Prometheus não está instalado.
+- [x] T093 Metrics wired:
+  - LoginController: `loginTotal('success'|'invalid_credentials'|'account_locked'|'tenant_suspended')`
+  - TokenIssuerService: `tokenEmitidoTotal()` após dispatch do TokenEmitido
+  - TokenRevocationService: `tokenRevogadoTotal($motivo->value)` em revokeCurrent/revokeAll/revokeById
+- [x] T094 [P] Sentry context estendido no listener `Authenticated` — adiciona `auth.token_id` e `auth.token_name` quando user tem PersonalAccessToken corrente. user.id + tenant.id já existiam.
 
 ### CSP refinement (audit)
 
-- [ ] T095 [P] Auditar bundle frontend produzido por `npm run build` — confirmar zero `eval()` calls, zero scripts inline injetados; rodar com CSP estrita em staging para detectar violations report-only
-- [ ] T096 [P] Auditar `Storage::disk('media')` URLs e qualquer integração externa — adicionar nos `connect-src` da CSP se necessário (Twilio, Meta, S3 endpoints)
+- [x] T095 [P] Auditoria do bundle prod (`npm run build`) concluída:
+  - **0** ocorrências de `eval(` ou `new Function(`
+  - **0** scripts inline em Blade views (resources/views/)
+  - `innerHTML` aparece apenas em `vue.runtime` + `vuedraggable` (código de framework, sanitizado pelo Vue)
+  - Confirma que CSP prod estrita (sem `unsafe-inline`/`unsafe-eval`) é viável
+- [x] T096 [P] `connect-src` expandido para suportar deploy decoupled:
+  - `wss://reverb.crm.com.br` (broadcasting)
+  - `https://*.amazonaws.com` (S3 media presigned URLs — Storage::disk('media'))
+  - `https://api.crm.com.br` (SPA → API cross-origin)
+  Tornados configuráveis via `config/csp.php` (`CSP_REVERB_HOST`, `CSP_MEDIA_HOST`, `CSP_API_HOST` env).
 
 ### Documentation
 

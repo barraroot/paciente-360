@@ -19,6 +19,13 @@ Schedule::command('tenants:apply-overdue-restrictions')->dailyAt('02:00');
 // T245 — Remove convites expirados há mais de 30 dias (limpeza semanal).
 Schedule::command('invitations:purge-expired')->weeklyOn(0, '03:00');
 
+// T091 (Fase 4 Lote J) — Purga tokens Sanctum expirados/revogados > 90d.
+// 03:00 BRT diário. withoutOverlapping previne execução paralela em catch-up.
+Schedule::command('auth:tokens-purge-expired')
+    ->dailyAt('03:00')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();
+
 // T264 — Retenção de auditoria (FR-038 — LGPD Art. 16).
 // Archive roda no dia 1; delete-expired no dia 2 (sempre depois) para que
 // registros no boundary entrem em cold ANTES da deleção física.

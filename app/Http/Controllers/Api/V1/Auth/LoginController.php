@@ -13,6 +13,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\TenantResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Support\Metrics\AuthMetricsContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
@@ -58,6 +59,7 @@ final class LoginController extends Controller
     public function __invoke(
         LoginRequest $request,
         BearerAuthContract $issuer,
+        AuthMetricsContract $metrics,
     ): JsonResponse {
         $user = User::withoutGlobalScopes()
             ->where('email', $request->email)
@@ -71,12 +73,16 @@ final class LoginController extends Controller
                 motivo: MotivoLoginFalho::Invalid,
             ));
 
+            $metrics->loginTotal('invalid_credentials');
+
             throw new InvalidCredentialsException;
         }
 
         // Verificar lock antes de qualquer validação de credencial.
         // Conta bloqueada retorna 423 independente da senha fornecida (FR-023).
         if ($this->isLocked($user)) {
+            $metrics->loginTotal('account_locked');
+
             throw new AccountLockedException($user->locked_until);
         }
 
@@ -89,6 +95,8 @@ final class LoginController extends Controller
                 path: $request->path(),
                 motivo: MotivoLoginFalho::Invalid,
             ));
+
+            $metrics->loginTotal('invalid_credentials');
 
             throw new InvalidCredentialsException;
         }
@@ -104,12 +112,16 @@ final class LoginController extends Controller
                 motivo: MotivoLoginFalho::Invalid,
             ));
 
+            $metrics->loginTotal('invalid_credentials');
+
             throw new InvalidCredentialsException;
         }
 
         // Tenant suspenso → 403 (FR-005). Credenciais foram validadas, então é
         // seguro revelar o motivo (usuário pode ir regularizar billing).
         if ($user->tenant !== null && $user->tenant->status === 'suspended') {
+            $metrics->loginTotal('tenant_suspended');
+
             throw new TenantSuspendedException;
         }
 
@@ -126,6 +138,8 @@ final class LoginController extends Controller
             name: $request->string('device_name', 'Default')->toString(),
             abilities: ['*'],
         );
+
+        $metrics->loginTotal('success');
 
         return response()->json([
             'token' => $result['token'],

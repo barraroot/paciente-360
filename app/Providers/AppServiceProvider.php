@@ -43,6 +43,8 @@ use App\Policies\QuickReplyPolicy;
 use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
 use App\Services\Billing\StripeClientWrapper;
+use App\Support\Metrics\AuthMetrics;
+use App\Support\Metrics\AuthMetricsContract;
 use App\Support\Metrics\MessagingMetrics;
 use App\Support\Metrics\MessagingMetricsContract;
 use Illuminate\Auth\Events\Authenticated;
@@ -54,6 +56,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
 use Laravel\Sanctum\Events\TokenAuthenticated;
+use Laravel\Sanctum\PersonalAccessToken;
 use Sentry\Breadcrumb;
 use Sentry\State\Scope;
 use Spatie\Permission\PermissionRegistrar;
@@ -97,6 +100,11 @@ class AppServiceProvider extends ServiceProvider
         // chamadas caem em log estruturado (sem lançar exceção).
         // Bound via contrato (MessagingMetricsContract) para facilitar mocking em testes.
         $this->app->singleton(MessagingMetricsContract::class, MessagingMetrics::class);
+
+        // T092 (Fase 4 Lote J) — AuthMetrics: 4 métricas Prometheus do domínio Auth.
+        // Mesma estratégia graceful do MessagingMetrics: degrada para Log::debug
+        // quando o pacote Prometheus não está disponível (CI / dev sem exporter).
+        $this->app->singleton(AuthMetricsContract::class, AuthMetrics::class);
 
         // T034 — Fase 4: BearerAuthContract → TokenIssuerService (singleton).
         // Injeta em LoginController, LogoutAllController e qualquer consumer que
@@ -338,6 +346,19 @@ class AppServiceProvider extends ServiceProvider
                 $tenantId = $user->tenant_id ?? null;
                 if ($tenantId !== null && $tenantId !== '') {
                     $scope->setTag('tenant.id', (string) $tenantId);
+                }
+
+                // T094 (Fase 4 Lote J) — Auth Sanctum context.
+                // Quando autenticado via Bearer (PersonalAccessToken), adiciona
+                // ID do token + 8-char prefix do plain text para correlação
+                // sem leak da chave (FR-023 / Princípio I LGPD).
+                if (method_exists($user, 'currentAccessToken')) {
+                    $token = $user->currentAccessToken();
+
+                    if ($token instanceof PersonalAccessToken) {
+                        $scope->setTag('auth.token_id', (string) $token->id);
+                        $scope->setTag('auth.token_name', (string) $token->name);
+                    }
                 }
             });
         });

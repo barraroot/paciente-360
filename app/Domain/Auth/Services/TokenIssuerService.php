@@ -7,6 +7,7 @@ use App\Domain\Auth\Enums\MotivoRevogacaoToken;
 use App\Domain\Auth\Events\TokenEmitido;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Metrics\AuthMetricsContract;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
@@ -31,6 +32,10 @@ use Laravel\Sanctum\PersonalAccessToken;
  */
 class TokenIssuerService implements BearerAuthContract
 {
+    public function __construct(
+        private readonly AuthMetricsContract $metrics,
+    ) {}
+
     /**
      * Emite um novo Personal Access Token para o usuário.
      *
@@ -76,6 +81,8 @@ class TokenIssuerService implements BearerAuthContract
             abilities: $abilities,
             user: $user,
         ));
+
+        $this->metrics->tokenEmitidoTotal();
 
         return [
             'token' => $plainTextToken,

@@ -31,7 +31,9 @@ class TokenIssuerServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new TokenIssuerService;
+        // Resolve via container para receber o AuthMetricsContract injected
+        // (binding em AppServiceProvider; em testes degrada para no-op log).
+        $this->service = $this->app->make(TokenIssuerService::class);
     }
 
     /** @test */

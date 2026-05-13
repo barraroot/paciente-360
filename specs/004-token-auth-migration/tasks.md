@@ -316,11 +316,11 @@
 
 ### Implementation for US7
 
-- [ ] T078 [P] [US7] Confirmar `specs/004-token-auth-migration/contracts/openapi.yaml` (criado no `/speckit.plan`) tem `securitySchemes.bearerAuth` + 6 paths usam — já feito em commit `d642a85`; revisar para garantir consistência com endpoints implementados
-- [ ] T079 [P] [US7] Rodar `vendor/bin/sail artisan scribe:generate` — Scribe gera doc HTML/Postman a partir das routes Laravel + annotations
-- [ ] T080 [US7] Atualizar `app/Console/Commands/CheckOpenApiDrift.php` (Lote O Fase 3) para incluir `specs/004-token-auth-migration/contracts/openapi.yaml`; rodar `openapi:check` → exit 0 esperado
-- [ ] T081 [P] [US7] Criar Postman collection em `docs/api/Paciente360 API v1.postman_collection.json` (ou similar) com pre-request scripts conforme quickstart.md § 6
-- [ ] T082 [US7] Atualizar `resources/views/scribe/...` (template) para incluir explicação de Bearer auth no header — instruir como obter token via `/auth/login`
+- [x] T078 [P] [US7] `specs/004-token-auth-migration/contracts/openapi.yaml` confirmado consistente com endpoints implementados — 6 paths (login/logout/logout-all/me/tokens index/tokens delete), `securitySchemes.bearerAuth` com `bearerFormat: sanctum-token`, parameter `TenantSlugHeader` reutilizado, responses `Unauthenticated`/`TenantMismatch`/`ValidationError`
+- [x] T079 [P] [US7] `vendor/bin/sail artisan scribe:generate` gera HTML em `public/vendor/scribe/`, Postman em `storage/app/private/scribe/collection.json` e OpenAPI em `storage/app/private/scribe/openapi.yaml`. Config `auth.in = AuthIn::BEARER`, `auth.name = 'Authorization'`, `auth.extra_info` documenta o fluxo Bearer + X-Tenant-Slug
+- [x] T080 [US7] `CheckOpenApiDrift` recebe `specs/004-token-auth-migration/contracts/openapi.yaml` no array de arquivos. `openapi:check` retorna `[OK] Nenhum drift detectado. Contrato OpenAPI sincronizado.` (73 rotas reais = 73 paths no OpenAPI)
+- [x] T081 [P] [US7] Postman collection em `docs/api/Paciente360-API-v1.postman_collection.json` — variables (base_url, token, tenant_slug, email, password), pre-request script collection-level injetando Authorization + X-Tenant-Slug + X-Request-Id, post-response script no login auto-salvando token + tenant_slug, 6 endpoints Auth + 1 Broadcasting
+- [x] T082 [US7] Scribe template usa o `extra_info` configurado no scribe.php — `auth.md` gerado explica como obter token via `/auth/login` e enviar Bearer + X-Tenant-Slug. `intro_text` atualizado citando a collection Postman
 
 ---
 

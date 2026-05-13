@@ -17,7 +17,7 @@ endpoints:
       authenticated: true
       deprecated: false
     headers:
-      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Authorization: 'Bearer paciente360_<seu-token>'
       Content-Type: application/json
       Accept: application/json
     urlParameters: []
@@ -40,8 +40,8 @@ endpoints:
     responseFields: []
     auth:
       - headers
-      - X-XSRF-TOKEN
-      - 6g43cv8PD1aE5beadkZfhV6
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null
@@ -61,7 +61,7 @@ endpoints:
       authenticated: true
       deprecated: false
     headers:
-      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Authorization: 'Bearer paciente360_<seu-token>'
       Content-Type: application/json
       Accept: application/json
     urlParameters:
@@ -87,8 +87,8 @@ endpoints:
     responseFields: []
     auth:
       - headers
-      - X-XSRF-TOKEN
-      - 6g43cv8PD1aE5beadkZfhV6
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null
@@ -108,7 +108,7 @@ endpoints:
       authenticated: true
       deprecated: false
     headers:
-      X-XSRF-TOKEN: '{YOUR_AUTH_KEY}'
+      Authorization: 'Bearer paciente360_<seu-token>'
       Content-Type: application/json
       Accept: application/json
     urlParameters:
@@ -134,8 +134,8 @@ endpoints:
     responseFields: []
     auth:
       - headers
-      - X-XSRF-TOKEN
-      - 6g43cv8PD1aE5beadkZfhV6
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null

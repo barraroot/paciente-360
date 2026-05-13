@@ -65,17 +65,21 @@ class SetSecurityHeaders
             //  - Reverb WSS (definido via env CSP_REVERB_HOST)
             //  - S3 media presigned URLs (envCSP_MEDIA_HOST — ex.: *.amazonaws.com)
             //  - API self (CDN SPA → API decoupled em domínios distintos)
+            //  - Google Calendar OAuth + API (Fase 5 T004 — env CSP_GOOGLE_HOSTS)
             // Defaults seguros para o domain prod alvo do Paciente360.
             $reverbHost = (string) config('csp.reverb_host', 'wss://reverb.crm.com.br');
             $mediaHost = (string) config('csp.media_host', 'https://*.amazonaws.com');
             $apiHost = (string) config('csp.api_host', 'https://api.crm.com.br');
+            $googleHosts = implode(' ', (array) config('csp.google_hosts', []));
+
+            $connectSrc = trim("'self' {$reverbHost} {$mediaHost} {$apiHost} {$googleHosts}");
 
             $csp = implode('; ', [
                 "default-src 'self'",
                 "script-src 'self' 'nonce-{$nonce}'",
                 "style-src 'self' 'nonce-{$nonce}'",
                 "img-src 'self' data: https:",
-                "connect-src 'self' {$reverbHost} {$mediaHost} {$apiHost}",
+                "connect-src {$connectSrc}",
                 "frame-ancestors 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",

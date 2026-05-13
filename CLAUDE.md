@@ -184,7 +184,11 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: nenhuma — `004-token-auth-migration` entregue 2026-05-13, aguardando merge em `main`.
+- **Active feature**: `005-agendamento-consultas` — [plan](specs/005-agendamento-consultas/plan.md) — Fase 5 em planejamento (spec + plan + research + data-model + contracts + quickstart prontos em 2026-05-13). 14/15 clarifications resolvidos via 2 sessions de `/speckit.clarify`; NC nº 12 (UX revogação OAuth) resolvido em `research.md` R5. Próximo: `/speckit.tasks`. Highlights do design:
+  - 7 user stories cobrindo Épico 6 do PRD (agenda, tipos, drag-and-drop, confirmação automática, reagendamento via chat, lista de espera FIFO sequencial, sync Google Calendar via sub-calendário tenant-scoped)
+  - 14 entidades novas + 11 eventos de domínio + 6 cron jobs + ~50 endpoints REST
+  - Outlook DEFERRED → Fase 6 (modelo `provider` enum preparado — clarify nº 11)
+  - Constitution Check passa nos 7 princípios **sem amendment** (v1.4.0 cobre todos os gates)
 - **Previous features delivered**:
   - `004-token-auth-migration` — [spec](specs/004-token-auth-migration/spec.md) — Cookie→Bearer migration entregue em 2026-05-13. 8 lotes (D-K), suite full **1130 tests / 1127 passed / 0 failures**. Commits: D `40af4ec` → K `1db8e96`. Highlights:
     - 6 endpoints Bearer (`/auth/login`, `/auth/me`, `/auth/logout[-all]`, `/auth/tokens[/{id}]`) + Reverb broadcast Bearer

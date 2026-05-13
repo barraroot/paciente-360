@@ -34,4 +34,20 @@ return [
      */
     'api_host' => env('CSP_API_HOST', 'https://api.crm.com.br'),
 
+    /*
+     * Hosts Google (Fase 5 — Sincronização Google Calendar US-6.7).
+     *
+     * connect-src precisa cobrir:
+     *  - https://accounts.google.com — fluxo OAuth (authorize + token endpoint)
+     *  - https://oauth2.googleapis.com — token refresh
+     *  - https://www.googleapis.com — Google Calendar API v3 (events.insert/list/watch, calendars.insert)
+     *
+     * Override por ambiente via env CSP_GOOGLE_HOSTS (string com hosts separados por espaço).
+     * Default cobre os 3 endpoints documentados em research.md R1+R3.
+     */
+    'google_hosts' => array_values(array_filter(explode(' ', env(
+        'CSP_GOOGLE_HOSTS',
+        'https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com'
+    )))),
+
 ];

@@ -41,11 +41,11 @@
 
 ### Migration pré-flight + UNIQUE email (T011-T015)
 
-- [ ] T011 Criar `app/Console/Commands/UsersDedupeEmailsCrossTenantCommand.php` com signature `--check | --interactive | --auto` (per research R6 + data-model.md § 2): query `SELECT email, GROUP_CONCAT(tenant_id) FROM users GROUP BY email HAVING COUNT(*) > 1`; modos resolvem mantendo email no tenant mais ativo + sufixo `.tenant-{slug}` nos demais
-- [ ] T012 [P] Write `tests/Feature/Fase4/Migration/DedupCommandTest.php` — cobre check, interactive, auto modes; valida audit log + notificação admin
-- [ ] T013 [P] Write `tests/Feature/Fase4/Migration/EmailUniqueCrossTenantMigrationTest.php` — aplica migration; valida que duplicatas pendentes geram exception; sem duplicatas aplica clean
-- [ ] T014 Criar migration `database/migrations/2026_05_13_HHMMSS_add_unique_email_global_constraint.php` — `DROP CONSTRAINT users_tenant_id_email_unique; ADD CONSTRAINT users_email_unique UNIQUE (email);`. Migration aborta se duplicatas presentes (gate)
-- [ ] T015 Criar migration `database/migrations/2026_05_13_HHMMSS_add_personal_access_tokens_indexes.php` — `CREATE INDEX (tokenable_type, tokenable_id, expires_at)` + partial index `(expires_at) WHERE expires_at < NOW()` para purge job
+- [x] T011 Criar `app/Console/Commands/UsersDedupeEmailsCrossTenantCommand.php` com signature `--check | --interactive | --auto` (per research R6 + data-model.md § 2): query `SELECT email, GROUP_CONCAT(tenant_id) FROM users GROUP BY email HAVING COUNT(*) > 1`; modos resolvem mantendo email no tenant mais ativo + sufixo `.tenant-{slug}` nos demais
+- [x] T012 [P] Write `tests/Feature/Fase4/Migration/DedupCommandTest.php` — cobre check, interactive, auto modes; valida audit log + notificação admin
+- [x] T013 [P] Write `tests/Feature/Fase4/Migration/EmailUniqueCrossTenantMigrationTest.php` — aplica migration; valida que duplicatas pendentes geram exception; sem duplicatas aplica clean
+- [x] T014 Criar migration `database/migrations/2026_05_13_000001_add_unique_email_global_constraint.php` — `DROP INDEX users_email_tenant_unique; ADD CONSTRAINT users_email_unique UNIQUE (email);`. Migration aborta se duplicatas presentes (gate)
+- [x] T015 Criar migration `database/migrations/2026_05_13_000002_add_personal_access_tokens_indexes.php` — `CREATE INDEX (tokenable_type, tokenable_id, expires_at)` + partial index `(expires_at) WHERE expires_at IS NOT NULL` para purge job
 
 ### Eventos Auditable (T016-T019)
 

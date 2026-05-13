@@ -18,7 +18,10 @@ use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Observers\MessageObserver;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
 use App\Domain\Messaging\QuickReply\Models\QuickReply;
+use App\Events\Agenda\ConsultaCriada;
 use App\Events\TenantResolved;
+use App\Listeners\Agenda\MoveCardToAgendadoColumn;
+use App\Models\Agenda\Appointment;
 use App\Models\Agenda\AppointmentType;
 use App\Models\Anotacao;
 use App\Models\AuditLog;
@@ -30,6 +33,7 @@ use App\Models\Professional;
 use App\Models\Tag;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Policies\Agenda\AppointmentPolicy;
 use App\Policies\Agenda\AppointmentTypePolicy;
 use App\Policies\Agenda\ProfessionalSchedulePolicy;
 use App\Policies\AnotacaoPolicy;
@@ -168,6 +172,12 @@ class AppServiceProvider extends ServiceProvider
                 );
             }
         );
+
+        // Fase 5 — Listener move card no funil quando consulta é criada (FR-013).
+        Event::listen(
+            ConsultaCriada::class,
+            MoveCardToAgendadoColumn::class,
+        );
     }
 
     /**
@@ -202,6 +212,7 @@ class AppServiceProvider extends ServiceProvider
         // Fase 5 — Agenda de Consultas.
         Gate::policy(Professional::class, ProfessionalSchedulePolicy::class);
         Gate::policy(AppointmentType::class, AppointmentTypePolicy::class);
+        Gate::policy(Appointment::class, AppointmentPolicy::class);
     }
 
     /**

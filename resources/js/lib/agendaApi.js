@@ -40,3 +40,25 @@ export const updateAppointmentType = (id, payload) =>
 
 export const deleteAppointmentType = (id) =>
   api.delete(`/agenda/appointment-types/${id}`)
+
+// ─── Appointments + Slots (US-6.3 / US-6.5) ───────────────────────
+export const listAppointments = (params = {}) =>
+  api.get('/agenda/consultas', { params })
+
+export const createAppointment = (payload) =>
+  api.post('/agenda/consultas', payload)
+
+export const getAppointment = (id) =>
+  api.get(`/agenda/consultas/${id}`)
+
+export const rescheduleAppointment = (id, payload) =>
+  api.post(`/agenda/consultas/${id}/reagendar`, payload)
+
+export const listAvailableSlots = (params) =>
+  api.get('/agenda/slots-disponiveis', { params })
+
+export const reserveSlot = (startsAt, payload) =>
+  api.post(`/agenda/slots/${encodeURIComponent(startsAt)}/reservar`, payload)
+
+export const releaseReservation = (id) =>
+  api.delete(`/agenda/slot-reservations/${id}`)

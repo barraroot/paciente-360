@@ -171,60 +171,60 @@ Web app multi-tenant Laravel + Vue (Option 2 do plan):
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T060 [P] [US3] Test `tests/Feature/Agenda/AppointmentCreationTest.php` cobrindo AC-6.3.1 (criar consulta + funil mover) + AC-6.3.4 (busca paciente trgm) + AC-6.3.5 (cadastro rápido paciente) + AC-6.3.6 (notify_patient via Fase 3)
-- [ ] T061 [P] [US3] Test `tests/Feature/Agenda/SlotConflictRaceTest.php` (50 requests paralelos no mesmo slot, exatamente 1 sucesso → resto 409 `slot_conflict`) — gate SC-008 / FR-011a
-- [ ] T062 [P] [US3] Test `tests/Feature/Agenda/SlotReservationTest.php` (TTL 5min user / 2min IA, conflict 409, commit/expired/canceled) — clarify nº 2
-- [ ] T063 [P] [US3] Test `tests/Unit/Agenda/SlotGeneratorServiceTest.php` (15+ cenários: intervalo, bloqueio, buffer, conflito, externo, reserva ativa) — R7
-- [ ] T064 [P] [US3] Test `tests/Feature/Agenda/AppointmentReschedulingDragTest.php` cobrindo AC-6.3.3 (drag-to-move dispara `ConsultaReagendada` + Fase 3 notifica)
+- [X] T060 [P] [US3] Test `tests/Feature/Agenda/AppointmentCreationTest.php` cobrindo AC-6.3.1 (criar consulta + funil mover) + AC-6.3.4 (busca paciente trgm) + AC-6.3.5 (cadastro rápido paciente) + AC-6.3.6 (notify_patient via Fase 3)
+- [X] T061 [P] [US3] Test `tests/Feature/Agenda/SlotConflictRaceTest.php` (50 requests paralelos no mesmo slot, exatamente 1 sucesso → resto 409 `slot_conflict`) — gate SC-008 / FR-011a
+- [X] T062 [P] [US3] Test `tests/Feature/Agenda/SlotReservationTest.php` (TTL 5min user / 2min IA, conflict 409, commit/expired/canceled) — clarify nº 2
+- [X] T063 [P] [US3] Test `tests/Unit/Agenda/SlotGeneratorServiceTest.php` (15+ cenários: intervalo, bloqueio, buffer, conflito, externo, reserva ativa) — R7
+- [X] T064 [P] [US3] Test `tests/Feature/Agenda/AppointmentReschedulingDragTest.php` cobrindo AC-6.3.3 (drag-to-move dispara `ConsultaReagendada` + Fase 3 notifica)
 
 ### Models + Events for US3
 
-- [ ] T065 [P] [US3] Criar `app/Models/Agenda/Appointment.php` com casts (UUID v7, status enum, encrypted `notes`, decimal `valor_aplicado`), scope `BelongsToTenant`, scope `active()`, accessor `reschedule_count` (count de `appointment_reschedules`)
-- [ ] T066 [P] [US3] Criar `app/Models/Agenda/AppointmentReschedule.php` (FK appointment_id, scope tenant)
-- [ ] T067 [P] [US3] Criar `app/Models/Agenda/SlotReservation.php` com scope `active()` (released_at IS NULL AND expires_at > now()), scope `expired()`
-- [ ] T068 [P] [US3] Criar evento `app/Events/Agenda/ConsultaCriada.php` (Auditable + ShouldBroadcast em `tenant.{id}.agenda`)
-- [ ] T069 [P] [US3] Criar evento `app/Events/Agenda/ConsultaReagendada.php` (Auditable + ShouldBroadcast)
+- [X] T065 [P] [US3] Criar `app/Models/Agenda/Appointment.php` com casts (UUID v7, status enum, encrypted `notes`, decimal `valor_aplicado`), scope `BelongsToTenant`, scope `active()`, accessor `reschedule_count` (count de `appointment_reschedules`)
+- [X] T066 [P] [US3] Criar `app/Models/Agenda/AppointmentReschedule.php` (FK appointment_id, scope tenant)
+- [X] T067 [P] [US3] Criar `app/Models/Agenda/SlotReservation.php` com scope `active()` (released_at IS NULL AND expires_at > now()), scope `expired()`
+- [X] T068 [P] [US3] Criar evento `app/Events/Agenda/ConsultaCriada.php` (Auditable + ShouldBroadcast em `tenant.{id}.agenda`)
+- [X] T069 [P] [US3] Criar evento `app/Events/Agenda/ConsultaReagendada.php` (Auditable + ShouldBroadcast)
 
 ### Services for US3
 
-- [ ] T070 [P] [US3] Criar `app/Services/Agenda/SlotGeneratorService.php` com método pure `generate(Professional, AppointmentType, CarbonPeriod): Collection` + `forApi(...)` com cache Redis 60s — R7
-- [ ] T071 [P] [US3] Criar `app/Services/Agenda/SlotReservationService.php` com `reserve(...)`, `release(...)`, `cleanupExpired()`; trata 23505 unique_violation → 409 — R4
-- [ ] T072 [US3] Criar `app/Services/Agenda/AppointmentService.php` com `create(...)` (valida slot via SlotGenerator + Reservation commit + emite `ConsultaCriada`), `reschedule(...)` (cria `AppointmentReschedule` + valida limit FR-026b + emite `ConsultaReagendada` + cancela watch para reschedulings consecutivos), `cancelOverlappingAppointments(ScheduleException)` (FR-028c)
+- [X] T070 [P] [US3] Criar `app/Services/Agenda/SlotGeneratorService.php` com método pure `generate(Professional, AppointmentType, CarbonPeriod): Collection` + `forApi(...)` com cache Redis 60s — R7
+- [X] T071 [P] [US3] Criar `app/Services/Agenda/SlotReservationService.php` com `reserve(...)`, `release(...)`, `cleanupExpired()`; trata 23505 unique_violation → 409 — R4
+- [X] T072 [US3] Criar `app/Services/Agenda/AppointmentService.php` com `create(...)` (valida slot via SlotGenerator + Reservation commit + emite `ConsultaCriada`), `reschedule(...)` (cria `AppointmentReschedule` + valida limit FR-026b + emite `ConsultaReagendada` + cancela watch para reschedulings consecutivos), `cancelOverlappingAppointments(ScheduleException)` (FR-028c)
 
 ### Listeners for US3
 
-- [ ] T073 [P] [US3] Criar `app/Listeners/Agenda/MoveCardToAgendadoColumn.php` (Fase 2 funil — escuta `ConsultaCriada` → muda coluna do paciente para "Agendado"); bind em `EventServiceProvider`
-- [ ] T074 [P] [US3] Criar `app/Listeners/Agenda/BroadcastAppointmentChangeToAgendaChannel.php` (Reverb canal `tenant.X.agenda` para sync multi-aba); bind em `EventServiceProvider`
+- [X] T073 [P] [US3] Criar `app/Listeners/Agenda/MoveCardToAgendadoColumn.php` (Fase 2 funil — escuta `ConsultaCriada` → muda coluna do paciente para "Agendado"); bind em `EventServiceProvider`
+- [X] T074 [P] [US3] Criar `app/Listeners/Agenda/BroadcastAppointmentChangeToAgendaChannel.php` (Reverb canal `tenant.X.agenda` para sync multi-aba); bind em `EventServiceProvider`
 
 ### Form Requests + Resource + Policy + Controller for US3
 
-- [ ] T075 [US3] Criar `app/Policies/AppointmentPolicy.php` com `viewAny` (ability `appointment.view`), `view` (tenant scope), `create` (`appointment.create` + slot disponível), `update` (`appointment.update` — restrito a notas/valor — não move horário), `cancel` (`appointment.cancel`); registrar em `AuthServiceProvider`
-- [ ] T076 [P] [US3] Criar `app/Http/Requests/Agenda/StoreAppointmentRequest.php` (validation per OpenAPI `AppointmentCreate` + ability check `appointment.override_block` se `override_block=true` — clarify nº 5)
-- [ ] T077 [P] [US3] Criar `app/Http/Requests/Agenda/UpdateAppointmentRequest.php` (apenas notas/valor_override; rejeita campos de horário)
-- [ ] T078 [P] [US3] Criar `app/Http/Requests/Agenda/RescheduleAppointmentRequest.php` (idempotency_key + new_starts_at + motivo opcional; rejeita `professional_id`/`appointment_type_id` — clarify nº 7)
-- [ ] T079 [P] [US3] Criar `app/Http/Requests/Agenda/ReserveSlotRequest.php` (holder_type, holder_id, idempotency_key)
-- [ ] T080 [P] [US3] Criar `app/Http/Requests/Agenda/ListAvailableSlotsRequest.php` (professional_id, appointment_type_id, from, to ISO 8601, page, per_page max 200)
-- [ ] T081 [P] [US3] Criar `app/Http/Resources/Agenda/AppointmentResource.php` + `SlotResource.php` + `SlotReservationResource.php` (envelope com `timezone_display` IANA — clarify nº 13)
-- [ ] T082 [US3] Criar `app/Http/Controllers/Api/V1/Agenda/AppointmentController.php` (`index`, `store`, `show`, `update`, `reschedule`, `destroy` aliasado para `cancel`) — `cancel` separado em US5
-- [ ] T083 [US3] Criar `app/Http/Controllers/Api/V1/Agenda/SlotController.php` (`index` slots-disponiveis, `reservar`, `releaseReservation`)
-- [ ] T084 [US3] Editar `routes/api.php` adicionando rotas `/agenda/consultas/*`, `/agenda/slots-disponiveis`, `/agenda/slots/{starts_at}/reservar`, `/agenda/slot-reservations/{id}` (5 + 3 endpoints); rate limit `/reservar` 60/min/user e `/consultas` 120/min/user (Princípio VII)
+- [X] T075 [US3] Criar `app/Policies/AppointmentPolicy.php` com `viewAny` (ability `appointment.view`), `view` (tenant scope), `create` (`appointment.create` + slot disponível), `update` (`appointment.update` — restrito a notas/valor — não move horário), `cancel` (`appointment.cancel`); registrar em `AuthServiceProvider`
+- [X] T076 [P] [US3] Criar `app/Http/Requests/Agenda/StoreAppointmentRequest.php` (validation per OpenAPI `AppointmentCreate` + ability check `appointment.override_block` se `override_block=true` — clarify nº 5)
+- [X] T077 [P] [US3] Criar `app/Http/Requests/Agenda/UpdateAppointmentRequest.php` (apenas notas/valor_override; rejeita campos de horário)
+- [X] T078 [P] [US3] Criar `app/Http/Requests/Agenda/RescheduleAppointmentRequest.php` (idempotency_key + new_starts_at + motivo opcional; rejeita `professional_id`/`appointment_type_id` — clarify nº 7)
+- [X] T079 [P] [US3] Criar `app/Http/Requests/Agenda/ReserveSlotRequest.php` (holder_type, holder_id, idempotency_key)
+- [X] T080 [P] [US3] Criar `app/Http/Requests/Agenda/ListAvailableSlotsRequest.php` (professional_id, appointment_type_id, from, to ISO 8601, page, per_page max 200)
+- [X] T081 [P] [US3] Criar `app/Http/Resources/Agenda/AppointmentResource.php` + `SlotResource.php` + `SlotReservationResource.php` (envelope com `timezone_display` IANA — clarify nº 13)
+- [X] T082 [US3] Criar `app/Http/Controllers/Api/V1/Agenda/AppointmentController.php` (`index`, `store`, `show`, `update`, `reschedule`, `destroy` aliasado para `cancel`) — `cancel` separado em US5
+- [X] T083 [US3] Criar `app/Http/Controllers/Api/V1/Agenda/SlotController.php` (`index` slots-disponiveis, `reservar`, `releaseReservation`)
+- [X] T084 [US3] Editar `routes/api.php` adicionando rotas `/agenda/consultas/*`, `/agenda/slots-disponiveis`, `/agenda/slots/{starts_at}/reservar`, `/agenda/slot-reservations/{id}` (5 + 3 endpoints); rate limit `/reservar` 60/min/user e `/consultas` 120/min/user (Princípio VII)
 
 ### Cron command for US3
 
-- [ ] T085 [US3] Criar `app/Console/Commands/AgendaCleanupExpiredReservationsCommand.php` (escaneia reservas WHERE released_at IS NULL AND expires_at < now() em batch de 1000, marca released_at + release_reason='expired' + emite eventos auditados); confirmar Schedule registrado em T029
+- [X] T085 [US3] Criar `app/Console/Commands/AgendaCleanupExpiredReservationsCommand.php` (escaneia reservas WHERE released_at IS NULL AND expires_at < now() em batch de 1000, marca released_at + release_reason='expired' + emite eventos auditados); confirmar Schedule registrado em T029
 
 ### Frontend for US3 (FullCalendar drag-and-drop)
 
-- [ ] T086 [P] [US3] Criar `resources/js/composables/useTimezoneRenderer.js` (Luxon parse ISO+offset → render TZ contextual) — clarify nº 13 / R6
-- [ ] T087 [P] [US3] Criar `resources/js/composables/useSlotReservation.js` (POST /reservar + heartbeat antes de TTL expirar)
-- [ ] T088 [P] [US3] Criar `resources/js/composables/useAgendaCalendar.js` (wrapper FullCalendar com drag handlers — drag-create + drag-to-move com confirm modal)
-- [ ] T089 [US3] Criar `resources/js/stores/agendaStore.js` (Pinia: state slots/appointments/reservations, actions fetch/create/reschedule/cancel, sync via Reverb canal `tenant.X.agenda` — invalida cache local em mudança)
-- [ ] T090 [P] [US3] Criar `resources/js/components/agenda/PatientAutocomplete.vue` (busca trgm Fase 2 com cadastro rápido — AC-6.3.4/AC-6.3.5)
-- [ ] T091 [P] [US3] Criar `resources/js/components/agenda/AppointmentFormModal.vue` (criar/editar consulta — campos: paciente, profissional, tipo, slot, override_block + motivo, valor_override + motivo)
-- [ ] T092 [P] [US3] Criar `resources/js/components/agenda/RescheduleConfirmModal.vue` (drag-to-move confirm — texto "Reagendar consulta de {Paciente} de {hora_atual} para {hora_nova}? O paciente será notificado." — clarify nº 9)
-- [ ] T093 [P] [US3] Criar `resources/js/components/agenda/SlotPicker.vue` (picker visual de slots disponíveis com TZ render via `useTimezoneRenderer`)
-- [ ] T094 [US3] Criar `resources/js/pages/agenda/AgendaPage.vue` (FullCalendar v7 com views diária + semanal + toggle multi-prof; render TZ contextual; integra modais + autocomplete + reservation heartbeat — AC-6.3.7 / clarify nº 9)
-- [ ] T095 [US3] Adicionar rotas Vue Router para `/agenda`, `/agenda/configurar`, `/agenda/tipos`; lazy-load chunks
+- [X] T086 [P] [US3] Criar `resources/js/composables/useTimezoneRenderer.js` (Luxon parse ISO+offset → render TZ contextual) — clarify nº 13 / R6
+- [X] T087 [P] [US3] Criar `resources/js/composables/useSlotReservation.js` (POST /reservar + heartbeat antes de TTL expirar)
+- [X] T088 [P] [US3] Criar `resources/js/composables/useAgendaCalendar.js` (wrapper FullCalendar com drag handlers — drag-create + drag-to-move com confirm modal)
+- [X] T089 [US3] Criar `resources/js/stores/agendaStore.js` (Pinia: state slots/appointments/reservations, actions fetch/create/reschedule/cancel, sync via Reverb canal `tenant.X.agenda` — invalida cache local em mudança)
+- [X] T090 [P] [US3] Criar `resources/js/components/agenda/PatientAutocomplete.vue` (busca trgm Fase 2 com cadastro rápido — AC-6.3.4/AC-6.3.5)
+- [X] T091 [P] [US3] Criar `resources/js/components/agenda/AppointmentFormModal.vue` (criar/editar consulta — campos: paciente, profissional, tipo, slot, override_block + motivo, valor_override + motivo)
+- [X] T092 [P] [US3] Criar `resources/js/components/agenda/RescheduleConfirmModal.vue` (drag-to-move confirm — texto "Reagendar consulta de {Paciente} de {hora_atual} para {hora_nova}? O paciente será notificado." — clarify nº 9)
+- [X] T093 [P] [US3] Criar `resources/js/components/agenda/SlotPicker.vue` (picker visual de slots disponíveis com TZ render via `useTimezoneRenderer`)
+- [X] T094 [US3] Criar `resources/js/pages/agenda/AgendaPage.vue` (FullCalendar v7 com views diária + semanal + toggle multi-prof; render TZ contextual; integra modais + autocomplete + reservation heartbeat — AC-6.3.7 / clarify nº 9)
+- [X] T095 [US3] Adicionar rotas Vue Router para `/agenda`, `/agenda/configurar`, `/agenda/tipos`; lazy-load chunks
 
 **Checkpoint**: US-6.3 verde — drag-and-drop funcional, slot reservation TTL, race condition gate, RBAC, paciente notificado via Fase 3, sync multi-aba via Reverb. **MVP MÍNIMO** entregável aqui (US1+US2+US3 = agenda operacional via painel humano sem confirmação automática).
 

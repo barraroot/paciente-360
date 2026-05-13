@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Agenda\AppointmentController;
 use App\Http\Controllers\Api\V1\Agenda\AppointmentTypeController;
 use App\Http\Controllers\Api\V1\Agenda\ProfessionalScheduleController;
 use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
+use App\Http\Controllers\Api\V1\Agenda\SlotController;
 use App\Http\Controllers\Api\V1\Audit\AuditLogsController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutAllController;
@@ -427,6 +429,24 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'agend
             ->name('schedule-exceptions.store');
         Route::delete('schedule-exceptions/{schedule_exception}', [ScheduleExceptionController::class, 'destroy'])
             ->name('schedule-exceptions.destroy');
+
+        // T084 (US-6.3) — Appointments + slots (search/reserve/release)
+        Route::get('consultas', [AppointmentController::class, 'index'])
+            ->name('consultas.index');
+        Route::post('consultas', [AppointmentController::class, 'store'])
+            ->middleware('throttle:120,1')
+            ->name('consultas.store');
+        Route::get('consultas/{appointment}', [AppointmentController::class, 'show'])
+            ->name('consultas.show');
+        Route::post('consultas/{appointment}/reagendar', [AppointmentController::class, 'reschedule'])
+            ->name('consultas.reschedule');
+        Route::get('slots-disponiveis', [SlotController::class, 'listAvailable'])
+            ->name('slots.available');
+        Route::post('slots/{starts_at}/reservar', [SlotController::class, 'reservar'])
+            ->middleware('throttle:60,1')
+            ->name('slots.reserve');
+        Route::delete('slot-reservations/{slot_reservation}', [SlotController::class, 'releaseReservation'])
+            ->name('slots.reservation.release');
 
         // T057 (US-6.2) — Tipos de atendimento
         Route::get('appointment-types', [AppointmentTypeController::class, 'index'])

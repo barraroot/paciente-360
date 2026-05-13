@@ -158,7 +158,7 @@
 
 ### Tests for US2 (E2E browser-side — Playwright para smoke; testes unit do auth store via Vitest se existir, senão pular)
 
-- [ ] T051 [P] [US2] Write `tests/e2e/auth-token-flow.spec.ts` Playwright covering:
+- [x] T051 [P] [US2] Write `tests/e2e/auth-token-flow.spec.ts` Playwright covering:
   - login_persists_token_to_localStorage
   - token_auto_injects_in_subsequent_requests
   - 401_clears_storage_and_redirects_to_login
@@ -167,8 +167,8 @@
 
 ### Implementation for US2
 
-- [ ] T052 [P] [US2] Atualizar `resources/js/lib/api.js` — remover `withCredentials: true, withXSRFToken: true`; adicionar interceptor de request que injeta `Authorization: Bearer ${authStore.token}` e `X-Tenant-Slug: ${authStore.tenant.slug}` quando autenticado; manter interceptor de 401 (já existe)
-- [ ] T053 [US2] Atualizar `resources/js/stores/auth.js` Pinia:
+- [x] T052 [P] [US2] Atualizar `resources/js/lib/api.js` — remover `withCredentials: true, withXSRFToken: true`; adicionar interceptor de request que injeta `Authorization: Bearer ${authStore.token}` e `X-Tenant-Slug: ${authStore.tenant.slug}` quando autenticado; manter interceptor de 401 (já existe)
+- [x] T053 [US2] Atualizar `resources/js/stores/auth.js` Pinia:
   - State: `token: ref(null), user: null, tenant: null, permissions: []`
   - `boot()` action — carrega `localStorage.getItem('paciente360.auth.token')`; se presente, faz `GET /auth/me` para revalidar + carregar user+tenant
   - `login({email, password})` — chama `POST /auth/login`; persist token em localStorage + state
@@ -176,18 +176,18 @@
   - `logoutAll()` — chama `POST /auth/logout-all`
   - `setToken(token)` / `clearToken()` helpers
   - `reset()` — limpa state local sem chamar API (usado por 401 interceptor)
-- [ ] T054 [P] [US2] Atualizar `resources/js/pages/Auth/LoginPage.vue` — form 2 campos (email + password). Submit chama `authStore.login(...)`. Sucesso → redirect `/panel`. Erro 401 → mensagem genérica "Credenciais inválidas" (não revela tenant). Erro 423 → mostra `locked_until`
-- [ ] T055 [P] [US2] Criar `resources/js/pages/Auth/TokensPage.vue` (Settings → Sessões) — lista tokens via `GET /auth/tokens`; cada item mostra `name, token_id_prefix, last_used_at, expires_at, is_current badge`; botão "Revogar" chama `DELETE /auth/tokens/{id}` (confirm modal); botão "Sair de todos dispositivos" (logout-all)
-- [ ] T056 [P] [US2] Adicionar rota `/panel/configuracoes/sessoes` em `resources/js/router/index.js` com meta `requiresAuth: true, ability: 'inbox.view'` (qualquer user autenticado pode gerenciar próprias sessões)
-- [ ] T057 [US2] Atualizar `resources/js/main.js` (ou bootstrap entry) — chamar `authStore.boot()` no início, ANTES de mount do app; aguarda revalidação antes de renderizar
-- [ ] T058 [US2] Adicionar i18n strings em `resources/js/i18n/pt-BR.json` chave `auth`:
+- [x] T054 [P] [US2] Atualizar `resources/js/pages/Auth/LoginPage.vue` — form 2 campos (email + password). Submit chama `authStore.login(...)`. Sucesso → redirect `/panel`. Erro 401 → mensagem genérica "Credenciais inválidas" (não revela tenant). Erro 423 → mostra `locked_until`
+- [x] T055 [P] [US2] Criar `resources/js/pages/Auth/TokensPage.vue` (Settings → Sessões) — lista tokens via `GET /auth/tokens`; cada item mostra `name, token_id_prefix, last_used_at, expires_at, is_current badge`; botão "Revogar" chama `DELETE /auth/tokens/{id}` (confirm modal); botão "Sair de todos dispositivos" (logout-all)
+- [x] T056 [P] [US2] Adicionar rota `/panel/configuracoes/sessoes` em `resources/js/router/index.js` com meta `requiresAuth: true, ability: 'inbox.view'` (qualquer user autenticado pode gerenciar próprias sessões)
+- [x] T057 [US2] Atualizar `resources/js/main.js` (ou bootstrap entry) — chamar `authStore.boot()` no início, ANTES de mount do app; aguarda revalidação antes de renderizar
+- [x] T058 [US2] Adicionar i18n strings em `resources/js/i18n/pt-BR.json` chave `auth`:
   ```
   sessoes.titulo, sessoes.atual, sessoes.expira_em, sessoes.usado_em, sessoes.revogar, sessoes.logout_all, sessoes.confirmar_revogar
   ```
 
 ### Build + verify
 
-- [ ] T059 [US2] `vendor/bin/sail npm run build` — confirma 0 erros, bundle dentro do esperado (não regredir vs Fase 3)
+- [x] T059 [US2] `vendor/bin/sail npm run build` — confirma 0 erros, bundle dentro do esperado (não regredir vs Fase 3)
 
 ---
 

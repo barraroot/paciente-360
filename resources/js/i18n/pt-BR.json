@@ -45,8 +45,23 @@
             "card3_title": "LGPD por padrão",
             "card3_body": "Auditoria, criptografia e retenção configurável desde o dia 1."
         },
+        "sessoes": {
+            "titulo": "Sessões e dispositivos",
+            "atual": "Esta sessão",
+            "expira_em": "Expira em {data}",
+            "usado_em": "Usado pela última vez {tempo}",
+            "revogar": "Revogar",
+            "logout_all": "Sair de todos os dispositivos",
+            "confirmar_revogar": "Tem certeza que deseja revogar esta sessão? O dispositivo será desconectado imediatamente.",
+            "confirmar_logout_all": "Você será desconectado de TODOS os dispositivos. Continuar?",
+            "vazio": "Nenhuma sessão ativa.",
+            "erro_carregar": "Não foi possível carregar as sessões."
+        },
         "errors": {
             "failed": "Credenciais inválidas.",
+            "invalid_credentials": "Credenciais inválidas.",
+            "account_locked": "Conta temporariamente bloqueada após múltiplas tentativas. Tente novamente em {until}.",
+            "generic": "Erro ao fazer login. Tente novamente.",
             "throttle": "Muitas tentativas. Tente novamente em {seconds} segundos."
         }
     },

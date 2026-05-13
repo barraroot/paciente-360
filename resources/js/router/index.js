@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory } from "vue-router";
-import { useAuthStore } from "@/stores/auth.js";
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth.js';
 
 const PanelPlaceholder = {
     template: `
@@ -14,239 +14,238 @@ const PanelPlaceholder = {
 
 const routes = [
     {
-        path: "/",
-        redirect: "/panel",
+        path: '/',
+        redirect: '/panel',
     },
 
     // ─── Autenticação ───────────────────────────────────────────────────────────
     {
-        path: "/login",
-        name: "auth.login",
-        component: () => import("@/pages/auth/LoginPage.vue"),
+        path: '/login',
+        name: 'auth.login',
+        component: () => import('@/pages/auth/LoginPage.vue'),
         meta: { requiresGuest: true },
     },
     {
-        path: "/forgot-password",
-        name: "auth.forgot",
-        component: () => import("@/pages/auth/ForgotPasswordPage.vue"),
+        path: '/forgot-password',
+        name: 'auth.forgot',
+        component: () => import('@/pages/auth/ForgotPasswordPage.vue'),
         meta: { requiresGuest: true },
     },
     {
-        path: "/reset-password/:token",
-        name: "auth.reset",
-        component: () => import("@/pages/auth/ResetPasswordPage.vue"),
+        path: '/reset-password/:token',
+        name: 'auth.reset',
+        component: () => import('@/pages/auth/ResetPasswordPage.vue'),
         meta: { requiresGuest: true },
     },
     {
-        path: "/register-clinic",
-        name: "tenant.register",
-        component: () =>
-            import("@/pages/tenant-register/RegisterTenantPage.vue"),
+        path: '/register-clinic',
+        name: 'tenant.register',
+        component: () => import('@/pages/tenant-register/RegisterTenantPage.vue'),
         meta: { requiresGuest: true },
     },
 
     // ─── Painel (requer autenticação) ───────────────────────────────────────────
     {
-        path: "/panel",
-        name: "panel.home",
+        path: '/panel',
+        name: 'panel.home',
         component: PanelPlaceholder,
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/onboarding",
-        name: "panel.onboarding",
-        component: () => import("@/pages/onboarding/OnboardingWizardPage.vue"),
+        path: '/panel/onboarding',
+        name: 'panel.onboarding',
+        component: () => import('@/pages/onboarding/OnboardingWizardPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/billing/plans",
-        name: "billing.plans",
-        component: () => import("@/pages/billing/PlansPage.vue"),
+        path: '/panel/billing/plans',
+        name: 'billing.plans',
+        component: () => import('@/pages/billing/PlansPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/billing/subscription",
-        name: "billing.subscription",
-        component: () => import("@/pages/billing/SubscriptionPage.vue"),
+        path: '/panel/billing/subscription',
+        name: 'billing.subscription',
+        component: () => import('@/pages/billing/SubscriptionPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/billing/ai-usage",
-        name: "billing.ai-usage",
-        component: () => import("@/pages/billing/AiUsagePage.vue"),
+        path: '/panel/billing/ai-usage',
+        name: 'billing.ai-usage',
+        component: () => import('@/pages/billing/AiUsagePage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/users",
-        name: "users.list",
-        component: () => import("@/pages/users/UsersListPage.vue"),
+        path: '/panel/users',
+        name: 'users.list',
+        component: () => import('@/pages/users/UsersListPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/users/invite",
-        name: "users.invite",
-        component: () => import("@/pages/users/InviteUserPage.vue"),
+        path: '/panel/users/invite',
+        name: 'users.invite',
+        component: () => import('@/pages/users/InviteUserPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/accept-invitation",
-        name: "users.accept",
-        component: () => import("@/pages/invitations/AcceptInvitationPage.vue"),
+        path: '/accept-invitation',
+        name: 'users.accept',
+        component: () => import('@/pages/invitations/AcceptInvitationPage.vue'),
         meta: { requiresGuest: true },
     },
     {
-        path: "/panel/audit-logs",
-        name: "audit.list",
-        component: () => import("@/pages/audit/AuditLogsPage.vue"),
+        path: '/panel/audit-logs',
+        name: 'audit.list',
+        component: () => import('@/pages/audit/AuditLogsPage.vue'),
         meta: { requiresAuth: true },
     },
     // ─── Pacientes ──────────────────────────────────────────────────────────────
     {
-        path: "/panel/pacientes",
-        name: "pacientes.list",
-        component: () => import("@/pages/pacientes/PacientesListPage.vue"),
+        path: '/panel/pacientes',
+        name: 'pacientes.list',
+        component: () => import('@/pages/pacientes/PacientesListPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/pacientes/novo",
-        name: "pacientes.create",
-        component: () => import("@/pages/pacientes/PacienteFormPage.vue"),
+        path: '/panel/pacientes/novo',
+        name: 'pacientes.create',
+        component: () => import('@/pages/pacientes/PacienteFormPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/pacientes/mesclagem",
-        name: "pacientes.mesclagem",
-        component: () => import("@/pages/pacientes/MesclagemPage.vue"),
+        path: '/panel/pacientes/mesclagem',
+        name: 'pacientes.mesclagem',
+        component: () => import('@/pages/pacientes/MesclagemPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/pacientes/:id",
-        name: "pacientes.show",
-        component: () => import("@/pages/pacientes/PacienteShowPage.vue"),
+        path: '/panel/pacientes/:id',
+        name: 'pacientes.show',
+        component: () => import('@/pages/pacientes/PacienteShowPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/pacientes/:id/editar",
-        name: "pacientes.edit",
-        component: () => import("@/pages/pacientes/PacienteFormPage.vue"),
+        path: '/panel/pacientes/:id/editar',
+        name: 'pacientes.edit',
+        component: () => import('@/pages/pacientes/PacienteFormPage.vue'),
         props: (route) => ({ id: Number(route.params.id) }),
         meta: { requiresAuth: true },
     },
     // US4 — Funil Kanban
     {
-        path: "/panel/pacientes/funil",
-        name: "pacientes.funil.kanban",
-        component: () => import("@/pages/pacientes/FunilKanbanPage.vue"),
+        path: '/panel/pacientes/funil',
+        name: 'pacientes.funil.kanban',
+        component: () => import('@/pages/pacientes/FunilKanbanPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/pacientes/funil/config",
-        name: "pacientes.funil.config",
-        component: () => import("@/pages/pacientes/FunilConfigPage.vue"),
+        path: '/panel/pacientes/funil/config',
+        name: 'pacientes.funil.config',
+        component: () => import('@/pages/pacientes/FunilConfigPage.vue'),
         meta: { requiresAuth: true },
     },
     // US3 — Importação em massa
     {
-        path: "/panel/pacientes/importar",
-        name: "pacientes.import.upload",
-        component: () => import("@/pages/pacientes/ImportacaoPage.vue"),
+        path: '/panel/pacientes/importar',
+        name: 'pacientes.import.upload',
+        component: () => import('@/pages/pacientes/ImportacaoPage.vue'),
         meta: { requiresAuth: true },
     },
     {
-        path: "/panel/pacientes/importacao/:id",
-        name: "pacientes.import.status",
-        component: () => import("@/pages/pacientes/ImportacaoStatusPage.vue"),
+        path: '/panel/pacientes/importacao/:id',
+        name: 'pacientes.import.status',
+        component: () => import('@/pages/pacientes/ImportacaoStatusPage.vue'),
         props: (route) => ({ id: route.params.id }),
         meta: { requiresAuth: true },
     },
 
     // ─── Configurações → Sessões (US2 — Bearer token management) ──────────────
     {
-        path: "/panel/configuracoes/sessoes",
-        name: "auth.tokens",
-        component: () => import("@/pages/auth/TokensPage.vue"),
+        path: '/panel/configuracoes/sessoes',
+        name: 'auth.tokens',
+        component: () => import('@/pages/auth/TokensPage.vue'),
         meta: { requiresAuth: true },
     },
 
     // ─── Canais (Omnichannel Inbox — US1) ──────────────────────────────────────
     {
-        path: "/panel/canais",
-        name: "canais.index",
-        component: () => import("@/pages/Canais/Index.vue"),
-        meta: { requiresAuth: true, ability: "inbox.view", title: "Canais" },
+        path: '/panel/canais',
+        name: 'canais.index',
+        component: () => import('@/pages/Canais/Index.vue'),
+        meta: { requiresAuth: true, ability: 'inbox.view', title: 'Canais' },
     },
     {
-        path: "/panel/canais/conectar-whatsapp",
-        name: "canais.conectar_whatsapp",
-        component: () => import("@/pages/Canais/ConectarWhatsApp.vue"),
+        path: '/panel/canais/conectar-whatsapp',
+        name: 'canais.conectar_whatsapp',
+        component: () => import('@/pages/Canais/ConectarWhatsApp.vue'),
         meta: {
             requiresAuth: true,
-            ability: "channel.connect",
-            title: "Conectar WhatsApp",
+            ability: 'channel.connect',
+            title: 'Conectar WhatsApp',
         },
     },
     {
-        path: "/panel/canais/conectar-instagram",
-        name: "canais.conectar_instagram",
-        component: () => import("@/pages/Canais/ConectarInstagram.vue"),
+        path: '/panel/canais/conectar-instagram',
+        name: 'canais.conectar_instagram',
+        component: () => import('@/pages/Canais/ConectarInstagram.vue'),
         meta: {
             requiresAuth: true,
-            ability: "channel.connect",
-            title: "Conectar Instagram",
+            ability: 'channel.connect',
+            title: 'Conectar Instagram',
         },
     },
     {
-        path: "/panel/canais/:id",
-        name: "canais.show",
-        component: () => import("@/pages/Canais/Detalhe.vue"),
+        path: '/panel/canais/:id',
+        name: 'canais.show',
+        component: () => import('@/pages/Canais/Detalhe.vue'),
         props: true,
         meta: {
             requiresAuth: true,
-            ability: "inbox.view",
-            title: "Detalhes do canal",
+            ability: 'inbox.view',
+            title: 'Detalhes do canal',
         },
     },
 
     // ─── Inbox Unificada (Omnichannel — US4) ───────────────────────────────────
     {
-        path: "/panel/inbox",
-        name: "inbox.index",
-        component: () => import("@/pages/Inbox/Index.vue"),
-        meta: { requiresAuth: true, ability: "inbox.view", title: "Inbox" },
+        path: '/panel/inbox',
+        name: 'inbox.index',
+        component: () => import('@/pages/Inbox/Index.vue'),
+        meta: { requiresAuth: true, ability: 'inbox.view', title: 'Inbox' },
     },
     {
-        path: "/panel/inbox/conversa/:id",
-        name: "inbox.conversation",
-        component: () => import("@/pages/Inbox/Index.vue"),
+        path: '/panel/inbox/conversa/:id',
+        name: 'inbox.conversation',
+        component: () => import('@/pages/Inbox/Index.vue'),
         props: true,
-        meta: { requiresAuth: true, ability: "inbox.view", title: "Conversa" },
+        meta: { requiresAuth: true, ability: 'inbox.view', title: 'Conversa' },
     },
     // US-4.5 — Regras de atribuição automática
     {
-        path: "/panel/inbox/regras-atribuicao",
-        name: "inbox.regras_atribuicao",
-        component: () => import("@/pages/Inbox/RegrasAtribuicao.vue"),
+        path: '/panel/inbox/regras-atribuicao',
+        name: 'inbox.regras_atribuicao',
+        component: () => import('@/pages/Inbox/RegrasAtribuicao.vue'),
         meta: {
             requiresAuth: true,
-            ability: "inbox.assign",
-            title: "Regras de Atribuição",
+            ability: 'inbox.assign',
+            title: 'Regras de Atribuição',
         },
     },
     // US-4.7 — Respostas Rápidas
     {
-        path: "/panel/inbox/respostas-rapidas",
-        name: "inbox.respostas_rapidas",
-        component: () => import("@/pages/Inbox/RespostasRapidas.vue"),
+        path: '/panel/inbox/respostas-rapidas',
+        name: 'inbox.respostas_rapidas',
+        component: () => import('@/pages/Inbox/RespostasRapidas.vue'),
         meta: {
             requiresAuth: true,
-            ability: "inbox.view",
-            title: "Respostas Rápidas",
+            ability: 'inbox.view',
+            title: 'Respostas Rápidas',
         },
     },
 
     {
-        path: "/panel/:pathMatch(.*)*",
-        name: "panel.catchAll",
+        path: '/panel/:pathMatch(.*)*',
+        name: 'panel.catchAll',
         component: PanelPlaceholder,
         meta: { requiresAuth: true },
     },
@@ -274,23 +273,23 @@ router.beforeEach(async (to) => {
         try {
             await auth.fetchMe();
         } catch {
-            return { name: "auth.login", query: { redirect: to.fullPath } };
+            return { name: 'auth.login', query: { redirect: to.fullPath } };
         }
     }
 
     if (to.meta.requiresGuest && auth.isAuthenticated) {
-        return { path: "/panel" };
+        return { path: '/panel' };
     }
 
     // Auto-redirect para onboarding quando tenant ainda não concluiu o setup.
     // Só aplica em /panel (exato) para não criar loops — /panel/onboarding e
     // demais sub-rotas do painel ficam isentas.
     if (
-        to.name === "panel.home" &&
+        to.name === 'panel.home' &&
         auth.isAuthenticated &&
         auth.tenant?.onboarding_completed === false
     ) {
-        return { name: "panel.onboarding" };
+        return { name: 'panel.onboarding' };
     }
 });
 

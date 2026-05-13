@@ -201,18 +201,21 @@
 
 ### Tests for US3
 
-- [ ] T060 [P] [US3] Write `tests/Feature/Fase4/Auth/BroadcastingAuthBearerTest.php` covering:
-  - broadcasting_auth_accepts_bearer_token_returns_200_signature
-  - broadcasting_auth_rejects_cookie_session_returns_401
-  - broadcasting_auth_validates_X_Tenant_Slug_header
-  - cross_tenant_broadcast_subscription_blocked_403 (Princípio II — InboxTenantIsolationTest extension)
+- [x] T060 [P] [US3] Write `tests/Feature/Fase4/Auth/BroadcastingAuthBearerTest.php` covering:
+  - broadcasting_auth_accepts_bearer_token_returns_200_signature ✓
+  - broadcasting_auth_rejects_request_without_bearer_returns_401 ✓ (refinado vs cookie-only — auth:sanctum bloqueia ausência de Bearer)
+  - broadcasting_auth_rejects_missing_x_tenant_slug_returns_400 ✓
+  - broadcasting_auth_rejects_x_tenant_slug_mismatch_returns_403 ✓
+  - cross_tenant_broadcast_subscription_blocked_403 ✓ (Princípio II — channel callback returns false)
 
 ### Implementation for US3
 
-- [ ] T061 [US3] Atualizar `bootstrap/app.php` registro de broadcasting — chamar `Broadcast::routes(['middleware' => ['auth:sanctum', 'tenant.slug']])` em vez do default `['web']`; OR remover `statefulApi()` da chain do `broadcasting/auth` se já não estiver lá
-- [ ] T062 [US3] Atualizar `resources/js/echo.js` — `authorizer` envia `Authorization: Bearer ${authStore.token}` + `X-Tenant-Slug: ${authStore.tenant.slug}`; remove `withCredentials`/`withXSRFToken` (agora desnecessário)
-- [ ] T063 [US3] Run US3 tests; all PASS
-- [ ] T064 [US3] **Smoke test manual** — abrir 2 abas com user diferente do mesmo tenant em `/panel/inbox`; trigger evento broadcast (ex.: enviar mensagem via curl webhook); confirmar que ambas abas recebem evento em <2s (verificado no DevTools → Network → WS)
+- [x] T061 [US3] Atualizar `bootstrap/app.php` registro de broadcasting — `withBroadcasting(__DIR__.'/../routes/channels.php', ['middleware' => ['auth:sanctum', 'tenant.slug']])`; removido `channels:` de `withRouting` para evitar dupla registration
+- [x] T062 [US3] Atualizar `resources/js/echo.js` — `authorizer` async usa lazy import de `@/lib/api.js` (que injeta Bearer + X-Tenant-Slug); remove `withCredentials`/`withXSRFToken`/`X-Requested-With` defaults globais
+- [x] T062a [US3] **(Fix arquitetural descoberto)** — Adicionar `User::guardName()` retornando `'web'`. `Auth::shouldUse('sanctum')` (chamado pelo auth:sanctum) muta `config('auth.defaults.guard')` para 'sanctum'; sem o pin, Spatie buscaria permissions com guard='sanctum' e falharia (todas seedadas com 'web'). Quebraria `$user->can()` em produção sob Bearer auth. Foi pego só agora porque Lote D não exercita `can()`.
+- [x] T062b [US3] **(Adiantado do Lote I)** Migrar `tests/Feature/Fase0/Tenant/ChannelAuthorizationTest.php` (5 testes) e `tests/Feature/Fase3/Foundational/ReverbChannelAuthorizationTest.php` (5 testes, 8 actingAs) para Bearer/Sanctum::actingAs + X-Tenant-Slug. Mantém suite verde até Lote I completar a migração massiva.
+- [x] T063 [US3] Run US3 tests; 15/15 PASS (5 novos Fase 4 + 5 Fase 0 + 5 Fase 3)
+- [ ] T064 [US3] **Smoke test manual** — abrir 2 abas com user diferente do mesmo tenant em `/panel/inbox`; trigger evento broadcast (ex.: enviar mensagem via curl webhook); confirmar que ambas abas recebem evento em <2s (verificado no DevTools → Network → WS). _Pendente operacional — exige Reverb + Twilio rodando._
 
 ---
 

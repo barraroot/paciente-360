@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 
 /**
  * Instância Axios pré-configurada para o backend Laravel/Sanctum Bearer.
@@ -15,8 +15,8 @@ import axios from "axios";
  *   api.js ← importa → stores/auth.js ← importa → api.js
  */
 const api = axios.create({
-    baseURL: "/api/v1",
-    headers: { Accept: "application/json" },
+    baseURL: '/api/v1',
+    headers: { Accept: 'application/json' },
 });
 
 /**
@@ -29,17 +29,17 @@ function generateRequestId() {
 
 // Interceptor de request — injeta X-Request-Id, Authorization Bearer e X-Tenant-Slug.
 api.interceptors.request.use(async (config) => {
-    config.headers["X-Request-Id"] = generateRequestId();
+    config.headers['X-Request-Id'] = generateRequestId();
 
-    const { useAuthStore } = await import("@/stores/auth.js");
+    const { useAuthStore } = await import('@/stores/auth.js');
     const authStore = useAuthStore();
 
     if (authStore.token) {
-        config.headers["Authorization"] = `Bearer ${authStore.token}`;
+        config.headers['Authorization'] = `Bearer ${authStore.token}`;
     }
 
     if (authStore.tenant?.slug) {
-        config.headers["X-Tenant-Slug"] = authStore.tenant.slug;
+        config.headers['X-Tenant-Slug'] = authStore.tenant.slug;
     }
 
     return config;
@@ -53,14 +53,14 @@ api.interceptors.response.use(
         const status = error.response?.status;
 
         if (status === 401) {
-            const { useAuthStore } = await import("@/stores/auth.js");
-            const { default: router } = await import("@/router/index.js");
+            const { useAuthStore } = await import('@/stores/auth.js');
+            const { default: router } = await import('@/router/index.js');
 
             useAuthStore().reset();
 
-            if (router.currentRoute.value.name !== "auth.login") {
+            if (router.currentRoute.value.name !== 'auth.login') {
                 router.push({
-                    name: "auth.login",
+                    name: 'auth.login',
                     query: { redirect: router.currentRoute.value.fullPath },
                 });
             }

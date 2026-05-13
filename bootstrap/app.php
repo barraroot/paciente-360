@@ -38,7 +38,10 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         apiPrefix: 'api/v1',
         commands: __DIR__.'/../routes/console.php',
-        channels: __DIR__.'/../routes/channels.php',
+        // `channels` removido daqui — registrado abaixo via `withBroadcasting()`
+        // com middleware Bearer (Fase 4 Lote F — T061). Manter aqui faria o
+        // framework chamar `Broadcast::routes()` SEM atributos (default 'web'),
+        // sobrescrevendo nossa configuração com auth de sessão.
         health: '/up',
         then: function (): void {
             // Widget public routes — served at root level (no /api/v1 prefix).
@@ -46,6 +49,14 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware([])
                 ->group(base_path('routes/widget.php'));
         },
+    )
+    // T061 — /broadcasting/auth com Bearer Sanctum + triple-check tenant slug.
+    // Substitui o default 'web' (cookie-session) por:
+    //   auth:sanctum  → autentica via Authorization: Bearer <token>
+    //   tenant.slug   → exige X-Tenant-Slug bate com user.tenant_id (FR-011)
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        ['middleware' => ['auth:sanctum', 'tenant.slug']],
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Confia em proxies (ngrok local, load balancer prod) para que

@@ -1,13 +1,13 @@
-import { createApp } from "vue";
-import { createPinia } from "pinia";
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 
-import router from "./router";
-import i18n from "./i18n";
-import App from "./App.vue";
+import router from './router';
+import i18n from './i18n';
+import App from './App.vue';
 
-import "./echo";
+import './echo';
 
-import { useAuthStore } from "@/stores/auth.js";
+import { useAuthStore } from '@/stores/auth.js';
 
 const app = createApp(App);
 
@@ -21,5 +21,5 @@ app.use(i18n);
 // O app monta deslogado e o router guard redireciona para /login se necessário.
 const authStore = useAuthStore();
 authStore.boot().finally(() => {
-    app.mount("#app");
+    app.mount('#app');
 });

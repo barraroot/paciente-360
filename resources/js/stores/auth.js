@@ -1,4 +1,4 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
 /**
  * Store de autenticação Bearer Token (Sanctum Personal Access Tokens).
@@ -25,10 +25,10 @@ import { defineStore } from "pinia";
  *  - paciente360.auth.tenant_slug  — cached slug para X-Tenant-Slug header
  */
 
-const LS_TOKEN_KEY = "paciente360.auth.token";
-const LS_TENANT_SLUG_KEY = "paciente360.auth.tenant_slug";
+const LS_TOKEN_KEY = 'paciente360.auth.token';
+const LS_TENANT_SLUG_KEY = 'paciente360.auth.tenant_slug';
 
-export const useAuthStore = defineStore("auth", {
+export const useAuthStore = defineStore('auth', {
     state: () => ({
         token: null,
         user: null,
@@ -169,8 +169,8 @@ export const useAuthStore = defineStore("auth", {
          * @returns {Promise<object>} dados do usuário autenticado
          */
         async login({ email, password, device_name }) {
-            const api = (await import("@/lib/api.js")).default;
-            const { data } = await api.post("/auth/login", {
+            const api = (await import('@/lib/api.js')).default;
+            const { data } = await api.post('/auth/login', {
                 email,
                 password,
                 device_name,
@@ -203,9 +203,9 @@ export const useAuthStore = defineStore("auth", {
          * Idempotente: falhas na API são ignoradas.
          */
         async logout() {
-            const api = (await import("@/lib/api.js")).default;
+            const api = (await import('@/lib/api.js')).default;
             try {
-                await api.post("/auth/logout");
+                await api.post('/auth/logout');
             } catch {
                 // Idempotente — token pode já estar revogado.
             }
@@ -217,9 +217,9 @@ export const useAuthStore = defineStore("auth", {
          * Usado em "Sair de todos os dispositivos".
          */
         async logoutAll() {
-            const api = (await import("@/lib/api.js")).default;
+            const api = (await import('@/lib/api.js')).default;
             try {
-                await api.post("/auth/logout-all");
+                await api.post('/auth/logout-all');
             } catch {
                 // Idempotente.
             }
@@ -237,8 +237,8 @@ export const useAuthStore = defineStore("auth", {
          * @returns {Promise<object>} dados do usuário
          */
         async fetchMe() {
-            const api = (await import("@/lib/api.js")).default;
-            const { data } = await api.get("/auth/me");
+            const api = (await import('@/lib/api.js')).default;
+            const { data } = await api.get('/auth/me');
 
             this.setUser(data.user);
             this.setTenant(data.tenant);

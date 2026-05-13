@@ -96,6 +96,11 @@ class Appointment extends Model
         return $this->hasMany(AppointmentReschedule::class);
     }
 
+    public function confirmationDispatches(): HasMany
+    {
+        return $this->hasMany(ConfirmationDispatch::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->whereIn('status', self::ACTIVE_STATUSES);

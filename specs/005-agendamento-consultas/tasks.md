@@ -238,44 +238,44 @@ Web app multi-tenant Laravel + Vue (Option 2 do plan):
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T096 [P] [US4] Test `tests/Feature/Agenda/ConfirmationFlowTest.php` cobrindo AC-6.4.1..6.4.6 (T-24h, T-2h, retry T-30min, T-15min escala manual, idempotência respostas, paciente sem canal) — clarify nº 6 / FR-018..024
-- [ ] T097 [P] [US4] Test `tests/Feature/Agenda/AttendanceMarkingTest.php` cobrindo clarify nº 14: marcação manual realizada/no-show, auto-flag T+30min, janela 7d → `concluida_sem_registro`, reversão 48h, ability `appointment.revert_attendance_marking` após 48h
+- [X] T096 [P] [US4] Test `tests/Feature/Agenda/ConfirmationFlowTest.php` cobrindo AC-6.4.1..6.4.6 (T-24h, T-2h, retry T-30min, T-15min escala manual, idempotência respostas, paciente sem canal) — clarify nº 6 / FR-018..024
+- [X] T097 [P] [US4] Test `tests/Feature/Agenda/AttendanceMarkingTest.php` cobrindo clarify nº 14: marcação manual realizada/no-show, auto-flag T+30min, janela 7d → `concluida_sem_registro`, reversão 48h, ability `appointment.revert_attendance_marking` após 48h
 
 ### Models + Events for US4
 
-- [ ] T098 [P] [US4] Criar `app/Models/Agenda/ConfirmationDispatch.php` com casts (kind enum, via_ia bool, response_value enum), scope `BelongsToTenant`
-- [ ] T099 [P] [US4] Criar evento `app/Events/Agenda/ConsultaConfirmacaoPendente.php` (Auditable; payload inclui `via_ia`, `horario_brasilia`, `tz_label` derivado de `IanaTimezoneCity::canonicalLabel()` — clarify nº 6/13)
-- [ ] T100 [P] [US4] Criar evento `app/Events/Agenda/ConsultaConfirmada.php` (Auditable + ShouldBroadcast `tenant.X.agenda`)
-- [ ] T101 [P] [US4] Criar evento `app/Events/Agenda/ConsultaCancelada.php` (Auditable + ShouldBroadcast)
-- [ ] T102 [P] [US4] Criar evento `app/Events/Agenda/ConsultaPendenteContatoManual.php` (Auditable — clarify nº 6 retry T-15min)
-- [ ] T103 [P] [US4] Criar evento `app/Events/Agenda/ConsultaRealizada.php` + `ConsultaNaoRealizada.php` + `ConsultaMarcacaoRevertida.php` (Auditable — clarify nº 14)
+- [X] T098 [P] [US4] Criar `app/Models/Agenda/ConfirmationDispatch.php` com casts (kind enum, via_ia bool, response_value enum), scope `BelongsToTenant`
+- [X] T099 [P] [US4] Criar evento `app/Events/Agenda/ConsultaConfirmacaoPendente.php` (Auditable; payload inclui `via_ia`, `horario_brasilia`, `tz_label` derivado de `IanaTimezoneCity::canonicalLabel()` — clarify nº 6/13)
+- [X] T100 [P] [US4] Criar evento `app/Events/Agenda/ConsultaConfirmada.php` (Auditable + ShouldBroadcast `tenant.X.agenda`)
+- [X] T101 [P] [US4] Criar evento `app/Events/Agenda/ConsultaCancelada.php` (Auditable + ShouldBroadcast)
+- [X] T102 [P] [US4] Criar evento `app/Events/Agenda/ConsultaPendenteContatoManual.php` (Auditable — clarify nº 6 retry T-15min)
+- [X] T103 [P] [US4] Criar evento `app/Events/Agenda/ConsultaRealizada.php` + `ConsultaNaoRealizada.php` + `ConsultaMarcacaoRevertida.php` (Auditable — clarify nº 14)
 
 ### Services for US4
 
-- [ ] T104 [P] [US4] Criar `app/Services/Agenda/ConfirmationDispatcherService.php` com `dispatchPending()` (varre consultas elegíveis e emite `ConsultaConfirmacaoPendente` com kind correto: 24h/2h/retry_30min/15min_manual_escalation; checa `via_ia` flag se Fase 3 indica conversa ativa; cria `ConfirmationDispatch` row idempotent)
-- [ ] T105 [US4] Criar `app/Services/Agenda/ConfirmationResponseProcessor.php` com `process(Appointment, value: 1|2|3, kind, received_at)` — emite `ConsultaConfirmada` (1) ou `ConsultaCancelada` motivo=paciente_via_chat (3) ou `ReagendamentoSolicitadoPeloPaciente` (2 — feature evento) — clarify nº 6 + idempotente FR-023
-- [ ] T106 [P] [US4] Criar `app/Services/Agenda/AttendanceMarkingService.php` com `mark(Appointment, status, motivo, User $actor)` (valida janela 7d, ability `appointment.update`), `revert(Appointment, User $actor)` (valida 48h ou ability `appointment.revert_attendance_marking`); emite eventos `ConsultaRealizada`/`ConsultaNaoRealizada`/`ConsultaMarcacaoRevertida` — clarify nº 14
+- [X] T104 [P] [US4] Criar `app/Services/Agenda/ConfirmationDispatcherService.php` com `dispatchPending()` (varre consultas elegíveis e emite `ConsultaConfirmacaoPendente` com kind correto: 24h/2h/retry_30min/15min_manual_escalation; checa `via_ia` flag se Fase 3 indica conversa ativa; cria `ConfirmationDispatch` row idempotent)
+- [X] T105 [US4] Criar `app/Services/Agenda/ConfirmationResponseProcessor.php` com `process(Appointment, value: 1|2|3, kind, received_at)` — emite `ConsultaConfirmada` (1) ou `ConsultaCancelada` motivo=paciente_via_chat (3) ou `ReagendamentoSolicitadoPeloPaciente` (2 — feature evento) — clarify nº 6 + idempotente FR-023
+- [X] T106 [P] [US4] Criar `app/Services/Agenda/AttendanceMarkingService.php` com `mark(Appointment, status, motivo, User $actor)` (valida janela 7d, ability `appointment.update`), `revert(Appointment, User $actor)` (valida 48h ou ability `appointment.revert_attendance_marking`); emite eventos `ConsultaRealizada`/`ConsultaNaoRealizada`/`ConsultaMarcacaoRevertida` — clarify nº 14
 
 ### Listeners for US4
 
-- [ ] T107 [P] [US4] Criar `app/Listeners/Agenda/DispatchConfirmationToInbox.php` (escuta `ConsultaConfirmacaoPendente` → encaminha para `MessagingDispatcher` da Fase 3 com payload formatado); bind em `EventServiceProvider`
+- [X] T107 [P] [US4] Criar `app/Listeners/Agenda/DispatchConfirmationToInbox.php` (escuta `ConsultaConfirmacaoPendente` → encaminha para `MessagingDispatcher` da Fase 3 com payload formatado); bind em `EventServiceProvider`
 
 ### Cron commands for US4
 
-- [ ] T108 [US4] Criar `app/Console/Commands/AgendaDispatchConfirmationsCommand.php` (chama `ConfirmationDispatcherService::dispatchPending()`); confirmar registrado em T029
-- [ ] T109 [US4] Criar `app/Console/Commands/AgendaAutoCloseStaleAppointmentsCommand.php` (escaneia `Appointment WHERE status IN ('scheduled','confirmed') AND starts_at < now() - 7d`; muda status `concluida_sem_registro`; audit warning) — clarify nº 14
+- [X] T108 [US4] Criar `app/Console/Commands/AgendaDispatchConfirmationsCommand.php` (chama `ConfirmationDispatcherService::dispatchPending()`); confirmar registrado em T029
+- [X] T109 [US4] Criar `app/Console/Commands/AgendaAutoCloseStaleAppointmentsCommand.php` (escaneia `Appointment WHERE status IN ('scheduled','confirmed') AND starts_at < now() - 7d`; muda status `concluida_sem_registro`; audit warning) — clarify nº 14
 
 ### Endpoints for US4
 
-- [ ] T110 [P] [US4] Criar `app/Http/Requests/Agenda/ConfirmResponseRequest.php` (response_value 1|2|3, dispatch_kind, received_at) — endpoint interno para Fase 3 ingestar
-- [ ] T111 [P] [US4] Criar `app/Http/Requests/Agenda/MarkAttendanceRequest.php` (status realizada|nao_realizada, attendance_motivo opcional)
-- [ ] T112 [US4] Adicionar métodos ao `AppointmentController.php`: `confirmResponse(...)`, `markAttendance(...)`, `revertAttendance(...)`
-- [ ] T113 [US4] Editar `routes/api.php` adicionando: `POST /agenda/consultas/{id}/confirmar-resposta`, `POST /agenda/consultas/{id}/marcar-comparecimento`, `POST /agenda/consultas/{id}/reverter-comparecimento`
+- [X] T110 [P] [US4] Criar `app/Http/Requests/Agenda/ConfirmResponseRequest.php` (response_value 1|2|3, dispatch_kind, received_at) — endpoint interno para Fase 3 ingestar
+- [X] T111 [P] [US4] Criar `app/Http/Requests/Agenda/MarkAttendanceRequest.php` (status realizada|nao_realizada, attendance_motivo opcional)
+- [X] T112 [US4] Adicionar métodos ao `AppointmentController.php`: `confirmResponse(...)`, `markAttendance(...)`, `revertAttendance(...)`
+- [X] T113 [US4] Editar `routes/api.php` adicionando: `POST /agenda/consultas/{id}/confirmar-resposta`, `POST /agenda/consultas/{id}/marcar-comparecimento`, `POST /agenda/consultas/{id}/reverter-comparecimento`
 
 ### Frontend for US4
 
-- [ ] T114 [P] [US4] Criar `resources/js/components/agenda/AttendanceMarkButton.vue` (botão com 3 estados: marcar realizada / nao_realizada, mostrar "auto-flag" após T+30min, botão reverter dentro de 48h ou Admin com ability — clarify nº 14)
-- [ ] T115 [P] [US4] Criar widget `resources/js/components/agenda/PendingAttendanceWidget.vue` no dashboard (lista consultas com `auto_flagged_at IS NOT NULL AND status IN ('scheduled','confirmed')` — clarify nº 14)
+- [X] T114 [P] [US4] Criar `resources/js/components/agenda/AttendanceMarkButton.vue` (botão com 3 estados: marcar realizada / nao_realizada, mostrar "auto-flag" após T+30min, botão reverter dentro de 48h ou Admin com ability — clarify nº 14)
+- [X] T115 [P] [US4] Criar widget `resources/js/components/agenda/PendingAttendanceWidget.vue` no dashboard (lista consultas com `auto_flagged_at IS NOT NULL AND status IN ('scheduled','confirmed')` — clarify nº 14)
 
 **Checkpoint**: US-6.4 verde — confirmação T-24h/T-2h/retry T-30min disparam, respostas 1/2/3 processadas, marcação de comparecimento + reversão funcionais.
 

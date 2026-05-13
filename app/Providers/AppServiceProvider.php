@@ -18,8 +18,10 @@ use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Observers\MessageObserver;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
 use App\Domain\Messaging\QuickReply\Models\QuickReply;
+use App\Events\Agenda\ConsultaConfirmacaoPendente;
 use App\Events\Agenda\ConsultaCriada;
 use App\Events\TenantResolved;
+use App\Listeners\Agenda\DispatchConfirmationToInbox;
 use App\Listeners\Agenda\MoveCardToAgendadoColumn;
 use App\Models\Agenda\Appointment;
 use App\Models\Agenda\AppointmentType;
@@ -177,6 +179,12 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             ConsultaCriada::class,
             MoveCardToAgendadoColumn::class,
+        );
+
+        // Fase 5 (US-6.4) — Listener encaminha confirmações para Fase 3 inbox.
+        Event::listen(
+            ConsultaConfirmacaoPendente::class,
+            DispatchConfirmationToInbox::class,
         );
     }
 

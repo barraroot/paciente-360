@@ -440,6 +440,13 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'agend
             ->name('consultas.show');
         Route::post('consultas/{appointment}/reagendar', [AppointmentController::class, 'reschedule'])
             ->name('consultas.reschedule');
+        // T113 (US-6.4) — Confirmação automática + comparecimento
+        Route::post('consultas/{appointment}/confirmar-resposta', [AppointmentController::class, 'confirmResponse'])
+            ->name('consultas.confirm-response');
+        Route::post('consultas/{appointment}/marcar-comparecimento', [AppointmentController::class, 'markAttendance'])
+            ->name('consultas.mark-attendance');
+        Route::post('consultas/{appointment}/reverter-comparecimento', [AppointmentController::class, 'revertAttendance'])
+            ->name('consultas.revert-attendance');
         Route::get('slots-disponiveis', [SlotController::class, 'listAvailable'])
             ->name('slots.available');
         Route::post('slots/{starts_at}/reservar', [SlotController::class, 'reservar'])

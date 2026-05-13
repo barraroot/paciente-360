@@ -3,14 +3,19 @@
 namespace App\Http\Controllers\Api\V1\Agenda;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Agenda\ConfirmResponseRequest;
+use App\Http\Requests\Agenda\MarkAttendanceRequest;
 use App\Http\Requests\Agenda\RescheduleAppointmentRequest;
 use App\Http\Requests\Agenda\StoreAppointmentRequest;
 use App\Http\Resources\Agenda\AppointmentResource;
 use App\Models\Agenda\Appointment;
 use App\Services\Agenda\AppointmentService;
+use App\Services\Agenda\AttendanceMarkingService;
+use App\Services\Agenda\ConfirmationResponseProcessor;
 use App\Services\Agenda\SlotConflictException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -86,6 +91,72 @@ class AppointmentController extends Controller
             }
 
             return response()->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return new AppointmentResource($updated);
+    }
+
+    /**
+     * T112a — Ingesta resposta de confirmação vinda da Fase 3 (US-6.4).
+     */
+    public function confirmResponse(
+        ConfirmResponseRequest $request,
+        Appointment $appointment,
+        ConfirmationResponseProcessor $processor,
+    ) {
+        Gate::authorize('view', $appointment);
+
+        $data = $request->validated();
+        $updated = $processor->process(
+            $appointment,
+            $data['response_value'],
+            $data['dispatch_kind'],
+            isset($data['received_at']) ? Carbon::parse($data['received_at']) : null,
+        );
+
+        return new AppointmentResource($updated);
+    }
+
+    /**
+     * T112b — Marcar comparecimento (clarify nº 14).
+     */
+    public function markAttendance(
+        MarkAttendanceRequest $request,
+        Appointment $appointment,
+        AttendanceMarkingService $service,
+    ) {
+        try {
+            $updated = $service->mark(
+                $appointment,
+                $request->validated()['status'],
+                $request->validated()['attendance_motivo'] ?? null,
+                $request->user(),
+            );
+        } catch (\DomainException $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return new AppointmentResource($updated);
+    }
+
+    /**
+     * T112c — Reverter marcação (clarify nº 14).
+     */
+    public function revertAttendance(
+        Request $request,
+        Appointment $appointment,
+        AttendanceMarkingService $service,
+    ) {
+        Gate::authorize('update', $appointment);
+
+        try {
+            $updated = $service->revert($appointment, $request->user());
+        } catch (\DomainException $e) {
+            $code = $e->getMessage() === 'revert_window_expired'
+                ? Response::HTTP_FORBIDDEN
+                : Response::HTTP_UNPROCESSABLE_ENTITY;
+
+            return response()->json(['error' => $e->getMessage()], $code);
         }
 
         return new AppointmentResource($updated);

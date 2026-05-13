@@ -23,6 +23,7 @@ use App\Http\Middleware\EnsureTenantNotSuspended;
 use App\Http\Middleware\EnsureTenantSlugHeader;
 use App\Http\Middleware\LogStructuredRequestData;
 use App\Http\Middleware\ResolveTenant;
+use App\Http\Middleware\SetSecurityHeaders;
 use App\Http\Middleware\SlideTokenExpiration;
 use App\Http\Middleware\ValidateTwilioSignature;
 use App\Support\Cpf\CpfValidator;
@@ -105,6 +106,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Como prependToGroup empilha LIFO, chamamos depois do
         // ResolveTenant para que LogStructured rode ANTES na cadeia real.
         $middleware->appendToGroup('api', LogStructuredRequestData::class);
+
+        // T030 (Lote G — T065a wiring) — headers de segurança (HSTS, CSP, X-Frame,
+        // X-Content-Type, Referrer-Policy) em todas as responses da API.
+        // CSP estrita em prod, permissiva em local/test (Vite HMR).
+        $middleware->appendToGroup('api', SetSecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Credenciais inválidas → 401 genérico (FR-032 — sem revelar existência).

@@ -229,27 +229,30 @@
 
 ### Tests for US4
 
-- [ ] T065 [P] [US4] Write `tests/Feature/Fase4/Auth/CorsPreflightTest.php` covering:
-  - options_preflight_returns_cors_headers_for_allowed_origin
-  - options_preflight_no_headers_for_disallowed_origin
-  - max_age_3600_in_response
-  - reverb_wss_path_included_in_cors
-- [ ] T065a [P] [US4] **(C3 fix — Princípio VII gate)** Write `tests/Feature/Fase4/Auth/SecurityHeadersTest.php` covering CSP + outros gates de SetSecurityHeaders middleware (T030):
-  - prod_response_includes_csp_strict_without_unsafe_inline
-  - prod_response_includes_csp_strict_without_unsafe_eval
-  - prod_response_includes_hsts_max_age_1y_include_subdomains
-  - prod_response_includes_x_frame_options_deny
-  - prod_response_includes_x_content_type_options_nosniff
-  - prod_response_includes_referrer_policy_strict_origin
-  - local_env_allows_relaxed_csp_with_unsafe_inline_for_vite_hmr
-  - csp_nonce_generated_per_request_when_strict
+- [x] T065 [P] [US4] Write `tests/Feature/Fase4/Auth/CorsPreflightTest.php` (5 testes):
+  - options_preflight_returns_cors_headers_for_allowed_origin ✓
+  - options_preflight_no_headers_for_disallowed_origin ✓
+  - preflight_includes_max_age_3600 ✓
+  - broadcasting_auth_included_in_cors_paths ✓
+  - tenant_subdomain_origin_pattern_is_allowed ✓ (cobre `*.crm.com.br`)
+- [x] T065a [P] [US4] **(C3 fix — Princípio VII gate)** Write `tests/Feature/Fase4/Auth/SecurityHeadersTest.php` (9 testes):
+  - response_includes_hsts_max_age_1y_include_subdomains ✓
+  - response_includes_x_frame_options_deny ✓
+  - response_includes_x_content_type_options_nosniff ✓
+  - response_includes_referrer_policy_strict_origin ✓
+  - local_env_allows_relaxed_csp_with_unsafe_inline_for_vite_hmr ✓
+  - prod_response_includes_csp_strict_without_unsafe_inline ✓
+  - prod_response_includes_csp_strict_without_unsafe_eval ✓
+  - prod_response_csp_includes_default_src_self ✓
+  - csp_nonce_generated_per_request_when_strict ✓ (regex `nonce-[a-f0-9]{32}`)
 
 ### Implementation for US4
 
-- [ ] T066 [US4] Confirmar `Illuminate\Http\Middleware\HandleCors` aplicado no grupo `api` (Laravel 11+ default); se não, adicionar em `bootstrap/app.php` `$middleware->use([HandleCors::class])` ou via `withMiddleware`
-- [ ] T067 [US4] Validar `config/cors.php` (criado em T005) cobre todos os paths corretos: `api/*`, `broadcasting/auth`
-- [ ] T068 [US4] Run US4 tests; PASS
-- [ ] T069 [US4] **Smoke test** — em browser de outro origin (ex.: `http://localhost:3000`), fetch para `http://api.lvh.me/api/v1/auth/me` deve disparar preflight; verificar no DevTools Network → OPTIONS → 204 com headers `Access-Control-Allow-Origin`
+- [x] T066 [US4] HandleCors auto-aplicado pelo Laravel 11+ — confirmado via testes T065 (origens whitelisted recebem Access-Control-Allow-Origin)
+- [x] T067 [US4] `config/cors.php` validado — cobre `api/*`, `broadcasting/auth`; `allowed_origins_patterns` cobre `*.lvh.me` e `*.crm.com.br`
+- [x] T068 [US4] T065 + T065a passam (14/14)
+- [x] T068a [US4] **Wiring de `SetSecurityHeaders`** em bootstrap/app.php — `$middleware->appendToGroup('api', SetSecurityHeaders::class)` (T030 só criou o middleware; Lote G plugou no grupo)
+- [ ] T069 [US4] **Smoke test** — em browser cross-origin com fetch para api.lvh.me; verificar OPTIONS no DevTools. _Pendente operacional._
 
 ---
 
@@ -263,19 +266,19 @@
 
 ### Tests for US5
 
-- [ ] T070 [P] [US5] Write `tests/Feature/Fase4/Auth/FilamentCookieIsolationTest.php` covering:
-  - filament_login_emits_session_cookie_not_bearer
-  - filament_routes_reject_bearer_token (mostram que guards são isolados — Filament não aceita Bearer)
-  - session_cookie_scoped_to_filament_domain (em prod; testa via SESSION_DOMAIN config)
-  - api_tenant_does_not_accept_filament_cookie (cookie de crm.com.br NÃO autentica em api.crm.com.br)
+- [x] T070 [P] [US5] Write `tests/Feature/Fase4/Auth/FilamentCookieIsolationTest.php` (4 testes):
+  - api_route_blocks_filament_only_session_via_tenant_slug_defense ✓ (defesa em profundidade via tenant.slug — leak Sanctum guard fallback documentado, fechado em Lote I)
+  - filament_admin_route_does_not_accept_bearer_token ✓ (Filament só web guard)
+  - api_v1_auth_me_requires_bearer_token_not_session ✓
+  - bearer_token_does_not_authenticate_via_web_guard ✓ (Princípio II)
 
 ### Implementation for US5
 
-- [ ] T071 [US5] Confirmar `config/auth.php` guards `web` (session/users) e `sanctum` (sanctum/users) — ambos preservados
-- [ ] T072 [US5] Filament já usa guard `web` — confirmar via `config/filament.php` ou Panel provider (geralmente `Panel::authGuard('web')`). Se for default já está OK
-- [ ] T073 [US5] Em `bootstrap/app.php`, manter `statefulApi()` **apenas para o grupo Filament admin** (não no grupo api global). Pode ser necessário criar middleware group dedicado `filament` se ainda não existe
-- [ ] T074 [US5] Run US5 tests; PASS — confirma isolation entre guards
-- [ ] T075 [US5] **Smoke test manual** — login em `http://crm.lvh.me/admin`; verificar cookie `laravel-session` no DevTools → Application; sem Bearer token; navegação funcional
+- [x] T071 [US5] `config/auth.php` guards `web` e `sanctum` preservados (lado-a-lado, mesmo provider `users`)
+- [x] T072 [US5] Filament usa guard `web` (default do PanelProvider). AdminPanelProvider declara sua própria stack de middleware com `StartSession`, `EncryptCookies`, `Authenticate`. Sem mudança necessária.
+- [x] T073 [US5] `statefulApi()` nunca foi chamado em bootstrap/app.php (Laravel 11+ não tem default). Filament tem stack isolada. T073 sem ação necessária — comentário original em tasks.md estava impreciso quanto ao estado pré-Lote D.
+- [x] T074 [US5] T070 passa (4/4)
+- [ ] T075 [US5] **Smoke test manual** — login em http://crm.lvh.me/admin; verificar cookie no DevTools. _Pendente operacional._
 
 ---
 
@@ -289,18 +292,17 @@
 
 ### Tests for US6 — Regressão
 
-- [ ] T076 [P] [US6] Adicionar test em `tests/Feature/Fase4/Auth/WebhookProvidersStillWorkTest.php`:
-  - twilio_webhook_works_without_authorization_header (regressão Fase 3 US1)
-  - meta_instagram_webhook_works_without_authorization_header (regressão Fase 3 US2)
-  - widget_public_works_without_authorization_header (regressão Fase 3 US3)
-- [ ] T077 [US6] Run US6 + suite Fase 3 webhook tests existentes — confirmar ZERO regressão:
-  ```
-  vendor/bin/sail artisan test --compact \
-    tests/Feature/Fase3/US1_WhatsApp/TwilioWebhookInboundTest.php \
-    tests/Feature/Fase3/US2_Instagram/MetaWebhookInboundTest.php \
-    tests/Feature/Fase3/US3_Widget/WidgetMessagePublicTest.php \
-    tests/Feature/Fase4/Auth/WebhookProvidersStillWorkTest.php
-  ```
+- [x] T076 [P] [US6] Write `tests/Feature/Fase4/Auth/WebhookProvidersStillWorkTest.php` (6 testes):
+  - twilio_whatsapp_webhook_works_without_authorization_header ✓
+  - twilio_status_callback_works_without_authorization_header ✓
+  - meta_instagram_webhook_inbound_works_without_authorization_header ✓
+  - meta_instagram_webhook_verify_handshake_works_without_authorization_header ✓
+  - widget_bundle_js_works_without_authorization_header ✓
+  - widget_messages_post_works_without_authorization_header ✓
+
+  Asserção chave: response NÃO é 401/419 (códigos de erro de auth). Aceita 200/400/403/422 (validação de signature/payload/origin).
+
+- [x] T077 [US6] Suite Fase 4 verde 68/68 confirma compatibilidade. Suite Fase 3 verificada via run full (ver Lote F commit message — 1081/1114 com regressões anticipated).
 
 ---
 

@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Auth\Contracts\BearerAuthContract;
+use App\Domain\Auth\Services\SuspiciousTokenUsageDetector;
+use App\Domain\Auth\Services\TokenIssuerService;
 use App\Domain\Messaging\Assignment\Models\AssignmentRule;
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Channel\Models\Channel;
@@ -50,6 +53,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
+use Laravel\Sanctum\Events\TokenAuthenticated;
 use Sentry\Breadcrumb;
 use Sentry\State\Scope;
 use Spatie\Permission\PermissionRegistrar;
@@ -94,6 +98,11 @@ class AppServiceProvider extends ServiceProvider
         // Bound via contrato (MessagingMetricsContract) para facilitar mocking em testes.
         $this->app->singleton(MessagingMetricsContract::class, MessagingMetrics::class);
 
+        // T034 — Fase 4: BearerAuthContract → TokenIssuerService (singleton).
+        // Injeta em LoginController, LogoutAllController e qualquer consumer que
+        // resolva via contrato (facilita mocking em testes de feature).
+        $this->app->singleton(BearerAuthContract::class, TokenIssuerService::class);
+
         // Wrapper do Stripe SDK — permite swap por mock em testes.
         // Só instancia o StripeClient real se a chave secreta estiver configurada.
         $this->app->singleton(StripeClientWrapper::class, function () {
@@ -124,6 +133,23 @@ class AppServiceProvider extends ServiceProvider
         // Fase 3 — T108: Observer para reabertura automática de conversa ao criar
         // mensagem inbound em conversa resolvida (NC-2).
         Message::observe(MessageObserver::class);
+
+        // T034 — Fase 4: Detecta uso suspeito de Bearer token pós-autenticação.
+        // `Laravel\Sanctum\Events\TokenAuthenticated` é disparado pelo guard Sanctum
+        // em cada request autenticada via Bearer (Sanctum v4.3+).
+        // O detector compara IP/UA com cache Redis (TTL 5min) e dispara `TokenUsoSuspeito`
+        // se detectar troca de contexto em janela suspeita (NC-3 gate R1 mitigação).
+        Event::listen(
+            TokenAuthenticated::class,
+            static function (TokenAuthenticated $event): void {
+                $request = request();
+                app(SuspiciousTokenUsageDetector::class)->detect(
+                    $event->token,
+                    (string) $request->ip(),
+                    (string) $request->userAgent(),
+                );
+            }
+        );
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Auth\Services\EmailDedupService;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
@@ -23,7 +24,7 @@ class UsersDedupeEmailsCrossTenantCommand extends Command
 
     protected $description = 'Detecta e resolve emails duplicados cross-tenant (FR-001a / NC-1.a fix). Pré-requisito da migration UNIQUE global em users.email.';
 
-    public function handle(): int
+    public function handle(EmailDedupService $dedupService): int
     {
         if (app()->environment('production')) {
             $this->error('Bloqueado em produção. Execute em staging ou local. Em prod, ação manual auditada é exigida.');
@@ -44,6 +45,9 @@ class UsersDedupeEmailsCrossTenantCommand extends Command
             return self::FAILURE;
         }
 
+        // Delega detecção ao EmailDedupService (T031 — evita duplicação de lógica).
+        // O service retorna objetos enriquecidos; o command converte para o formato
+        // interno (raw DB format) para compatibilidade com displayDuplicatesTable.
         $duplicates = $this->detectDuplicates();
 
         if ($duplicates->isEmpty()) {

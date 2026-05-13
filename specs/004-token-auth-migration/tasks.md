@@ -49,37 +49,37 @@
 
 ### Eventos Auditable (T016-T019)
 
-- [ ] T016 [P] Criar `app/Domain/Auth/Events/TokenEmitido.php` (Auditable, action `auth.token_emitido`, payload `{user_id, token_id, token_id_prefix, ip, user_agent, expires_at, abilities}`; `relatedPacienteId() = null`)
-- [ ] T017 [P] Criar `app/Domain/Auth/Events/TokenRevogado.php` (Auditable, action `auth.token_revogado`, payload `{user_id, token_id, motivo, executor_id}`; motivo enum `manual|logout_all|admin_force|expired|suspicious_use`)
-- [ ] T018 [P] Criar `app/Domain/Auth/Events/LoginFalhouViaToken.php` (Auditable, action `auth.login_falhou_token`, payload `{ip, token_id_prefix, path, motivo}`; motivo enum `invalid|expired|revoked`)
-- [ ] T019 [P] Criar `app/Domain/Auth/Events/TokenUsoSuspeito.php` (Auditable, action `auth.token_uso_suspeito`, payload `{user_id, token_id, ip_atual, ip_anterior, ua_atual, ua_anterior, janela_segundos}`)
+- [x] T016 [P] Criar `app/Domain/Auth/Events/TokenEmitido.php` (Auditable, action `auth.token_emitido`, payload `{user_id, token_id, token_id_prefix, ip, user_agent, expires_at, abilities}`; `relatedPacienteId() = null`)
+- [x] T017 [P] Criar `app/Domain/Auth/Events/TokenRevogado.php` (Auditable, action `auth.token_revogado`, payload `{user_id, token_id, motivo, executor_id}`; motivo enum `manual|logout_all|admin_force|expired|suspicious_use`)
+- [x] T018 [P] Criar `app/Domain/Auth/Events/LoginFalhouViaToken.php` (Auditable, action `auth.login_falhou_token`, payload `{ip, token_id_prefix, path, motivo}`; motivo enum `invalid|expired|revoked`)
+- [x] T019 [P] Criar `app/Domain/Auth/Events/TokenUsoSuspeito.php` (Auditable, action `auth.token_uso_suspeito`, payload `{user_id, token_id, ip_atual, ip_anterior, ua_atual, ua_anterior, janela_segundos}`)
 
 ### Contracts + Services (T020-T026)
 
-- [ ] T020 [P] Criar `app/Domain/Auth/Contracts/BearerAuthContract.php` interface — `issueToken(User, string $name, array $abilities): array; revokeToken(int $id): void; revokeAllForUser(User): int; resolveTenantByEmail(string): ?Tenant;`
-- [ ] T021 [P] Write `tests/Unit/Auth/TokenIssuerServiceTest.php` — emit token via Sanctum, fire TokenEmitido, hash SHA-256 no DB
-- [ ] T022 Criar `app/Domain/Auth/Services/TokenIssuerService.php` implementing BearerAuthContract — usa `$user->createToken($name, $abilities, $expiresAt)` Sanctum; expira em `now()->addMinutes(config('sanctum.expiration'))`; fire TokenEmitido com payload completo
-- [ ] T023 [P] Criar `app/Domain/Auth/Services/TokenRevocationService.php` — métodos `revokeCurrent(User)`, `revokeAll(User, string $motivo = 'logout_all')`, `revokeById(int $id, ?int $executorId = null)`. Cada chamada fire TokenRevogado com motivo apropriado
-- [ ] T024 [P] Write `tests/Unit/Auth/SlidingExpirationServiceTest.php` — UPDATE só se `expires_at - now() < 5d`; idempotência; throttle correto
-- [ ] T025 Criar `app/Domain/Auth/Services/SlidingExpirationService.php` — `renewIfDue(PersonalAccessToken $token, int $bufferDays = 5, int $windowMinutes = null): bool`; usa default config quando bufferDays/windowMinutes não passados
-- [ ] T026 [P] Write `tests/Unit/Auth/SuspiciousTokenUsageDetectorTest.php` — detecta IPs/UAs distintos em <5min via Redis cache; emite TokenUsoSuspeito; não auto-revoga (apenas alert)
+- [x] T020 [P] Criar `app/Domain/Auth/Contracts/BearerAuthContract.php` interface — `issueToken(User, string $name, array $abilities): array; revokeToken(int $id): void; revokeAllForUser(User): int; resolveTenantByEmail(string): ?Tenant;`
+- [x] T021 [P] Write `tests/Unit/Auth/TokenIssuerServiceTest.php` — emit token via Sanctum, fire TokenEmitido, hash SHA-256 no DB
+- [x] T022 Criar `app/Domain/Auth/Services/TokenIssuerService.php` implementing BearerAuthContract — usa `$user->createToken($name, $abilities, $expiresAt)` Sanctum; expira em `now()->addMinutes(config('sanctum.expiration'))`; fire TokenEmitido com payload completo
+- [x] T023 [P] Criar `app/Domain/Auth/Services/TokenRevocationService.php` — métodos `revokeCurrent(User)`, `revokeAll(User, string $motivo = 'logout_all')`, `revokeById(int $id, ?int $executorId = null)`. Cada chamada fire TokenRevogado com motivo apropriado
+- [x] T024 [P] Write `tests/Unit/Auth/SlidingExpirationServiceTest.php` — UPDATE só se `expires_at - now() < 5d`; idempotência; throttle correto
+- [x] T025 Criar `app/Domain/Auth/Services/SlidingExpirationService.php` — `renewIfDue(PersonalAccessToken $token, int $bufferDays = 5, int $windowMinutes = null): bool`; usa default config quando bufferDays/windowMinutes não passados
+- [x] T026 [P] Write `tests/Unit/Auth/SuspiciousTokenUsageDetectorTest.php` — detecta IPs/UAs distintos em <5min via Redis cache; emite TokenUsoSuspeito; não auto-revoga (apenas alert)
 
 ### Middleware (T027-T030)
 
-- [ ] T027 [P] Criar `app/Http/Middleware/EnsureTenantSlugHeader.php` — exige `X-Tenant-Slug` header em rotas autenticadas (exceto `/auth/login`, `/auth/me`); validação cross-check `$user->tenant_id === Tenant::where('slug', $header)->first()->id`; mismatch → 403 com `error=tenant_mismatch`; header ausente → 400 `tenant_header_required`
-- [ ] T028 [P] Criar `app/Http/Middleware/SlideTokenExpiration.php` — aplicado após `auth:sanctum`; chama `SlidingExpirationService::renewIfDue($request->user()->currentAccessToken())`
-- [ ] T029 [P] Criar `app/Http/Middleware/MaskAuthorizationInLogs.php` — estende `LogStructuredRequestData` (Fase 0/3) substituindo header `Authorization` por `Bearer SCRUBBED` antes do log; aplica também em audit context se token aparecer
-- [ ] T030 [P] Criar `app/Http/Middleware/SetSecurityHeaders.php` — CSP estrita em prod com nonce (research R4); permissive em local/test; sempre seta HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin
+- [x] T027 [P] Criar `app/Http/Middleware/EnsureTenantSlugHeader.php` — exige `X-Tenant-Slug` header em rotas autenticadas (exceto `/auth/login`, `/auth/me`); validação cross-check `$user->tenant_id === Tenant::where('slug', $header)->first()->id`; mismatch → 403 com `error=tenant_mismatch`; header ausente → 400 `tenant_header_required`
+- [x] T028 [P] Criar `app/Http/Middleware/SlideTokenExpiration.php` — aplicado após `auth:sanctum`; chama `SlidingExpirationService::renewIfDue($request->user()->currentAccessToken())`
+- [x] T029 [P] Criar `app/Http/Middleware/MaskAuthorizationInLogs.php` — estende `LogStructuredRequestData` (Fase 0/3) substituindo header `Authorization` por `Bearer SCRUBBED` antes do log; aplica também em audit context se token aparecer
+- [x] T030 [P] Criar `app/Http/Middleware/SetSecurityHeaders.php` — CSP estrita em prod com nonce (research R4); permissive em local/test; sempre seta HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin
 
 ### Service `EmailDedupService` + `SuspiciousTokenUsageDetector` impl (T031-T032)
 
-- [ ] T031 [P] Criar `app/Domain/Auth/Services/EmailDedupService.php` — lógica usada pelo command T011: `detectDuplicates(): Collection`, `applyDedup(array $resolutions): void` (cada resolution = `{email, keep_tenant_id, suffix_tenants[]}`); audit log + notify admins
-- [ ] T032 [P] Criar `app/Domain/Auth/Services/SuspiciousTokenUsageDetector.php` — listener post-auth que dispatch via Redis cache key `auth:token-usage:{token_id}` com TTL 5min armazenando `{ip, ua}`; comparar com request atual; se distinto, fire TokenUsoSuspeito + Sentry error
+- [x] T031 [P] Criar `app/Domain/Auth/Services/EmailDedupService.php` — lógica usada pelo command T011: `detectDuplicates(): Collection`, `applyDedup(array $resolutions): void` (cada resolution = `{email, keep_tenant_id, suffix_tenants[]}`); audit log + notify admins
+- [x] T032 [P] Criar `app/Domain/Auth/Services/SuspiciousTokenUsageDetector.php` — listener post-auth que dispatch via Redis cache key `auth:token-usage:{token_id}` com TTL 5min armazenando `{ip, ua}`; comparar com request atual; se distinto, fire TokenUsoSuspeito + Sentry error
 
 ### Verify Phase 2
 
-- [ ] T033 Rodar todos os testes unit + foundational: `vendor/bin/sail artisan test --compact tests/Unit/Auth/ tests/Feature/Fase4/Migration/` — esperado 100% green
-- [ ] T034 Bind no `AppServiceProvider`: `BearerAuthContract → TokenIssuerService` singleton; register `SuspiciousTokenUsageDetector` listener para evento Sanctum `TokenAuthenticated` (ou eventoadequado)
+- [x] T033 Rodar todos os testes unit + foundational: `vendor/bin/sail artisan test --compact tests/Unit/Auth/ tests/Feature/Fase4/Migration/` — esperado 100% green
+- [x] T034 Bind no `AppServiceProvider`: `BearerAuthContract → TokenIssuerService` singleton; register `SuspiciousTokenUsageDetector` listener para evento Sanctum `TokenAuthenticated` (ou eventoadequado)
 
 **Checkpoint Phase 2**: Foundational completo. Pint clean obrigatório (`vendor/bin/sail bin pint --dirty --format agent`).
 

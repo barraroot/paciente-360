@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
 
@@ -46,7 +47,7 @@ class ImportacaoPermissionTest extends TestCase
     public function test_admin_clinica_pode_importar(): void
     {
         $user = $this->userForRole($this->tenant, 'admin-clinica');
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->postJson($this->baseUrl('/pacientes/importacao'), [
             'arquivo' => $this->buildMinimalCsv(),
@@ -60,7 +61,7 @@ class ImportacaoPermissionTest extends TestCase
     public function test_medico_nao_pode_importar(): void
     {
         $user = $this->userForRole($this->tenant, 'medico');
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->postJson($this->baseUrl('/pacientes/importacao'), [
             'arquivo' => $this->buildMinimalCsv(),
@@ -74,7 +75,7 @@ class ImportacaoPermissionTest extends TestCase
     public function test_atendente_nao_pode_importar(): void
     {
         $user = $this->userForRole($this->tenant, 'atendente');
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->postJson($this->baseUrl('/pacientes/importacao'), [
             'arquivo' => $this->buildMinimalCsv(),
@@ -88,7 +89,7 @@ class ImportacaoPermissionTest extends TestCase
     public function test_recepcionista_nao_pode_importar(): void
     {
         $user = $this->userForRole($this->tenant, 'recepcionista');
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         $response = $this->postJson($this->baseUrl('/pacientes/importacao'), [
             'arquivo' => $this->buildMinimalCsv(),

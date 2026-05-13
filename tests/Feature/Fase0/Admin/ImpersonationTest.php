@@ -8,6 +8,7 @@ use App\Services\Admin\ImpersonationService;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
@@ -54,7 +55,7 @@ class ImpersonationTest extends TestCase
         /** @var ImpersonationService $service */
         $service = app(ImpersonationService::class);
 
-        $this->actingAs($this->superAdmin);
+        Sanctum::actingAs($this->superAdmin, ['*']);
 
         $service->start($this->superAdmin, $this->tenant, $this->targetUser);
 
@@ -71,7 +72,7 @@ class ImpersonationTest extends TestCase
         /** @var ImpersonationService $service */
         $service = app(ImpersonationService::class);
 
-        $this->actingAs($this->superAdmin);
+        Sanctum::actingAs($this->superAdmin, ['*']);
 
         $service->start($this->superAdmin, $this->tenant, $this->targetUser);
 
@@ -89,7 +90,7 @@ class ImpersonationTest extends TestCase
         /** @var ImpersonationService $service */
         $service = app(ImpersonationService::class);
 
-        $this->actingAs($this->superAdmin);
+        Sanctum::actingAs($this->superAdmin, ['*']);
 
         $service->start($this->superAdmin, $this->tenant, $this->targetUser);
 

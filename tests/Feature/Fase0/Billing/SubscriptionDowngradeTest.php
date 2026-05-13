@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Billing\StripeClientWrapper;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\Sanctum;
 use Mockery;
 use Spatie\Permission\PermissionRegistrar;
 use Stripe\StripeClient;
@@ -119,7 +120,7 @@ class SubscriptionDowngradeTest extends TestCase
         $this->mockStripeClientForPatch(2);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->patchJson($this->patchUrl($tenant->slug), [
             'professionals_quantity' => 2,
@@ -174,7 +175,7 @@ class SubscriptionDowngradeTest extends TestCase
         $this->mockStripeClientForPatch(3, 'price_starter_base');
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->patchJson($this->patchUrl($tenant->slug), [
             'plan_code' => 'starter',
@@ -231,7 +232,7 @@ class SubscriptionDowngradeTest extends TestCase
         $this->mockStripeClientForPatch(3);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->patchJson($this->patchUrl($tenant->slug), [
             'professionals_quantity' => 3,
@@ -258,7 +259,7 @@ class SubscriptionDowngradeTest extends TestCase
         $admin = $this->setupAdminForTenant($tenant);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         // Payload vazio: nenhum campo de mudança informado.
         $response = $this->patchJson($this->patchUrl($tenant->slug), []);

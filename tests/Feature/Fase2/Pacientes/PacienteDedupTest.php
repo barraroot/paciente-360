@@ -6,6 +6,7 @@ use App\Models\Paciente;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
 
@@ -135,7 +136,7 @@ class PacienteDedupTest extends TestCase
         // Cria paciente no tenant B com mesmo CPF → 201 (cross-tenant não dispara dedup)
         $userB = $this->userForRole($tenantB, 'admin-clinica');
         $this->app->instance('tenant', $tenantB);
-        $this->actingAs($userB);
+        Sanctum::actingAs($userB, ['*']);
 
         $response = $this->postJson($this->tenantUrl($tenantB, '/pacientes'), [
             'nome' => 'Paciente Tenant B',

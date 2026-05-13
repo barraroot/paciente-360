@@ -9,6 +9,7 @@ use App\Models\Professional;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -79,7 +80,7 @@ class MedicoVisibilityScopeTest extends TestCase
             ->state(['assigned_user_id' => $otherAtendente->id])
             ->create();
 
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $response = $this->getJson($this->baseUrl('/inbox/conversations'));
 
@@ -102,7 +103,7 @@ class MedicoVisibilityScopeTest extends TestCase
             ->state(['assigned_user_id' => $medico->id])
             ->create();
 
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $response = $this->getJson(
             $this->baseUrl("/inbox/conversations/{$conv->id}")
@@ -130,7 +131,7 @@ class MedicoVisibilityScopeTest extends TestCase
             ->state(['assigned_user_id' => null])
             ->create();
 
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $response = $this->getJson(
             $this->baseUrl("/inbox/conversations/{$conv->id}")
@@ -158,7 +159,7 @@ class MedicoVisibilityScopeTest extends TestCase
             ->state(['assigned_user_id' => $medico2->id])
             ->create();
 
-        $this->actingAs($medico1);
+        Sanctum::actingAs($medico1, ['*']);
 
         $response = $this->getJson(
             $this->baseUrl("/inbox/conversations/{$conv->id}")
@@ -196,7 +197,7 @@ class MedicoVisibilityScopeTest extends TestCase
             ->for($hiddenPaciente, 'patient')
             ->create();
 
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         // Pode enviar mensagem na conversa visível
         $response = $this->postJson(
@@ -226,7 +227,7 @@ class MedicoVisibilityScopeTest extends TestCase
             ->for($this->channel, 'channel')
             ->create();
 
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->getJson($this->baseUrl('/inbox/conversations'));
 
@@ -245,7 +246,7 @@ class MedicoVisibilityScopeTest extends TestCase
             ->for($this->channel, 'channel')
             ->create();
 
-        $this->actingAs($atendente);
+        Sanctum::actingAs($atendente, ['*']);
 
         $response = $this->getJson($this->baseUrl('/inbox/conversations'));
 
@@ -264,7 +265,7 @@ class MedicoVisibilityScopeTest extends TestCase
             ->for($this->channel, 'channel')
             ->create();
 
-        $this->actingAs($recepcionista);
+        Sanctum::actingAs($recepcionista, ['*']);
 
         $response = $this->getJson($this->baseUrl('/inbox/conversations'));
 
@@ -283,7 +284,7 @@ class MedicoVisibilityScopeTest extends TestCase
             ->for($this->channel, 'channel')
             ->create();
 
-        $this->actingAs($financeiro);
+        Sanctum::actingAs($financeiro, ['*']);
 
         $response = $this->getJson($this->baseUrl('/inbox/conversations'));
 

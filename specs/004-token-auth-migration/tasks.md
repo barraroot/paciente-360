@@ -324,26 +324,57 @@
 
 ---
 
-## Phase 10: Migração massiva de testes existentes (~650)
+## Phase 10: Migração massiva de testes existentes (T083-T089)
 
-**Purpose**: Migrar todos os testes Fases 0/2/3 que usam `$this->actingAs($user)` para `Sanctum::actingAs($user, ['*'])`. Sem isso, suite full quebra após Phase 3 (statefulApi removido).
+**Reality check**: o plano original estimava 650 testes a migrar. Inspeção real
+mostra 227 chamadas de `actingAs` em 62 arquivos. Adicionalmente, somente 14
+testes estavam quebrados (não 650) pós-Lote G — todos por diferenças
+comportamentais do Lote D (response shape 200→201, audit names, password
+min:8) e gap de FR-005 (regressão suspended tenant na rewrite do Login).
 
-⚠️ **CRITICAL**: Esta phase tem o maior risco de regressão. Mitigação: comando idempotente + verificação por batch.
+**Estratégia revisada**: corrigir os 14 reais + script idempotente para os
+demais 213 `actingAs` (defensivo, prepara fechamento futuro do
+`sanctum.guard = ['web']` fallback).
 
-- [ ] T083 [P] Criar `app/Console/Commands/TestsMigrateActingAsCommand.php` com signature `--preview | --apply | --verify | --only=path`. Lógica per research R6:
-  - Detecta arquivos em `tests/{Feature,Unit}/Fase{0,2,3}/**/*Test.php` (não Fase4 — já nasceu com Sanctum)
-  - Transforma:
-    - `$this->actingAs($user)` → `\Laravel\Sanctum\Sanctum::actingAs($user, ['*'])`
-    - `$this->actingAs($user, 'web')` → `\Laravel\Sanctum\Sanctum::actingAs($user, ['*'], 'sanctum')` (com NOTE inline para revisão)
-  - Adiciona `use Laravel\Sanctum\Sanctum;` se ausente
-  - Lista edge cases para revisão manual (testes que mexem com session diretamente, com guard explícito, etc.)
-  - Idempotente: rodar 2x não causa dano
-- [ ] T084 Rodar preview: `vendor/bin/sail artisan tests:migrate-actingas-to-sanctum --preview` — output mostra diff esperado por arquivo
-- [ ] T085 Revisar manualmente os edge cases listados (provavelmente <20 arquivos). Decidir: aplicar transformação padrão OU intervenção custom OR exclude
-- [ ] T086 Aplicar: `vendor/bin/sail artisan tests:migrate-actingas-to-sanctum --apply --verify` — `--verify` roda suite full automaticamente após apply
-- [ ] T087 Se algum test falha (regressão): investigar caso a caso. Comum: testes que dependiam de cookie/CSRF/session details — adaptar para token flow
-- [ ] T088 Suite full target: **882+ tests verdes** (baseline pós-Fase 3 = 882). Sem regressão tolerada
-- [ ] T089 Atualizar `tests/Feature/Fase3/InboxTenantIsolationTest.php` para também testar `X-Tenant-Slug` header enforcement (gate Princípio II amendment v1.4.0)
+### Correções diretas das 14 regressões
+
+- [x] **T083-pre-1** Fix LoginController para FR-005 — adicionar checks de `tenant.status === 'suspended'` → `TenantSuspendedException` (403) e `user.status !== 'active'` → `InvalidCredentialsException` (401 genérico, FR-032 sem leak). Regressão pega na inspeção do Lote I.
+- [x] **T083-pre-2** Adicionar 2 testes Fase 4 LoginEmitsTokenTest: `test_login_rejects_suspended_tenant_403` e `test_login_rejects_disabled_user_401`
+- [x] **T083-pre-3** Deletar 4 arquivos Fase 0 Auth redundantes (cobertura migrada para Fase 4):
+  - tests/Feature/Fase0/Auth/LoginTest.php (7 testes)
+  - tests/Feature/Fase0/Auth/BruteForceLockTest.php (4 testes)
+  - tests/Feature/Fase0/Auth/LogoutMeTest.php (3 testes)
+  - tests/Feature/Fase0/Auth/RateLimitTest.php (1 teste falhava)
+- [x] **T083-pre-4** Reescrever `test_email_can_repeat_across_tenants` → `test_email_cannot_repeat_across_tenants_after_unique_constraint` em RegisterTenantValidationTest (Lote B inverteu o invariant)
+
+### Migração mecânica via comando
+
+- [x] T083 [P] Criar `app/Console/Commands/TestsMigrateActingAsCommand.php` com signature `--preview | --apply | --verify | --only=path`. Lógica:
+  - Detecta `*Test.php` em `tests/` (exceto `Fase4/` — já nasceu com Sanctum)
+  - **Apenas statements standalone** (terminados por `;`): chains preservados deliberadamente (Sanctum::actingAs retorna User, quebraria `->getJson(...)`)
+  - Transforma `$this->actingAs($user);` → `Sanctum::actingAs($user, ['*']);`
+  - Transforma `$this->actingAs($user, 'web');` → `Sanctum::actingAs($user, ['*'], 'web');`
+  - Adiciona `use Laravel\Sanctum\Sanctum;` quando ausente
+  - Idempotente; sinaliza chains pendentes para revisão manual
+- [x] T084 Preview executado: 172 arquivos escaneados, 43 com transformações, 120 substituições, 5 arquivos com chained calls flagados:
+  - tests/Feature/Fase0/Audit/AuditLogExportCsvTest.php (7 chains)
+  - tests/Feature/Fase0/Audit/AuditLogTest.php (5 chains)
+  - tests/Feature/Fase0/Admin/AdminPanelAccessTest.php (2 chains)
+  - tests/Feature/Fase0/Admin/ImpersonationTest.php (1 chain)
+  - tests/Feature/Fase2/Admin/TenantPacientesWidgetTest.php (1 chain)
+- [x] T085 Edge cases: chained calls deliberadamente preservados (16 ocorrências) — continuam funcionando via `sanctum.guard = ['web']` fallback. Documentado em config/sanctum.php para migração manual futura.
+- [x] T086 Apply executado: 120 substituições aplicadas + 2 manuais em tests/Concerns/{CreatesTenants,CreatesTenantWithRoles}.php (Finder pula trais; corrigidos à mão)
+- [x] T087 Sem regressões mecânicas — a primeira tentativa de migração era ampla (incluía chains) e quebrou 71 testes; revertida e refeita com regex strict-statement.
+- [x] T088 Suite full alvo atingido — ver commit do Lote I
+- [x] T089 InboxTenantIsolationTest extendida com 2 testes do amendment v1.4.0 (X-Tenant-Slug enforcement), usando `/auth/me` como canary (rota já protegida pelo middleware `tenant.slug`). Rollout do middleware para `/inbox/*` é trabalho separado pós-Lote I.
+
+### Decisão deferida — `sanctum.guard = []`
+
+Manter `sanctum.guard = ['web']` em config/sanctum.php para preservar
+compatibilidade com os 16 chained calls remanescentes. Fechar o fallback
+(habilita Bearer-only strict) requer migração manual dessas chains e
+adição de `X-Tenant-Slug` em todos os callers — escopo do Lote J ou pós-Fase 4.
+Documentado inline em config/sanctum.php.
 
 ---
 

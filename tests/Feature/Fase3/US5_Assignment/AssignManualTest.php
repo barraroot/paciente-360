@@ -11,6 +11,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -76,7 +77,7 @@ class AssignManualTest extends TestCase
     public function attendant_can_pick_unassigned_conversation_for_themselves(): void
     {
         $atendente = $this->userForRole($this->tenant, 'atendente');
-        $this->actingAs($atendente);
+        Sanctum::actingAs($atendente, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $conversation = Conversation::factory()
@@ -183,7 +184,7 @@ class AssignManualTest extends TestCase
     public function requires_inbox_assign_ability(): void
     {
         $financeiro = $this->userForRole($this->tenant, 'financeiro');
-        $this->actingAs($financeiro);
+        Sanctum::actingAs($financeiro, ['*']);
         $this->app->instance('tenant', $this->tenant);
 
         $conversation = Conversation::factory()

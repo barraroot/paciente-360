@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\RolesSeeder;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -89,7 +90,7 @@ trait CreatesTenantWithRoles
         $user = $this->userForRole($tenant, $role);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         return [$tenant, $user];
     }

@@ -7,6 +7,7 @@ use App\Domain\Auth\Enums\MotivoLoginFalho;
 use App\Domain\Auth\Events\LoginFalhouViaToken;
 use App\Exceptions\Auth\AccountLockedException;
 use App\Exceptions\Auth\InvalidCredentialsException;
+use App\Exceptions\Auth\TenantSuspendedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\TenantResource;
@@ -90,6 +91,26 @@ final class LoginController extends Controller
             ));
 
             throw new InvalidCredentialsException;
+        }
+
+        // Usuário desativado → 401 genérico (não vaza status — FR-032).
+        // Roda APÓS verificar senha para preservar o timing da resposta entre
+        // "senha errada" e "usuário desativado".
+        if ($user->status !== 'active') {
+            Event::dispatch(new LoginFalhouViaToken(
+                ip: $request->ip() ?? '0.0.0.0',
+                tokenIdPrefix: null,
+                path: $request->path(),
+                motivo: MotivoLoginFalho::Invalid,
+            ));
+
+            throw new InvalidCredentialsException;
+        }
+
+        // Tenant suspenso → 403 (FR-005). Credenciais foram validadas, então é
+        // seguro revelar o motivo (usuário pode ir regularizar billing).
+        if ($user->tenant !== null && $user->tenant->status === 'suspended') {
+            throw new TenantSuspendedException;
         }
 
         // Sucesso — resetar contador de tentativas antes de emitir token.

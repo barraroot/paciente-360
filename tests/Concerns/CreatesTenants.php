@@ -4,6 +4,7 @@ namespace Tests\Concerns;
 
 use App\Models\Tenant;
 use App\Models\User;
+use Laravel\Sanctum\Sanctum;
 
 /**
  * Helpers para suítes de teste do Lote B (Phase 2.2 — multi-tenant
@@ -58,7 +59,7 @@ trait CreatesTenants
         $user ??= $this->createUserForTenant($tenant);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         return $this;
     }

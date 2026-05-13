@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Laravel\Sanctum\Sanctum;
 use Mockery;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenantWithRoles;
@@ -98,7 +99,7 @@ class ConnectWhatsAppEndpointTest extends TestCase
         $registrar->forgetCachedPermissions();
         $doctor->assignRole('medico');
 
-        $this->actingAs($doctor);
+        Sanctum::actingAs($doctor, ['*']);
 
         $payload = [
             'type' => 'whatsapp',

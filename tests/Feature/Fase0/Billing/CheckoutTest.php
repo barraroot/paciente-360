@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Services\Billing\StripeClientWrapper;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\Sanctum;
 use Mockery;
 use Spatie\Permission\PermissionRegistrar;
 use Stripe\StripeClient;
@@ -63,7 +64,7 @@ class CheckoutTest extends TestCase
         $this->mockStripeClient();
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->postJson(
             $this->checkoutUrl($tenant->slug),
@@ -106,7 +107,7 @@ class CheckoutTest extends TestCase
         ]);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->postJson(
             $this->checkoutUrl($tenant->slug),
@@ -130,7 +131,7 @@ class CheckoutTest extends TestCase
         $admin->assignRole($role);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->postJson(
             $this->checkoutUrl($tenant->slug),
@@ -154,7 +155,7 @@ class CheckoutTest extends TestCase
         $admin->assignRole($role);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->postJson(
             $this->checkoutUrl($tenant->slug),
@@ -178,7 +179,7 @@ class CheckoutTest extends TestCase
         $medico->assignRole($role);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $response = $this->postJson(
             $this->checkoutUrl($tenant->slug),

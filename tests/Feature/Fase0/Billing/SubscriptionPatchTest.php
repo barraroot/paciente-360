@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Billing\StripeClientWrapper;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\Sanctum;
 use Mockery;
 use Spatie\Permission\PermissionRegistrar;
 use Stripe\Exception\ApiConnectionException;
@@ -138,7 +139,7 @@ class SubscriptionPatchTest extends TestCase
         );
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->patchJson($this->patchUrl($tenant->slug), [
             'professionals_quantity' => 5,
@@ -195,7 +196,7 @@ class SubscriptionPatchTest extends TestCase
         );
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->patchJson($this->patchUrl($tenant->slug), [
             'plan_code' => 'pro',
@@ -233,7 +234,7 @@ class SubscriptionPatchTest extends TestCase
         $medico->assignRole($role);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $response = $this->patchJson($this->patchUrl($tenant->slug), [
             'professionals_quantity' => 5,
@@ -252,7 +253,7 @@ class SubscriptionPatchTest extends TestCase
         $admin = $this->setupAdminForTenant($tenant);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->patchJson($this->patchUrl($tenant->slug), [
             'plan_code' => 'unknown',
@@ -271,7 +272,7 @@ class SubscriptionPatchTest extends TestCase
         $admin = $this->setupAdminForTenant($tenant);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->patchJson($this->patchUrl($tenant->slug), [
             'professionals_quantity' => 0,
@@ -307,7 +308,7 @@ class SubscriptionPatchTest extends TestCase
         $this->app->instance(StripeClientWrapper::class, $wrapper);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->patchJson($this->patchUrl($tenant->slug), [
             'professionals_quantity' => 5,
@@ -326,7 +327,7 @@ class SubscriptionPatchTest extends TestCase
         $admin = $this->setupAdminForTenant($tenant);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($admin);
+        Sanctum::actingAs($admin, ['*']);
 
         $response = $this->patchJson($this->patchUrl($tenant->slug), [
             'professionals_quantity' => 3,

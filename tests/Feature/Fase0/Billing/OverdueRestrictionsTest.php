@@ -10,6 +10,7 @@ use App\Services\Billing\StripeWebhookService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenants;
 use Tests\TestCase;
@@ -174,7 +175,7 @@ class OverdueRestrictionsTest extends TestCase
         $user = $this->createUserForTenant($tenant);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         // Tenant restrito → 402.
         $response = $this->getJson('/_premium_test');
@@ -199,7 +200,7 @@ class OverdueRestrictionsTest extends TestCase
         $user = $this->createUserForTenant($tenant);
 
         $this->app->instance('tenant', $tenant);
-        $this->actingAs($user);
+        Sanctum::actingAs($user, ['*']);
 
         // Rota não premium → 200 mesmo restrito.
         $response = $this->getJson('/_not_premium_test');

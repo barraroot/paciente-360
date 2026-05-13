@@ -7,6 +7,7 @@ use App\Domain\Messaging\Widget\Models\WebWidgetConfig;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -126,7 +127,7 @@ class CreateWebChannelTest extends TestCase
         $registrar->forgetCachedPermissions();
         $medico->assignRole('medico');
 
-        $this->actingAs($medico);
+        Sanctum::actingAs($medico, ['*']);
 
         $response = $this->postJson($this->baseUrl('/inbox/channels'), [
             'type' => 'web',

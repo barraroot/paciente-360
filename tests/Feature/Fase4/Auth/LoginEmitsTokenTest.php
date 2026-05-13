@@ -214,4 +214,38 @@ class LoginEmitsTokenTest extends TestCase
             'token_expires_at deve ser ~30 dias a partir de agora',
         );
     }
+
+    /**
+     * Lote I — restaurar invariant FR-005: tenant suspenso bloqueia login com 403.
+     * (Regressão introduzida em Lote D que rewrote LoginController sem a check.)
+     */
+    public function test_login_rejects_suspended_tenant_403(): void
+    {
+        $this->tenant->forceFill(['status' => 'suspended'])->save();
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $this->user->email,
+            'password' => 'secret123',
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJsonFragment(['error' => 'tenant_suspended']);
+    }
+
+    /**
+     * Lote I — usuário desativado retorna 401 genérico (não vaza status,
+     * preserva timing constante vs senha errada). FR-032.
+     */
+    public function test_login_rejects_disabled_user_401(): void
+    {
+        $this->user->forceFill(['status' => 'disabled'])->save();
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $this->user->email,
+            'password' => 'secret123',
+        ]);
+
+        $response->assertStatus(401)
+            ->assertJsonFragment(['error' => 'invalid_credentials']);
+    }
 }

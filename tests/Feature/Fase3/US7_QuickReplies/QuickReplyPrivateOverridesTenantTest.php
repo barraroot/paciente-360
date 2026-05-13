@@ -6,6 +6,7 @@ use App\Domain\Messaging\QuickReply\Models\QuickReply;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\CreatesTenantWithRoles;
 use Tests\TestCase;
@@ -63,7 +64,7 @@ class QuickReplyPrivateOverridesTenantTest extends TestCase
                 'content' => 'Meu preço especial: R$150.',
             ]);
 
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         $response = $this->getJson($this->url());
         $response->assertOk();
@@ -99,7 +100,7 @@ class QuickReplyPrivateOverridesTenantTest extends TestCase
                 'content' => 'Meu preço especial: R$150.',
             ]);
 
-        $this->actingAs($this->userB);
+        Sanctum::actingAs($this->userB, ['*']);
 
         $response = $this->getJson($this->url());
         $response->assertOk();
@@ -133,7 +134,7 @@ class QuickReplyPrivateOverridesTenantTest extends TestCase
                 'content' => 'Preço privado.',
             ]);
 
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         $items = collect($this->getJson($this->url())->json('data'));
         $preco = $items->where('shortcut', '/preco')->first();
@@ -156,7 +157,7 @@ class QuickReplyPrivateOverridesTenantTest extends TestCase
             ->privateOf($this->userA)
             ->create(['shortcut' => '/mine-only']);
 
-        $this->actingAs($this->userA);
+        Sanctum::actingAs($this->userA, ['*']);
 
         // Filter scope=tenant
         $tenantResponse = $this->getJson($this->url().'?scope=tenant');

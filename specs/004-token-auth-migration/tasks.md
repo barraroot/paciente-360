@@ -414,9 +414,9 @@ Documentado inline em config/sanctum.php.
 
 ### Documentation
 
-- [ ] T097 [P] Atualizar `specs/004-token-auth-migration/quickstart.md` § 12 DoR com status final (após implementação completa)
-- [ ] T098 [P] Atualizar `CLAUDE.md` SPECKIT markers para apontar Fase 4 como entregue (após merge)
-- [ ] T099 [P] Atualizar `README.md` (se existe) com fluxo de auth atualizado para devs novos
+- [x] T097 [P] `quickstart.md` § 12 DoR atualizado — todos os 21 itens marcados ✓ (exceto coverage deferred operacional). Adicionada seção "Pendências operacionais pós-merge" listando os 5 itens não-bloqueantes (domínios prod, smoke E2E, coverage CI, chains pendentes, rollout tenant.slug).
+- [x] T098 [P] `CLAUDE.md` SPECKIT markers atualizados — `Active feature` agora "nenhuma" (aguardando merge); `004-token-auth-migration` movida para `Previous features delivered` com highlights. Adicionada seção "Token Auth (Fase 4) — Key Patterns" com 7 padrões críticos (Bearer triple-check, User::guardName(), tenant.slug, Sanctum::actingAs em tests, CSP config, retention).
+- [x] T099 [P] `README.md` reescrito — substituído boilerplate Laravel pelo onboarding Paciente360: comandos Sail, URLs locais, fluxo Bearer completo (login + headers + endpoints + sliding expiration), referência ao Postman, padrões SPA/Pinia, comandos úteis, sumário das 4 features entregues. Laravel boilerplate preservado abaixo.
 
 ### Final regression + coverage (Lote K — gate de merge)
 

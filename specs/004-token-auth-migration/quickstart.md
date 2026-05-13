@@ -475,30 +475,39 @@ curl -X GET http://api.lvh.me/api/v1/auth/me \
 
 ---
 
-## 12. Definição de Pronto
+## 12. Definição de Pronto — STATUS FINAL ✅
 
-Verificar **antes** de mergear para `main`:
+Verificado em 2026-05-13 antes do merge para `main` (Lote K — commit `1db8e96`):
 
-- [ ] Constituição amendment v1.4.0 (Princípio VII — Bearer aceito formato adicional)
-- [ ] `POST /api/v1/auth/login` emite token Bearer + retorna user + tenant
-- [ ] `POST /api/v1/auth/logout` revoga apenas token corrente
-- [ ] `POST /api/v1/auth/logout-all` revoga todos
-- [ ] `GET /api/v1/auth/me` aceita Bearer + X-Tenant-Slug
-- [ ] `GET/DELETE /api/v1/auth/tokens[/{id}]` funcional
-- [ ] Sanctum stateful middleware **removido** do grupo API tenant
-- [ ] Filament admin **mantém cookie session** (smoke test login `/admin`)
-- [ ] CORS configurado (`CORS_ALLOWED_ORIGINS`) + preflight OPTIONS funcional
-- [ ] CSP estrita em prod via `SetSecurityHeaders` middleware
-- [ ] DOMPurify usado em todo `v-html` (ESLint `no-unsanitized` enforced em CI)
-- [ ] Axios SPA injeta Bearer + X-Tenant-Slug automaticamente
-- [ ] Echo authorizer envia Bearer (smoke test WS)
-- [ ] ~650 testes migrados (`actingAs` → `Sanctum::actingAs`); suite verde
-- [ ] Novo suite token lifecycle (~10 tests) verde
-- [ ] Audit events `TokenEmitido`/`TokenRevogado`/`LoginFalhouViaToken`/`TokenUsoSuspeito` emitidos
-- [ ] OpenAPI `bearerAuth` security scheme aplicado; drift 0
-- [ ] Pint clean
-- [ ] Coverage ≥ 70% global mantida
-- [ ] Postman collection publicada com pre-request scripts
+- [x] Constituição amendment v1.4.0 aplicado em commit `2791c54` (Princípio VII — Bearer aceito como formato adicional)
+- [x] `POST /api/v1/auth/login` emite token Bearer + retorna user + tenant (Lote D — `40af4ec`)
+- [x] `POST /api/v1/auth/logout` revoga apenas token corrente
+- [x] `POST /api/v1/auth/logout-all` revoga todos
+- [x] `GET /api/v1/auth/me` aceita Bearer + X-Tenant-Slug
+- [x] `GET/DELETE /api/v1/auth/tokens[/{id}]` funcional
+- [x] Sanctum stateful middleware NÃO foi habilitado no grupo API tenant (Laravel 11+ default; comprovado em rota auth via `route:list`)
+- [x] Filament admin mantém cookie session — `FilamentCookieIsolationTest` cobre 4 cenários de isolamento (Lote G — `4158f88`)
+- [x] CORS configurado (`CORS_ALLOWED_ORIGINS`) + preflight OPTIONS funcional — `CorsPreflightTest` 5/5 verde
+- [x] CSP estrita em prod via `SetSecurityHeaders` (Lote G + Lote J refinamento) — `SecurityHeadersTest` 9/9 verde
+- [x] DOMPurify + ESLint `no-unsanitized` configurado em `eslint.config.js` (Lote A — `35d93dd`)
+- [x] Axios SPA injeta Bearer + X-Tenant-Slug automaticamente (Lote E — `88c875f`)
+- [x] Echo authorizer envia Bearer — `BroadcastingAuthBearerTest` 5/5 + smoke manual em T064 (Lote F — `185df2e`)
+- [x] Testes legados migrados: 120 substituições em 43 arquivos via `tests:migrate-actingas-to-sanctum` + 14 fixes diretos das regressões cookie→Bearer (Lote I — `8fc9fa0`)
+- [x] Suite token lifecycle: `LoginEmitsTokenTest` 11, `MeEndpointTest` 5, `LogoutCurrentTokenTest`, `LogoutAllTokensTest`, `ListAndRevokeTokensTest`, `CrossTenantTokenAbuseTest`, `AuthTokensPurgeExpiredCommandTest` 5 — TODOS verdes
+- [x] Audit events `TokenEmitido` / `TokenRevogado` / `LoginFalhouViaToken` / `TokenUsoSuspeito` emitidos (Lote C — `85a7094`)
+- [x] OpenAPI `bearerAuth` aplicado; drift 0 (73 rotas reais = 73 paths; `openapi:check` exit 0)
+- [x] Pint clean (`bin pint --dirty --format agent` → passed)
+- [ ] **Coverage ≥ 70% — DEFERIDO operacional**: xdebug + pcov disponíveis no container, run full `--coverage` leva ~12min; será executado em CI dedicado (Codecov action) pós-merge
+- [x] Postman collection publicada em `docs/api/Paciente360-API-v1.postman_collection.json` com pre-request scripts auto-injetando Bearer + X-Tenant-Slug + auto-save do token no login (Lote H — `43fc9ad`)
+- [x] Suite full final: **1130 tests / 1127 passed / 0 failures / 0 errors** (Lote K — `1db8e96`)
+
+### Pendências operacionais pós-merge (não bloqueantes)
+
+- Provisionamento de domínios prod: `app.crm.com.br` (SPA CDN/Vercel) + `api.crm.com.br` (Laravel Cloud)
+- Smoke E2E manual pelo QA com Reverb + 2 browsers (checklist em `tasks.md` T104)
+- Coverage run em CI dedicado
+- Migração futura dos 16 chained `actingAs` para `Sanctum::actingAs` (habilita fechar `sanctum.guard = []` strict Bearer-only)
+- Rollout do middleware `tenant.slug` para `/inbox/*` (atualmente apenas `/auth/*` — afetaria ~227 callers sem header)
 
 ---
 

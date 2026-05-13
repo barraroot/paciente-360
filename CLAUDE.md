@@ -184,15 +184,16 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `004-token-auth-migration`
-- **Spec**: [specs/004-token-auth-migration/spec.md](specs/004-token-auth-migration/spec.md) (Clarified — 5/5 perguntas resolvidas)
-- **Plan**: [specs/004-token-auth-migration/plan.md](specs/004-token-auth-migration/plan.md) (309 linhas, 9 lotes A-I, ~60 tasks)
-- **Research (Phase 0)**: [specs/004-token-auth-migration/research.md](specs/004-token-auth-migration/research.md) (6 decisões R1-R6)
-- **Data model (Phase 1)**: [specs/004-token-auth-migration/data-model.md](specs/004-token-auth-migration/data-model.md) (UNIQUE email + 4 eventos Auditable)
-- **API contracts (Phase 1)**: [specs/004-token-auth-migration/contracts/openapi.yaml](specs/004-token-auth-migration/contracts/openapi.yaml) (6 paths, 9 schemas, bearerAuth scheme)
-- **Quickstart (Phase 1)**: [specs/004-token-auth-migration/quickstart.md](specs/004-token-auth-migration/quickstart.md) (deploy split + CORS + CSP + Postman)
-- **Constitution amendment v1.4.0**: ✅ **APLICADO em 2026-05-12** — Princípio VII expandido para aceitar Bearer Sanctum tokens como formato adicional; 5 novos gates específicos (SHA-256 hash, CORS env, CSP estrita, DOMPurify, audit suspeito). Implementação destravada.
+- **Active feature**: nenhuma — `004-token-auth-migration` entregue 2026-05-13, aguardando merge em `main`.
 - **Previous features delivered**:
+  - `004-token-auth-migration` — [spec](specs/004-token-auth-migration/spec.md) — Cookie→Bearer migration entregue em 2026-05-13. 8 lotes (D-K), suite full **1130 tests / 1127 passed / 0 failures**. Commits: D `40af4ec` → K `1db8e96`. Highlights:
+    - 6 endpoints Bearer (`/auth/login`, `/auth/me`, `/auth/logout[-all]`, `/auth/tokens[/{id}]`) + Reverb broadcast Bearer
+    - SPA Vue migrada para Bearer + X-Tenant-Slug em `axios` + Echo authorizer
+    - CSP estrita configurável (`config/csp.php`) + CORS env-driven (`CORS_ALLOWED_ORIGINS`)
+    - **Bug arquitetural corrigido** (Lote F): `User::guardName()` pina Spatie no guard `web` — sem o pin, `Auth::shouldUse('sanctum')` quebraria silenciosamente `$user->can()` em produção sob Bearer
+    - 4 métricas Prometheus em `AuthMetrics` + Sentry tags `auth.token_id` / `auth.token_name`
+    - Comando `auth:tokens-purge-expired` schedulado diário 03:00 BRT (retention 90d)
+    - Constitution amendment v1.4.0 aplicado em `2791c54` (Princípio VII — Bearer formato adicional)
   - `003-omnichannel-inbox` — [spec](specs/003-omnichannel-inbox/spec.md) — 290/290 tasks, 352 tests Fase 3, 47/47 ACs, 7/7 user stories. Mergeado em `main` 2026-05-12.
   - `002-crm-pacientes` — [plan](specs/002-crm-pacientes/plan.md) — 650 testes verdes
   - `001-fundacao-multitenant` — [plan](specs/001-fundacao-multitenant/plan.md) — 467 testes verdes
@@ -225,3 +226,36 @@ When working on CRM Pacientes features, remember these critical patterns:
    - Observer no `Professional.boot()` detecta `is_active: true → false`.
    - Listener cria `TarefaReatribuicao` com lista de pacientes órfãos.
    - Job `ReassignOrphansJob` (extends `TenantAwareJob`) atualiza `profissional_responsavel_id = null`.
+
+## Token Auth (Fase 4) — Key Patterns
+
+When working on auth features post-Fase 4, remember:
+
+1. **API tenant é stateless via Bearer Sanctum**
+   - Endpoints autenticados exigem `Authorization: Bearer paciente360_<token>` + `X-Tenant-Slug: <slug>` (FR-011 triple-check).
+   - Filament admin permanece cookie-session em domínio separado (`crm.com.br`), NÃO compartilha auth com a API tenant.
+   - `users.email` é UNIQUE global (migration `2026_05_13_000001`) — permite resolver tenant via lookup direto no login.
+
+2. **`User::guardName()` pina Spatie no guard `'web'`**
+   - `Auth::shouldUse('sanctum')` (chamado pelo middleware `auth:sanctum`) muta `config('auth.defaults.guard')`. Sem o pin, Spatie buscaria permissions com `guard='sanctum'` e falharia silenciosamente (permissions seedadas com `guard='web'`).
+   - Pinning resolve uma vez para todos os controllers Bearer-authenticated.
+
+3. **Middleware `tenant.slug` em rotas `/auth/*`**
+   - `EnsureTenantSlugHeader` (alias `tenant.slug`) — 400 se header ausente, 403 se mismatch com `$user->tenant_id`.
+   - Allow-list: `api/v1/auth/login` apenas (não exige header — lookup por email).
+   - Para `/inbox/*` e demais rotas API, ainda não aplicado (rollout adiado — afetaria ~227 callers).
+
+4. **Testes legados usam `Sanctum::actingAs($user, ['*'])`**
+   - Comando `tests:migrate-actingas-to-sanctum --apply` migrou 120 statements standalone. Chained calls (`$this->actingAs($u)->getJson(...)`) deliberadamente preservados.
+   - Fallback `sanctum.guard = ['web']` mantido em `config/sanctum.php` para não quebrar chains até migração manual completa.
+
+5. **`Sanctum::actingAs` + Spatie permissions**
+   - Em setUp de testes, usar `Sanctum::actingAs($user, ['*'])` para preservar a instância com cache de roles do Spatie carregado. `$user->createToken()` força reload do DB sem o cache → channel callbacks com `$user->can(...)` podem falhar.
+
+6. **CSP estrita configurável via `config/csp.php`**
+   - `connect-src` inclui Reverb WSS + S3 media + API host. Override via env `CSP_REVERB_HOST` / `CSP_MEDIA_HOST` / `CSP_API_HOST`.
+   - Production: nonce gerado por request, sem `unsafe-inline`/`unsafe-eval`. Local/test: permissivo para Vite HMR.
+
+7. **Token retention 90d (`auth:tokens-purge-expired`)**
+   - Schedule diário 03:00 BRT em `routes/console.php`. Purga `personal_access_tokens` com `expires_at < now()-90d`.
+   - 4 métricas Prometheus em `AuthMetrics`: `auth_login_total{result}`, `auth_token_emitido_total`, `auth_token_revogado_total{motivo}`, `auth_active_tokens`.

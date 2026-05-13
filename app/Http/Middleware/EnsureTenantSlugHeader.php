@@ -35,11 +35,14 @@ class EnsureTenantSlugHeader
      * Padrões de path que dispensam o header `X-Tenant-Slug`.
      * Usado via `str_contains` contra `$request->path()`.
      *
+     * NOTA: `api/v1/auth/me` foi removido da allow-list (Lote D decision).
+     * OpenAPI spec exige X-Tenant-Slug em /auth/me para triple-check anti-token-roubo
+     * (Princípio II / amendment v1.4.0). SPA envia o header no boot após login.
+     *
      * @var list<string>
      */
     private const ALLOW_LIST = [
         'api/v1/auth/login',
-        'api/v1/auth/me',
     ];
 
     /**

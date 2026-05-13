@@ -2,46 +2,38 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
-use App\Events\Auth\LogoutSucceeded;
+use App\Domain\Auth\Services\TokenRevocationService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Event;
 
 /**
- * Controller de logout (US-2.1 — FR-028).
+ * Controller de logout do token Bearer corrente (Lote D — T044).
  *
- * Dispara evento auditável antes de invalidar a sessão (o listener precisa
- * do `user_id` enquanto o usuário ainda está autenticado no guard).
+ * Substitui o controller cookie/session-based da Fase 0. Revoga apenas
+ * o token Bearer usado na request corrente, preservando outros tokens
+ * do mesmo usuário (ex.: outros dispositivos).
  *
- * Retorna 204 No Content conforme contrato OpenAPI.
+ * Para revogar TODOS os tokens, usar `LogoutAllController`.
+ *
+ * Dispara `TokenRevogado` (Auditable) via `TokenRevocationService::revokeCurrent`.
  *
  * @group Auth
+ *
+ * @see App\Domain\Auth\Services\TokenRevocationService
+ * @see App\Http\Controllers\Api\V1\Auth\LogoutAllController
+ * @see specs/004-token-auth-migration/spec.md §FR-004
  */
 final class LogoutController extends Controller
 {
     /**
-     * Encerrar sessão atual.
-     *
-     * Invalida a sessão Sanctum e regenera o CSRF token.
+     * Revogar apenas o token Bearer corrente.
      *
      * @response 204 scenario="sucesso"
      */
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, TokenRevocationService $svc): Response
     {
-        $user = $request->user();
-
-        if ($user !== null) {
-            Event::dispatch(new LogoutSucceeded($user));
-        }
-
-        Auth::guard('web')->logout();
-
-        if ($request->hasSession()) {
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-        }
+        $svc->revokeCurrent($request->user());
 
         return response()->noContent();
     }

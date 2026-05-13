@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Api\V1\Audit\AuditLogsController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
+use App\Http\Controllers\Api\V1\Auth\LogoutAllController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\MeController;
 use App\Http\Controllers\Api\V1\Auth\PasswordController;
+use App\Http\Controllers\Api\V1\Auth\TokensController;
 use App\Http\Controllers\Api\V1\Billing\AiUsageController;
 use App\Http\Controllers\Api\V1\Billing\CheckoutController;
 use App\Http\Controllers\Api\V1\Billing\PlansController;
@@ -74,17 +76,23 @@ Route::middleware('auth:sanctum')->get('/_me', fn (Request $request) => response
     $request->user()->only(['id', 'email', 'tenant_id'])
 ));
 
-// US-2.1 — Login de usuário interno (T103).
-// Substituiu a rota dummy do Lote G. Rate limit por IP+host (throttle:login)
-// e rejeição de tenant suspenso (tenant.not-suspended) aplicados aqui.
-Route::post('/auth/login', LoginController::class)
-    ->middleware(['throttle:login', 'tenant.not-suspended'])
-    ->name('auth.login');
+// Lote D — Fase 4: Bearer token auth endpoints.
+// POST /auth/login emite Personal Access Token (substitui cookie/session).
+// Rotas autenticadas: auth:sanctum + tenant.slug (X-Tenant-Slug header check) + slide.token.
+Route::prefix('auth')->group(function (): void {
+    Route::post('login', LoginController::class)
+        ->middleware(['throttle:login'])
+        ->name('auth.login');
 
-// US-2.1 — Logout e endpoint /me (T105). Exigem autenticação Sanctum.
-Route::middleware('auth:sanctum')->group(function (): void {
-    Route::post('/auth/logout', LogoutController::class)->name('auth.logout');
-    Route::get('/auth/me', MeController::class)->name('auth.me');
+    Route::middleware(['auth:sanctum', 'tenant.slug', 'slide.token'])->group(function (): void {
+        Route::post('logout', LogoutController::class)->name('auth.logout');
+        Route::post('logout-all', LogoutAllController::class)->name('auth.logout_all');
+        Route::get('me', MeController::class)->name('auth.me');
+        Route::get('tokens', [TokensController::class, 'index'])->name('auth.tokens.index');
+        Route::delete('tokens/{tokenId}', [TokensController::class, 'destroy'])
+            ->whereNumber('tokenId')
+            ->name('auth.tokens.destroy');
+    });
 });
 
 // US-1.1 — Cadastro público de tenant (T143). Servido apenas em hosts

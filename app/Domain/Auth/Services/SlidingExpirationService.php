@@ -37,7 +37,8 @@ class SlidingExpirationService
         int $bufferDays = 5,
         ?int $windowMinutes = null,
     ): bool {
-        if ($token->expires_at === null) {
+        // Guard defensivo: accepts only real DateTimeInterface (null ou false em mocks/sem expiração → skip).
+        if (! $token->expires_at instanceof \DateTimeInterface) {
             return false;
         }
 

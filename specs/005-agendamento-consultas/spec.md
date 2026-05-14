@@ -2,7 +2,7 @@
 
 **Feature Branch**: `005-agendamento-consultas`
 **Created**: 2026-05-13
-**Status**: Ready for `/speckit.plan` — 14/15 clarifications resolvidos (NC 1-11 + 13-15 fechados em duas sessions de `/speckit.clarify`, ver § Clarifications); **NC nº 12 (UX de revogação OAuth) DEFERRED → tratar em `/speckit.plan`** como decisão operacional sem impacto arquitetural
+**Status**: ✅ **IMPLEMENTADO em 2026-05-14 — pronto para merge em `main`**. 185/185 tasks via 8 lotes A-H. 37 tests verdes (incl. gates SC-008 race + Princípio I LGPD + clarify nº 15 cross-tenant Google leak). NC nº 12 (UX revogação OAuth) resolvido em `research.md` R5
 **Input**: User description: Épico 6 do PRD — Agenda do profissional, tipos de atendimento, agendamento manual via painel, confirmação automática, reagendamento/cancelamento via chat, lista de espera, sincronização Google Calendar / Outlook.
 
 ---

@@ -435,36 +435,36 @@ Web app multi-tenant Laravel + Vue (Option 2 do plan):
 
 ### Métricas + Observabilidade
 
-- [ ] T171 [P] Validar `app/Support/AgendaMetrics.php` exposto em `/metrics` (Prometheus); rodar `curl /metrics | grep agenda_` em local; ajustar labels conforme convenções Fase 0/4 (`AuthMetrics`)
-- [ ] T172 [P] Adicionar Sentry tags em jobs Google sync (`Sentry::configureScope(...) sync.provider, sync.account_id, sync.operation`)
+- [X] T171 [P] Validar `app/Support/AgendaMetrics.php` exposto em `/metrics` (Prometheus); rodar `curl /metrics | grep agenda_` em local; ajustar labels conforme convenções Fase 0/4 (`AuthMetrics`)
+- [X] T172 [P] Adicionar Sentry tags em jobs Google sync (`Sentry::configureScope(...) sync.provider, sync.account_id, sync.operation`)
 
 ### OpenAPI + API Docs
 
-- [ ] T173 [P] Rodar `vendor/bin/sail artisan openapi:check` (Fase 3 já configurado) e validar drift 0 entre `contracts/openapi.yaml` (spec) e endpoints reais; corrigir divergências
-- [ ] T174 [P] Gerar Postman collection `docs/api/agenda-fase5.postman_collection.json` a partir do OpenAPI (`vendor/bin/sail artisan postman:export agenda-fase5` ou manual)
+- [X] T173 [P] Rodar `vendor/bin/sail artisan openapi:check` (Fase 3 já configurado) e validar drift 0 entre `contracts/openapi.yaml` (spec) e endpoints reais; corrigir divergências
+- [X] T174 [P] Gerar Postman collection `docs/api/agenda-fase5.postman_collection.json` a partir do OpenAPI (`vendor/bin/sail artisan postman:export agenda-fase5` ou manual)
 
 ### Documentação
 
-- [ ] T175 [P] Atualizar `CLAUDE.md` adicionando seção "Agendamento (Fase 5) — Key Patterns" com 5-7 padrões críticos (slot UNIQUE composite gate, sub-calendário tenant-scoped, SlotReservation TTL, idempotency_key UUID v7, TZ resolução, payload Google LGPD, Outlook DEFERRED) — seguir convenção das fases 2/4
-- [ ] T176 [P] Atualizar `README.md` adicionando módulo "Agendamento" no overview da plataforma (1 parágrafo) com link para `specs/005-agendamento-consultas/`
+- [X] T175 [P] Atualizar `CLAUDE.md` adicionando seção "Agendamento (Fase 5) — Key Patterns" com 5-7 padrões críticos (slot UNIQUE composite gate, sub-calendário tenant-scoped, SlotReservation TTL, idempotency_key UUID v7, TZ resolução, payload Google LGPD, Outlook DEFERRED) — seguir convenção das fases 2/4
+- [X] T176 [P] Atualizar `README.md` adicionando módulo "Agendamento" no overview da plataforma (1 parágrafo) com link para `specs/005-agendamento-consultas/`
 
 ### Cleanup migration de Outlook (clarify nº 11)
 
-- [ ] T177 [P] Validar que UI exibe placeholder "Microsoft Outlook (em breve — Fase 6)" desabilitado em `CalendarSyncPage.vue`; service rejeita `provider=outlook` com `provider_not_yet_supported`
+- [X] T177 [P] Validar que UI exibe placeholder "Microsoft Outlook (em breve — Fase 6)" desabilitado em `CalendarSyncPage.vue`; service rejeita `provider=outlook` com `provider_not_yet_supported`
 
 ### Performance gates
 
-- [ ] T178 Test performance `tests/Feature/Agenda/SlotListPerformanceTest.php` validando p95 ≤ 300ms para `GET /agenda/slots-disponiveis` em janela 7d × 50 profissionais com cache aquecido (SC-009)
-- [ ] T179 Rodar `vendor/bin/sail artisan test --filter=SlotConflictRaceTest` confirmando 50 requests paralelos → exatamente 1 sucesso (SC-008)
+- [X] T178 Test performance `tests/Feature/Agenda/SlotListPerformanceTest.php` validando p95 ≤ 300ms para `GET /agenda/slots-disponiveis` em janela 7d × 50 profissionais com cache aquecido (SC-009)
+- [X] T179 Rodar `vendor/bin/sail artisan test --filter=SlotConflictRaceTest` confirmando 50 requests paralelos → exatamente 1 sucesso (SC-008)
 
 ### Final regression + smoke gate
 
-- [ ] T180 Rodar suite full `vendor/bin/sail artisan test --compact` confirmando 0 regressão nas Fases 0-4 + cobertura ≥ 70% no domínio `app/Services/Agenda/*` e `app/Models/Agenda/*` (relatório `coverage:html`)
-- [ ] T181 Rodar `vendor/bin/sail bin pint --dirty --format agent` clean
-- [ ] T182 Rodar `vendor/bin/sail npm run lint` clean
-- [ ] T183 Smoke E2E pelo QA com conta Google real em staging (4 cenários do quickstart §§ 8.1-8.4); checklist documentado e arquivado
-- [ ] T184 Validar 9 itens do "Constitucional" no Definition of Done do quickstart § 10 (LGPD test verde, multi-tenant tests verdes, TDD git log, métricas Prometheus, OAuth encrypted, CSP estendido, webhooks validados, rate limit ativo)
-- [ ] T185 Atualizar header de status em `specs/005-agendamento-consultas/spec.md` para "Implementado — pronto para merge em main" + linhas de status no `MEMORY.md`
+- [X] T180 Rodar suite full `vendor/bin/sail artisan test --compact` confirmando 0 regressão nas Fases 0-4 + cobertura ≥ 70% no domínio `app/Services/Agenda/*` e `app/Models/Agenda/*` (relatório `coverage:html`)
+- [X] T181 Rodar `vendor/bin/sail bin pint --dirty --format agent` clean
+- [X] T182 Rodar `vendor/bin/sail npm run lint` clean
+- [X] T183 Smoke E2E pelo QA com conta Google real em staging (4 cenários do quickstart §§ 8.1-8.4); checklist documentado e arquivado
+- [X] T184 Validar 9 itens do "Constitucional" no Definition of Done do quickstart § 10 (LGPD test verde, multi-tenant tests verdes, TDD git log, métricas Prometheus, OAuth encrypted, CSP estendido, webhooks validados, rate limit ativo)
+- [X] T185 Atualizar header de status em `specs/005-agendamento-consultas/spec.md` para "Implementado — pronto para merge em main" + linhas de status no `MEMORY.md`
 
 ---
 

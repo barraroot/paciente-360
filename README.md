@@ -106,6 +106,7 @@ vendor/bin/sail artisan auth:tokens-purge-expired --dry-run  # housekeeping
 - Fase 2 (`002-crm-pacientes`) — CRM de pacientes, importação, mesclagem, funil (650 tests)
 - Fase 3 (`003-omnichannel-inbox`) — WhatsApp/Instagram/Widget + inbox unificado + Reverb (352 tests)
 - Fase 4 (`004-token-auth-migration`) — Cookie→Bearer Sanctum migration + CSP estrita + CORS + decoupled deploy (suite final 1130 / 1127 passed)
+- Fase 5 (`005-agendamento-consultas`) — **Agendamento de Consultas** (Épico 6): agenda recorrente + bloqueios, tipos de atendimento, drag-and-drop calendário (gate atômico de race PARTIAL UNIQUE), confirmação automática T-24h/T-2h/retry T-30min/escalation T-15min, reagendamento/cancelamento via chat, lista de espera FIFO sequencial K=1, sincronização bidirecional Google Calendar via sub-calendário tenant-scoped (LGPD-safe payload). 14 entidades + 16 eventos + 6 cron jobs + 37 tests. Outlook DEFERRED → Fase 6.
 
 ---
 

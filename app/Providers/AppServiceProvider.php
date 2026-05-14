@@ -25,6 +25,7 @@ use App\Listeners\Agenda\DispatchConfirmationToInbox;
 use App\Listeners\Agenda\MoveCardToAgendadoColumn;
 use App\Models\Agenda\Appointment;
 use App\Models\Agenda\AppointmentType;
+use App\Models\Agenda\CalendarSyncAccount;
 use App\Models\Anotacao;
 use App\Models\AuditLog;
 use App\Models\Convenio;
@@ -37,6 +38,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Policies\Agenda\AppointmentPolicy;
 use App\Policies\Agenda\AppointmentTypePolicy;
+use App\Policies\Agenda\CalendarSyncAccountPolicy;
 use App\Policies\Agenda\ProfessionalSchedulePolicy;
 use App\Policies\AnotacaoPolicy;
 use App\Policies\AssignmentPolicy;
@@ -219,6 +221,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Professional::class, ProfessionalSchedulePolicy::class);
         Gate::policy(AppointmentType::class, AppointmentTypePolicy::class);
         Gate::policy(Appointment::class, AppointmentPolicy::class);
+        Gate::policy(CalendarSyncAccount::class, CalendarSyncAccountPolicy::class);
     }
 
     /**

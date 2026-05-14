@@ -365,65 +365,65 @@ Web app multi-tenant Laravel + Vue (Option 2 do plan):
 
 ### Tests for User Story 7 ⚠️
 
-- [ ] T139 [P] [US7] Test `tests/Feature/Agenda/CalendarSyncOAuthTest.php` (fluxo connect → criar sub-calendário → emit token → refresh → revoke) — clarify nº 10/15 + R5
-- [ ] T140 [P] [US7] Test `tests/Feature/Agenda/CrossTenantGoogleSyncTest.php` (eventos do sub-cal tenant A não aparecem em `events.list?calendarId=sub-cal-B`) — gate AC-6.7.11 / clarify nº 15
-- [ ] T141 [P] [US7] Test `tests/Feature/Agenda/GoogleEventPayloadLgpdTest.php` (payload Google sem PII clínica: título fixo `Consulta — {nome}`, descrição genérica, sem CPF/convênio) — gate Princípio I / FR-038/038a
-- [ ] T142 [P] [US7] Test `tests/Feature/Agenda/TimezoneRenderTest.php` (TZ tenant default, override profissional, TZ explícito no texto da mensagem) — clarify nº 13
+- [X] T139 [P] [US7] Test `tests/Feature/Agenda/CalendarSyncOAuthTest.php` (fluxo connect → criar sub-calendário → emit token → refresh → revoke) — clarify nº 10/15 + R5
+- [X] T140 [P] [US7] Test `tests/Feature/Agenda/CrossTenantGoogleSyncTest.php` (eventos do sub-cal tenant A não aparecem em `events.list?calendarId=sub-cal-B`) — gate AC-6.7.11 / clarify nº 15
+- [X] T141 [P] [US7] Test `tests/Feature/Agenda/GoogleEventPayloadLgpdTest.php` (payload Google sem PII clínica: título fixo `Consulta — {nome}`, descrição genérica, sem CPF/convênio) — gate Princípio I / FR-038/038a
+- [X] T142 [P] [US7] Test `tests/Feature/Agenda/TimezoneRenderTest.php` (TZ tenant default, override profissional, TZ explícito no texto da mensagem) — clarify nº 13
 
 ### Models + Events for US7
 
-- [ ] T143 [P] [US7] Criar `app/Models/Agenda/CalendarSyncAccount.php` com casts (encrypted access_token + refresh_token, status enum, expires_at datetime), scope `BelongsToTenant`, scope `connected()`, scope `needsWatchRenewal()` (watch_channel_expires_at < now() + 48h)
-- [ ] T144 [P] [US7] Criar `app/Models/Agenda/CalendarSyncedEvent.php` (mapping appointment ↔ external_event_id), scope `BelongsToTenant`
-- [ ] T145 [P] [US7] Criar `app/Models/Agenda/ExternalCalendarBusy.php` (clarify nº 10), scope `BelongsToTenant`, scope `coveringSlot(starts_at, ends_at)`
-- [ ] T146 [P] [US7] Criar evento `app/Events/Agenda/CalendarioExternoSincronizado.php` (Auditable — payload: provider, status, last_sync_at)
+- [X] T143 [P] [US7] Criar `app/Models/Agenda/CalendarSyncAccount.php` com casts (encrypted access_token + refresh_token, status enum, expires_at datetime), scope `BelongsToTenant`, scope `connected()`, scope `needsWatchRenewal()` (watch_channel_expires_at < now() + 48h)
+- [X] T144 [P] [US7] Criar `app/Models/Agenda/CalendarSyncedEvent.php` (mapping appointment ↔ external_event_id), scope `BelongsToTenant`
+- [X] T145 [P] [US7] Criar `app/Models/Agenda/ExternalCalendarBusy.php` (clarify nº 10), scope `BelongsToTenant`, scope `coveringSlot(starts_at, ends_at)`
+- [X] T146 [P] [US7] Criar evento `app/Events/Agenda/CalendarioExternoSincronizado.php` (Auditable — payload: provider, status, last_sync_at)
 
 ### Services for US7
 
-- [ ] T147 [US7] Criar `app/Services/Agenda/Calendar/GoogleCalendarOAuthService.php` com `connect(Professional)` (gera authorize_url + state CSRF), `handleCallback(code, state)` (troca code por token + cria sub-calendário via `GoogleSubCalendarManager` + persiste account), `tryRefresh(CalendarSyncAccount)` (R5 — auto-refresh antes de declarar falha), `disconnect(CalendarSyncAccount)` (revoga token + stop watch channel; eventos no Google permanecem)
-- [ ] T148 [US7] Criar `app/Services/Agenda/Calendar/GoogleSubCalendarManager.php` com `createSubCalendar(CalendarSyncAccount, Tenant)` retorna `google_calendar_id`; `verifyExists(CalendarSyncAccount)` (chamado em reconexão — clarify nº 15 / R5)
-- [ ] T149 [US7] Criar `app/Services/Agenda/Calendar/GoogleCalendarSyncService.php` com `syncAppointment(Appointment, action: create|update|delete)` (chama Google API com `calendarId={sub_cal_id}`, payload com título fixo, descrição genérica, IANA TZ — FR-038/038a) — gate test T141
-- [ ] T150 [US7] Criar `app/Services/Agenda/Calendar/GoogleCalendarWatchService.php` com `subscribe(CalendarSyncAccount)` (chama `events.watch?calendarId={sub_cal_id}` com webhook URL + token HMAC; persiste `watch_channel_id`/`expires_at`), `unsubscribe(CalendarSyncAccount)` (chama `channels.stop`); `renewIfNearExpiry()` chamado pelo cron — R3
-- [ ] T151 [US7] Criar `app/Services/Agenda/Calendar/GoogleCalendarPollFallbackService.php` com `pollAccount(CalendarSyncAccount)` (chama `events.list?calendarId={sub_cal_id}&updatedMin={last_polled_at}`, atualiza/cria `ExternalCalendarBusy`); chamado por cron 5min — R3
+- [X] T147 [US7] Criar `app/Services/Agenda/Calendar/GoogleCalendarOAuthService.php` com `connect(Professional)` (gera authorize_url + state CSRF), `handleCallback(code, state)` (troca code por token + cria sub-calendário via `GoogleSubCalendarManager` + persiste account), `tryRefresh(CalendarSyncAccount)` (R5 — auto-refresh antes de declarar falha), `disconnect(CalendarSyncAccount)` (revoga token + stop watch channel; eventos no Google permanecem)
+- [X] T148 [US7] Criar `app/Services/Agenda/Calendar/GoogleSubCalendarManager.php` com `createSubCalendar(CalendarSyncAccount, Tenant)` retorna `google_calendar_id`; `verifyExists(CalendarSyncAccount)` (chamado em reconexão — clarify nº 15 / R5)
+- [X] T149 [US7] Criar `app/Services/Agenda/Calendar/GoogleCalendarSyncService.php` com `syncAppointment(Appointment, action: create|update|delete)` (chama Google API com `calendarId={sub_cal_id}`, payload com título fixo, descrição genérica, IANA TZ — FR-038/038a) — gate test T141
+- [X] T150 [US7] Criar `app/Services/Agenda/Calendar/GoogleCalendarWatchService.php` com `subscribe(CalendarSyncAccount)` (chama `events.watch?calendarId={sub_cal_id}` com webhook URL + token HMAC; persiste `watch_channel_id`/`expires_at`), `unsubscribe(CalendarSyncAccount)` (chama `channels.stop`); `renewIfNearExpiry()` chamado pelo cron — R3
+- [X] T151 [US7] Criar `app/Services/Agenda/Calendar/GoogleCalendarPollFallbackService.php` com `pollAccount(CalendarSyncAccount)` (chama `events.list?calendarId={sub_cal_id}&updatedMin={last_polled_at}`, atualiza/cria `ExternalCalendarBusy`); chamado por cron 5min — R3
 
 ### Jobs for US7
 
-- [ ] T152 [P] [US7] Criar `app/Jobs/Agenda/SyncAppointmentToGoogleCalendarJob.php` extends `TenantAwareJob` (Fase 2) — invocado via listener em `ConsultaCriada`/`ConsultaReagendada`/`ConsultaCancelada` para profissionais com `CalendarSyncAccount` connected
-- [ ] T153 [P] [US7] Criar `app/Jobs/Agenda/ProcessGoogleCalendarPushJob.php` (recebe push notification → atualiza/cria `ExternalCalendarBusy` para o sub-cal afetado)
-- [ ] T154 [P] [US7] Criar `app/Jobs/Agenda/PollGoogleCalendarFallbackJob.php` (executa `GoogleCalendarPollFallbackService::pollAccount(...)` por account)
-- [ ] T155 [P] [US7] Criar `app/Jobs/Agenda/RenewGoogleWatchChannelJob.php` (chama `GoogleCalendarWatchService::renewIfNearExpiry()` por account)
-- [ ] T156 [P] [US7] Criar `app/Jobs/Agenda/DetectGoogleSyncFailureJob.php` (R5 — wrapper invocado em qualquer chamada Google API; ao detectar 401/invalid_grant 2x em window 1min → marca account.status=disconnected + dispatch notification job)
+- [X] T152 [P] [US7] Criar `app/Jobs/Agenda/SyncAppointmentToGoogleCalendarJob.php` extends `TenantAwareJob` (Fase 2) — invocado via listener em `ConsultaCriada`/`ConsultaReagendada`/`ConsultaCancelada` para profissionais com `CalendarSyncAccount` connected
+- [X] T153 [P] [US7] Criar `app/Jobs/Agenda/ProcessGoogleCalendarPushJob.php` (recebe push notification → atualiza/cria `ExternalCalendarBusy` para o sub-cal afetado)
+- [X] T154 [P] [US7] Criar `app/Jobs/Agenda/PollGoogleCalendarFallbackJob.php` (executa `GoogleCalendarPollFallbackService::pollAccount(...)` por account)
+- [X] T155 [P] [US7] Criar `app/Jobs/Agenda/RenewGoogleWatchChannelJob.php` (chama `GoogleCalendarWatchService::renewIfNearExpiry()` por account)
+- [X] T156 [P] [US7] Criar `app/Jobs/Agenda/DetectGoogleSyncFailureJob.php` (R5 — wrapper invocado em qualquer chamada Google API; ao detectar 401/invalid_grant 2x em window 1min → marca account.status=disconnected + dispatch notification job)
 
 ### Listeners for US7
 
-- [ ] T157 [P] [US7] Criar `app/Listeners/Agenda/SyncAppointmentToGoogleCalendar.php` (escuta `ConsultaCriada`/`ConsultaReagendada`/`ConsultaCancelada` → dispatch `SyncAppointmentToGoogleCalendarJob` para profissionais com sync ativa); bind em `EventServiceProvider`
-- [ ] T158 [P] [US7] Criar `app/Listeners/Agenda/SendCalendarSyncDisconnectNotification.php` (escuta `CalendarioExternoSincronizado(status=disconnected)` → envia email `CalendarSyncDisconnectedMail` deduplicado via `last_disconnect_notified_at`); bind em `EventServiceProvider`
+- [X] T157 [P] [US7] Criar `app/Listeners/Agenda/SyncAppointmentToGoogleCalendar.php` (escuta `ConsultaCriada`/`ConsultaReagendada`/`ConsultaCancelada` → dispatch `SyncAppointmentToGoogleCalendarJob` para profissionais com sync ativa); bind em `EventServiceProvider`
+- [X] T158 [P] [US7] Criar `app/Listeners/Agenda/SendCalendarSyncDisconnectNotification.php` (escuta `CalendarioExternoSincronizado(status=disconnected)` → envia email `CalendarSyncDisconnectedMail` deduplicado via `last_disconnect_notified_at`); bind em `EventServiceProvider`
 
 ### Cron commands for US7
 
-- [ ] T159 [US7] Criar `app/Console/Commands/AgendaGooglePollFallbackCommand.php` (lista todos accounts connected → dispatcha `PollGoogleCalendarFallbackJob` por account); confirmar Schedule registrado em T029
-- [ ] T160 [US7] Criar `app/Console/Commands/AgendaGoogleRenewWatchChannelsCommand.php` (lista accounts com `needsWatchRenewal()` → dispatcha `RenewGoogleWatchChannelJob`); confirmar Schedule registrado em T029
+- [X] T159 [US7] Criar `app/Console/Commands/AgendaGooglePollFallbackCommand.php` (lista todos accounts connected → dispatcha `PollGoogleCalendarFallbackJob` por account); confirmar Schedule registrado em T029
+- [X] T160 [US7] Criar `app/Console/Commands/AgendaGoogleRenewWatchChannelsCommand.php` (lista accounts com `needsWatchRenewal()` → dispatcha `RenewGoogleWatchChannelJob`); confirmar Schedule registrado em T029
 
 ### Mail for US7
 
-- [ ] T161 [P] [US7] Criar `app/Mail/CalendarSyncDisconnectedMail.php` (Markdown template com link para `/agenda/sincronizacao` e CTA "Reconectar") — R5
+- [X] T161 [P] [US7] Criar `app/Mail/CalendarSyncDisconnectedMail.php` (Markdown template com link para `/agenda/sincronizacao` e CTA "Reconectar") — R5
 
 ### Webhook + Middleware for US7
 
-- [ ] T162 [P] [US7] Criar `app/Http/Middleware/ValidateGoogleChannelToken.php` (valida HMAC `X-Goog-Channel-Token` contra `tenant_id+professional_id+channel_id` com `APP_KEY` — R3); registrar alias `validate.google.channel.token` em `bootstrap/app.php`
-- [ ] T163 [US7] Criar `app/Http/Controllers/Api/V1/Agenda/GoogleCalendarWebhookController.php` (`store(channelId, Request)` — sempre retorna HTTP 200; valida token → dispatch `ProcessGoogleCalendarPushJob`; erros logados Sentry — R3)
-- [ ] T164 [US7] Editar `routes/web.php` (não API — webhook externo) adicionando `POST /webhooks/google-calendar/{channelId}` com middleware `validate.google.channel.token`
+- [X] T162 [P] [US7] Criar `app/Http/Middleware/ValidateGoogleChannelToken.php` (valida HMAC `X-Goog-Channel-Token` contra `tenant_id+professional_id+channel_id` com `APP_KEY` — R3); registrar alias `validate.google.channel.token` em `bootstrap/app.php`
+- [X] T163 [US7] Criar `app/Http/Controllers/Api/V1/Agenda/GoogleCalendarWebhookController.php` (`store(channelId, Request)` — sempre retorna HTTP 200; valida token → dispatch `ProcessGoogleCalendarPushJob`; erros logados Sentry — R3)
+- [X] T164 [US7] Editar `routes/web.php` (não API — webhook externo) adicionando `POST /webhooks/google-calendar/{channelId}` com middleware `validate.google.channel.token`
 
 ### Endpoints OAuth + status for US7
 
-- [ ] T165 [P] [US7] Criar `app/Http/Resources/Agenda/CalendarSyncAccountResource.php` (omite tokens encrypted)
-- [ ] T166 [P] [US7] Criar `app/Policies/CalendarSyncAccountPolicy.php` (ability `calendar_sync.configure`); registrar em `AuthServiceProvider`
-- [ ] T167 [US7] Criar `app/Http/Controllers/Api/V1/Agenda/CalendarSyncController.php` (`connect`, `callback`, `disconnect`, `show`)
-- [ ] T168 [US7] Editar `routes/api.php` adicionando: `POST /agenda/calendar-sync/google/connect`, `GET /agenda/calendar-sync/google/callback`, `POST /agenda/calendar-sync/google/disconnect`, `GET /agenda/calendar-sync`
+- [X] T165 [P] [US7] Criar `app/Http/Resources/Agenda/CalendarSyncAccountResource.php` (omite tokens encrypted)
+- [X] T166 [P] [US7] Criar `app/Policies/CalendarSyncAccountPolicy.php` (ability `calendar_sync.configure`); registrar em `AuthServiceProvider`
+- [X] T167 [US7] Criar `app/Http/Controllers/Api/V1/Agenda/CalendarSyncController.php` (`connect`, `callback`, `disconnect`, `show`)
+- [X] T168 [US7] Editar `routes/api.php` adicionando: `POST /agenda/calendar-sync/google/connect`, `GET /agenda/calendar-sync/google/callback`, `POST /agenda/calendar-sync/google/disconnect`, `GET /agenda/calendar-sync`
 
 ### Frontend for US7
 
-- [ ] T169 [P] [US7] Criar `resources/js/pages/agenda/CalendarSyncPage.vue` (botão Conectar Google, status conectado/desconectado/erro, info do sub-calendário, painel "Outlook em breve — Fase 6" desabilitado — clarify nº 11)
-- [ ] T170 [P] [US7] Criar `resources/js/components/agenda/CalendarSyncDisconnectBanner.vue` (banner persistente com CTAs Reconectar/Dispensar — R5); montar em `App.vue` para profissionais com `calendar_sync.configure`
+- [X] T169 [P] [US7] Criar `resources/js/pages/agenda/CalendarSyncPage.vue` (botão Conectar Google, status conectado/desconectado/erro, info do sub-calendário, painel "Outlook em breve — Fase 6" desabilitado — clarify nº 11)
+- [X] T170 [P] [US7] Criar `resources/js/components/agenda/CalendarSyncDisconnectBanner.vue` (banner persistente com CTAs Reconectar/Dispensar — R5); montar em `App.vue` para profissionais com `calendar_sync.configure`
 
 **Checkpoint**: US-6.7 verde — Google Calendar bidirecional funcional via sub-cal tenant-scoped, push + polling fallback, OAuth UX completa, eventos passados/clínicos sem PII, smoke 8.4 do quickstart passa em staging.
 

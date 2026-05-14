@@ -289,26 +289,26 @@ Web app multi-tenant Laravel + Vue (Option 2 do plan):
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T116 [P] [US5] Test `tests/Feature/Agenda/RescheduleViaChatTest.php` cobrindo AC-6.5.1..6.5.7 (slots-disponiveis, idempotency_key, manter prof+tipo, limite 2 reagendamentos → 422 escalated, mantém status, reservar/release) — clarify nº 7
-- [ ] T117 [P] [US5] Test `tests/Feature/Agenda/CancellationPolicyTest.php` cobrindo política tenant→tipo, "bloqueia + escala" via inbox, profissional irrestrito com motivo audit, override admin — clarify nº 3
+- [X] T116 [P] [US5] Test `tests/Feature/Agenda/RescheduleViaChatTest.php` cobrindo AC-6.5.1..6.5.7 (slots-disponiveis, idempotency_key, manter prof+tipo, limite 2 reagendamentos → 422 escalated, mantém status, reservar/release) — clarify nº 7
+- [X] T117 [P] [US5] Test `tests/Feature/Agenda/CancellationPolicyTest.php` cobrindo política tenant→tipo, "bloqueia + escala" via inbox, profissional irrestrito com motivo audit, override admin — clarify nº 3
 
 ### Events for US5
 
-- [ ] T118 [P] [US5] Criar evento `app/Events/Agenda/CancelamentoSolicitadoForaDoPrazo.php` (Auditable — clarify nº 3 — payload: appointment_id, requested_by, window_hours, current_hours_until_appt)
-- [ ] T119 [P] [US5] Criar evento `app/Events/Agenda/LimiteDeReagendamentoExcedido.php` (Auditable — clarify nº 7)
-- [ ] T120 [P] [US5] Criar evento `app/Events/Agenda/ReagendamentoSolicitadoPeloPaciente.php` (Auditable — futura IA Matricial consome resposta "2")
+- [X] T118 [P] [US5] Criar evento `app/Events/Agenda/CancelamentoSolicitadoForaDoPrazo.php` (Auditable — clarify nº 3 — payload: appointment_id, requested_by, window_hours, current_hours_until_appt)
+- [X] T119 [P] [US5] Criar evento `app/Events/Agenda/LimiteDeReagendamentoExcedido.php` (Auditable — clarify nº 7)
+- [X] T120 [P] [US5] Criar evento `app/Events/Agenda/ReagendamentoSolicitadoPeloPaciente.php` (Auditable — futura IA Matricial consome resposta "2")
 
 ### Services + Endpoints for US5
 
-- [ ] T121 [US5] Estender `app/Services/Agenda/AppointmentService.php` com `cancel(Appointment, motivo, quem_cancelou, User $actor)` (valida policy tenant→tipo `min_cancellation_hours`; se paciente/IA + fora do prazo → 422 + emit `CancelamentoSolicitadoForaDoPrazo`; profissional irrestrito; FR-028/028a/028b/028c)
-- [ ] T122 [P] [US5] Criar `app/Http/Requests/Agenda/CancelAppointmentRequest.php` (motivo, quem_cancelou enum, idempotency_key)
-- [ ] T123 [US5] Adicionar método `AppointmentController::cancel(...)` que delega `AppointmentService::cancel(...)` e retorna 422 estruturado quando bloqueado fora do prazo
-- [ ] T124 [US5] Editar `routes/api.php` adicionando `POST /agenda/consultas/{id}/cancelar`
+- [X] T121 [US5] Estender `app/Services/Agenda/AppointmentService.php` com `cancel(Appointment, motivo, quem_cancelou, User $actor)` (valida policy tenant→tipo `min_cancellation_hours`; se paciente/IA + fora do prazo → 422 + emit `CancelamentoSolicitadoForaDoPrazo`; profissional irrestrito; FR-028/028a/028b/028c)
+- [X] T122 [P] [US5] Criar `app/Http/Requests/Agenda/CancelAppointmentRequest.php` (motivo, quem_cancelou enum, idempotency_key)
+- [X] T123 [US5] Adicionar método `AppointmentController::cancel(...)` que delega `AppointmentService::cancel(...)` e retorna 422 estruturado quando bloqueado fora do prazo
+- [X] T124 [US5] Editar `routes/api.php` adicionando `POST /agenda/consultas/{id}/cancelar`
 
 ### Listener for US5 (escala via inbox)
 
-- [ ] T125 [P] [US5] Criar `app/Listeners/Agenda/EscalateCancellationOutsideWindowToInbox.php` (escuta `CancelamentoSolicitadoForaDoPrazo` → cria handoff/note na inbox da Fase 3); bind em `EventServiceProvider`
-- [ ] T126 [P] [US5] Criar `app/Listeners/Agenda/EscalateRescheduleLimitExceededToInbox.php` (escuta `LimiteDeReagendamentoExcedido` → cria handoff na inbox); bind em `EventServiceProvider`
+- [X] T125 [P] [US5] Criar `app/Listeners/Agenda/EscalateCancellationOutsideWindowToInbox.php` (escuta `CancelamentoSolicitadoForaDoPrazo` → cria handoff/note na inbox da Fase 3); bind em `EventServiceProvider`
+- [X] T126 [P] [US5] Criar `app/Listeners/Agenda/EscalateRescheduleLimitExceededToInbox.php` (escuta `LimiteDeReagendamentoExcedido` → cria handoff na inbox); bind em `EventServiceProvider`
 
 **Checkpoint**: US-6.5 verde — contrato API simples para IA Matricial estável, idempotency, política de prazo + escala via inbox.
 
@@ -322,36 +322,36 @@ Web app multi-tenant Laravel + Vue (Option 2 do plan):
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T127 [P] [US6] Test `tests/Feature/Agenda/WaitlistSequentialTest.php` cobrindo AC-6.6.1..6.6.5 (K=1, prazo 15min, expira → próximo, alocação atômica, múltiplas listas permitidas) — clarify nº 8 / FR-030..033
+- [X] T127 [P] [US6] Test `tests/Feature/Agenda/WaitlistSequentialTest.php` cobrindo AC-6.6.1..6.6.5 (K=1, prazo 15min, expira → próximo, alocação atômica, múltiplas listas permitidas) — clarify nº 8 / FR-030..033
 
 ### Models + Events for US6
 
-- [ ] T128 [P] [US6] Criar `app/Models/Agenda/WaitlistEntry.php` com casts (status enum, position int), scope `BelongsToTenant`, scope `waiting()`, scope `notified()`, scope `nextInQueue(profId, typeId)`
-- [ ] T129 [P] [US6] Criar evento `app/Events/Agenda/VagaAbertaNaListaDeEspera.php` (Auditable — payload: waitlist_entry_id, patient_id, slot_starts_at, professional_id, type_id, notification_window_minutes)
+- [X] T128 [P] [US6] Criar `app/Models/Agenda/WaitlistEntry.php` com casts (status enum, position int), scope `BelongsToTenant`, scope `waiting()`, scope `notified()`, scope `nextInQueue(profId, typeId)`
+- [X] T129 [P] [US6] Criar evento `app/Events/Agenda/VagaAbertaNaListaDeEspera.php` (Auditable — payload: waitlist_entry_id, patient_id, slot_starts_at, professional_id, type_id, notification_window_minutes)
 
 ### Services for US6
 
-- [ ] T130 [P] [US6] Criar `app/Services/Agenda/WaitlistService.php` com `enroll(Patient, Professional, AppointmentType)` (cria entry, calcula position FIFO), `notifyNext(Professional, AppointmentType, slot_starts_at)` (atômico — UPDATE ... WHERE status='waiting' ORDER BY position ASC LIMIT 1; emite `VagaAbertaNaListaDeEspera`), `accept(WaitlistEntry, idempotency_key)` (cria Appointment via `AppointmentService::create()`; muda status accepted), `expireNotifications()` (cron — marca status=expired, chama notifyNext do próximo)
+- [X] T130 [P] [US6] Criar `app/Services/Agenda/WaitlistService.php` com `enroll(Patient, Professional, AppointmentType)` (cria entry, calcula position FIFO), `notifyNext(Professional, AppointmentType, slot_starts_at)` (atômico — UPDATE ... WHERE status='waiting' ORDER BY position ASC LIMIT 1; emite `VagaAbertaNaListaDeEspera`), `accept(WaitlistEntry, idempotency_key)` (cria Appointment via `AppointmentService::create()`; muda status accepted), `expireNotifications()` (cron — marca status=expired, chama notifyNext do próximo)
 
 ### Listeners for US6
 
-- [ ] T131 [P] [US6] Criar `app/Listeners/Agenda/OpenWaitlistOnCancellation.php` (escuta `ConsultaCancelada` → chama `WaitlistService::notifyNext(...)` para o slot liberado se houver elegível); bind em `EventServiceProvider`
-- [ ] T132 [P] [US6] Criar `app/Listeners/Agenda/DispatchWaitlistOfferToInbox.php` (escuta `VagaAbertaNaListaDeEspera` → encaminha para Fase 3 enviar mensagem ao paciente notificado); bind em `EventServiceProvider`
+- [X] T131 [P] [US6] Criar `app/Listeners/Agenda/OpenWaitlistOnCancellation.php` (escuta `ConsultaCancelada` → chama `WaitlistService::notifyNext(...)` para o slot liberado se houver elegível); bind em `EventServiceProvider`
+- [X] T132 [P] [US6] Criar `app/Listeners/Agenda/DispatchWaitlistOfferToInbox.php` (escuta `VagaAbertaNaListaDeEspera` → encaminha para Fase 3 enviar mensagem ao paciente notificado); bind em `EventServiceProvider`
 
 ### Cron command for US6
 
-- [ ] T133 [US6] Criar `app/Console/Commands/AgendaExpireWaitlistNotificationsCommand.php` (chama `WaitlistService::expireNotifications()`); confirmar Schedule registrado em T029
+- [X] T133 [US6] Criar `app/Console/Commands/AgendaExpireWaitlistNotificationsCommand.php` (chama `WaitlistService::expireNotifications()`); confirmar Schedule registrado em T029
 
 ### Endpoints for US6
 
-- [ ] T134 [P] [US6] Criar `app/Http/Requests/Agenda/StoreWaitlistEntryRequest.php` + `AcceptWaitlistOfferRequest.php`
-- [ ] T135 [P] [US6] Criar `app/Http/Resources/Agenda/WaitlistEntryResource.php`
-- [ ] T136 [US6] Criar `app/Http/Controllers/Api/V1/Agenda/WaitlistController.php` (`index`, `store`, `destroy`, `accept`)
-- [ ] T137 [US6] Editar `routes/api.php` adicionando rotas `/agenda/waitlist/*` (4 endpoints)
+- [X] T134 [P] [US6] Criar `app/Http/Requests/Agenda/StoreWaitlistEntryRequest.php` + `AcceptWaitlistOfferRequest.php`
+- [X] T135 [P] [US6] Criar `app/Http/Resources/Agenda/WaitlistEntryResource.php`
+- [X] T136 [US6] Criar `app/Http/Controllers/Api/V1/Agenda/WaitlistController.php` (`index`, `store`, `destroy`, `accept`)
+- [X] T137 [US6] Editar `routes/api.php` adicionando rotas `/agenda/waitlist/*` (4 endpoints)
 
 ### Frontend for US6
 
-- [ ] T138 [P] [US6] Criar `resources/js/pages/agenda/WaitlistPage.vue` (listagem por (prof × tipo) com filtro de status; CTA inscrever paciente)
+- [X] T138 [P] [US6] Criar `resources/js/pages/agenda/WaitlistPage.vue` (listagem por (prof × tipo) com filtro de status; CTA inscrever paciente)
 
 **Checkpoint**: US-6.6 verde — FIFO sequencial K=1 funcionando, prazo 15min configurável por tenant, expira → próximo, alocação atômica.
 

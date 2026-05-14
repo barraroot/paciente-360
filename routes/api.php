@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Agenda\AppointmentTypeController;
 use App\Http\Controllers\Api\V1\Agenda\ProfessionalScheduleController;
 use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
 use App\Http\Controllers\Api\V1\Agenda\SlotController;
+use App\Http\Controllers\Api\V1\Agenda\WaitlistController;
 use App\Http\Controllers\Api\V1\Audit\AuditLogsController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutAllController;
@@ -447,6 +448,20 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'agend
             ->name('consultas.mark-attendance');
         Route::post('consultas/{appointment}/reverter-comparecimento', [AppointmentController::class, 'revertAttendance'])
             ->name('consultas.revert-attendance');
+        // T124 (US-6.5) — Cancelamento via chat com política de prazo
+        Route::post('consultas/{appointment}/cancelar', [AppointmentController::class, 'cancel'])
+            ->name('consultas.cancel');
+
+        // T137 (US-6.6) — Lista de espera FIFO sequencial K=1
+        Route::get('waitlist', [WaitlistController::class, 'index'])
+            ->name('waitlist.index');
+        Route::post('waitlist', [WaitlistController::class, 'store'])
+            ->name('waitlist.store');
+        Route::delete('waitlist/{waitlist}', [WaitlistController::class, 'destroy'])
+            ->name('waitlist.destroy');
+        Route::post('waitlist/{waitlist}/aceitar', [WaitlistController::class, 'accept'])
+            ->name('waitlist.accept');
+
         Route::get('slots-disponiveis', [SlotController::class, 'listAvailable'])
             ->name('slots.available');
         Route::post('slots/{starts_at}/reservar', [SlotController::class, 'reservar'])

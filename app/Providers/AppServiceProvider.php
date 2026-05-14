@@ -175,17 +175,15 @@ class AppServiceProvider extends ServiceProvider
             }
         );
 
-        // Fase 5 — Listener move card no funil quando consulta é criada (FR-013).
-        Event::listen(
-            ConsultaCriada::class,
-            MoveCardToAgendadoColumn::class,
-        );
-
-        // Fase 5 (US-6.4) — Listener encaminha confirmações para Fase 3 inbox.
-        Event::listen(
-            ConsultaConfirmacaoPendente::class,
-            DispatchConfirmationToInbox::class,
-        );
+        // Fase 5 — Listeners auto-discovered via Laravel 11+ event discovery
+        // (scan de app/Listeners/Agenda/* com type-hint do evento no método handle).
+        // Listeners auto-registrados:
+        //  - MoveCardToAgendadoColumn               → ConsultaCriada (FR-013)
+        //  - DispatchConfirmationToInbox            → ConsultaConfirmacaoPendente (US-6.4)
+        //  - EscalateCancellationOutsideWindowToInbox → CancelamentoSolicitadoForaDoPrazo (clarify nº 3)
+        //  - EscalateRescheduleLimitExceededToInbox → LimiteDeReagendamentoExcedido (clarify nº 7)
+        //  - OpenWaitlistOnCancellation             → ConsultaCancelada (clarify nº 8)
+        //  - DispatchWaitlistOfferToInbox           → VagaAbertaNaListaDeEspera (clarify nº 8)
     }
 
     /**

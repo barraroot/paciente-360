@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Agenda;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Agenda\CancelAppointmentRequest;
 use App\Http\Requests\Agenda\ConfirmResponseRequest;
 use App\Http\Requests\Agenda\MarkAttendanceRequest;
 use App\Http\Requests\Agenda\RescheduleAppointmentRequest;
@@ -133,6 +134,25 @@ class AppointmentController extends Controller
                 $request->user(),
             );
         } catch (\DomainException $e) {
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return new AppointmentResource($updated);
+    }
+
+    /**
+     * T123 — Cancela consulta com política de prazo (US-6.5 / clarify nº 3).
+     */
+    public function cancel(CancelAppointmentRequest $request, Appointment $appointment)
+    {
+        try {
+            $updated = $this->service->cancel($appointment, $request->validated(), $request->user());
+        } catch (\DomainException $e) {
+            $payload = json_decode($e->getMessage(), true);
+            if (is_array($payload) && isset($payload['error'])) {
+                return response()->json($payload, Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
             return response()->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 

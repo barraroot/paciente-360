@@ -2,6 +2,8 @@
 
 namespace App\Services\Agenda;
 
+use App\Events\Agenda\CancelamentoSolicitadoForaDoPrazo;
+use App\Events\Agenda\ConsultaCancelada;
 use App\Events\Agenda\ConsultaCriada;
 use App\Events\Agenda\ConsultaReagendada;
 use App\Events\Agenda\LimiteDeReagendamentoExcedido;
@@ -200,6 +202,70 @@ final class AppointmentService
             $data['quem_solicitou'] ?? ($actor ? 'atendente' : 'ia'),
             $data['motivo'] ?? null,
         );
+
+        return $appointment->fresh();
+    }
+
+    /**
+     * T121 — Cancela consulta com política de prazo (clarify nº 3).
+     *
+     * Regras:
+     *  - quem_cancelou=profissional → irrestrito (motivo obrigatório, audit)
+     *  - quem_cancelou=atendente   → irrestrito (operação humana via painel)
+     *  - quem_cancelou=paciente OR via_ia → valida tenant.min_cancellation_hours
+     *    com override por type.min_cancellation_hours.
+     *    Fora do prazo → DomainException + emit CancelamentoSolicitadoForaDoPrazo.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @throws \DomainException cancellation_outside_window | invalid_status
+     */
+    public function cancel(Appointment $appointment, array $data, ?User $actor = null): Appointment
+    {
+        if (in_array($appointment->status, Appointment::TERMINAL_STATUSES, true)) {
+            throw new \DomainException('appointment_already_terminal');
+        }
+
+        $quem = $data['quem_cancelou'];
+        $isPatientOrIa = in_array($quem, ['paciente', 'ia'], true);
+
+        if ($isPatientOrIa) {
+            $tenant = Tenant::find($appointment->tenant_id);
+            $tenantWindow = (int) ($tenant->settings['agenda']['min_cancellation_hours'] ?? 4);
+            $type = $appointment->appointmentType;
+            $window = $type->min_cancellation_hours !== null && $type->min_cancellation_hours !== ''
+                ? (int) $type->min_cancellation_hours
+                : $tenantWindow;
+
+            $hoursUntil = now()->floatDiffInHours($appointment->starts_at, false);
+
+            if ($hoursUntil < $window) {
+                CancelamentoSolicitadoForaDoPrazo::dispatch(
+                    $appointment,
+                    $quem,
+                    $window,
+                    $hoursUntil,
+                );
+
+                throw new \DomainException(json_encode([
+                    'error' => 'cancellation_outside_window',
+                    'escalated_to_inbox' => true,
+                    'window_hours' => $window,
+                    'current_hours_until_appt' => round($hoursUntil, 2),
+                ]));
+            }
+        }
+
+        $appointment->update([
+            'status' => 'canceled',
+            'quem_cancelou' => $quem,
+            'motivo_cancelamento' => $data['motivo'],
+            'canceled_at' => now(),
+        ]);
+
+        $this->metrics->appointmentCanceledTotal($quem);
+
+        ConsultaCancelada::dispatch($appointment->fresh(), $quem, $data['motivo']);
 
         return $appointment->fresh();
     }

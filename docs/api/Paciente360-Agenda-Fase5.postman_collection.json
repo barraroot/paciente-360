@@ -1,0 +1,732 @@
+{
+  "info": {
+    "_postman_id": "p360-agenda-fase5",
+    "name": "Paciente360 — Agenda (Fase 5)",
+    "description": "Coleção da API REST do módulo de Agendamento — Fase 5.\n\n## Pré-requisitos\n\n1. **Auth**: faça login via collection `Paciente360 API v1 (Bearer)` — `POST /auth/login` salva `{{token}}` e `{{tenant_slug}}`. Esta collection consome essas variáveis.\n2. **Tenant slug**: header `X-Tenant-Slug` injetado automaticamente em TODAS as requests autenticadas (Princípio II — triple-check anti-token-roubo cross-tenant).\n3. **Migrations + seeders**: `vendor/bin/sail artisan migrate && vendor/bin/sail artisan db:seed --class=AgendaPermissionsSeeder` antes de testar.\n\n## Variáveis utilizadas\n\n- `base_url` — default `http://api.lvh.me/api/v1`\n- `token` — preenchido pelo login (collection Fase 4)\n- `tenant_slug` — preenchido pelo login (collection Fase 4)\n- `professional_id`, `appointment_type_id`, `paciente_id`, `appointment_id`, `waitlist_id`, `calendar_sync_account_id`, `schedule_exception_id`, `slot_reservation_id`, `slot_starts_at` — IDs/timestamps usados em path/query\n\n## Estrutura\n\nPastas por user story (US-6.1 → US-6.7) + webhook Google.\n\n## Referências\n\n- Spec: `specs/005-agendamento-consultas/spec.md`\n- OpenAPI: `specs/005-agendamento-consultas/contracts/openapi.yaml`\n- Quickstart: `specs/005-agendamento-consultas/quickstart.md`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script (collection-level) — injeta Authorization + X-Tenant-Slug",
+          "// em TODAS as requests da coleção (exceto webhooks públicos).",
+          "if (pm.variables.get('skipAuth')) { return; }",
+          "",
+          "const token = pm.collectionVariables.get('token');",
+          "const tenantSlug = pm.collectionVariables.get('tenant_slug');",
+          "",
+          "if (token) {",
+          "    pm.request.headers.upsert({ key: 'Authorization', value: `Bearer ${token}` });",
+          "}",
+          "if (tenantSlug) {",
+          "    pm.request.headers.upsert({ key: 'X-Tenant-Slug', value: tenantSlug });",
+          "}",
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://api.lvh.me/api/v1", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "tenant_slug", "value": "", "type": "string" },
+    { "key": "professional_id", "value": "1", "type": "string" },
+    { "key": "appointment_type_id", "value": "1", "type": "string" },
+    { "key": "paciente_id", "value": "1", "type": "string" },
+    { "key": "appointment_id", "value": "1", "type": "string" },
+    { "key": "waitlist_id", "value": "1", "type": "string" },
+    { "key": "calendar_sync_account_id", "value": "1", "type": "string" },
+    { "key": "schedule_exception_id", "value": "1", "type": "string" },
+    { "key": "slot_reservation_id", "value": "1", "type": "string" },
+    { "key": "slot_starts_at", "value": "2026-06-15T09:00:00-03:00", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "US-6.1 — Schedule + Exceptions",
+      "description": "Configuração de agenda recorrente do profissional + bloqueios pontuais (clarify nº 5 — dual ownership médico/admin).",
+      "item": [
+        {
+          "name": "GET schedule do profissional",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agenda/professionals/{{professional_id}}/schedules",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "professionals", "{{professional_id}}", "schedules"]
+            }
+          }
+        },
+        {
+          "name": "PUT atualiza schedule (batch)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/agenda/professionals/{{professional_id}}/schedules",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "professionals", "{{professional_id}}", "schedules"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timezone\": \"America/Sao_Paulo\",\n  \"schedules\": [\n    { \"day_of_week\": 1, \"blocks\": [{\"start\":\"08:00\",\"end\":\"12:00\"},{\"start\":\"13:00\",\"end\":\"18:00\"}] },\n    { \"day_of_week\": 2, \"blocks\": [{\"start\":\"08:00\",\"end\":\"18:00\"}] },\n    { \"day_of_week\": 3, \"blocks\": [{\"start\":\"08:00\",\"end\":\"18:00\"}] },\n    { \"day_of_week\": 4, \"blocks\": [{\"start\":\"08:00\",\"end\":\"18:00\"}] },\n    { \"day_of_week\": 5, \"blocks\": [{\"start\":\"08:00\",\"end\":\"12:00\"}] }\n  ],\n  \"accepted_appointment_type_ids\": [{{appointment_type_id}}]\n}"
+            }
+          }
+        },
+        {
+          "name": "GET exceptions (bloqueios)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agenda/professionals/{{professional_id}}/schedule-exceptions?from=2026-06-01&to=2026-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "professionals", "{{professional_id}}", "schedule-exceptions"],
+              "query": [
+                { "key": "from", "value": "2026-06-01" },
+                { "key": "to", "value": "2026-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST cria exception",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/professionals/{{professional_id}}/schedule-exceptions",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "professionals", "{{professional_id}}", "schedule-exceptions"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"starts_at\": \"2026-06-10T00:00:00-03:00\",\n  \"ends_at\": \"2026-06-20T23:59:59-03:00\",\n  \"reason\": \"Férias\"\n}"
+            },
+            "description": "FR-028c — consultas existentes nessa janela serão canceladas em cascade com motivo `schedule_exception`."
+          }
+        },
+        {
+          "name": "DELETE exception",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/agenda/schedule-exceptions/{{schedule_exception_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "schedule-exceptions", "{{schedule_exception_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "US-6.2 — Tipos de atendimento",
+      "description": "CRUD de AppointmentType (clarify nº 4 — valor único snapshot na consulta + override com motivo).",
+      "item": [
+        {
+          "name": "GET listar tipos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agenda/appointment-types?include_inactive=0&page=1&per_page=50",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "appointment-types"],
+              "query": [
+                { "key": "include_inactive", "value": "0" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST cria tipo",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/appointment-types",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "appointment-types"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Consulta\",\n  \"duration_minutes\": 30,\n  \"buffer_minutes\": 5,\n  \"valor_particular\": 200.00,\n  \"valor_convenio_default\": 150.00,\n  \"min_cancellation_hours\": 4,\n  \"cor\": \"#3B82F6\",\n  \"descricao\": \"Consulta padrão de 30 minutos\",\n  \"intent_ia\": \"agendar_consulta\"\n}"
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 201) {",
+                    "  pm.collectionVariables.set('appointment_type_id', pm.response.json().data.id);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET detalhe do tipo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agenda/appointment-types/{{appointment_type_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "appointment-types", "{{appointment_type_id}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH atualiza tipo",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/agenda/appointment-types/{{appointment_type_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "appointment-types", "{{appointment_type_id}}"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valor_particular\": 250.00,\n  \"min_cancellation_hours\": 12\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE inativa tipo (FR-007 — preserva histórico)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/agenda/appointment-types/{{appointment_type_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "appointment-types", "{{appointment_type_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "US-6.3 / 6.5 — Slots + Reservation",
+      "description": "Consulta de slots disponíveis + reserva pessimista soft (clarify nº 2 — TTL 5min user / 2min IA).",
+      "item": [
+        {
+          "name": "GET slots disponíveis (próximos 7d)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agenda/slots-disponiveis?professional_id={{professional_id}}&appointment_type_id={{appointment_type_id}}&from=2026-06-15T00:00:00-03:00&to=2026-06-22T23:59:59-03:00",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "slots-disponiveis"],
+              "query": [
+                { "key": "professional_id", "value": "{{professional_id}}" },
+                { "key": "appointment_type_id", "value": "{{appointment_type_id}}" },
+                { "key": "from", "value": "2026-06-15T00:00:00-03:00" },
+                { "key": "to", "value": "2026-06-22T23:59:59-03:00" }
+              ]
+            },
+            "description": "Resposta inclui `timezone_display` (IANA) — clarify nº 13."
+          }
+        },
+        {
+          "name": "POST reserva slot (TTL 5min user)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/slots/{{slot_starts_at}}/reservar",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "slots", "{{slot_starts_at}}", "reservar"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"professional_id\": {{professional_id}},\n  \"appointment_type_id\": {{appointment_type_id}},\n  \"holder_type\": \"user\",\n  \"holder_id\": \"42\",\n  \"idempotency_key\": \"{{$randomUUID}}\"\n}"
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 201) {",
+                    "  pm.collectionVariables.set('slot_reservation_id', pm.response.json().data.id);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST reserva slot (TTL 2min IA — clarify nº 2)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/slots/{{slot_starts_at}}/reservar",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "slots", "{{slot_starts_at}}", "reservar"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"professional_id\": {{professional_id}},\n  \"appointment_type_id\": {{appointment_type_id}},\n  \"holder_type\": \"ia\",\n  \"holder_id\": \"conv-abc-123\",\n  \"idempotency_key\": \"{{$randomUUID}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE libera reserva (form fechado)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/agenda/slot-reservations/{{slot_reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "slot-reservations", "{{slot_reservation_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "US-6.3 — Appointments (CRUD + reagendar)",
+      "description": "Criação de consulta com gate atômico de race (FR-011a / SC-008) + reagendamento com idempotency (clarify nº 7).",
+      "item": [
+        {
+          "name": "GET lista consultas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas?professional_id={{professional_id}}&status[]=scheduled&status[]=confirmed&from=2026-06-01&to=2026-06-30&page=1&per_page=50",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas"],
+              "query": [
+                { "key": "professional_id", "value": "{{professional_id}}" },
+                { "key": "status[]", "value": "scheduled" },
+                { "key": "status[]", "value": "confirmed" },
+                { "key": "from", "value": "2026-06-01" },
+                { "key": "to", "value": "2026-06-30" },
+                { "key": "page", "value": "1" },
+                { "key": "per_page", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST cria consulta (painel)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idempotency_key\": \"{{$randomUUID}}\",\n  \"paciente_id\": {{paciente_id}},\n  \"professional_id\": {{professional_id}},\n  \"appointment_type_id\": {{appointment_type_id}},\n  \"starts_at\": \"{{slot_starts_at}}\",\n  \"channel_origin\": \"painel\",\n  \"notify_patient\": true\n}"
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if ([200, 201].includes(pm.response.code)) {",
+                    "  pm.collectionVariables.set('appointment_id', pm.response.json().data.id);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST cria consulta (IA Matricial)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idempotency_key\": \"{{$randomUUID}}\",\n  \"paciente_id\": {{paciente_id}},\n  \"professional_id\": {{professional_id}},\n  \"appointment_type_id\": {{appointment_type_id}},\n  \"starts_at\": \"{{slot_starts_at}}\",\n  \"channel_origin\": \"ia\",\n  \"reservation_id\": {{slot_reservation_id}}\n}"
+            }
+          }
+        },
+        {
+          "name": "POST cria com override de bloqueio (clarify nº 5)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paciente_id\": {{paciente_id}},\n  \"professional_id\": {{professional_id}},\n  \"appointment_type_id\": {{appointment_type_id}},\n  \"starts_at\": \"{{slot_starts_at}}\",\n  \"channel_origin\": \"painel\",\n  \"override_block\": true,\n  \"override_motivo\": \"Encaixe de emergência\"\n}"
+            },
+            "description": "Exige ability `appointment.override_block` (default Admin Clínica). `motivo` obrigatório, audit `warning`, push notification ao profissional."
+          }
+        },
+        {
+          "name": "GET detalhe consulta",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas/{{appointment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas", "{{appointment_id}}"]
+            }
+          }
+        },
+        {
+          "name": "POST reagenda consulta (clarify nº 7)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas/{{appointment_id}}/reagendar",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas", "{{appointment_id}}", "reagendar"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idempotency_key\": \"{{$randomUUID}}\",\n  \"new_starts_at\": \"2026-06-16T10:00:00-03:00\",\n  \"motivo\": \"Paciente solicitou outro horário\",\n  \"quem_solicitou\": \"paciente\"\n}"
+            },
+            "description": "Mantém prof+tipo (não aceitos no payload). Limite 2 reagendamentos (3ª tentativa retorna 422 `reschedule_limit_exceeded` + escalated_to_inbox=true)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "US-6.4 — Confirmação + Comparecimento",
+      "description": "Resposta automática 1/2/3 (clarify nº 6) + marcação manual (clarify nº 14).",
+      "item": [
+        {
+          "name": "POST confirma resposta paciente (1=sim)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas/{{appointment_id}}/confirmar-resposta",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas", "{{appointment_id}}", "confirmar-resposta"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"response_value\": \"1\",\n  \"dispatch_kind\": \"24h\",\n  \"received_at\": \"2026-06-14T13:30:00-03:00\"\n}"
+            },
+            "description": "Endpoint INTERNO — chamado pela Fase 3 quando paciente responde via canal."
+          }
+        },
+        {
+          "name": "POST resposta cancelamento (3)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas/{{appointment_id}}/confirmar-resposta",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas", "{{appointment_id}}", "confirmar-resposta"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"response_value\": \"3\",\n  \"dispatch_kind\": \"2h\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST marca comparecimento (realizada)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas/{{appointment_id}}/marcar-comparecimento",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas", "{{appointment_id}}", "marcar-comparecimento"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"realizada\"\n}"
+            },
+            "description": "Janela 7d após starts_at (clarify nº 14). Após isso retorna 422 `appointment_too_old_for_marking`."
+          }
+        },
+        {
+          "name": "POST marca no-show",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas/{{appointment_id}}/marcar-comparecimento",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas", "{{appointment_id}}", "marcar-comparecimento"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"nao_realizada\",\n  \"attendance_motivo\": \"Não compareceu sem aviso\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST reverte marcação (48h)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas/{{appointment_id}}/reverter-comparecimento",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas", "{{appointment_id}}", "reverter-comparecimento"]
+            },
+            "description": "Dentro de 48h: ability `appointment.update`. Após 48h: ability dedicada `appointment.revert_attendance_marking` (default Admin Clínica) + audit warning."
+          }
+        }
+      ]
+    },
+    {
+      "name": "US-6.5 — Cancelamento via chat",
+      "description": "Política de prazo tenant→type override (clarify nº 3 — bloqueia + escala para inbox).",
+      "item": [
+        {
+          "name": "POST cancela (paciente — dentro do prazo)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas/{{appointment_id}}/cancelar",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas", "{{appointment_id}}", "cancelar"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idempotency_key\": \"{{$randomUUID}}\",\n  \"quem_cancelou\": \"paciente\",\n  \"motivo\": \"Imprevisto pessoal\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST cancela (paciente — FORA do prazo) → 422",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas/{{appointment_id}}/cancelar",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas", "{{appointment_id}}", "cancelar"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quem_cancelou\": \"paciente\",\n  \"motivo\": \"Mudança de planos\"\n}"
+            },
+            "description": "Retorna 422 com `error=cancellation_outside_window`, `escalated_to_inbox=true`, `window_hours`, `current_hours_until_appt`. Emite evento `CancelamentoSolicitadoForaDoPrazo` para Fase 3 criar handoff."
+          }
+        },
+        {
+          "name": "POST cancela (profissional — irrestrito)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/consultas/{{appointment_id}}/cancelar",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "consultas", "{{appointment_id}}", "cancelar"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quem_cancelou\": \"profissional\",\n  \"motivo\": \"Emergência médica\"\n}"
+            },
+            "description": "Profissional/atendente irrestritos — motivo obrigatório + audit."
+          }
+        }
+      ]
+    },
+    {
+      "name": "US-6.6 — Lista de espera FIFO",
+      "description": "FIFO sequencial K=1 (clarify nº 8 — 1 candidato notificado por vez, prazo 15min).",
+      "item": [
+        {
+          "name": "GET lista entradas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agenda/waitlist?professional_id={{professional_id}}&appointment_type_id={{appointment_type_id}}&status=waiting",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "waitlist"],
+              "query": [
+                { "key": "professional_id", "value": "{{professional_id}}" },
+                { "key": "appointment_type_id", "value": "{{appointment_type_id}}" },
+                { "key": "status", "value": "waiting" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST inscreve paciente",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/waitlist",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "waitlist"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paciente_id\": {{paciente_id}},\n  \"professional_id\": {{professional_id}},\n  \"appointment_type_id\": {{appointment_type_id}}\n}"
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200 || pm.response.code === 201) {",
+                    "  pm.collectionVariables.set('waitlist_id', pm.response.json().data.id);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "DELETE remove entry",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/agenda/waitlist/{{waitlist_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "waitlist", "{{waitlist_id}}"]
+            }
+          }
+        },
+        {
+          "name": "POST aceita vaga (status=notified)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/waitlist/{{waitlist_id}}/aceitar",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "waitlist", "{{waitlist_id}}", "aceitar"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idempotency_key\": \"{{$randomUUID}}\"\n}"
+            },
+            "description": "Cria Appointment via channel_origin=autoatendimento. Erros: `waitlist_offer_expired` (15min sem confirmar) ou `waitlist_entry_not_notified`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "US-6.7 — Calendar Sync (Google)",
+      "description": "OAuth + sub-calendário tenant-scoped (clarify nº 15) + UX revogação (R5). Outlook DEFERRED → Fase 6.",
+      "item": [
+        {
+          "name": "POST inicia OAuth Google (gera authorize_url)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/calendar-sync/google/connect",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "calendar-sync", "google", "connect"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"professional_id\": {{professional_id}},\n  \"provider\": \"google\"\n}"
+            },
+            "description": "Resposta inclui `authorize_url` (redirecionar usuário) + `state` (CSRF). Provider=outlook retorna 422 `provider_not_yet_supported`."
+          }
+        },
+        {
+          "name": "GET callback OAuth (Google chama)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agenda/calendar-sync/google/callback?code=AUTHORIZATION_CODE_FROM_GOOGLE&state=STATE_FROM_CONNECT&professional_id={{professional_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "calendar-sync", "google", "callback"],
+              "query": [
+                { "key": "code", "value": "AUTHORIZATION_CODE_FROM_GOOGLE" },
+                { "key": "state", "value": "STATE_FROM_CONNECT" },
+                { "key": "professional_id", "value": "{{professional_id}}" }
+              ]
+            },
+            "description": "Troca code por token, cria sub-calendário `Paciente360 — {Tenant.nome}` (clarify nº 15), subscribe watch channel, retorna CalendarSyncAccount. Falha de criação → 422 `calendar_subcalendar_creation_failed`.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "if (pm.response.code === 200) {",
+                    "  pm.collectionVariables.set('calendar_sync_account_id', pm.response.json().data.id);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET status do sync (do user logado)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agenda/calendar-sync",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "calendar-sync"]
+            }
+          }
+        },
+        {
+          "name": "POST desconecta (revoga + stop watch)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/agenda/calendar-sync/{{calendar_sync_account_id}}/disconnect",
+              "host": ["{{base_url}}"],
+              "path": ["agenda", "calendar-sync", "{{calendar_sync_account_id}}", "disconnect"]
+            },
+            "description": "Revoga token Google + stop watch channel. Eventos no Google permanecem (não deleta — clarify nº 10 / R5)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks — Google Calendar (público)",
+      "description": "Recebe push notifications do Google. Validado por HMAC do header X-Goog-Channel-Token (R3). Sempre retorna 200.",
+      "item": [
+        {
+          "name": "POST push notification do Google",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/../webhooks/google-calendar/CHANNEL_UUID_HERE",
+              "host": ["{{base_url}}"],
+              "path": ["..", "webhooks", "google-calendar", "CHANNEL_UUID_HERE"]
+            },
+            "header": [
+              { "key": "X-Goog-Channel-Id", "value": "CHANNEL_UUID_HERE" },
+              { "key": "X-Goog-Channel-Token", "value": "HMAC_SHA256_TOKEN" },
+              { "key": "X-Goog-Resource-Id", "value": "RESOURCE_ID_FROM_WATCH" },
+              { "key": "X-Goog-Resource-State", "value": "exists" },
+              { "key": "X-Goog-Message-Number", "value": "1" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": ["pm.variables.set('skipAuth', true);"]
+              }
+            }
+          ],
+          "description": "Webhook PÚBLICO — sem Bearer/X-Tenant-Slug. HMAC token = hash_hmac('sha256', tenant_id.prof_id.channel_id, APP_KEY). Resource-State pode ser: sync (handshake), exists (mudança), not_exists (deleção)."
+        }
+      ]
+    }
+  ]
+}

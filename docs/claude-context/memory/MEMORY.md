@@ -1,0 +1,5 @@
+- [Paciente360 — escopo e stack](project_paciente360.md) — CRM médico SaaS multi-tenant; LGPD, IA com guardrails clínicos, stack Laravel 13 + Vue 3 fixada
+- [Fase 0 entregue](project_fase0_done.md) — 128/128 tasks, 467 testes verdes, cobertura 77.2%, branch `001-fundacao-multitenant` em 2026-05-10
+- [Fase 2 entregue](project_fase2_done.md) — 142/146 tasks, 650 testes verdes (+183), OpenAPI drift 0, branch `002-crm-pacientes` em 2026-05-11; 4 deferred (coverage tool / E2E run / Sentry / Prometheus)
+- [Fase 4 entregue](project_fase4_done.md) — Cookie→Bearer Sanctum + CSP estrita + CORS, 9 commits, suite 1130/1127/0/0 em 2026-05-13; aguardando merge em `main`
+- [Fase 5 entregue](project_fase5_done.md) — Agendamento (Épico 6), 7 user stories + 14 entidades + sub-cal Google tenant-scoped, 8 lotes A-H, 37 tests em 2026-05-14; aguardando merge

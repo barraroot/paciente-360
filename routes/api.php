@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Agenda\AppointmentController;
+use App\Http\Controllers\Api\V1\Agenda\AppointmentTypeController;
+use App\Http\Controllers\Api\V1\Agenda\ProfessionalScheduleController;
+use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
+use App\Http\Controllers\Api\V1\Agenda\SlotController;
+use App\Http\Controllers\Api\V1\Agenda\WaitlistController;
 use App\Http\Controllers\Api\V1\Audit\AuditLogsController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutAllController;
@@ -392,3 +398,87 @@ Route::middleware(['throttle:webhook-meta'])->group(function (): void {
         ->middleware(ValidateMetaSignature::class)
         ->name('webhooks.instagram.inbound');
 });
+
+/*
+|--------------------------------------------------------------------------
+| T026 (Fase 5) — Agenda de Consultas (US-6.1..6.7)
+|--------------------------------------------------------------------------
+|
+| Rotas autenticadas: Bearer + X-Tenant-Slug (Fase 4 triple-check) +
+| feature flag opcional `agenda.enabled` (T028 EnsureAgendaModuleEnabled).
+|
+| Filled per US:
+|   T046 (US1 schedules), T057 (US2 types), T084 (US3 appointments+slots),
+|   T113 (US4 confirm+attendance), T124 (US5 cancel),
+|   T137 (US6 waitlist), T168 (US7 sync).
+|
+| Webhook Google Calendar fica fora deste grupo — validado por HMAC do header
+| X-Goog-Channel-Token em routes/web.php (T164).
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'agenda.enabled'])
+    ->prefix('agenda')
+    ->name('agenda.')
+    ->group(function (): void {
+        // T046 (US-6.1) — Agenda recorrente + bloqueios pontuais
+        Route::get('professionals/{professional}/schedules', [ProfessionalScheduleController::class, 'show'])
+            ->name('schedules.show');
+        Route::put('professionals/{professional}/schedules', [ProfessionalScheduleController::class, 'update'])
+            ->name('schedules.update');
+        Route::get('professionals/{professional}/schedule-exceptions', [ScheduleExceptionController::class, 'index'])
+            ->name('schedule-exceptions.index');
+        Route::post('professionals/{professional}/schedule-exceptions', [ScheduleExceptionController::class, 'store'])
+            ->name('schedule-exceptions.store');
+        Route::delete('schedule-exceptions/{schedule_exception}', [ScheduleExceptionController::class, 'destroy'])
+            ->name('schedule-exceptions.destroy');
+
+        // T084 (US-6.3) — Appointments + slots (search/reserve/release)
+        Route::get('consultas', [AppointmentController::class, 'index'])
+            ->name('consultas.index');
+        Route::post('consultas', [AppointmentController::class, 'store'])
+            ->middleware('throttle:120,1')
+            ->name('consultas.store');
+        Route::get('consultas/{appointment}', [AppointmentController::class, 'show'])
+            ->name('consultas.show');
+        Route::post('consultas/{appointment}/reagendar', [AppointmentController::class, 'reschedule'])
+            ->name('consultas.reschedule');
+        // T113 (US-6.4) — Confirmação automática + comparecimento
+        Route::post('consultas/{appointment}/confirmar-resposta', [AppointmentController::class, 'confirmResponse'])
+            ->name('consultas.confirm-response');
+        Route::post('consultas/{appointment}/marcar-comparecimento', [AppointmentController::class, 'markAttendance'])
+            ->name('consultas.mark-attendance');
+        Route::post('consultas/{appointment}/reverter-comparecimento', [AppointmentController::class, 'revertAttendance'])
+            ->name('consultas.revert-attendance');
+        // T124 (US-6.5) — Cancelamento via chat com política de prazo
+        Route::post('consultas/{appointment}/cancelar', [AppointmentController::class, 'cancel'])
+            ->name('consultas.cancel');
+
+        // T137 (US-6.6) — Lista de espera FIFO sequencial K=1
+        Route::get('waitlist', [WaitlistController::class, 'index'])
+            ->name('waitlist.index');
+        Route::post('waitlist', [WaitlistController::class, 'store'])
+            ->name('waitlist.store');
+        Route::delete('waitlist/{waitlist}', [WaitlistController::class, 'destroy'])
+            ->name('waitlist.destroy');
+        Route::post('waitlist/{waitlist}/aceitar', [WaitlistController::class, 'accept'])
+            ->name('waitlist.accept');
+
+        Route::get('slots-disponiveis', [SlotController::class, 'listAvailable'])
+            ->name('slots.available');
+        Route::post('slots/{starts_at}/reservar', [SlotController::class, 'reservar'])
+            ->middleware('throttle:60,1')
+            ->name('slots.reserve');
+        Route::delete('slot-reservations/{slot_reservation}', [SlotController::class, 'releaseReservation'])
+            ->name('slots.reservation.release');
+
+        // T057 (US-6.2) — Tipos de atendimento
+        Route::get('appointment-types', [AppointmentTypeController::class, 'index'])
+            ->name('appointment-types.index');
+        Route::post('appointment-types', [AppointmentTypeController::class, 'store'])
+            ->name('appointment-types.store');
+        Route::get('appointment-types/{appointment_type}', [AppointmentTypeController::class, 'show'])
+            ->name('appointment-types.show');
+        Route::patch('appointment-types/{appointment_type}', [AppointmentTypeController::class, 'update'])
+            ->name('appointment-types.update');
+        Route::delete('appointment-types/{appointment_type}', [AppointmentTypeController::class, 'destroy'])
+            ->name('appointment-types.destroy');
+    });

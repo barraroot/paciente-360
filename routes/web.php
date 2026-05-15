@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\MetricsController;
+use App\Http\Controllers\Webhooks\GoogleCalendarWebhookController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -42,6 +43,14 @@ Route::view('/panel/{any}', 'app')->where('any', '.*');
 // STRIPE_WEBHOOK_SECRET está configurado.
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handleWebhook'])
     ->name('webhooks.stripe')
+    ->withoutMiddleware([VerifyCsrfToken::class, ResolveTenant::class]);
+
+// T164 (Fase 5) — Webhook Google Calendar Watch (push notifications, R3).
+// Sempre retorna 200 (evita retry storms). Validado por HMAC do header
+// X-Goog-Channel-Token via middleware ValidateGoogleChannelToken.
+Route::post('/webhooks/google-calendar/{channelId}', GoogleCalendarWebhookController::class)
+    ->middleware('validate.google.channel.token')
+    ->name('webhooks.google-calendar')
     ->withoutMiddleware([VerifyCsrfToken::class, ResolveTenant::class]);
 
 // T271 — Endpoint Prometheus /metrics.

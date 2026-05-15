@@ -6,12 +6,13 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 /**
- * **T062–T064** — Orquestrador dos seeders default da Fase 0.
+ * **T062–T064 + T021 (Fase 5)** — Orquestrador dos seeders default.
  *
  * Ordem importa:
- *   1. RolesSeeder      — roles + permissions template (`tenant_id NULL`).
- *   2. PlansSeeder      — planos comerciais (`starter`, `pro`, `enterprise`).
- *   3. SuperAdminSeeder — usuário Super Admin (depende da role).
+ *   1. RolesSeeder              — roles + permissions template (`tenant_id NULL`) — Fase 0/2/3.
+ *   2. AgendaPermissionsSeeder  — 11 abilities Fase 5 (Agenda) + sync para tenants existentes.
+ *   3. PlansSeeder              — planos comerciais (`starter`, `pro`, `enterprise`).
+ *   4. SuperAdminSeeder         — usuário Super Admin (depende da role).
  *
  * Todos os seeders são idempotentes — `migrate:fresh --seed` rodado 2×
  * não duplica dados.
@@ -28,6 +29,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolesSeeder::class,
+            AgendaPermissionsSeeder::class,
             PlansSeeder::class,
             SuperAdminSeeder::class,
         ]);

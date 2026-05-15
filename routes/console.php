@@ -66,3 +66,38 @@ Schedule::command('messaging:metrics-queue-sizes')->everyMinute()->withoutOverla
 // T270 — Métricas Prometheus: conversas ativas por (tenant, canal) (a cada 5min).
 // Agrega cross-tenant via query SQL; sem withoutOverlapping (query rápida, < 50ms).
 Schedule::command('messaging:metrics-conversations')->everyFiveMinutes();
+
+/*
+|--------------------------------------------------------------------------
+| Fase 5 — Agenda de Consultas (T029)
+|--------------------------------------------------------------------------
+|
+| 6 schedule entries cobrindo:
+|  - Cleanup de slot reservations expiradas (clarify nº 2)
+|  - Expiração de notificações de lista de espera + notify next FIFO (clarify nº 8)
+|  - Dispatch de confirmações T-24h/T-2h/retry T-30min (clarify nº 6)
+|  - Auto-close de consultas sem marcação após 7 dias (clarify nº 14)
+|  - Polling fallback Google Calendar (clarify nº 10 / R3)
+|  - Renovação de watch channels Google antes do TTL (R3)
+|
+| Commands criados nas tasks T085 (cleanup), T133 (expire waitlist),
+| T108 (dispatch confirmações), T109 (auto-close), T159 (poll), T160 (renew).
+*/
+
+Schedule::command('agenda:cleanup-expired-reservations')->everyMinute()->onOneServer();
+
+Schedule::command('agenda:expire-waitlist-notifications')->everyMinute()->onOneServer();
+
+Schedule::command('agenda:dispatch-confirmations')->everyFiveMinutes()->onOneServer();
+
+Schedule::command('agenda:auto-close-stale-appointments')
+    ->dailyAt('00:30')
+    ->timezone('America/Sao_Paulo')
+    ->onOneServer();
+
+Schedule::command('agenda:google-poll-fallback')->everyFiveMinutes()->onOneServer();
+
+Schedule::command('agenda:google-renew-watch-channels')
+    ->dailyAt('02:00')
+    ->timezone('America/Sao_Paulo')
+    ->onOneServer();

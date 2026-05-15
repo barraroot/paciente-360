@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use App\Events\Professional\ProfessionalDeactivated;
+use App\Models\Agenda\AppointmentType;
+use App\Models\Agenda\ProfessionalSchedule;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -75,5 +79,31 @@ class Professional extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Fase 5 — Agenda recorrente do profissional (US-6.1).
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(ProfessionalSchedule::class);
+    }
+
+    /**
+     * Fase 5 — Tipos de atendimento aceitos pelo profissional (US-6.1 / US-6.2).
+     */
+    public function appointmentTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            AppointmentType::class,
+            'appointment_type_professional',
+            'professional_id',
+            'appointment_type_id'
+        )->withPivot(['tenant_id', 'created_at']);
     }
 }

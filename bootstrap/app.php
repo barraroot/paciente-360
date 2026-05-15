@@ -19,12 +19,14 @@ use App\Exceptions\Users\InvalidInvitationException;
 use App\Exceptions\Users\LastAdminClinicaException;
 use App\Exceptions\Users\PlanLimitReachedException;
 use App\Http\Middleware\ApplyOverdueRestrictions;
+use App\Http\Middleware\EnsureAgendaModuleEnabled;
 use App\Http\Middleware\EnsureTenantNotSuspended;
 use App\Http\Middleware\EnsureTenantSlugHeader;
 use App\Http\Middleware\LogStructuredRequestData;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetSecurityHeaders;
 use App\Http\Middleware\SlideTokenExpiration;
+use App\Http\Middleware\ValidateGoogleChannelToken;
 use App\Http\Middleware\ValidateTwilioSignature;
 use App\Support\Cpf\CpfValidator;
 use Illuminate\Foundation\Application;
@@ -92,6 +94,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.slug' => EnsureTenantSlugHeader::class,
             // Fase 4 Bearer — sliding expiration 30d: renova token se expires_at < 5d.
             'slide.token' => SlideTokenExpiration::class,
+            // Fase 5 (T028) — feature flag opcional para o módulo Agenda.
+            'agenda.enabled' => EnsureAgendaModuleEnabled::class,
+            // Fase 5 (T162 — US-6.7 / R3) — valida HMAC do header X-Goog-Channel-Token.
+            'validate.google.channel.token' => ValidateGoogleChannelToken::class,
         ]);
 
         // `ResolveTenant` roda em TODA request da API. Deve rodar ANTES

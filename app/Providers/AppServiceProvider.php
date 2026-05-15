@@ -18,16 +18,28 @@ use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Observers\MessageObserver;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
 use App\Domain\Messaging\QuickReply\Models\QuickReply;
+use App\Events\Agenda\ConsultaConfirmacaoPendente;
+use App\Events\Agenda\ConsultaCriada;
 use App\Events\TenantResolved;
+use App\Listeners\Agenda\DispatchConfirmationToInbox;
+use App\Listeners\Agenda\MoveCardToAgendadoColumn;
+use App\Models\Agenda\Appointment;
+use App\Models\Agenda\AppointmentType;
+use App\Models\Agenda\CalendarSyncAccount;
 use App\Models\Anotacao;
 use App\Models\AuditLog;
 use App\Models\Convenio;
 use App\Models\FunilColuna;
 use App\Models\Invitation;
 use App\Models\Paciente;
+use App\Models\Professional;
 use App\Models\Tag;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Policies\Agenda\AppointmentPolicy;
+use App\Policies\Agenda\AppointmentTypePolicy;
+use App\Policies\Agenda\CalendarSyncAccountPolicy;
+use App\Policies\Agenda\ProfessionalSchedulePolicy;
 use App\Policies\AnotacaoPolicy;
 use App\Policies\AssignmentPolicy;
 use App\Policies\AuditLogPolicy;
@@ -43,6 +55,8 @@ use App\Policies\QuickReplyPolicy;
 use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
 use App\Services\Billing\StripeClientWrapper;
+use App\Support\Metrics\AgendaMetrics;
+use App\Support\Metrics\AgendaMetricsContract;
 use App\Support\Metrics\AuthMetrics;
 use App\Support\Metrics\AuthMetricsContract;
 use App\Support\Metrics\MessagingMetrics;
@@ -106,6 +120,10 @@ class AppServiceProvider extends ServiceProvider
         // quando o pacote Prometheus não está disponível (CI / dev sem exporter).
         $this->app->singleton(AuthMetricsContract::class, AuthMetrics::class);
 
+        // T024 (Fase 5) — AgendaMetrics: 7 métricas Prometheus do domínio Agenda.
+        // Mesma estratégia graceful — degrada para Log::debug sem o pacote Prometheus.
+        $this->app->singleton(AgendaMetricsContract::class, AgendaMetrics::class);
+
         // T034 — Fase 4: BearerAuthContract → TokenIssuerService (singleton).
         // Injeta em LoginController, LogoutAllController e qualquer consumer que
         // resolva via contrato (facilita mocking em testes de feature).
@@ -158,6 +176,16 @@ class AppServiceProvider extends ServiceProvider
                 );
             }
         );
+
+        // Fase 5 — Listeners auto-discovered via Laravel 11+ event discovery
+        // (scan de app/Listeners/Agenda/* com type-hint do evento no método handle).
+        // Listeners auto-registrados:
+        //  - MoveCardToAgendadoColumn               → ConsultaCriada (FR-013)
+        //  - DispatchConfirmationToInbox            → ConsultaConfirmacaoPendente (US-6.4)
+        //  - EscalateCancellationOutsideWindowToInbox → CancelamentoSolicitadoForaDoPrazo (clarify nº 3)
+        //  - EscalateRescheduleLimitExceededToInbox → LimiteDeReagendamentoExcedido (clarify nº 7)
+        //  - OpenWaitlistOnCancellation             → ConsultaCancelada (clarify nº 8)
+        //  - DispatchWaitlistOfferToInbox           → VagaAbertaNaListaDeEspera (clarify nº 8)
     }
 
     /**
@@ -188,6 +216,12 @@ class AppServiceProvider extends ServiceProvider
         // AssignmentPolicy usa Conversation como model (assign/transfer/viewAssignments)
         Gate::policy(AssignmentRule::class, AssignmentPolicy::class);
         Gate::policy(QuickReply::class, QuickReplyPolicy::class);
+
+        // Fase 5 — Agenda de Consultas.
+        Gate::policy(Professional::class, ProfessionalSchedulePolicy::class);
+        Gate::policy(AppointmentType::class, AppointmentTypePolicy::class);
+        Gate::policy(Appointment::class, AppointmentPolicy::class);
+        Gate::policy(CalendarSyncAccount::class, CalendarSyncAccountPolicy::class);
     }
 
     /**

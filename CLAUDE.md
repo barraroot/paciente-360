@@ -184,8 +184,16 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: nenhuma — `004-token-auth-migration` entregue 2026-05-13, aguardando merge em `main`.
-- **Previous features delivered**:
+- **Active feature**: nenhuma — `005-agendamento-consultas` entregue 2026-05-14, aguardando merge em `main`.
+- **Previous features delivered (5)**:
+  - `005-agendamento-consultas` — [spec](specs/005-agendamento-consultas/spec.md) — Fase 5 entregue em 2026-05-14. 8 lotes (A-H), **185/185 tasks**, **37 tests verdes**. Commits: A `a7087eb` → H pendente. Highlights:
+    - 7 user stories Épico 6 (agenda, tipos, drag-and-drop, confirmação automática, reagendamento via chat, lista de espera FIFO sequencial K=1, sync Google Calendar)
+    - 14 entidades + 16 eventos de domínio + 6 cron jobs + ~30 endpoints REST + 1 webhook
+    - Gates críticos: PARTIAL UNIQUE em appointments (SC-008/FR-011a) + sub-calendário Google tenant-scoped (clarify nº 15) + payload Google sem PII (FR-038/038a)
+    - Outlook DEFERRED → Fase 6 (modelo `provider` enum preparado — clarify nº 11)
+    - Constitution Check PASS nos 7 princípios **sem amendment** (v1.4.0 cobriu todos os gates)
+    - Stubs Google API em `GoogleCalendarApiClient` — implementação real fica para integração de produção (smoke E2E QA staging)
+    - Bug arquitetural descoberto e corrigido (Lote F): Laravel 11+ Event Discovery duplica listeners se registrado manualmente em AppServiceProvider
   - `004-token-auth-migration` — [spec](specs/004-token-auth-migration/spec.md) — Cookie→Bearer migration entregue em 2026-05-13. 8 lotes (D-K), suite full **1130 tests / 1127 passed / 0 failures**. Commits: D `40af4ec` → K `1db8e96`. Highlights:
     - 6 endpoints Bearer (`/auth/login`, `/auth/me`, `/auth/logout[-all]`, `/auth/tokens[/{id}]`) + Reverb broadcast Bearer
     - SPA Vue migrada para Bearer + X-Tenant-Slug em `axios` + Echo authorizer
@@ -259,3 +267,63 @@ When working on auth features post-Fase 4, remember:
 7. **Token retention 90d (`auth:tokens-purge-expired`)**
    - Schedule diário 03:00 BRT em `routes/console.php`. Purga `personal_access_tokens` com `expires_at < now()-90d`.
    - 4 métricas Prometheus em `AuthMetrics`: `auth_login_total{result}`, `auth_token_emitido_total`, `auth_token_revogado_total{motivo}`, `auth_active_tokens`.
+
+## Agendamento (Fase 5) — Key Patterns
+
+When working on agenda features post-Fase 5, remember:
+
+1. **PARTIAL UNIQUE em `appointments` é o gate atômico de race condition**
+   - `CREATE UNIQUE INDEX app_active_slot_unique ON appointments (tenant_id, professional_id, starts_at) WHERE status IN ('scheduled', 'confirmed')` (FR-011a / SC-008).
+   - Status terminais (`canceled, realizada, nao_realizada, concluida_sem_registro`) ficam fora — slot consumido/passado pode ser reusado em datas futuras.
+   - `reschedule` PRESERVA status (clarify nº 7) — sem 'reagendada' no enum.
+
+2. **`SlotReservation` é reserva pessimista soft com TTL diferenciado**
+   - PARTIAL UNIQUE `(tenant_id, professional_id, starts_at) WHERE released_at IS NULL` impede 2 reservas ativas no mesmo slot.
+   - TTL 5min user / 2min IA (configurável em `tenant.settings.agenda.slot_reservation_ttl_*_minutes`).
+   - Cleanup cron `agenda:cleanup-expired-reservations` (everyMinute) marca `release_reason='expired'`.
+   - Defesa em profundidade — gate final é o UNIQUE em `appointments` (FR-011a).
+
+3. **Sub-calendário Google tenant-scoped (clarify nº 15)**
+   - `CalendarSyncAccount` UNIQUE(`tenant_id`, `professional_id`) — mesma conta Google em 2 tenants gera 2 rows com `google_calendar_id` distintos.
+   - Sub-cal criado automaticamente no callback OAuth: `Paciente360 — {Tenant.nome}`.
+   - TODA chamada Google API usa `calendarId={sub_cal_id}` — eventos do tenant A invisíveis ao polling do tenant B.
+   - Gate: `CrossTenantGoogleSyncTest` valida ExternalCalendarBusy isolado.
+
+4. **Payload Google sem PII clínica (FR-038/038a)**
+   - `GoogleCalendarSyncService::buildEventBody()` produz APENAS:
+     - `summary`: `"Consulta — {Profissional.nome}"` (fixo, sem nome paciente / CPF / convênio)
+     - `description`: `"Agendamento via {Tenant.nome}"` (genérico)
+     - `start.timeZone` / `end.timeZone`: IANA do profissional
+   - Gate LGPD: `GoogleEventPayloadLgpdTest` (assertStringNotContainsString para Maria Souza, CPF, "Cirurgia", "dor no peito").
+
+5. **Listeners auto-discovered Laravel 11+ — NÃO registrar manualmente**
+   - Laravel 11+ scaneia `app/Listeners/` e auto-registra listeners via type-hint do método `handle($event)`.
+   - Registrar via `Event::listen()` em AppServiceProvider DUPLICA execução (descoberto em Lote F: lista de espera notificava 2x — fix removeu registrações manuais).
+   - Padrão: criar listener com `handle(EventClass $event)` typed → discovery cuida do resto.
+
+6. **TZ tenant default + override profissional + UTC interno (clarify nº 13)**
+   - `tenants.timezone` é fonte; `professionals.timezone` é override nullable.
+   - `TimezoneResolverService::forProfessional()` retorna IANA correto.
+   - DB: tudo `timestamptz UTC`. API REST: ISO 8601 com offset + envelope `timezone_display` IANA.
+   - Mensagens ao paciente: `IanaTimezoneCity::format("14:00", "America/Sao_Paulo")` → `"14:00 (horário de São Paulo)"`.
+
+7. **Cron schedule (6 commands em `routes/console.php`)**
+   - `agenda:cleanup-expired-reservations` — everyMinute (TTL slot reservations)
+   - `agenda:expire-waitlist-notifications` — everyMinute (clarify nº 8 — re-notifica próximo)
+   - `agenda:dispatch-confirmations` — every5min (T-24h/T-2h/retry/escalation)
+   - `agenda:auto-close-stale-appointments` — daily 00:30 BRT (clarify nº 14 — janela 7d)
+   - `agenda:google-poll-fallback` — every5min (R3 — cobre watch channel expirado)
+   - `agenda:google-renew-watch-channels` — daily 02:00 BRT (R3 — renova antes TTL ~7d)
+
+8. **`ConfirmationDispatch.status='pending_manual'` ≠ `Appointment.status`**
+   - Quando T-15min sem resposta OU paciente sem canal → `ConfirmationDispatch.status='pending_manual'` + emit `ConsultaPendenteContatoManual` (Fase 3 cria task na inbox).
+   - **`Appointment.status` permanece `scheduled`** — desambiguado em FR-019b/FR-024 (analyze A1).
+
+9. **Stubs Google API em `GoogleCalendarApiClient`**
+   - Wrapper testável — métodos REAIS (createSubCalendar, insertEvent, watchChannel, etc.) marcados como TODO.
+   - Em produção com `google/apiclient` instalado: implementar passando o pacote.
+   - Tests (incl. CrossTenantGoogleSyncTest, GoogleEventPayloadLgpdTest) usam stubs — não fazem requests reais.
+
+10. **`Appointment.notes` é encrypted via cast** (Princípio I)
+    - Cast `'notes' => 'encrypted'` aplica `Crypt::encryptString` antes de persistir.
+    - Mesmo padrão para `CalendarSyncAccount.encrypted_access_token` / `encrypted_refresh_token`.

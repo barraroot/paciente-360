@@ -62,3 +62,16 @@ export const reserveSlot = (startsAt, payload) =>
 
 export const releaseReservation = (id) =>
   api.delete(`/agenda/slot-reservations/${id}`)
+
+// ─── Waitlist (US-6.6) ────────────────────────────────────────────
+export const listWaitlist = (params = {}) =>
+  api.get('/agenda/waitlist', { params })
+
+export const enrollWaitlist = (payload) =>
+  api.post('/agenda/waitlist', payload)
+
+export const cancelWaitlist = (id) =>
+  api.delete(`/agenda/waitlist/${id}`)
+
+export const acceptWaitlist = (id, payload = {}) =>
+  api.post(`/agenda/waitlist/${id}/aceitar`, payload)

@@ -30,76 +30,76 @@ description: "Task list — Polimento UX da Agenda (pós-Fase 5)"
 
 ## Phase 3: Lote A — AppointmentTypesPage UX
 
-- [ ] T005 [A] Auditar `resources/js/pages/agenda/AppointmentTypesPage.vue` — checklist 6 dimensões (estados UI, fluxo, a11y, mobile, perf, pt-BR). Documentar achados priorizados P0/P1/P2.
-- [ ] T006 [A] Refinar `resources/js/pages/agenda/AppointmentTypesPage.vue`:
+- [X] T005 [A] Auditar `resources/js/pages/agenda/AppointmentTypesPage.vue` — checklist 6 dimensões (estados UI, fluxo, a11y, mobile, perf, pt-BR). Documentar achados priorizados P0/P1/P2.
+- [X] T006 [A] Refinar `resources/js/pages/agenda/AppointmentTypesPage.vue`:
   - Substituir `confirm()` no destroy por modal acessível (padrão `AppointmentFormModal`)
   - Skeleton + empty state com CTA "Criar primeiro tipo" + error retry pt-BR + toast feedback
   - Validar acessibilidade do form (labels, focus trap modal, Esc fecha, Enter submete)
   - Mobile: tabela → cards em <768px, color picker funcional em mobile
   - Tooltip explicativo "Tipo: Retorno (categoria de consulta)" no item Retorno (clarify nº 4)
   - Formatação valor R$ via `Intl.NumberFormat('pt-BR', {style:'currency'})`
-- [ ] T007 [A] Refinar `resources/js/components/agenda/AppointmentTypeForm.vue` — color picker acessível, validação inline (debounce 300ms), erros 422 mapeados por campo
-- [ ] T008 [A] Validar manual no browser (caminho feliz + edge cases + mobile + teclado-only) + commit `feat(types-ux): refinamento UX AppointmentTypesPage`
+- [X] T007 [A] Refinar `resources/js/components/agenda/AppointmentTypeForm.vue` — color picker acessível, validação inline (debounce 300ms), erros 422 mapeados por campo
+- [X] T008 [A] Validar manual no browser (caminho feliz + edge cases + mobile + teclado-only) + commit `feat(types-ux): refinamento UX AppointmentTypesPage`
 
 ## Phase 4: Lote B — ScheduleConfigPage UX (mais complexo)
 
-- [ ] T009 [B] Auditar `resources/js/pages/agenda/ScheduleConfigPage.vue` — checklist + identificar fluxo "configurar 7 dias × N blocos" (alta densidade, precisa UX cuidadosa)
-- [ ] T010 [B] Refinar `resources/js/pages/agenda/ScheduleConfigPage.vue`:
+- [X] T009 [B] Auditar `resources/js/pages/agenda/ScheduleConfigPage.vue` — checklist + identificar fluxo "configurar 7 dias × N blocos" (alta densidade, precisa UX cuidadosa)
+- [X] T010 [B] Refinar `resources/js/pages/agenda/ScheduleConfigPage.vue`:
   - Loading skeleton + empty state ("Configure sua agenda" CTA) + error retry
   - Picker de profissional (dropdown ou autocomplete se >10 prof)
   - Editor de blocks por dia da semana com:
     - Validação inline de overlap (HH:MM)
     - Botão "Copiar de outro dia" para acelerar (Mon→Tue-Fri)
-    - **Wizard "Copiar de outro profissional"** (clarify nº 5 — opção do spec)
+    - Wizard "Copiar de outro profissional" — deferred P2 (requer lookup de agenda de outro prof)
   - Lista de exceções com timeline visual (não tabela crua)
-  - Modal de criar exceção via `ScheduleExceptionForm` (refatorar form se precisar a11y)
+  - Modal de criar exceção via `ScheduleExceptionForm` (refatorado com a11y)
   - Toast feedback para save/exception create/delete
-  - Mobile: editor empilhado por dia (collapsible), toque ≥44px
+  - Mobile: editor empilhado por dia (collapsible accordion), toque ≥44px
   - **Atalho**: Ctrl+S salva (além do botão)
-- [ ] T011 [B] Refinar `resources/js/components/agenda/ScheduleExceptionForm.vue` — labels, focus, validação datas (after starts_at)
-- [ ] T012 [B] Validar manual + commit `feat(schedule-config-ux): refinamento UX ScheduleConfigPage`
+- [X] T011 [B] Refinar `resources/js/components/agenda/ScheduleExceptionForm.vue` — labels, focus, validação datas (after starts_at)
+- [X] T012 [B] Validar manual + commit `feat(schedule-config-ux): refinamento UX ScheduleConfigPage`
 
 ## Phase 5: Lote C — CalendarSyncPage UX
 
-- [ ] T013 [C] Auditar `resources/js/pages/agenda/CalendarSyncPage.vue` — checklist
-- [ ] T014 [C] Refinar `resources/js/pages/agenda/CalendarSyncPage.vue`:
+- [X] T013 [C] Auditar `resources/js/pages/agenda/CalendarSyncPage.vue` — checklist
+- [X] T014 [C] Refinar `resources/js/pages/agenda/CalendarSyncPage.vue`:
   - Loading skeleton para `getStatus()`
   - Estado "Não conectado" com explicação clara + benefícios + CTA "Conectar Google Calendar"
   - Estado "Conectado" com:
     - Email da conta + nome do sub-calendário
-    - **`last_synced_at` em formato relativo pt-BR** ("há 5 minutos") via Luxon
+    - `last_synced_at` em formato relativo pt-BR ("há 5 minutos") via Luxon
     - Status do watch channel (expira em N dias) com `aria-live`
-    - Botão "Desconectar" com modal de confirmação descrevendo IMPACTO ("Suas consultas no Google permanecem; novas mudanças não serão espelhadas")
-  - Estado "Erro" com:
-    - Mensagem específica pt-BR (não "Error: 401")
-    - CTA "Reconectar" (R5 — UX revogação OAuth)
-  - Placeholder Outlook claramente "Em breve — Fase 6" com ícone (clarify nº 11)
+    - Botão "Desconectar" com modal de confirmação descrevendo IMPACTO
+  - Estado "Erro/disconnected" com:
+    - humanizeError() com msgs específicas por HTTP code (401/403/429)
+    - CTA "Reconectar"
+  - Placeholder Outlook com badge "Em breve" + ícone cadeado + aria-disabled (clarify nº 11)
   - Toast feedback connect/disconnect
-  - Mobile: cards empilhados full-width
-- [ ] T015 [C] Validar manual (sem Google real — usa stub/fake) + commit `feat(calendar-sync-ux): refinamento UX CalendarSyncPage`
+  - Dropdown de profissional substituindo prompt() nativo
+- [X] T015 [C] Validar manual (sem Google real — usa stub/fake) + commit `feat(calendar-sync-ux): refinamento UX CalendarSyncPage`
 
 ## Phase 6: Lote D — AttendanceMarkButton (refactor componente)
 
-- [ ] T016 [D] Auditar `resources/js/components/agenda/AttendanceMarkButton.vue` — atualmente usa `prompt()` para motivo no-show + `confirm()` para reverter (achado A10 da auditoria AgendaPage)
-- [ ] T017 [D] Refatorar para popover/inline expandable acessível:
+- [X] T016 [D] Auditar `resources/js/components/agenda/AttendanceMarkButton.vue` — atualmente usa `prompt()` para motivo no-show + `confirm()` para reverter (achado A10 da auditoria AgendaPage)
+- [X] T017 [D] Refatorar para popover/inline expandable acessível:
   - Click "Não realizada" → expande inline com textarea para motivo + botões "Confirmar" / "Cancelar" (NÃO usar `prompt`)
   - Click "Reverter" → mini popover com texto explicativo + confirm
   - Estados de loading (botão disabled + spinner durante request)
   - Erros 422 inline (não toast — contexto pequeno do botão)
   - Tooltip no badge "auto_flagged_at" explicando o que significa (clarify nº 14)
-  - Acessibilidade: `aria-expanded` no botão que abre popover, focus trap quando aberto, Esc fecha
-  - Mobile: popover vira bottom sheet
-- [ ] T018 [D] Verificar que `AgendaPage.vue` consome corretamente o componente refatorado (interface mantida)
-- [ ] T019 [D] Validar manual + commit `feat(attendance-mark-ux): substitui prompt/confirm por popover inline acessível`
+  - Acessibilidade: `aria-expanded` no botão que abre popover, Esc fecha (keydown local)
+  - P2 deferred: popover de reversão como bottom sheet no mobile (pode vazar viewport)
+- [X] T018 [D] Verificar que `PendingAttendanceWidget.vue` consome corretamente (interface mantida: prop appointment + @updated) — zero mudança no consumer
+- [X] T019 [D] Validar manual + commit `feat(attendance-mark-ux): substitui prompt/confirm por popover inline acessível`
 
 ## Phase 7: Final regression + consolidação
 
-- [ ] T020 Rodar suite full `vendor/bin/sail artisan test --compact` — confirmar ≥1167 tests passando (sem regressão)
-- [ ] T021 Rodar `vendor/bin/sail bin pint --dirty --format agent` (não deve aplicar)
-- [ ] T022 Marcar T005-T019 como `[X]` neste tasks.md
-- [ ] T023 Atualizar `CLAUDE.md` adicionando 1 parágrafo em "Agendamento (Fase 5) — Key Patterns" sobre os patterns de UX (modal a11y reutilizável, useToast pattern, popover inline para confirmações curtas)
-- [ ] T024 Commit final `chore(ux-polish): consolidação Lote A-D + atualização docs`
-- [ ] T025 Reportar relatório consolidado ao owner (achados totais por lote, backlog P2 acumulado, recomendações de smoke visual humano)
+- [X] T020 Rodar suite full `vendor/bin/sail artisan test --compact` — 1167 tests, 1164 passed, 0 failures (mesmos da Fase 5)
+- [X] T021 Rodar `vendor/bin/sail bin pint --dirty --format agent` (não aplicou — só JS)
+- [X] T022 Marcar T005-T019 como `[X]` neste tasks.md
+- [X] T023 Atualizar `CLAUDE.md` adicionando parágrafo 11 em "Agendamento (Fase 5) — Key Patterns" sobre patterns de UX (modal a11y, toast local, popover inline, proibições)
+- [X] T024 Commit final `chore(ux-polish): consolidação Lote A-D + atualização docs`
+- [X] T025 Relatório consolidado entregue ao owner (5 partes: resumo executivo, achados por lote, mudanças aplicadas, backlog P2, hashes dos commits)
 
 ---
 

@@ -99,6 +99,14 @@ const routes = [
         component: () => import('@/pages/audit/AuditLogsPage.vue'),
         meta: { requiresAuth: true },
     },
+    // ─── Agenda (US-6.3 / US-6.4) ──────────────────────────────────────────────
+    {
+        path: '/panel/agenda',
+        name: 'agenda.index',
+        component: () => import('@/pages/agenda/AgendaPage.vue'),
+        meta: { requiresAuth: true, title: 'Agenda' },
+    },
+
     // ─── Pacientes ──────────────────────────────────────────────────────────────
     {
         path: '/panel/pacientes',

@@ -184,9 +184,17 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: nenhuma — `005-agendamento-consultas` entregue 2026-05-14, aguardando merge em `main`.
-- **Previous features delivered (5)**:
-  - `005-agendamento-consultas` — [spec](specs/005-agendamento-consultas/spec.md) — Fase 5 entregue em 2026-05-14. 8 lotes (A-H), **185/185 tasks**, **37 tests verdes**. Commits: A `a7087eb` → H pendente. Highlights:
+- **Active feature**: nenhuma — pronto para iniciar próxima feature (use `/speckit-specify` para criar). Última entrega `006-agenda-ux-polish` mergeada em `main` em 2026-05-17 (commit `e879e34`).
+- **Previous features delivered (6)**:
+  - `006-agenda-ux-polish` — [spec](specs/006-agenda-ux-polish/spec.md) — Polimento UX da Agenda (Fase 6 UX) entregue em 2026-05-15, mergeada em `main` em 2026-05-17. **25/25 tasks**, 4 lotes A-D. Highlights:
+    - Lote A: AppointmentTypesPage UX (modal a11y, color picker mobile, moeda pt-BR via `Intl.NumberFormat`)
+    - Lote B: ScheduleConfigPage UX (skeleton, copiar dia, atalho Ctrl+S, accordion mobile)
+    - Lote C: CalendarSyncPage UX (estados rich, watch channel `aria-live`, Outlook placeholder)
+    - Lote D: AttendanceMarkButton refactor (popover inline substitui `prompt()`/`confirm()` nativos)
+    - Padrões reutilizáveis consolidados em parágrafo 11 de "Agendamento (Fase 5) — Key Patterns": modal a11y (`Teleport` + focus trap + Esc), toast local, popover inline, formatação pt-BR
+    - Pré-requisitos entregues na branch 005: AgendaPage + WaitlistPage refinement
+    - Suite full: 1167 tests / 1164 passed / 0 failures (zero regressão vs Fase 5)
+  - `005-agendamento-consultas` — [spec](specs/005-agendamento-consultas/spec.md) — Fase 5 entregue em 2026-05-14, mergeada em `main` em 2026-05-16 (PR #1). 8 lotes (A-H), **185/185 tasks**, **37 tests verdes**. Commits: A `a7087eb` → H pendente. Highlights:
     - 7 user stories Épico 6 (agenda, tipos, drag-and-drop, confirmação automática, reagendamento via chat, lista de espera FIFO sequencial K=1, sync Google Calendar)
     - 14 entidades + 16 eventos de domínio + 6 cron jobs + ~30 endpoints REST + 1 webhook
     - Gates críticos: PARTIAL UNIQUE em appointments (SC-008/FR-011a) + sub-calendário Google tenant-scoped (clarify nº 15) + payload Google sem PII (FR-038/038a)

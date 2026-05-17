@@ -24,7 +24,9 @@ class WaitlistController extends Controller
 
     public function index(Request $request)
     {
-        $query = WaitlistEntry::query()->orderBy('position');
+        $query = WaitlistEntry::query()
+            ->with(['paciente', 'professional', 'appointmentType'])
+            ->orderBy('position');
 
         foreach (['professional_id', 'appointment_type_id', 'status'] as $field) {
             if ($value = $request->query($field)) {
@@ -44,7 +46,7 @@ class WaitlistController extends Controller
             AppointmentType::findOrFail($data['appointment_type_id']),
         );
 
-        return new WaitlistEntryResource($entry);
+        return new WaitlistEntryResource($entry->load(['paciente', 'professional', 'appointmentType']));
     }
 
     public function destroy(WaitlistEntry $waitlist)

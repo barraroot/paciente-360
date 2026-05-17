@@ -327,3 +327,11 @@ When working on agenda features post-Fase 5, remember:
 10. **`Appointment.notes` é encrypted via cast** (Princípio I)
     - Cast `'notes' => 'encrypted'` aplica `Crypt::encryptString` antes de persistir.
     - Mesmo padrão para `CalendarSyncAccount.encrypted_access_token` / `encrypted_refresh_token`.
+
+11. **UX polish Fase 6 (006-agenda-ux-polish) — Padrões reutilizáveis**
+    - **Modal a11y padrão**: `Teleport to="body"` + `role=dialog` + `aria-modal="true"` + `aria-labelledby` + focus trap Tab/Shift+Tab + `@keydown.esc.prevent="close"` + overlay click fecha + bottom-sheet `items-end sm:items-center` em mobile. Ref: `AppointmentFormModal.vue` / `RescheduleConfirmModal.vue`.
+    - **Toast pattern local** (sem lib): `const toast = ref(null)` + `showToast(msg, type)` + `setTimeout 5000` + `role=alert aria-live=assertive`. Replicado em AppointmentTypesPage, ScheduleConfigPage, CalendarSyncPage.
+    - **Popover inline para confirmações curtas** (substitui `confirm()` / `prompt()`): `ref(false)` para controle + `aria-expanded` no trigger + `aria-controls` no painel + Esc fecha via keydown local. Ex.: `AttendanceMarkButton.vue` — painel "Não realizada" com textarea + popover de reversão.
+    - **Proibido**: `confirm()`, `prompt()`, `alert()` nativos em qualquer componente novo — todos inacessíveis por leitores de tela e bloqueiam tab-order.
+    - **Confirmação destrutiva**: sempre modal descritivo com nome/impacto do que será deletado — nunca só "Tem certeza?".
+    - **Formatação moeda**: `new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)`. Data relativa: `DateTime.fromISO(iso).toRelative({ locale: 'pt-BR' })` via Luxon (já no bundle).

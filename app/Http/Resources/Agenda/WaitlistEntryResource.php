@@ -19,8 +19,11 @@ class WaitlistEntryResource extends JsonResource
         return [
             'id' => $this->id,
             'paciente_id' => $this->paciente_id,
+            'paciente_nome' => $this->whenLoaded('paciente', fn () => $this->paciente->nome),
             'professional_id' => $this->professional_id,
+            'professional_nome' => $this->whenLoaded('professional', fn () => $this->professional->name),
             'appointment_type_id' => $this->appointment_type_id,
+            'appointment_type_nome' => $this->whenLoaded('appointmentType', fn () => $this->appointmentType->nome),
             'status' => $this->status,
             'position' => $this->position,
             'notified_at' => $this->notified_at?->toIso8601String(),

@@ -99,6 +99,20 @@ const routes = [
         component: () => import('@/pages/audit/AuditLogsPage.vue'),
         meta: { requiresAuth: true },
     },
+    // ─── Agenda (US-6.3 / US-6.4 / US-6.6) ────────────────────────────────────
+    {
+        path: '/panel/agenda',
+        name: 'agenda.index',
+        component: () => import('@/pages/agenda/AgendaPage.vue'),
+        meta: { requiresAuth: true, title: 'Agenda' },
+    },
+    {
+        path: '/panel/agenda/lista-espera',
+        name: 'agenda.waitlist',
+        component: () => import('@/pages/agenda/WaitlistPage.vue'),
+        meta: { requiresAuth: true, title: 'Lista de Espera' },
+    },
+
     // ─── Pacientes ──────────────────────────────────────────────────────────────
     {
         path: '/panel/pacientes',

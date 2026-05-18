@@ -10,17 +10,18 @@ use Spatie\Permission\PermissionRegistrar;
 /**
  * **T062** — Seeder de roles e permissions default (templates globais).
  *
- * Cria 6 roles e 6 permissions com `tenant_id = NULL` (templates).
+ * Cria 6 roles e 33 permissions com `tenant_id = NULL` (templates).
  * `super-admin` é a única role de fato global; as demais são clonadas
  * por `TenantService` ao criar um tenant (mecanismo descrito em
  * `data-model.md` § 5.4).
  *
  * **Idempotente**: usa `firstOrCreate`. Reseed não duplica.
  *
- * Atribuição de permissions (data-model § 5.4):
- *  - admin-clinica: todas (6)
+ * Atribuição de permissions por fase:
+ *  - admin-clinica: abilities administrativas + CRM + inbox + receituário operacional
  *  - financeiro: view-billing, view-ai-usage, view-audit-logs (3)
- *  - medico, atendente, recepcionista: somente login (0 permissions)
+ *  - medico: CRM + inbox próprio + abilities completas de receituário
+ *  - atendente, recepcionista: CRM + inbox + `prescription.view`
  *  - super-admin: bypass via Gate (sem permissions atribuídas
  *    explicitamente — gate `before` no AppServiceProvider).
  */
@@ -76,6 +77,15 @@ class RolesSeeder extends Seeder
         'channel.connect',
         'channel.disconnect',
         'quick_reply.manage',
+
+        // Fase 7 — Receituários
+        'prescription.create',
+        'prescription.view',
+        'prescription.update',
+        'prescription.cancel',
+        'prescription.view_controlled',
+        'prescription.export',
+        'prescription_alert.configure',
     ];
 
     /**
@@ -112,6 +122,12 @@ class RolesSeeder extends Seeder
             'channel.connect',
             'channel.disconnect',
             'quick_reply.manage',
+            // Fase 7 — admin clínica não cria/edita receita, mas visualiza, cancela e exporta.
+            'prescription.view',
+            'prescription.cancel',
+            'prescription.view_controlled',
+            'prescription.export',
+            'prescription_alert.configure',
         ],
         'medico' => [
             'paciente.view',
@@ -127,6 +143,14 @@ class RolesSeeder extends Seeder
             'inbox.respond',
             'inbox.takeover_ai',
             'quick_reply.manage',
+            // Fase 7 — médico emissor.
+            'prescription.create',
+            'prescription.view',
+            'prescription.update',
+            'prescription.cancel',
+            'prescription.view_controlled',
+            'prescription.export',
+            'prescription_alert.configure',
         ],
         'atendente' => [
             'paciente.view',
@@ -142,6 +166,8 @@ class RolesSeeder extends Seeder
             'inbox.transfer',
             'inbox.takeover_ai',
             'quick_reply.manage',
+            // Fase 7 — sem acesso ao conteúdo clínico controlado.
+            'prescription.view',
         ],
         'recepcionista' => [
             'paciente.view',
@@ -157,6 +183,8 @@ class RolesSeeder extends Seeder
             'inbox.transfer',
             'inbox.takeover_ai',
             'quick_reply.manage',
+            // Fase 7 — sem acesso ao conteúdo clínico controlado.
+            'prescription.view',
         ],
         'financeiro' => [
             // Fase 0

@@ -20,6 +20,7 @@ use App\Exceptions\Users\LastAdminClinicaException;
 use App\Exceptions\Users\PlanLimitReachedException;
 use App\Http\Middleware\ApplyOverdueRestrictions;
 use App\Http\Middleware\EnsureAgendaModuleEnabled;
+use App\Http\Middleware\EnsurePrescriptionModuleEnabled;
 use App\Http\Middleware\EnsureTenantNotSuspended;
 use App\Http\Middleware\EnsureTenantSlugHeader;
 use App\Http\Middleware\LogStructuredRequestData;
@@ -96,6 +97,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'slide.token' => SlideTokenExpiration::class,
             // Fase 5 (T028) — feature flag opcional para o módulo Agenda.
             'agenda.enabled' => EnsureAgendaModuleEnabled::class,
+            'prescription.module' => EnsurePrescriptionModuleEnabled::class,
             // Fase 5 (T162 — US-6.7 / R3) — valida HMAC do header X-Goog-Channel-Token.
             'validate.google.channel.token' => ValidateGoogleChannelToken::class,
         ]);

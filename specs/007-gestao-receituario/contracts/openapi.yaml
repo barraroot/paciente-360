@@ -1,0 +1,813 @@
+openapi: 3.1.0
+info:
+  title: Paciente360 — Prescriptions API (Fase 7)
+  version: 7.0.0-draft
+  description: |
+    Contrato REST do módulo de Gestão de Receituários.
+
+    Autenticação: `Authorization: Bearer paciente360_<token>` + `X-Tenant-Slug: <slug>` (Fase 4).
+    Multi-tenancy: toda rota é tenant-scoped — cross-tenant retorna 404 (não 403).
+
+    Princípio I (LGPD): receitas controladas retornam payload mascarado para usuários sem `prescription.view_controlled`.
+    Toda visualização de receita controlada por usuário com a ability gera evento auditável.
+
+servers:
+  - url: https://{tenant}.paciente360.com.br/api/v1
+    description: Tenant API (multi-tenant via subdomain)
+    variables:
+      tenant:
+        default: example
+
+tags:
+  - name: Prescriptions
+    description: CRUD de receitas
+  - name: Prescription Items
+    description: Itens de medicamentos da receita
+  - name: Prescription PDF
+    description: Upload/download de PDF anexado (assíncrono)
+  - name: Prescription Alerts
+    description: Configuração de alertas de vencimento
+  - name: Prescription Renewals
+    description: Renovação de receitas (médico ou via IA)
+  - name: Prescription Reports
+    description: Relatório com filtros e exportação CSV
+  - name: AI Context
+    description: Provedor de contexto pseudonimizado para IA Matricial (fase futura)
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: paciente360_<token>
+
+  parameters:
+    TenantSlug:
+      name: X-Tenant-Slug
+      in: header
+      required: true
+      schema:
+        type: string
+      example: clinica-exemplo
+
+  schemas:
+    PrescriptionType:
+      type: string
+      enum: [common, special, controlled]
+      description: |
+        - `common` — Receita Comum (Lista C ou sem controle especial)
+        - `special` — Receita Especial / Azul (Listas B1/B2 — Portaria 344/98)
+        - `controlled` — Receita Controlada / Amarela (Listas A — Portaria 344/98)
+
+    PrescriptionStatus:
+      type: string
+      enum: [active, cancelled, superseded]
+
+    PrescriptionSource:
+      type: string
+      enum: [manual, import, ai]
+
+    CancellationReasonCategory:
+      type: string
+      enum: [erro_emissao, desistencia_paciente, substituicao, outro]
+
+    AlertType:
+      type: string
+      enum: [days15, days7, days1]
+
+    AlertStatus:
+      type: string
+      enum: [pending, dispatched, blocked_no_channel, blocked_no_template, skipped, cancelled, failed]
+
+    InitiatedBy:
+      type: string
+      enum: [professional, ai, patient]
+
+    PrescriptionItem:
+      type: object
+      required: [medication_name, posology]
+      properties:
+        id:
+          type: integer
+          format: int64
+        medication_name:
+          type: string
+          maxLength: 255
+        concentration:
+          type: string
+          nullable: true
+        pharmaceutical_form:
+          type: string
+          nullable: true
+        posology:
+          type: string
+          description: Texto livre (Q9). Estrutura granular fica para fase futura.
+        quantity:
+          type: string
+          nullable: true
+        treatment_duration:
+          type: string
+          nullable: true
+        sort_order:
+          type: integer
+          default: 0
+
+    Prescription:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        patient_id:
+          type: integer
+          format: int64
+        professional_id:
+          type: integer
+          format: int64
+        professional_name:
+          type: string
+          readOnly: true
+        appointment_id:
+          type: integer
+          format: int64
+          nullable: true
+        type:
+          $ref: '#/components/schemas/PrescriptionType'
+        status:
+          $ref: '#/components/schemas/PrescriptionStatus'
+        issued_at:
+          type: string
+          format: date
+        expires_at:
+          type: string
+          format: date
+          description: |
+            Para `controlled`/`special`: sempre `issued_at + 30 dias` (Portaria 344/98).
+            Para `common`: `issued_at + duration_days` ∈ {30, 60, 90, 180}.
+        duration_days:
+          type: integer
+          enum: [30, 60, 90, 180]
+          description: |
+            Apenas usado em CREATE de receita `common`. Server calcula `expires_at`.
+            Para `special`/`controlled` é ignorado — sistema força 30d.
+        renewed_from_id:
+          type: integer
+          format: int64
+          nullable: true
+        source:
+          $ref: '#/components/schemas/PrescriptionSource'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PrescriptionItem'
+          minItems: 1
+          maxItems: 10
+          description: |
+            Para `controlled`: exatamente 1 item (Portaria 344/98 — Notificação A).
+            Para `common`/`special`: 1-10 itens.
+        notes:
+          type: string
+          nullable: true
+        alert_disabled:
+          type: boolean
+          default: false
+          description: Somente settable para `type=common` (Q4b).
+        pdf_path:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Não exposto diretamente — use /prescriptions/{id}/pdf para URL assinada.
+        pdf_version:
+          type: integer
+          minimum: 0
+          readOnly: true
+        cancelled_at:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        cancelled_by_user_id:
+          type: integer
+          format: int64
+          nullable: true
+          readOnly: true
+        cancellation_reason_category:
+          $ref: '#/components/schemas/CancellationReasonCategory'
+        cancellation_reason:
+          type: string
+          nullable: true
+          maxLength: 500
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    PrescriptionMasked:
+      description: |
+        Receita controlada vista por usuário sem `prescription.view_controlled`.
+        Campos clínicos (items, notes) são omitidos do payload.
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        patient_id:
+          type: integer
+          format: int64
+        professional_id:
+          type: integer
+          format: int64
+        type:
+          type: string
+          enum: [controlled]
+        status:
+          $ref: '#/components/schemas/PrescriptionStatus'
+        issued_at:
+          type: string
+          format: date
+        expires_at:
+          type: string
+          format: date
+        masked:
+          type: boolean
+          const: true
+        masked_reason:
+          type: string
+          example: "Receita controlada — acesso restrito ao emissor e Admin Clínica"
+
+    PrescriptionForAi:
+      description: |
+        Payload pseudonimizado para consumo da IA Matricial (Fase futura).
+        Nunca contém medicamento, posologia ou observações.
+        Gate de teste: PrescriptionEventPayloadLgpdTest valida ausência de campos clínicos.
+      type: object
+      properties:
+        prescription_id:
+          type: integer
+          format: int64
+        patient_id:
+          type: integer
+          format: int64
+        professional_id:
+          type: integer
+          format: int64
+        professional_name:
+          type: string
+        days_until_expiry:
+          type: integer
+          minimum: 0
+        prescription_type:
+          $ref: '#/components/schemas/PrescriptionType'
+        default_appointment_type_id:
+          type: integer
+          format: int64
+          nullable: true
+
+    PrescriptionRenewal:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        original_prescription_id:
+          type: integer
+          format: int64
+        renewed_prescription_id:
+          type: integer
+          format: int64
+          nullable: true
+        initiated_by:
+          $ref: '#/components/schemas/InitiatedBy'
+        appointment_id:
+          type: integer
+          format: int64
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    PrescriptionAlert:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        prescription_id:
+          type: integer
+          format: int64
+        alert_type:
+          $ref: '#/components/schemas/AlertType'
+        status:
+          $ref: '#/components/schemas/AlertStatus'
+        scheduled_for:
+          type: string
+          format: date
+        dispatched_at:
+          type: string
+          format: date-time
+          nullable: true
+        skip_reason:
+          type: string
+          nullable: true
+
+    PrescriptionReportRow:
+      allOf:
+        - $ref: '#/components/schemas/Prescription'
+        - type: object
+          properties:
+            criticality:
+              type: string
+              enum: [green, yellow, red]
+              description: |
+                green = `expires_at` > today + 15d.
+                yellow = today + 1d <= `expires_at` <= today + 15d.
+                red = `expires_at` < today (vencida).
+
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        next_cursor:
+          type: string
+          nullable: true
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+paths:
+
+  /prescriptions:
+    get:
+      tags: [Prescriptions]
+      summary: Lista paginada de receitas
+      description: |
+        Lista paginada com filtros e mascaramento de controladas conforme abilities do usuário.
+        Receitas controladas que o usuário não pode ver vêm como `PrescriptionMasked`.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PrescriptionStatus'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/PrescriptionType'
+        - name: patient_id
+          in: query
+          schema:
+            type: integer
+        - name: professional_id
+          in: query
+          schema:
+            type: integer
+        - name: expires_after
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: expires_before
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/Prescription'
+                        - $ref: '#/components/schemas/PrescriptionMasked'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [Prescriptions]
+      summary: Cria nova receita
+      description: |
+        - Médico autenticado (ability `prescription.create`).
+        - Para `controlled`/`special`: validade fixa 30d.
+        - Para `common`: validade via `duration_days` ∈ {30, 60, 90, 180}.
+        - Para `controlled`: exatamente 1 item.
+        - Para `common`/`special`: 1-10 itens.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patient_id, type, issued_at, items]
+              properties:
+                patient_id:
+                  type: integer
+                appointment_id:
+                  type: integer
+                  nullable: true
+                type:
+                  $ref: '#/components/schemas/PrescriptionType'
+                issued_at:
+                  type: string
+                  format: date
+                duration_days:
+                  type: integer
+                  enum: [30, 60, 90, 180]
+                  description: Obrigatório se type=common; ignorado se special/controlled.
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 10
+                  items:
+                    $ref: '#/components/schemas/PrescriptionItem'
+                notes:
+                  type: string
+                  nullable: true
+                alert_disabled:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: Criada — evento PrescricaoCriada emitido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prescription'
+        '422':
+          description: |
+            Validação falhou. Casos típicos:
+            - `controlled`/`special` com `duration_days` ≠ 30
+            - `controlled` com mais de 1 item
+            - mais de 10 itens em qualquer tipo
+            - `alert_disabled=true` em `special` ou `controlled`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Sem ability `prescription.create`.
+
+  /prescriptions/{id}:
+    get:
+      tags: [Prescriptions]
+      summary: Mostra uma receita
+      description: |
+        Receitas controladas: usuários com `prescription.view_controlled` (emissor + Admin Clínica) veem
+        payload completo + evento `PrescricaoControladaVisualizada` é emitido. Outros recebem `PrescriptionMasked`.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Prescription'
+                  - $ref: '#/components/schemas/PrescriptionMasked'
+        '404':
+          description: Não encontrada (inclui caso cross-tenant — não vaza existência).
+
+    patch:
+      tags: [Prescriptions]
+      summary: Atualiza notes (único campo editável)
+      description: |
+        Apenas `notes` é editável após save inicial. Tipo, validade, items e posologia são imutáveis (Q3/AC-8.1.7).
+        Para corrigir, cancele a receita e crie outra.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Atualizada — evento PrescricaoAtualizada emitido.
+        '403':
+          description: Sem ability ou não é emissor.
+
+  /prescriptions/{id}/cancel:
+    post:
+      tags: [Prescriptions]
+      summary: Cancela receita (irreversível)
+      description: |
+        Status → 'cancelled'. Cadência de alerta interrompida (Q4c). Evento PrescricaoCancelada emitido.
+        Irreversível — sem janela de undo (Q3c).
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cancellation_reason_category, cancellation_reason]
+              properties:
+                cancellation_reason_category:
+                  $ref: '#/components/schemas/CancellationReasonCategory'
+                cancellation_reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '200':
+          description: Cancelada.
+        '422':
+          description: Receita já cancelada/renovada ou motivo ausente.
+
+  /prescriptions/{id}/pdf:
+    post:
+      tags: [Prescription PDF]
+      summary: Anexa ou substitui PDF da receita (multipart)
+      description: |
+        Upload assíncrono via Job `PrescriptionPdfUploadJob`. Receita textual não bloqueia.
+        Substituição: versão anterior preservada em S3 com sufixo `_v{n}` (Q7b).
+        Max 10MB (Q7c).
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [pdf]
+              properties:
+                pdf:
+                  type: string
+                  format: binary
+      responses:
+        '202':
+          description: Upload aceito — em processamento. Job assíncrono.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    const: "processing"
+                  job_id:
+                    type: string
+
+    get:
+      tags: [Prescription PDF]
+      summary: Gera URL assinada para download do PDF corrente
+      description: |
+        URL assinada com TTL 15min (R-7P-08). Emissão da URL registrada em audit_logs.
+        Receita controlada: emissão registra `PrescricaoControladaVisualizada`.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: URL assinada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  expires_at:
+                    type: string
+                    format: date-time
+                  version:
+                    type: integer
+
+  /prescriptions/{id}/renew:
+    post:
+      tags: [Prescription Renewals]
+      summary: Inicia renovação por ação explícita do médico
+      description: |
+        Cria entrada em `prescription_renewals` com `initiated_by='professional'`.
+        Pré-preenche nova receita com dados da original — médico edita e salva.
+        Vincula `previous_prescription_id` (Q3).
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Pré-cadastro criado.
+
+  /prescription-alerts:
+    get:
+      tags: [Prescription Alerts]
+      summary: Lista alertas de uma receita
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: prescription_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PrescriptionAlert'
+
+  /prescriptions/{id}/alert-config:
+    patch:
+      tags: [Prescription Alerts]
+      summary: Habilita/desabilita alertas (somente type=common)
+      description: |
+        AC-8.2.2 — desabilitar para `special`/`controlled` retorna 422.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alert_disabled]
+              properties:
+                alert_disabled:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+        '422':
+          description: Tentativa de desabilitar em special/controlled.
+
+  /prescription-reports:
+    get:
+      tags: [Prescription Reports]
+      summary: Relatório com filtros e indicador de criticidade
+      description: |
+        p95 ≤ 1,5s para tenants com até 50k receitas (SC-007).
+        Receitas controladas seguem mesma regra de mascaramento da listagem.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PrescriptionStatus'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/PrescriptionType'
+        - name: professional_id
+          in: query
+          schema:
+            type: integer
+        - name: patient_id
+          in: query
+          schema:
+            type: integer
+        - name: window_days
+          in: query
+          schema:
+            type: integer
+            enum: [7, 15, 30, 60]
+            default: 30
+          description: Janela "a vencer" — default 30d (Q6b).
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PrescriptionReportRow'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /prescription-reports/export:
+    get:
+      tags: [Prescription Reports]
+      summary: Exporta CSV obedecendo filtros + ability
+      description: |
+        Atendente sem `view_controlled` recebe CSV com linhas de controladas mascaradas
+        (medicamento/posologia em branco). Audit log de exportação registra IDs exportados.
+        Cabeçalho marca CONFIDENCIAL_ se contém ≥1 controlada.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PrescriptionStatus'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/PrescriptionType'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Sem ability `prescription.export`.
+
+  /ai/prescriptions/{id}/context:
+    get:
+      tags: [AI Context]
+      summary: Provê payload pseudonimizado para a IA Matricial (fase futura)
+      description: |
+        Endpoint consumido pela IA Matricial (não exposto à UI tenant).
+        Payload sem PII clínica — somente 7 campos da allowlist (Q5).
+        Gate de teste valida ausência de campos clínicos.
+      parameters:
+        - $ref: '#/components/parameters/TenantSlug'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrescriptionForAi'
+        '404':
+          description: Receita não encontrada ou não está em janela de renovação (D-15/7/1).

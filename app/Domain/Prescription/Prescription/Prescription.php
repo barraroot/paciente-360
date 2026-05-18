@@ -9,12 +9,12 @@ use App\Models\Agenda\Appointment;
 use App\Models\Concerns\BelongsToTenant;
 use App\Models\Paciente;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
+use Database\Factories\Prescription\PrescriptionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 
 class Prescription extends Model
 {
@@ -67,20 +67,71 @@ class Prescription extends Model
         ];
     }
 
+    protected static function newFactory(): PrescriptionFactory
+    {
+        return PrescriptionFactory::new();
+    }
+
     protected static function booted(): void
     {
-        static::addGlobalScope('withControlledIfAble', function (Builder $query): void {
-            $user = Auth::user();
+        // Global scope: remove do resultado receitas controladas de OUTROS emissores
+        // apenas quando o user não tem `prescription.view_controlled`.
+        //
+        // ATENÇÃO: Segundo Q8a da spec, receitas controladas NÃO devem ser omitidas
+        // da lista — devem aparecer como "linha mascarada". O mascaramento ocorre no
+        // PrescriptionResource via ControlledPrescriptionMaskingService.
+        //
+        // O scope abaixo é removido para garantir que receitas controladas apareçam
+        // na lista para todos os usuários com prescription.view, mas com conteúdo
+        // clínico mascarado no Resource. Desta forma:
+        //  - list: retorna todas (mascaradas para não-emissores sem view_controlled)
+        //  - show: retorna 200 (mascarado) — não 404 — para coordenação operacional
+        //
+        // Referência: specs/007-gestao-receituario/spec.md Q8a, Q8b
+    }
 
-            if (! $user instanceof User || $user->can('prescription.view_controlled')) {
-                return;
-            }
+    /**
+     * Verifica se a receita está vencida (expires_at < hoje).
+     */
+    public function isExpired(): bool
+    {
+        return $this->expires_at !== null && $this->expires_at->isBefore(Carbon::today());
+    }
 
-            $query->where(function (Builder $builder) use ($user): void {
-                $builder->where('type', '!=', PrescriptionType::Controlled->value)
-                    ->orWhere('professional_id', $user->getAuthIdentifier());
-            });
-        });
+    /**
+     * Verifica se a receita está cancelada.
+     */
+    public function isCancelled(): bool
+    {
+        return $this->status === PrescriptionStatus::Cancelled;
+    }
+
+    /**
+     * Criticidade visual baseada na proximidade do vencimento.
+     * - green: expires_at > hoje + 15d
+     * - yellow: hoje <= expires_at <= hoje + 15d
+     * - red: expires_at < hoje
+     */
+    public function criticality(): string
+    {
+        if ($this->expires_at === null) {
+            return 'green';
+        }
+
+        $today = Carbon::today();
+        $expiresAt = $this->expires_at->copy()->startOfDay();
+
+        if ($expiresAt->isBefore($today)) {
+            return 'red';
+        }
+
+        $daysUntilExpiry = $today->diffInDays($expiresAt, true);
+
+        if ($daysUntilExpiry <= 15) {
+            return 'yellow';
+        }
+
+        return 'green';
     }
 
     public function patient(): BelongsTo

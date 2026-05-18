@@ -92,85 +92,85 @@
 
 ### Tests for US-8.1 (Test-First obrigatório — escrever antes da impl) ⚠️
 
-- [ ] T033 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionCreationTest.php` — AC-8.1.1, AC-8.1.2, AC-8.1.3 (validade `controlled`/`special` = 30d fixos; `common` aceita só `{30,60,90,180}` server-side)
-- [ ] T034 [P] [US1] Teste `tests/Feature/Prescription/ControlledPrescriptionRegulatoryTest.php` — ⭐ Gate Portaria 344/98: controlada com >1 item retorna 422; tentativa de override `expires_at` rejeitada server-side
-- [ ] T035 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionUpdateImmutabilityTest.php` — AC-8.1.7 (PATCH só aceita `notes`; tipo/items/expires_at imutáveis após save)
-- [ ] T036 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionCancellationTest.php` — AC-8.1.8 (cancelamento exige category+texto, é irreversível, emite `PrescricaoCancelada`)
-- [ ] T037 [P] [US1] Teste `tests/Feature/Prescription/ControlledPrescriptionAccessTest.php` — ⭐ Gate principal: 5 perfis × 4 endpoints (matriz Q8); Atendente/Recepcionista/médico não-emissor recebem `PrescriptionMasked`; emissor + Admin Clínica com `view_controlled` veem completo + audit log
-- [ ] T038 [P] [US1] Teste `tests/Feature/Prescription/CrossTenantPrescriptionTest.php` — ⭐ Gate multi-tenant: 7 cenários (list/show/create/update/cancel/export/pdf) — tenant B recebe 404 em receita do tenant A; audit log `cross_tenant_attempt`
-- [ ] T039 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionPdfUploadAsyncTest.php` — AC-8.1.4 (textuais persistidos antes do upload; falha de S3 não invalida receita)
-- [ ] T040 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionPdfVersioningTest.php` — Q7b (substituição preserva `v0.pdf` no S3 + audit `pdf_replaced`)
-- [ ] T041 [P] [US1] Teste `tests/Unit/Prescription/PrescriptionExpiryCalculatorTest.php` — `issued_at + duration_days` no fuso do profissional (R-7P-07)
-- [ ] T042 [P] [US1] Teste `tests/Unit/Prescription/ControlledPrescriptionMaskingServiceTest.php` — service de mascaramento em isolamento
-- [ ] T043 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionAbilitiesTest.php` — AC-8.1.5 (Atendente/Recepcionista sem `prescription.create` → 403)
-- [ ] T044 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionTimelineProjectionTest.php` — AC-8.1.10 (listener `ProjectPrescriptionToPatientTimeline` projeta `PrescricaoCriada`/`Cancelada`/`Renovada`; alertas não poluem — Q11)
+- [x] T033 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionCreationTest.php` — AC-8.1.1, AC-8.1.2, AC-8.1.3 (validade `controlled`/`special` = 30d fixos; `common` aceita só `{30,60,90,180}` server-side)
+- [x] T034 [P] [US1] Teste `tests/Feature/Prescription/ControlledPrescriptionRegulatoryTest.php` — ⭐ Gate Portaria 344/98: controlada com >1 item retorna 422; tentativa de override `expires_at` rejeitada server-side
+- [x] T035 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionUpdateImmutabilityTest.php` — AC-8.1.7 (PATCH só aceita `notes`; tipo/items/expires_at imutáveis após save)
+- [x] T036 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionCancellationTest.php` — AC-8.1.8 (cancelamento exige category+texto, é irreversível, emite `PrescricaoCancelada`)
+- [x] T037 [P] [US1] Teste `tests/Feature/Prescription/ControlledPrescriptionAccessTest.php` — ⭐ Gate principal: 5 perfis × 4 endpoints (matriz Q8); Atendente/Recepcionista/médico não-emissor recebem `PrescriptionMasked`; emissor + Admin Clínica com `view_controlled` veem completo + audit log
+- [x] T038 [P] [US1] Teste `tests/Feature/Prescription/CrossTenantPrescriptionTest.php` — ⭐ Gate multi-tenant: 7 cenários (list/show/create/update/cancel/export/pdf) — tenant B recebe 404 em receita do tenant A; audit log `cross_tenant_attempt`
+- [x] T039 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionPdfUploadAsyncTest.php` — AC-8.1.4 (textuais persistidos antes do upload; falha de S3 não invalida receita)
+- [x] T040 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionPdfVersioningTest.php` — Q7b (substituição preserva `v0.pdf` no S3 + audit `pdf_replaced`)
+- [x] T041 [P] [US1] Teste `tests/Unit/Prescription/PrescriptionExpiryCalculatorTest.php` — `issued_at + duration_days` no fuso do profissional (R-7P-07)
+- [x] T042 [P] [US1] Teste `tests/Unit/Prescription/ControlledPrescriptionMaskingServiceTest.php` — service de mascaramento em isolamento
+- [x] T043 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionAbilitiesTest.php` — AC-8.1.5 (Atendente/Recepcionista sem `prescription.create` → 403)
+- [x] T044 [P] [US1] Teste `tests/Feature/Prescription/PrescriptionTimelineProjectionTest.php` — AC-8.1.10 (listener `ProjectPrescriptionToPatientTimeline` projeta `PrescricaoCriada`/`Cancelada`/`Renovada`; alertas não poluem — Q11)
 
 ### Factories
 
-- [ ] T045 [P] [US1] Criar `database/factories/Prescription/PrescriptionFactory.php` com states `common()`, `special()`, `controlled()`, `cancelled()`, `expired()`
-- [ ] T046 [P] [US1] Criar `database/factories/Prescription/PrescriptionItemFactory.php` com state `controlled()` (1 item) e `multi()` (3 itens)
-- [ ] T047 [P] [US1] Criar `database/factories/Prescription/PrescriptionAlertFactory.php` (states `pending`, `dispatched`, `skipped`)
-- [ ] T048 [P] [US1] Criar `database/factories/Prescription/PrescriptionRenewalFactory.php`
+- [x] T045 [P] [US1] Criar `database/factories/Prescription/PrescriptionFactory.php` com states `common()`, `special()`, `controlled()`, `cancelled()`, `expired()`
+- [x] T046 [P] [US1] Criar `database/factories/Prescription/PrescriptionItemFactory.php` com state `controlled()` (1 item) e `multi()` (3 itens)
+- [x] T047 [P] [US1] Criar `database/factories/Prescription/PrescriptionAlertFactory.php` (states `pending`, `dispatched`, `skipped`)
+- [x] T048 [P] [US1] Criar `database/factories/Prescription/PrescriptionRenewalFactory.php`
 
 ### Domain models (completar boot logic)
 
-- [ ] T049 [US1] Completar `app/Domain/Prescription/Prescription/Prescription.php` — booted observer que valida `controlled → exactly 1 item`, `alert_disabled = true → type = common`, cálculo de `expires_at` server-side; método `isExpired()`, `isCancelled()`, `criticality()` (verde/amarelo/vermelho)
-- [ ] T050 [US1] Implementar `app/Domain/Prescription/Prescription/PrescriptionService.php` — métodos `create(StorePrescriptionRequest $data): Prescription`, `updateNotes(Prescription $p, string $notes): void`, `cancel(Prescription $p, CancellationReasonCategory $cat, string $reason, User $by): void`
-- [ ] T051 [US1] Criar `app/Domain/Prescription/Prescription/Exceptions/ControlledPrescriptionRulesException.php` e `PrescriptionImmutableException.php`
-- [ ] T052 [P] [US1] Implementar `app/Domain/Prescription/PrescriptionItem/MedicationAutocompleteService.php` — Q2 (autocomplete via histórico do médico no tenant, GIN trgm)
-- [ ] T053 [P] [US1] Implementar `app/Domain/Prescription/Report/ControlledPrescriptionMaskingService.php` — recebe Prescription + User, retorna array com campos clínicos omitidos quando não há ability
+- [x] T049 [US1] Completar `app/Domain/Prescription/Prescription/Prescription.php` — booted observer que valida `controlled → exactly 1 item`, `alert_disabled = true → type = common`, cálculo de `expires_at` server-side; método `isExpired()`, `isCancelled()`, `criticality()` (verde/amarelo/vermelho)
+- [x] T050 [US1] Implementar `app/Domain/Prescription/Prescription/PrescriptionService.php` — métodos `create(StorePrescriptionRequest $data): Prescription`, `updateNotes(Prescription $p, string $notes): void`, `cancel(Prescription $p, CancellationReasonCategory $cat, string $reason, User $by): void`
+- [x] T051 [US1] Criar `app/Domain/Prescription/Prescription/Exceptions/ControlledPrescriptionRulesException.php` e `PrescriptionImmutableException.php`
+- [x] T052 [P] [US1] Implementar `app/Domain/Prescription/PrescriptionItem/MedicationAutocompleteService.php` — Q2 (autocomplete via histórico do médico no tenant, GIN trgm)
+- [x] T053 [P] [US1] Implementar `app/Domain/Prescription/Report/ControlledPrescriptionMaskingService.php` — recebe Prescription + User, retorna array com campos clínicos omitidos quando não há ability
 
 ### Eventos de domínio (auto-discovered)
 
-- [ ] T054 [P] [US1] Criar evento `app/Events/Prescription/PrescricaoCriada.php` com 6 readonly props (plan §6.3 / data-model §10)
-- [ ] T055 [P] [US1] Criar evento `app/Events/Prescription/PrescricaoAtualizada.php` com `prescriptionId, changedFields[]`
-- [ ] T056 [P] [US1] Criar evento `app/Events/Prescription/PrescricaoCancelada.php` com `prescriptionId, cancelledByUserId, categoryReason, cancelledAt`
-- [ ] T057 [P] [US1] Criar evento `app/Events/Prescription/PrescricaoControladaVisualizada.php` com `actorUserId, prescriptionId, viewedAt, ip, userAgent` (sem snapshot — Q8c)
+- [x] T054 [P] [US1] Criar evento `app/Events/Prescription/PrescricaoCriada.php` com 6 readonly props (plan §6.3 / data-model §10)
+- [x] T055 [P] [US1] Criar evento `app/Events/Prescription/PrescricaoAtualizada.php` com `prescriptionId, changedFields[]`
+- [x] T056 [P] [US1] Criar evento `app/Events/Prescription/PrescricaoCancelada.php` com `prescriptionId, cancelledByUserId, categoryReason, cancelledAt`
+- [x] T057 [P] [US1] Criar evento `app/Events/Prescription/PrescricaoControladaVisualizada.php` com `actorUserId, prescriptionId, viewedAt, ip, userAgent` (sem snapshot — Q8c)
 
 ### Listeners (auto-discovered Laravel 13 — NÃO registrar manualmente — A6/CLAUDE.md §5)
 
-- [ ] T058 [P] [US1] Criar listener `app/Listeners/Prescription/ProjectPrescriptionToPatientTimeline.php` — consome `PrescricaoCriada`/`Cancelada`/`ReceitaRenovada` e grava em `eventos_timeline` (Fase 2)
-- [ ] T059 [P] [US1] Criar listener `app/Listeners/Prescription/LogControlledPrescriptionAccess.php` — consome `PrescricaoControladaVisualizada`, grava em `audit_logs` com `action='prescription.view_controlled'`
+- [x] T058 [P] [US1] Criar listener `app/Listeners/Prescription/ProjectPrescriptionToPatientTimeline.php` — consome `PrescricaoCriada`/`Cancelada`/`ReceitaRenovada` e grava em `eventos_timeline` (Fase 2)
+- [x] T059 [P] [US1] Criar listener `app/Listeners/Prescription/LogControlledPrescriptionAccess.php` — consome `PrescricaoControladaVisualizada`, grava em `audit_logs` com `action='prescription.view_controlled'`
 
 ### FormRequests + Policy completa
 
-- [ ] T060 [US1] Implementar `app/Http/Requests/Prescriptions/StorePrescriptionRequest.php` — validações: `patient_id` exists tenant; `type` ∈ enum; `controlled` → `count(items)==1`; `common` → `duration_days ∈ {30,60,90,180}`; `special`/`controlled` ignoram `duration_days`; `alert_disabled` só com `type=common`; `items.*.medication_name` required string max:255; `items.*.posology` required text
-- [ ] T061 [P] [US1] Implementar `app/Http/Requests/Prescriptions/UpdatePrescriptionNotesRequest.php` — só `notes` editável
-- [ ] T062 [P] [US1] Implementar `app/Http/Requests/Prescriptions/CancelPrescriptionRequest.php` — `cancellation_reason_category` + `cancellation_reason` (≤500 chars) required
-- [ ] T063 [P] [US1] Implementar `app/Http/Requests/Prescriptions/ListPrescriptionsRequest.php` — filtros `status`, `type`, `patient_id`, `professional_id`, `expires_after`, `expires_before`, `cursor`
-- [ ] T064 [P] [US1] Implementar `app/Http/Requests/Prescriptions/UploadPrescriptionPdfRequest.php` — `pdf: required|file|mimes:pdf|max:10240`
-- [ ] T065 [US1] Completar `app/Policies/PrescriptionPolicy.php` — `view` (qualquer com `prescription.view`), `viewControlled` (emissor OR admin com `prescription.view_controlled`), `create`, `update` (só emissor), `cancel` (emissor OR admin), `export`
+- [x] T060 [US1] Implementar `app/Http/Requests/Prescriptions/StorePrescriptionRequest.php` — validações: `patient_id` exists tenant; `type` ∈ enum; `controlled` → `count(items)==1`; `common` → `duration_days ∈ {30,60,90,180}`; `special`/`controlled` ignoram `duration_days`; `alert_disabled` só com `type=common`; `items.*.medication_name` required string max:255; `items.*.posology` required text
+- [x] T061 [P] [US1] Implementar `app/Http/Requests/Prescriptions/UpdatePrescriptionNotesRequest.php` — só `notes` editável
+- [x] T062 [P] [US1] Implementar `app/Http/Requests/Prescriptions/CancelPrescriptionRequest.php` — `cancellation_reason_category` + `cancellation_reason` (≤500 chars) required
+- [x] T063 [P] [US1] Implementar `app/Http/Requests/Prescriptions/ListPrescriptionsRequest.php` — filtros `status`, `type`, `patient_id`, `professional_id`, `expires_after`, `expires_before`, `cursor`
+- [x] T064 [P] [US1] Implementar `app/Http/Requests/Prescriptions/UploadPrescriptionPdfRequest.php` — `pdf: required|file|mimes:pdf|max:10240`
+- [x] T065 [US1] Completar `app/Policies/PrescriptionPolicy.php` — `view` (qualquer com `prescription.view`), `viewControlled` (emissor OR admin com `prescription.view_controlled`), `create`, `update` (só emissor), `cancel` (emissor OR admin), `export`
 
 ### Resources (mascaramento aplicado no resource)
 
-- [ ] T066 [US1] Implementar `app/Http/Resources/Prescriptions/PrescriptionResource.php` — chama `ControlledPrescriptionMaskingService` quando user não pode `viewControlled`; emite `PrescricaoControladaVisualizada` ao serializar com conteúdo completo (ponto único — R-7P-11)
-- [ ] T067 [P] [US1] Implementar `app/Http/Resources/Prescriptions/PrescriptionItemResource.php`
+- [x] T066 [US1] Implementar `app/Http/Resources/Prescriptions/PrescriptionResource.php` — chama `ControlledPrescriptionMaskingService` quando user não pode `viewControlled`; emite `PrescricaoControladaVisualizada` ao serializar com conteúdo completo (ponto único — R-7P-11)
+- [x] T067 [P] [US1] Implementar `app/Http/Resources/Prescriptions/PrescriptionItemResource.php`
 
 ### Controllers + rotas
 
-- [ ] T068 [US1] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionController.php` — `index`, `store`, `show`, `update`, `cancel` (POST /prescriptions/{id}/cancel)
-- [ ] T069 [US1] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionPdfController.php` — `upload` (POST), `download` (GET com URL assinada TTL 15min — R-7P-08)
-- [ ] T070 [US1] Adicionar rotas em `routes/api.php` sob `prefix=api/v1` + middleware `auth:sanctum`, `tenant.slug`, `prescription.module` (5 rotas de CRUD + 2 de PDF)
+- [x] T068 [US1] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionController.php` — `index`, `store`, `show`, `update`, `cancel` (POST /prescriptions/{id}/cancel)
+- [x] T069 [US1] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionPdfController.php` — `upload` (POST), `download` (GET com URL assinada TTL 15min — R-7P-08)
+- [x] T070 [US1] Adicionar rotas em `routes/api.php` sob `prefix=api/v1` + middleware `auth:sanctum`, `tenant.slug`, `prescription.module` (5 rotas de CRUD + 2 de PDF)
 
 ### PDF async + S3
 
-- [ ] T071 [US1] Implementar `app/Jobs/Prescription/PrescriptionPdfUploadJob.php` — recebe `prescription_id` + `s3_key` temporário; copia para `prescriptions/{tenant_id}/{prescription_id}/v{version}.pdf`; atualiza `pdf_path` + `pdf_version` + emite `PrescricaoAtualizada{changed_fields=[pdf_path]}`; em caso de retry, mantém versão anterior intacta
-- [ ] T072 [US1] Implementar `app/Domain/Prescription/Pdf/PrescriptionPdfStorage.php` — wrapper sobre S3 disk com path por tenant (`prescriptions/{tid}/{pid}/`)
-- [ ] T073 [P] [US1] Implementar `app/Domain/Prescription/Pdf/PrescriptionPdfVersioningService.php` — gera próximo número de versão; arquiva versão atual antes de upload nova
-- [ ] T074 [P] [US1] Implementar `app/Domain/Prescription/Pdf/PrescriptionSignedUrlService.php` — `Storage::disk('prescriptions')->temporaryUrl($path, now()->addMinutes(15))` + audit log de emissão (FR-033)
+- [x] T071 [US1] Implementar `app/Jobs/Prescription/PrescriptionPdfUploadJob.php` — recebe `prescription_id` + `s3_key` temporário; copia para `prescriptions/{tenant_id}/{prescription_id}/v{version}.pdf`; atualiza `pdf_path` + `pdf_version` + emite `PrescricaoAtualizada{changed_fields=[pdf_path]}`; em caso de retry, mantém versão anterior intacta
+- [x] T072 [US1] Implementar `app/Domain/Prescription/Pdf/PrescriptionPdfStorage.php` — wrapper sobre S3 disk com path por tenant (`prescriptions/{tid}/{pid}/`)
+- [x] T073 [P] [US1] Implementar `app/Domain/Prescription/Pdf/PrescriptionPdfVersioningService.php` — gera próximo número de versão; arquiva versão atual antes de upload nova
+- [x] T074 [P] [US1] Implementar `app/Domain/Prescription/Pdf/PrescriptionSignedUrlService.php` — `Storage::disk('prescriptions')->temporaryUrl($path, now()->addMinutes(15))` + audit log de emissão (FR-033)
 
 ### Frontend Vue — listagem + cadastro + show
 
-- [ ] T075 [P] [US1] Criar `resources/js/lib/prescriptionsApi.js` com chamadas REST (list/get/create/update/cancel/uploadPdf/downloadPdf)
-- [ ] T076 [P] [US1] Criar `resources/js/stores/prescriptionsStore.js` (Pinia) com state, getters e actions
-- [ ] T077 [P] [US1] Criar `resources/js/composables/usePrescriptionFilters.js` para filtros reutilizáveis
-- [ ] T078 [P] [US1] Criar componentes `resources/js/components/prescriptions/PrescriptionTypeBadge.vue`, `PrescriptionStatusPill.vue`, `ControlledMaskingBanner.vue`
-- [ ] T079 [US1] Criar `resources/js/components/prescriptions/PrescriptionFormItems.vue` — lista dinâmica 1-10 (1 fixo para `controlled`), com autocomplete via `MedicationAutocompleteService`
-- [ ] T080 [US1] Criar `resources/js/components/prescriptions/PrescriptionPdfUploader.vue` — async com progress (segue padrão Fase 6 — toast local + a11y)
-- [ ] T081 [P] [US1] Criar `resources/js/components/prescriptions/PrescriptionCancelModal.vue` — modal a11y (Teleport + focus trap + Esc — padrão Fase 6) com `cancellation_reason_category` + textarea
-- [ ] T082 [US1] Criar `resources/js/pages/prescriptions/PrescriptionsListPage.vue` — listagem paginada com filtros, badge de tipo/status, indicador de criticidade
-- [ ] T083 [US1] Criar `resources/js/pages/prescriptions/PrescriptionCreatePage.vue` — seleção paciente, tipo, presets de duração (radio `{30,60,90,180}` para `common`, fixo 30d para `special`/`controlled`), formulário de items
-- [ ] T084 [US1] Criar `resources/js/pages/prescriptions/PrescriptionShowPage.vue` — detalhe + botão cancelar + botão renovar (placeholder até US-8.3) + uploader PDF
+- [x] T075 [P] [US1] Criar `resources/js/lib/prescriptionsApi.js` com chamadas REST (list/get/create/update/cancel/uploadPdf/downloadPdf)
+- [x] T076 [P] [US1] Criar `resources/js/stores/prescriptionsStore.js` (Pinia) com state, getters e actions
+- [x] T077 [P] [US1] Criar `resources/js/composables/usePrescriptionFilters.js` para filtros reutilizáveis
+- [x] T078 [P] [US1] Criar componentes `resources/js/components/prescriptions/PrescriptionTypeBadge.vue`, `PrescriptionStatusPill.vue`, `ControlledMaskingBanner.vue`
+- [x] T079 [US1] Criar `resources/js/components/prescriptions/PrescriptionFormItems.vue` — lista dinâmica 1-10 (1 fixo para `controlled`), com autocomplete via `MedicationAutocompleteService`
+- [x] T080 [US1] Criar `resources/js/components/prescriptions/PrescriptionPdfUploader.vue` — async com progress (segue padrão Fase 6 — toast local + a11y)
+- [x] T081 [P] [US1] Criar `resources/js/components/prescriptions/PrescriptionCancelModal.vue` — modal a11y (Teleport + focus trap + Esc — padrão Fase 6) com `cancellation_reason_category` + textarea
+- [x] T082 [US1] Criar `resources/js/pages/prescriptions/PrescriptionsListPage.vue` — listagem paginada com filtros, badge de tipo/status, indicador de criticidade
+- [x] T083 [US1] Criar `resources/js/pages/prescriptions/PrescriptionCreatePage.vue` — seleção paciente, tipo, presets de duração (radio `{30,60,90,180}` para `common`, fixo 30d para `special`/`controlled`), formulário de items
+- [x] T084 [US1] Criar `resources/js/pages/prescriptions/PrescriptionShowPage.vue` — detalhe + botão cancelar + botão renovar (placeholder até US-8.3) + uploader PDF
 
 **Checkpoint US-8.1**: Médico cadastra/lista/cancela receita; mascaramento funciona em 5 perfis; PDF async não bloqueia; timeline do paciente atualiza. 13 testes de feature + 2 unit verdes.
 

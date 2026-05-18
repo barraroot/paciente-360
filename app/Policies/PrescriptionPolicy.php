@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Domain\Prescription\Prescription\Prescription;
-use App\Domain\Prescription\Prescription\PrescriptionType;
 use App\Models\User;
 
 final class PrescriptionPolicy
@@ -28,11 +27,11 @@ final class PrescriptionPolicy
             return false;
         }
 
-        if ($prescription->type !== PrescriptionType::Controlled) {
-            return true;
-        }
-
-        return $this->viewControlled($user, $prescription);
+        // For controlled prescriptions, masking is handled in PrescriptionResource.
+        // All users with prescription.view within the tenant can VIEW the record
+        // (masked or full — depends on viewControlled ability + is emissor).
+        // 403 is only returned when user lacks prescription.view entirely.
+        return true;
     }
 
     public function viewControlled(User $user, Prescription $prescription): bool
@@ -55,6 +54,11 @@ final class PrescriptionPolicy
 
     public function update(User $user, Prescription $prescription): bool
     {
+        // Cancelled prescriptions are immutable (AC-8.1.7)
+        if ($prescription->isCancelled()) {
+            return false;
+        }
+
         return $user->tenant_id === $prescription->tenant_id
             && $prescription->professional_id === $user->id
             && $user->can('prescription.update');

@@ -6,6 +6,7 @@ use App\Domain\Prescription\Prescription\Prescription;
 use App\Models\Agenda\Appointment;
 use App\Models\Concerns\BelongsToTenant;
 use App\Models\User;
+use Database\Factories\Prescription\PrescriptionRenewalFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +36,11 @@ class PrescriptionRenewal extends Model
         return [
             'initiated_by' => InitiatedByType::class,
         ];
+    }
+
+    protected static function newFactory(): PrescriptionRenewalFactory
+    {
+        return PrescriptionRenewalFactory::new();
     }
 
     public function originalPrescription(): BelongsTo

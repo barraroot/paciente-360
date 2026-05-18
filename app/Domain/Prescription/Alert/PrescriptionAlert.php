@@ -5,6 +5,7 @@ namespace App\Domain\Prescription\Alert;
 use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Prescription\Prescription\Prescription;
 use App\Models\Concerns\BelongsToTenant;
+use Database\Factories\Prescription\PrescriptionAlertFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,6 +42,11 @@ class PrescriptionAlert extends Model
             'scheduled_for' => 'date',
             'dispatched_at' => 'datetime',
         ];
+    }
+
+    protected static function newFactory(): PrescriptionAlertFactory
+    {
+        return PrescriptionAlertFactory::new();
     }
 
     public function prescription(): BelongsTo

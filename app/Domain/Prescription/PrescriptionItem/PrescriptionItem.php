@@ -3,6 +3,7 @@
 namespace App\Domain\Prescription\PrescriptionItem;
 
 use App\Domain\Prescription\Prescription\Prescription;
+use Database\Factories\Prescription\PrescriptionItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,6 +34,11 @@ class PrescriptionItem extends Model
         return [
             'sort_order' => 'integer',
         ];
+    }
+
+    protected static function newFactory(): PrescriptionItemFactory
+    {
+        return PrescriptionItemFactory::new();
     }
 
     public function prescription(): BelongsTo

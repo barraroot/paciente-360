@@ -176,7 +176,7 @@ function onCancelled() {
 
 function fmtDate(iso) {
   if (!iso) return '—'
-  return DateTime.fromISO(iso).toFormat('dd/MM/yyyy')
+  return DateTime.fromISO(iso).setLocale('pt-BR').toFormat('dd/MM/yyyy')
 }
 
 function fmtRelative(iso) {

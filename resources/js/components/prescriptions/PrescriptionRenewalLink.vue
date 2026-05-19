@@ -56,7 +56,7 @@ onMounted(async () => {
 
 function fmtDate(iso) {
   if (!iso) return '—'
-  return DateTime.fromISO(iso).toFormat('dd/MM/yyyy')
+  return DateTime.fromISO(iso).setLocale('pt-BR').toFormat('dd/MM/yyyy')
 }
 
 // ─── Status da renovação ──────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ const renewalCompleted = computed(() => {
 const renewedAtDisplay = computed(() => {
   const iso = prescription.value?.renewed_at
   if (!iso) return null
-  return DateTime.fromISO(iso).toFormat('dd/MM')
+  return DateTime.fromISO(iso).setLocale('pt-BR').toFormat('dd/MM')
 })
 
 // ─── ID para aria-labelledby ──────────────────────────────────────────────────

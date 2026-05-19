@@ -18,6 +18,7 @@
  *  - Toast: role="alert" aria-live="assertive".
  */
 import { ref, computed, onMounted } from 'vue'
+import { DateTime } from 'luxon'
 import { usePrescriptionsStore } from '@/stores/prescriptionsStore'
 import { getPrescriptionAlerts } from '@/lib/prescriptionsApi'
 
@@ -161,6 +162,12 @@ const STATUS_CLASSES = {
   cancelled: 'text-foreground-muted',
   blocked: 'text-danger-600',
   none: 'text-foreground-muted',
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—'
+  const dt = DateTime.fromISO(iso)
+  return dt.isValid ? dt.setLocale('pt-BR').toFormat('dd/MM/yyyy') : iso
 }
 </script>
 
@@ -342,7 +349,7 @@ const STATUS_CLASSES = {
                 Enviado
               </span>
               <span v-else-if="alert.scheduled_for">
-                {{ alert.scheduled_for }}
+                {{ fmtDate(alert.scheduled_for) }}
               </span>
               <span v-else>—</span>
             </td>

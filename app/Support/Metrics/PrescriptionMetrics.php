@@ -120,6 +120,42 @@ final class PrescriptionMetrics implements PrescriptionMetricsContract
         );
     }
 
+    /** T174 — Counter de uploads de PDF por tenant e status. */
+    public function pdfUploaded(int $tenantId, string $status): void
+    {
+        $this->recordCounterOrLog(
+            name: 'paciente360_prescription_pdfs_uploaded_total',
+            labels: [
+                'tenant_id' => (string) $tenantId,
+                'status' => $status,
+            ],
+            help: 'Uploads de PDF de receita por tenant e status.',
+        );
+    }
+
+    /** T174 — Counter de signed URLs emitidas por tenant. */
+    public function signedUrlEmitted(int $tenantId): void
+    {
+        $this->recordCounterOrLog(
+            name: 'paciente360_prescription_signed_urls_emitted_total',
+            labels: ['tenant_id' => (string) $tenantId],
+            help: 'Signed URLs de PDF de receita emitidas por tenant.',
+        );
+    }
+
+    /** T174 — Counter de exportações CSV por tenant. */
+    public function csvExported(int $tenantId, int $count, bool $hasControlled): void
+    {
+        $this->recordCounterOrLog(
+            name: 'paciente360_prescription_csv_exports_total',
+            labels: [
+                'tenant_id' => (string) $tenantId,
+                'has_controlled' => $hasControlled ? 'true' : 'false',
+            ],
+            help: 'Exportacoes CSV de receitas por tenant (com flag de controladas).',
+        );
+    }
+
     /**
      * @param array<string, string> $labels
      */

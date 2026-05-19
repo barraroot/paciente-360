@@ -234,6 +234,12 @@ const routes = [
         meta: { requiresAuth: true, ability: 'prescription.create', title: 'Nova Receita' },
     },
     {
+        path: '/panel/receituarios/relatorio',
+        name: 'prescriptions.report',
+        component: () => import('@/pages/prescriptions/PrescriptionsReportPage.vue'),
+        meta: { requiresAuth: true, ability: 'prescription.view', title: 'Relatório de Receitas' },
+    },
+    {
         path: '/panel/receituarios/:id',
         name: 'prescriptions.show',
         component: () => import('@/pages/prescriptions/PrescriptionShowPage.vue'),

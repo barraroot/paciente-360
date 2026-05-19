@@ -326,37 +326,37 @@
 
 ### Tests for US-8.4 ⚠️
 
-- [ ] T150 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionReportTest.php` — AC-8.4.1, AC-8.4.3, AC-8.4.4, AC-8.4.8 (paginação, filtros combinados AND, definição de "renovada", janela 30d default)
-- [ ] T151 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionReportCriticalityTest.php` — indicador verde/amarelo/vermelho baseado em proximidade do vencimento
-- [ ] T152 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionReportMaskingTest.php` — AC-8.4.2 (controladas mascaradas para Atendente/Recepcionista/médico não-emissor)
-- [ ] T153 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionCsvExportTest.php` — AC-8.4.5, AC-8.4.7 (CSV respeita ability; prefixo `CONFIDENCIAL_` quando contém ≥1 controlada; audit log com lista de IDs exportados)
-- [ ] T154 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionReportPerformanceTest.php` — NFR-002/SC-007 (50k receitas → p95 ≤ 1,5s na primeira página; benchmark com `microtime(true)` × 10 iterations)
-- [ ] T155 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionReportCrossTenantTest.php` — AC-8.4.9 (cross-tenant retorna 404, audit `cross_tenant_attempt`)
+- [x] T150 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionReportTest.php` — AC-8.4.1, AC-8.4.3, AC-8.4.4, AC-8.4.8 (paginação, filtros combinados AND, definição de "renovada", janela 30d default)
+- [x] T151 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionReportCriticalityTest.php` — indicador verde/amarelo/vermelho baseado em proximidade do vencimento
+- [x] T152 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionReportMaskingTest.php` — AC-8.4.2 (controladas mascaradas para Atendente/Recepcionista/médico não-emissor)
+- [x] T153 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionCsvExportTest.php` — AC-8.4.5, AC-8.4.7 (CSV respeita ability; prefixo `CONFIDENCIAL_` quando contém ≥1 controlada; audit log com lista de IDs exportados)
+- [x] T154 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionReportPerformanceTest.php` — NFR-002/SC-007 (50k receitas → p95 ≤ 1,5s na primeira página; benchmark com `microtime(true)` × 10 iterations)
+- [x] T155 [P] [US4] Teste `tests/Feature/Prescription/PrescriptionReportCrossTenantTest.php` — AC-8.4.9 (cross-tenant retorna 404, audit `cross_tenant_attempt`)
 
 ### Domain — report service
 
-- [ ] T156 [US4] Implementar `app/Domain/Prescription/Report/PrescriptionReportService.php` — `paginate(ListPrescriptionsRequest, User): CursorPaginator` com filtros AND, ordenação default por `expires_at ASC`, índices compostos da data-model
-- [ ] T157 [US4] Implementar `app/Domain/Prescription/Report/PrescriptionCsvExporter.php` — gera CSV via stream; chama `ControlledPrescriptionMaskingService` por linha; cabeçalho com `CONFIDENCIAL_` quando ≥1 controlada; grava audit log com lista de IDs
+- [x] T156 [US4] Implementar `app/Domain/Prescription/Report/PrescriptionReportService.php` — `paginate(ListPrescriptionsRequest, User): CursorPaginator` com filtros AND, ordenação default por `expires_at ASC`, índices compostos da data-model
+- [x] T157 [US4] Implementar `app/Domain/Prescription/Report/PrescriptionCsvExporter.php` — gera CSV via stream; chama `ControlledPrescriptionMaskingService` por linha; cabeçalho com `CONFIDENCIAL_` quando ≥1 controlada; grava audit log com lista de IDs
 
 ### Controllers + endpoints
 
-- [ ] T158 [US4] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionReportController.php` — `index` (GET /prescription-reports)
-- [ ] T159 [US4] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionCsvExportController.php` — `export` (GET /prescription-reports/export) com streamed response + audit
-- [ ] T160 [P] [US4] Implementar `app/Http/Requests/Prescriptions/ExportPrescriptionsCsvRequest.php` — filtros + valida ability `prescription.export`
-- [ ] T161 [P] [US4] Implementar `app/Http/Resources/Prescriptions/PrescriptionReportRowResource.php` — adiciona `criticality` enum verde/amarelo/vermelho
-- [ ] T162 [US4] Adicionar rotas `GET /api/v1/prescription-reports` + `GET /api/v1/prescription-reports/export` em `routes/api.php`
+- [x] T158 [US4] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionReportController.php` — `index` (GET /prescription-reports)
+- [x] T159 [US4] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionCsvExportController.php` — `export` (GET /prescription-reports/export) com streamed response + audit
+- [x] T160 [P] [US4] Implementar `app/Http/Requests/Prescriptions/ExportPrescriptionsCsvRequest.php` — filtros + valida ability `prescription.export`
+- [x] T161 [P] [US4] Implementar `app/Http/Resources/Prescriptions/PrescriptionReportRowResource.php` — adiciona `criticality` enum verde/amarelo/vermelho
+- [x] T162 [US4] Adicionar rotas `GET /api/v1/prescription-reports` + `GET /api/v1/prescription-reports/export` em `routes/api.php`
 
 ### Frontend — relatório
 
-- [ ] T163 [P] [US4] Criar componentes filtros: `resources/js/components/prescriptions/PrescriptionReportFilters.vue` (status, tipo, profissional, paciente, janela)
-- [ ] T164 [US4] Criar `resources/js/pages/prescriptions/PrescriptionsReportPage.vue` — tabela paginada cursor-based; botão "Exportar CSV" (download streamed); indicador de criticidade colorido; refresh em tempo real via canal Reverb
-- [ ] T165 [P] [US4] Adicionar listener Echo em `PrescriptionsReportPage` para `ReceitaProximaDoVencimento` → atualiza linha sem recarregar
-- [ ] T166 [P] [US4] Estender `prescriptionsApi.js` com métodos `getReport(filters)`, `exportCsv(filters)`
+- [x] T163 [P] [US4] Criar componentes filtros: `resources/js/components/prescriptions/PrescriptionReportFilters.vue` (status, tipo, profissional, paciente, janela)
+- [x] T164 [US4] Criar `resources/js/pages/prescriptions/PrescriptionsReportPage.vue` — tabela paginada cursor-based; botão "Exportar CSV" (download streamed); indicador de criticidade colorido; refresh em tempo real via canal Reverb
+- [x] T165 [P] [US4] Adicionar listener Echo em `PrescriptionsReportPage` para `ReceitaProximaDoVencimento` → atualiza linha sem recarregar
+- [x] T166 [P] [US4] Estender `prescriptionsApi.js` com métodos `getReport(filters)`, `exportCsv(filters)`
 
 ### Performance — índices + benchmark
 
-- [ ] T167 [US4] Confirmar que os 6 índices da data-model `idx_prescriptions_*` foram criados (T006); rodar `EXPLAIN ANALYZE` sobre query típica do relatório com 50k rows seedados via factory (`PrescriptionFactory::factory()->count(50000)`)
-- [ ] T168 [US4] Implementar cursor pagination usando `latest('expires_at')->cursorPaginate(50)` em `PrescriptionReportService` (não offset — performance em tenants grandes)
+- [x] T167 [US4] Confirmar que os 6 índices da data-model `idx_prescriptions_*` foram criados (T006); rodar `EXPLAIN ANALYZE` sobre query típica do relatório com 50k rows seedados via factory (`PrescriptionFactory::factory()->count(50000)`)
+- [x] T168 [US4] Implementar cursor pagination usando `latest('expires_at')->cursorPaginate(50)` em `PrescriptionReportService` (não offset — performance em tenants grandes)
 
 ---
 
@@ -366,64 +366,64 @@
 
 ### Filament super admin (suporte e auditoria)
 
-- [ ] T169 Implementar `app/Filament/Resources/PrescriptionResource.php` — Resource no painel super admin (cookie session em `crm.com.br`); ação "Ver detalhes" registra audit `super_admin.prescription.viewed`; sem ação de edição (somente leitura) — research §7.4 / R-7P-05
-- [ ] T170 [P] Implementar `app/Filament/Resources/PrescriptionResource/Pages/ListPrescriptions.php` com filtros por tenant
-- [ ] T171 [P] Implementar `app/Filament/Resources/PrescriptionResource/Pages/ViewPrescription.php` (read-only)
+- [x] T169 Implementar `app/Filament/Resources/PrescriptionResource.php` — Resource no painel super admin (cookie session em `crm.com.br`); ação "Ver detalhes" registra audit `super_admin.prescription.viewed`; sem ação de edição (somente leitura) — research §7.4 / R-7P-05
+- [x] T170 [P] Implementar `app/Filament/Resources/PrescriptionResource/Pages/ListPrescriptions.php` com filtros por tenant
+- [x] T171 [P] Implementar `app/Filament/Resources/PrescriptionResource/Pages/ViewPrescription.php` (read-only)
 
 ### Jobs de manutenção
 
-- [ ] T172 Implementar `app/Jobs/Prescription/PurgeOldPrescriptionPdfVersionsJob.php` — mantém últimas 5 versões por receita; preserva todas as versões para `type=controlled` (research §2)
-- [ ] T173 [P] Criar `app/Console/Commands/PrescriptionsPurgeOldPdfVersionsCommand.php` + schedule em `routes/console.php` semanal `weeklyOn(1, '02:00')` BRT
+- [x] T172 Implementar `app/Jobs/Prescription/PurgeOldPrescriptionPdfVersionsJob.php` — mantém últimas 5 versões por receita; preserva todas as versões para `type=controlled` (research §2)
+- [x] T173 [P] Criar `app/Console/Commands/PrescriptionsPurgeOldPdfVersionsCommand.php` + schedule em `routes/console.php` semanal `weeklyOn(1, '02:00')` BRT
 
 ### Métricas finais + observabilidade
 
-- [ ] T174 [P] Adicionar em `PrescriptionMetrics`: `prescription_pdfs_uploaded_total{status}`, `prescription_signed_urls_emitted_total{tenant}`
-- [ ] T175 [P] Adicionar dashboard Grafana / docs Prometheus em `docs/observability/prescriptions-metrics.md` (DEFERRED se grafana ainda não está em pipeline)
-- [ ] T176 [P] Adicionar Sentry transaction tracing para `PrescriptionReportService::paginate` e `ProcessPrescriptionAlertsJob` (sample rate 100% em staging, 10% em produção)
+- [x] T174 [P] Adicionar em `PrescriptionMetrics`: `prescription_pdfs_uploaded_total{status}`, `prescription_signed_urls_emitted_total{tenant}`
+- [x] T175 [P] Adicionar dashboard Grafana / docs Prometheus em `docs/observability/prescriptions-metrics.md` (DEFERRED se grafana ainda não está em pipeline)
+- [x] T176 [P] Adicionar Sentry transaction tracing para `PrescriptionReportService::paginate` e `ProcessPrescriptionAlertsJob` (sample rate 100% em staging, 10% em produção)
 
 ### Documentação API
 
-- [ ] T177 [P] Gerar Postman collection `docs/api/Paciente360-Prescriptions-Fase7.postman_collection.json` com 1 request por endpoint do OpenAPI
-- [ ] T178 [P] Atualizar `CLAUDE.md` na seção "Active feature" → mover 007 para "Previous features delivered" com sumário (5 lotes A-E, X tarefas, Y tests verdes)
+- [x] T177 [P] Gerar Postman collection `docs/api/Paciente360-Prescriptions-Fase7.postman_collection.json` com 1 request por endpoint do OpenAPI
+- [x] T178 [P] Atualizar `CLAUDE.md` na seção "Active feature" → mover 007 para "Previous features delivered" com sumário (5 lotes A-E, X tarefas, Y tests verdes)
 
 ### Quickstart E2E + smoke
 
-- [ ] T179 Executar quickstart Cenário 1 (acesso indevido a controlada) em staging — registrar evidência em `docs/qa/smoke-fase7-prescriptions.md`
-- [ ] T180 Executar quickstart Cenário 2 (8 dias → D-7+D-1, renovação IA, cadência cancelada) em staging
-- [ ] T181 Executar quickstart Cenário 3 (substituição de PDF preserva v0) em staging
-- [ ] T182 Executar quickstart Cenário 4 (cross-tenant 404) em staging
-- [ ] T183 Executar quickstart Cenário 5 (HSM ausente bloqueia + cai Inbox) em staging
-- [ ] T184 Executar benchmark de performance do relatório (50k rows, 10 iterações, mediana) — anexar em `docs/qa/smoke-fase7-prescriptions.md`
+- [x] T179 Executar quickstart Cenário 1 (acesso indevido a controlada) em staging — registrar evidência em `docs/qa/smoke-fase7-prescriptions.md`
+- [x] T180 Executar quickstart Cenário 2 (8 dias → D-7+D-1, renovação IA, cadência cancelada) em staging
+- [x] T181 Executar quickstart Cenário 3 (substituição de PDF preserva v0) em staging
+- [x] T182 Executar quickstart Cenário 4 (cross-tenant 404) em staging
+- [x] T183 Executar quickstart Cenário 5 (HSM ausente bloqueia + cai Inbox) em staging
+- [x] T184 Executar benchmark de performance do relatório (50k rows, 10 iterações, mediana) — anexar em `docs/qa/smoke-fase7-prescriptions.md`
 
 ### Limpeza + regression gate
 
-- [ ] T185 [P] Rodar `vendor/bin/sail bin pint --dirty --format agent` em todos os arquivos modificados
-- [ ] T186 [P] Rodar suite completa: `vendor/bin/sail artisan test --compact` — garantir **zero regressão** vs Fase 6 (baseline 1167 tests / 1164 passed)
-- [ ] T187 Validar que **6 gates obrigatórios** (plan §3) estão verdes: `ControlledPrescriptionAccessTest`, `ControlledPrescriptionRegulatoryTest`, `PrescriptionAlertIdempotencyTest`, `PrescriptionEventPayloadLgpdTest`, `CrossTenantPrescriptionTest`, `PrescriptionAlertChannelTest`
-- [ ] T188 [P] Rodar `vendor/bin/sail npm run build` e verificar que não há erros de build/types em componentes Vue
-- [ ] T189 [P] Aplicar atualizações do spec listadas em plan §11 (TTL URL assinada 15min, `prescription_renewals.appointment_id` em vez de `appointments.prescription_id`, retenção 5 anos com flag) — commit dedicado `docs(spec-007-refinements)`
+- [x] T185 [P] Rodar `vendor/bin/sail bin pint --dirty --format agent` em todos os arquivos modificados
+- [x] T186 [P] Rodar suite completa: `vendor/bin/sail artisan test --compact` — garantir **zero regressão** vs Fase 6 (baseline 1167 tests / 1164 passed)
+- [x] T187 Validar que **6 gates obrigatórios** (plan §3) estão verdes: `ControlledPrescriptionAccessTest`, `ControlledPrescriptionRegulatoryTest`, `PrescriptionAlertIdempotencyTest`, `PrescriptionEventPayloadLgpdTest`, `CrossTenantPrescriptionTest`, `PrescriptionAlertChannelTest`
+- [x] T188 [P] Rodar `vendor/bin/sail npm run build` e verificar que não há erros de build/types em componentes Vue
+- [x] T189 [P] Aplicar atualizações do spec listadas em plan §11 (TTL URL assinada 15min, `prescription_renewals.appointment_id` em vez de `appointments.prescription_id`, retenção 5 anos com flag) — commit dedicado `docs(spec-007-refinements)`
 
 ### Métricas de segurança + alerting
 
-- [ ] T190 Configurar alerta Sentry: `prescription_controlled_access_denied_total > 10` em 5 min para o mesmo tenant → notificação CS (research §6)
-- [ ] T191 [P] Configurar alerta Sentry: `prescription_alerts_blocked_total{reason=no_template} > 5` em 1h → notificação product (template HSM precisa ser submetido)
+- [x] T190 Configurar alerta Sentry: `prescription_controlled_access_denied_total > 10` em 5 min para o mesmo tenant → notificação CS (research §6)
+- [x] T191 [P] Configurar alerta Sentry: `prescription_alerts_blocked_total{reason=no_template} > 5` em 1h → notificação product (template HSM precisa ser submetido)
 
 ### Cobertura + DoD checklist
 
-- [ ] T192 [P] Verificar cobertura PHPUnit ≥ 70% sobre `app/Domain/Prescription/**` (alvo constitucional)
-- [ ] T193 Validar DoD do spec §12 — marcar caixas no spec.md (commit dedicado `docs(spec-007-dod-checked)`)
+- [x] T192 [P] Verificar cobertura PHPUnit ≥ 70% sobre `app/Domain/Prescription/**` (alvo constitucional)
+- [x] T193 Validar DoD do spec §12 — marcar caixas no spec.md (commit dedicado `docs(spec-007-dod-checked)`)
 
 ### Frontend polish
 
-- [ ] T194 [P] Auditar a11y dos modais (`PrescriptionCancelModal`, `PrescriptionPdfUploader`) com axe-core via Playwright
-- [ ] T195 [P] Aplicar pattern de toast local (CLAUDE.md §11) em todas as ações de mutação (create/cancel/upload/renew)
-- [ ] T196 [P] Aplicar pattern de popover inline (não `confirm()`/`prompt()`) em ações destrutivas
-- [ ] T197 [P] Validar formatação pt-BR em datas (`Intl.DateTimeFormat('pt-BR')`) e valores monetários nas páginas de receita
+- [x] T194 [P] Auditar a11y dos modais (`PrescriptionCancelModal`, `PrescriptionPdfUploader`) com axe-core via Playwright
+- [x] T195 [P] Aplicar pattern de toast local (CLAUDE.md §11) em todas as ações de mutação (create/cancel/upload/renew)
+- [x] T196 [P] Aplicar pattern de popover inline (não `confirm()`/`prompt()`) em ações destrutivas
+- [x] T197 [P] Validar formatação pt-BR em datas (`Intl.DateTimeFormat('pt-BR')`) e valores monetários nas páginas de receita
 
 ### Constitution Check final
 
-- [ ] T198 Verificar que zero violações constitucionais foram introduzidas — rodar `tests/Feature/Prescription/PrescriptionEventPayloadLgpdTest` + `CrossTenantPrescriptionTest` + `ControlledPrescriptionAccessTest` em CI verde
-- [ ] T199 Atualizar `MEMORY.md` com entrada `Fase 7 entregue` (espelho do pattern Fase 5/6)
+- [x] T198 Verificar que zero violações constitucionais foram introduzidas — rodar `tests/Feature/Prescription/PrescriptionEventPayloadLgpdTest` + `CrossTenantPrescriptionTest` + `ControlledPrescriptionAccessTest` em CI verde
+- [x] T199 Atualizar `MEMORY.md` com entrada `Fase 7 entregue` (espelho do pattern Fase 5/6)
 
 ---
 

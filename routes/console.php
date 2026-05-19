@@ -124,3 +124,10 @@ Schedule::command('prescriptions:expire-active')
     ->dailyAt('00:30')
     ->timezone('America/Sao_Paulo')
     ->withoutOverlapping();
+
+// T173 — Purge de versões antigas de PDFs (não-controladas, retém últimas 5).
+//   Roda semanalmente às segundas 02:00 BRT.
+Schedule::command('prescriptions:purge-old-pdfs')
+    ->weeklyOn(1, '02:00')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();

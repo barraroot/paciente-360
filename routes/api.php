@@ -43,8 +43,10 @@ use App\Http\Controllers\Api\V1\Pacientes\TimelineController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionAlertConfigController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionContextForAiController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionController;
+use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionCsvExportController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionPdfController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionRenewalController;
+use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionReportController;
 use App\Http\Controllers\Api\V1\Tenant\CurrentTenantController;
 use App\Http\Controllers\Api\V1\Tenant\RegisterController as TenantRegisterController;
 use App\Http\Controllers\Api\V1\Users\InvitationsController;
@@ -560,4 +562,26 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'presc
     ->group(function (): void {
         Route::get('/{prescription}/context', [PrescriptionContextForAiController::class, 'show'])
             ->name('context');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Prescription Reports (Fase 7 — US-8.4 Relatório)
+|
+| T162 — Relatório de receitas com cursor pagination + exportação CSV.
+|
+| Routes:
+|   GET /api/v1/prescription-reports         → index (cursor paginated)
+|   GET /api/v1/prescription-reports/export  → export CSV (streamed)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'prescription.module'])
+    ->prefix('prescription-reports')
+    ->name('prescription-reports.')
+    ->group(function (): void {
+        Route::get('/', [PrescriptionReportController::class, 'index'])
+            ->name('index');
+
+        Route::get('/export', [PrescriptionCsvExportController::class, 'export'])
+            ->name('export');
     });

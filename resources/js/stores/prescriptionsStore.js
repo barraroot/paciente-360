@@ -15,6 +15,8 @@ import {
   downloadPdf,
   updateAlertConfig,
   renewPrescription,
+  getReport,
+  exportReportCsv,
 } from '@/lib/prescriptionsApi'
 
 export const usePrescriptionsStore = defineStore('prescriptions', () => {
@@ -44,6 +46,15 @@ export const usePrescriptionsStore = defineStore('prescriptions', () => {
 
   /** Controla se o canal Reverb já foi subscrito (idempotência). */
   let _reverbSubscribed = false
+
+  // ─── State específico do relatório (US-8.4) ───────────────────────────────
+  const report = ref({
+    list: [],
+    pagination: { next_cursor: null, prev_cursor: null, per_page: 50, total: null },
+    loading: false,
+    error: null,
+    exporting: false,
+  })
 
   // ─── Getters ───────────────────────────────────────────────────────────────
 
@@ -227,6 +238,62 @@ export const usePrescriptionsStore = defineStore('prescriptions', () => {
   }
 
   /**
+   * T166 (US-8.4) — Busca o relatório de receitas com paginação cursor-based.
+   * Quando append=true, adiciona ao final da lista existente (loadMore).
+   *
+   * @param {Object} filters - status, type, professional_id, patient_id, expires_after, expires_before, cursor, per_page
+   * @param {boolean} append - true para loadMore, false para substituir lista
+   */
+  async function fetchReport(filters = {}, append = false) {
+    report.value.loading = true
+    report.value.error = null
+    try {
+      const params = { ...filters }
+      Object.keys(params).forEach((k) => {
+        if (params[k] === null || params[k] === undefined || params[k] === '') {
+          delete params[k]
+        }
+      })
+      const { data } = await getReport(params)
+      const items = data.data ?? []
+      if (append) {
+        report.value.list = [...report.value.list, ...items]
+      } else {
+        report.value.list = items
+      }
+      report.value.pagination = {
+        next_cursor: data.meta?.next_cursor ?? null,
+        prev_cursor: data.meta?.prev_cursor ?? null,
+        per_page: data.meta?.per_page ?? 50,
+        total: data.meta?.total ?? null,
+      }
+    } catch (e) {
+      report.value.error = e?.response?.data?.message ?? 'Erro ao carregar relatório.'
+    } finally {
+      report.value.loading = false
+    }
+  }
+
+  /**
+   * T166 (US-8.4) — Exporta CSV do relatório.
+   * Retorna { filename, hasControlled } após disparar download.
+   *
+   * @param {Object} filters
+   * @returns {Promise<{ filename: string, hasControlled: boolean }>}
+   */
+  async function exportReport(filters = {}) {
+    report.value.exporting = true
+    try {
+      return await exportReportCsv(filters)
+    } catch (e) {
+      report.value.error = e?.response?.data?.message ?? 'Erro ao exportar relatório.'
+      throw e
+    } finally {
+      report.value.exporting = false
+    }
+  }
+
+  /**
    * T117 — Assina canal Reverb `prescriptions.{tenantId}` para receber
    * `PrescriptionsReportRefresh` e re-fetch a receita afetada.
    * Idempotente: se já inscrito, não duplica.
@@ -325,6 +392,7 @@ export const usePrescriptionsStore = defineStore('prescriptions', () => {
     loading,
     error,
     uploading,
+    report,
     // getters
     byId,
     byType,
@@ -339,6 +407,8 @@ export const usePrescriptionsStore = defineStore('prescriptions', () => {
     requestDownloadUrl,
     updateAlertConfig: updateAlertConfigAction,
     renew,
+    fetchReport,
+    exportReport,
     subscribeToReportRefresh,
     unsubscribeFromReportRefresh,
     setFilters,

@@ -435,8 +435,15 @@ livewire(ListUsers::class)
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `007-gestao-receituario` — Fase 7 / Épico 8 (Gestão de Receituários). Spec ✅ Clarified (13/13 ambiguidades resolvidas). Plan ✅ pronto (`plan.md`, `data-model.md`, `research.md`, `contracts/openapi.yaml`, `quickstart.md`). Constitution Check: PASS em 7/7 princípios sem amendment. Próximo passo: `/speckit-tasks`. Cronograma macro: 5 lotes A-E.
-- **Previous features delivered (6)**:
+- **Active feature**: nenhuma — aguardando próxima fase.
+- **Previous features delivered (7)**:
+  - `007-gestao-receituario` — [spec](specs/007-gestao-receituario/spec.md) — Fase 7 / Épico 8 (Gestão de Receituários) entregue em 2026-05-19. **5 lotes A-E**, **199/199 tasks**, **175/175 prescription tests verdes**, suite full **1342 tests / 1338 passed / 0 failures (1 flaky timing pré-existente)**. Commits: A `66c6c46` → B `8a9890e` → C `7780b27` → D `44d8500` → E (pendente). Highlights:
+    - 4 user stories Épico 8: US-8.1 Cadastro (mascaramento controladas 5 perfis), US-8.2 Alerta D-15/D-7/D-1, US-8.3 Renovação IA (contrato pseudonimizado 7 campos), US-8.4 Relatório + CSV
+    - 7 entidades + 9 eventos + 7 listeners + 5 cron jobs + ~13 endpoints REST + Filament super-admin
+    - **6 Gates constitucionais** verdes: ControlledPrescriptionAccessTest (Q8), ControlledPrescriptionRegulatoryTest (Portaria 344/98), PrescriptionAlertIdempotencyTest (Redis NX + DB UNIQUE), PrescriptionEventPayloadLgpdTest (reflection allowlist 7 props), CrossTenantPrescriptionTest (404 não 403), PrescriptionAlertChannelTest (template HSM)
+    - DEFERRED: InboxTask real (Inbox Fase 3 sem `createForPatient`); MessageDispatchService::send() real (mesma dep); S3 real delete em PurgeOldPdfVersions; Sentry tracing/alerting (config externa); Grafana dashboard; smoke staging E2E
+    - Constitution Check PASS 7/7 **sem amendment** (v1.4.0)
+  - `006-agenda-ux-polish` — [spec](specs/006-agenda-ux-polish/spec.md) — Polimento UX da Agenda (Fase 6 UX) entregue em 2026-05-15, mergeada em `main` em 2026-05-17. **25/25 tasks**, 4 lotes A-D. Highlights:
   - `006-agenda-ux-polish` — [spec](specs/006-agenda-ux-polish/spec.md) — Polimento UX da Agenda (Fase 6 UX) entregue em 2026-05-15, mergeada em `main` em 2026-05-17. **25/25 tasks**, 4 lotes A-D. Highlights:
     - Lote A: AppointmentTypesPage UX (modal a11y, color picker mobile, moeda pt-BR via `Intl.NumberFormat`)
     - Lote B: ScheduleConfigPage UX (skeleton, copiar dia, atalho Ctrl+S, accordion mobile)
@@ -594,3 +601,77 @@ When working on agenda features post-Fase 5, remember:
     - **Proibido**: `confirm()`, `prompt()`, `alert()` nativos em qualquer componente novo — todos inacessíveis por leitores de tela e bloqueiam tab-order.
     - **Confirmação destrutiva**: sempre modal descritivo com nome/impacto do que será deletado — nunca só "Tem certeza?".
     - **Formatação moeda**: `new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)`. Data relativa: `DateTime.fromISO(iso).toRelative({ locale: 'pt-BR' })` via Luxon (já no bundle).
+
+## Receituários (Fase 7) — Key Patterns
+
+When working on prescription features post-Fase 7, remember:
+
+1. **`PrescriptionType` define a regra regulatória (Portaria 344/98)**
+   - `controlled` (Listas A) → validade fixa 30d + EXATAMENTE 1 item (trigger DB `enforce_controlled_single_item`) + mascaramento + audit em cada visualização.
+   - `special` (Listas B) → validade fixa 30d.
+   - `common` (Lista C ou sem controle) → `duration_days ∈ {30, 60, 90, 180}` (CHECK constraint server-side).
+   - CHECK `chk_prescription_validity_by_type` enforça regra no DB; `StorePrescriptionRequest` é defesa em profundidade.
+
+2. **Mascaramento de controladas via `ControlledPrescriptionMaskingService`**
+   - Receita `type=controlled` retorna `PrescriptionMasked` (omite `items`/`notes`) para qualquer user sem ability `prescription.view_controlled`.
+   - Emissor + Admin Clínica veem completo + emitem evento `PrescricaoControladaVisualizada` (audit em `audit_logs`).
+   - **Ponto único de emissão**: `PrescriptionResource::toArray()` — evita duplicação em coleções.
+
+3. **Global scope `withControlledIfAble` em `Prescription::booted()`**
+   - Quando user não tem `prescription.view_controlled`: filtra receitas `controlled` cujo `professional_id != $user->id` antes do query DB.
+   - Isto + mascaramento no Resource = duas camadas de defesa (Princípio I + defense in depth).
+
+4. **Cadência de alertas D-15/D-7/D-1 — Idempotência dual layer**
+   - DB UNIQUE `(prescription_id, alert_type)` + Redis lock `prescription_alert:{pid}:{type}:{date}` TTL 25h (defense in depth).
+   - `PrescriptionAlertIdempotencyKey::for($pid, $alertType, $date)` gera chave Redis (padrão Fase 5 commands).
+   - Cron `prescriptions:process-alerts` daily 06:00 BRT + `prescriptions:expire-active` daily 00:30 BRT (`withoutOverlapping()`).
+   - Checkpoint passado na criação → `status=skipped` com `skip_reason='checkpoint_past_at_creation'` (não tenta disparar retroativo).
+
+5. **`ContainsNoClinicalData` marker interface — Gate LGPD por reflection**
+   - Qualquer evento consumido pela IA Matricial implementa `App\Support\Lgpd\ContainsNoClinicalData` (marker sem métodos).
+   - `PrescriptionEventPayloadLgpdTest` valida via reflection que `ReceitaProximaDoVencimento` tem EXATAMENTE 7 props: `prescriptionId, patientId, professionalId, professionalName, daysUntilExpiry, prescriptionType, defaultAppointmentTypeId`.
+   - **Qualquer field clínico (medication_name/posology/notes) quebra o gate** — adicionar nova prop exige revisão LGPD obrigatória.
+   - `PrescriptionForAiResource` projeta os mesmos 7 campos no endpoint `GET /ai/prescriptions/{id}/context`.
+
+6. **Opt-out paciente via `PatientProfessionalPreference`**
+   - `suppress_renewal_notifications` boolean por `(patient_id, professional_id)` — UNIQUE composto.
+   - `DispatchPrescriptionAlertViaMessaging` lê a preferência; se `suppress=true` → alert vira `skipped` com `skip_reason='recipient_opted_out'`. Evento `ReceitaProximaDoVencimento` ainda é emitido — apenas envio externo é suprimido.
+
+7. **Debounce 4h por destinatário via Redis** (FR-016 / Q4d)
+   - Cache key `messaging_debounce:prescription_alert:{patient_id}:{alert_type}` TTL 14400s.
+   - `Redis::set($key, 1, 'EX', 14400, 'NX')` → se já existe → `skip_reason='debounced'`.
+
+8. **Renovação via `prescription_renewals` (junção explícita)**
+   - UNIQUE parcial `original_prescription_id WHERE renewed_prescription_id IS NOT NULL` impede duas renovações concluídas da mesma origem.
+   - `RenewPrescriptionService::complete()` transita original → `superseded` + emite `ReceitaRenovada` → listener `CancelAlertScheduleOnRenewal` cancela alerts pending.
+   - `StorePrescriptionRequest` aceita `renewed_from_id` nullable; `PrescriptionService::create()` chama `complete()` na mesma transação.
+   - Política: `canRenew = status=active AND expires_at <= today+30d AND não já renovada`. Inelegível → 422 `prescription_not_eligible_for_renewal` com `reason` específico.
+
+9. **Versionamento de PDF path-based** (research §2)
+   - Path `prescriptions/{tenant_id}/{prescription_id}/v{n}.pdf` — versão atual em `pdf_version` na DB.
+   - Substituição preserva `v0.pdf` no S3 (não usa S3 native versioning — portabilidade entre disks).
+   - URL assinada TTL 15min via `PrescriptionSignedUrlService::sign()` + audit log de emissão.
+   - Job semanal `prescriptions:purge-old-pdfs` mantém últimas 5 versões — controladas preservadas TODAS dentro da janela de retenção.
+
+10. **Filament super-admin read-only para suporte** (research §7.4)
+    - `app/Filament/Resources/Prescriptions/PrescriptionResource.php` — `withoutGlobalScopes()` para enxergar cross-tenant.
+    - Apenas `ViewAction` (sem create/edit/delete). Audit log `super_admin.prescription.viewed` no boot do componente.
+    - Acessível em `crm.com.br/admin` (cookie session Fase 4).
+
+11. **Métricas Prometheus em `PrescriptionMetrics`**
+    - `prescription_alerts_dispatched_total{tenant, alert_step, status}`
+    - `prescription_alerts_blocked_total{reason, tenant}` (`no_template`, `no_channel`, `no_conversation`)
+    - `prescription_alerts_idempotency_hits_total`
+    - `prescription_alerts_processed_total`
+    - `prescription_renewals_initiated_total{initiated_by, tenant}`
+    - `prescription_pdfs_uploaded_total{status}`
+    - `prescription_signed_urls_emitted_total{tenant}`
+    - `prescription_csv_exports_total{tenant, has_controlled}`
+    - `prescription_controlled_access_denied_total{tenant, perfil}` (alerta Sentry > 10 em 5min = scan).
+
+12. **DEFERRED ao final da Fase 7** (documentados nos commits dos lotes C e D)
+    - **InboxTask real**: `EnqueueInboxTaskOnAiRenewal` e fallback em `DispatchPrescriptionAlertViaMessaging` usam `Log::warning` + métrica. Integração com `ConversationService::createForPatient()` da Fase 3 ainda não disponível (Conversation precisa `channel_id` + `external_thread_id`, modelo de inbox interna ainda não desenhado).
+    - **`MessageDispatchService::send()` real**: lookup de Conversation por paciente não existe — dispatcher atualiza `alert.status='dispatched'` diretamente.
+    - **S3 real delete** em `PurgeOldPrescriptionPdfVersionsJob`: stub `Log::info` por enquanto.
+    - **Smoke staging E2E**: 5 cenários do quickstart documentados em `docs/qa/smoke-fase7-prescriptions.md` — aguardando infra staging com módulo habilitado.
+    - **Sentry alerts**: contadores Prometheus prontos; rules de alerting precisam ser configuradas em prod.

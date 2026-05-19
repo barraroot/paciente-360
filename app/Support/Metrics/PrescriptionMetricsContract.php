@@ -28,4 +28,13 @@ interface PrescriptionMetricsContract
     public function controlledAccessDeniedTotal(int $tenantId): void;
 
     public function pdfUploadedTotal(string $status): void;
+
+    /** T174 — Counter de uploads de PDF por tenant e status. */
+    public function pdfUploaded(int $tenantId, string $status): void;
+
+    /** T174 — Counter de signed URLs emitidas por tenant. */
+    public function signedUrlEmitted(int $tenantId): void;
+
+    /** T174 — Counter de exportações CSV por tenant (com flag de controlada). */
+    public function csvExported(int $tenantId, int $count, bool $hasControlled): void;
 }

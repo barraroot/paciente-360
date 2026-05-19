@@ -23,8 +23,21 @@ import { usePrescriptionsStore } from '@/stores/prescriptionsStore'
 import api from '@/lib/api'
 import PrescriptionFormItems from '@/components/prescriptions/PrescriptionFormItems.vue'
 
+// ─── Toast local (padrão Fase 6) ─────────────────────────────────────────────
+
 const router = useRouter()
 const store = usePrescriptionsStore()
+
+const toast = ref(null)
+let toastTimer = null
+
+function showToast(message, type = 'success') {
+  if (toastTimer) clearTimeout(toastTimer)
+  toast.value = { message, type }
+  toastTimer = setTimeout(() => {
+    toast.value = null
+  }, 5000)
+}
 
 // ─── Form state ───────────────────────────────────────────────────────────────
 
@@ -166,6 +179,7 @@ async function submit() {
     }
 
     const created = await store.create(payload)
+    showToast('Receita criada com sucesso.')
     router.push({ name: 'prescriptions.show', params: { id: created.id } })
   } catch (e) {
     if (e?.response?.status === 422 && e.response.data?.errors) {
@@ -469,5 +483,30 @@ const DURATION_PRESETS = [30, 60, 90, 180]
         </div>
       </form>
     </div>
+
+    <!-- Toast local (padrão Fase 6) -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="toast"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        class="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-lg px-4 py-3 text-sm shadow-lg max-w-sm"
+        :class="[
+          toast.type === 'error'
+            ? 'bg-danger-50 text-danger-700 ring-1 ring-danger-200'
+            : 'bg-success-50 text-success-700 ring-1 ring-success-200',
+        ]"
+      >
+        {{ toast.message }}
+      </div>
+    </Transition>
   </div>
 </template>

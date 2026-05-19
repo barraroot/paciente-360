@@ -8,6 +8,7 @@ use App\Domain\Prescription\Renewal\PrescriptionRenewal;
 use App\Models\Agenda\Appointment;
 use App\Models\Concerns\BelongsToTenant;
 use App\Models\Paciente;
+use App\Models\Tenant;
 use App\Models\User;
 use Database\Factories\Prescription\PrescriptionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -132,6 +133,11 @@ class Prescription extends Model
         }
 
         return 'green';
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 
     public function patient(): BelongsTo

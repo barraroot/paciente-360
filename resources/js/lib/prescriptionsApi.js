@@ -138,3 +138,48 @@ export const getAppointmentRenewal = async (_appointmentId) => {
   // Placeholder — retorna null até endpoint ser implementado
   return null
 }
+
+// ─── Relatório (US-8.4) ───────────────────────────────────────────────────────
+
+/**
+ * GET /api/v1/prescription-reports
+ * Retorna listagem paginada (cursor-based) com criticality + is_renewed.
+ * Receitas controladas sem permissão retornam como PrescriptionMasked.
+ *
+ * @param {Object} filters - status, type, professional_id, patient_id, expires_after, expires_before, cursor, per_page
+ */
+export const getReport = (filters = {}) =>
+  api.get('/prescription-reports', { params: filters })
+
+/**
+ * GET /api/v1/prescription-reports/export
+ * StreamedResponse CSV. Filename com prefixo CONFIDENCIAL_ quando ≥1 controlada.
+ * Baixa o arquivo via blob + URL.createObjectURL.
+ *
+ * @param {Object} filters - mesmos filtros de getReport
+ * @returns {Promise<{ filename: string, hasControlled: boolean }>}
+ */
+export const exportReportCsv = async (filters = {}) => {
+  const response = await api.get('/prescription-reports/export', {
+    params: filters,
+    responseType: 'blob',
+  })
+
+  // Extrai filename do header Content-Disposition
+  const cd = response.headers['content-disposition'] || ''
+  const match = cd.match(/filename="?([^";]+)"?/)
+  const filename =
+    match?.[1] ?? `receituarios_${new Date().toISOString().slice(0, 10)}.csv`
+
+  const blob = new Blob([response.data], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+
+  return { filename, hasControlled: filename.startsWith('CONFIDENCIAL_') }
+}

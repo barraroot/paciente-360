@@ -14,6 +14,7 @@ import {
   uploadPdf,
   downloadPdf,
   updateAlertConfig,
+  renewPrescription,
 } from '@/lib/prescriptionsApi'
 
 export const usePrescriptionsStore = defineStore('prescriptions', () => {
@@ -194,6 +195,23 @@ export const usePrescriptionsStore = defineStore('prescriptions', () => {
     }
   }
 
+  /**
+   * T143 (US-8.3) — Registra renovação de receita via POST /prescriptions/{id}/renew.
+   * Retorna o PrescriptionRenewal criado ou lança erro com dados da resposta 422.
+   *
+   * @param {string|number} id - ID da receita original
+   * @param {{ initiated_by: 'professional'|'ai'|'patient', appointment_id?: number }} payload
+   */
+  async function renew(id, payload) {
+    try {
+      const { data } = await renewPrescription(id, payload)
+      return data.data ?? data
+    } catch (e) {
+      error.value = e?.response?.data?.message ?? 'Erro ao renovar receituário.'
+      throw e
+    }
+  }
+
   async function updateAlertConfigAction(id, alertDisabled) {
     try {
       const { data } = await updateAlertConfig(id, { alert_disabled: alertDisabled })
@@ -320,6 +338,7 @@ export const usePrescriptionsStore = defineStore('prescriptions', () => {
     uploadPdf: uploadPdfAction,
     requestDownloadUrl,
     updateAlertConfig: updateAlertConfigAction,
+    renew,
     subscribeToReportRefresh,
     unsubscribeFromReportRefresh,
     setFilters,

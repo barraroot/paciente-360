@@ -86,6 +86,9 @@ class RolesSeeder extends Seeder
         'prescription.view_controlled',
         'prescription.export',
         'prescription_alert.configure',
+        // T141 — Ability exclusiva para tokens de sistema/IA (US-8.3).
+        // NÃO atribuída a nenhuma role — apenas via createToken('ai-system', ['prescription.ai_context']).
+        'prescription.ai_context',
     ];
 
     /**

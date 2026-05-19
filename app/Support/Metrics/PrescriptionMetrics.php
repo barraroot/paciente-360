@@ -4,6 +4,7 @@
 
 namespace App\Support\Metrics;
 
+use App\Domain\Prescription\Renewal\InitiatedByType;
 use Illuminate\Support\Facades\Log;
 
 final class PrescriptionMetrics implements PrescriptionMetricsContract
@@ -75,6 +76,19 @@ final class PrescriptionMetrics implements PrescriptionMetricsContract
                 'count' => (string) $count,
             ],
             help: 'Total de alertas de receita processados pelo job principal.',
+        );
+    }
+
+    /** T148 — Counter de renovações iniciadas por tipo de iniciador e tenant. */
+    public function renewalInitiated(int $tenantId, InitiatedByType $by): void
+    {
+        $this->recordCounterOrLog(
+            name: 'paciente360_prescription_renewals_initiated_total',
+            labels: [
+                'initiated_by' => $by->value,
+                'tenant_id' => (string) $tenantId,
+            ],
+            help: 'Renovacoes de receita iniciadas por tipo de iniciador e tenant.',
         );
     }
 

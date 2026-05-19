@@ -4,6 +4,9 @@ namespace App\Domain\Prescription\Prescription;
 
 use App\Domain\Prescription\Alert\PrescriptionAlertSchedulerService;
 use App\Domain\Prescription\PrescriptionItem\PrescriptionItem;
+use App\Domain\Prescription\Renewal\InitiatedByType;
+use App\Domain\Prescription\Renewal\PrescriptionRenewal;
+use App\Domain\Prescription\Renewal\RenewPrescriptionService;
 use App\Events\Prescription\PrescricaoAtualizada;
 use App\Events\Prescription\PrescricaoCancelada;
 use App\Events\Prescription\PrescricaoCriada;
@@ -25,6 +28,7 @@ class PrescriptionService
 {
     public function __construct(
         private readonly PrescriptionAlertSchedulerService $alertScheduler,
+        private readonly RenewPrescriptionService $renewService,
     ) {}
 
     /**
@@ -101,6 +105,35 @@ class PrescriptionService
                 issuedAt: $issuedAt,
                 expiresAt: $expiresAt,
             );
+
+            // T142 — Se renewed_from_id informado, completa a renovação.
+            // Busca a original no mesmo tenant (defesa cross-tenant).
+            $renewedFromId = isset($data['renewed_from_id']) ? (int) $data['renewed_from_id'] : null;
+
+            if ($renewedFromId !== null) {
+                $original = Prescription::withoutTenantScope()
+                    ->where('id', $renewedFromId)
+                    ->where('tenant_id', $author->tenant_id)
+                    ->first();
+
+                if ($original !== null) {
+                    // Busca renewal pendente (sem renewed_prescription_id) ou cria nova.
+                    $renewal = PrescriptionRenewal::withoutTenantScope()
+                        ->where('original_prescription_id', $original->id)
+                        ->whereNull('renewed_prescription_id')
+                        ->first()
+                        ?? PrescriptionRenewal::create([
+                            'tenant_id' => $original->tenant_id,
+                            'original_prescription_id' => $original->id,
+                            'renewed_prescription_id' => null,
+                            'initiated_by' => InitiatedByType::Professional,
+                            'requested_by_user_id' => $author->id,
+                        ]);
+
+                    // complete() faz update em transação aninhada — seguro com DB::transaction.
+                    $this->renewService->complete($renewal, $prescription);
+                }
+            }
 
             return $prescription;
         });

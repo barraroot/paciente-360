@@ -170,6 +170,28 @@ async function downloadPdf() {
   }
 }
 
+// ─── Renovação (T144 US-8.3) ─────────────────────────────────────────────────
+
+/**
+ * Janela de renovação: receita ativa + expires_at dentro de 30 dias (ou já vencida).
+ * Se a API expor `renewed_to_id`, impede dupla renovação; senão o backend retorna 422.
+ * A inelegibilidade definitiva é validada pelo backend — basta permitir o clique.
+ */
+const canRenew = computed(() => {
+  if (!prescription.value) return false
+  if (prescription.value.status !== 'active') return false
+  if (prescription.value.renewed_to_id) return false
+  if (!prescription.value.expires_at) return false
+  const daysUntilExpiry = Math.ceil(
+    (new Date(prescription.value.expires_at) - new Date()) / 86400000,
+  )
+  return daysUntilExpiry <= 30
+})
+
+function goToRenew() {
+  router.push({ name: 'prescriptions.renew', params: { id: id.value } })
+}
+
 // ─── Timeline simplificada ────────────────────────────────────────────────────
 
 const timelineEvents = computed(() => {
@@ -314,15 +336,25 @@ const timelineEvents = computed(() => {
               Cancelar receita
             </button>
 
-            <!-- Renovar — placeholder US-8.3 -->
-            <!-- TODO US-8.3: Renovação via IA — disponível em Lote D -->
+            <!-- Renovar (US-8.3) -->
+            <button
+              v-if="canRenew"
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-primary-300 px-3 py-1.5 text-sm font-medium text-primary-700 hover:bg-primary-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 transition"
+              @click="goToRenew"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+              Renovar
+            </button>
             <span
+              v-else-if="prescription.status === 'active' && !prescription.masked"
               class="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground-muted"
-              title="Disponível em breve"
+              title="Esta receita não pode ser renovada"
               aria-disabled="true"
             >
               Renovar
-              <span class="rounded bg-surface-elevated px-1 text-xs">Em breve</span>
             </span>
 
             <!-- Baixar PDF -->

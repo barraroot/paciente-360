@@ -2,6 +2,8 @@
 
 namespace App\Support\Metrics;
 
+use App\Domain\Prescription\Renewal\InitiatedByType;
+
 interface PrescriptionMetricsContract
 {
     public function alertDispatchedTotal(int $tenantId, string $alertStep, string $status): void;
@@ -17,6 +19,9 @@ interface PrescriptionMetricsContract
 
     /** T113 — Counter/gauge de alertas processados pelo job principal. */
     public function alertsProcessed(int $tenantId, int $count): void;
+
+    /** T148 — Counter de renovações iniciadas por tipo e tenant. */
+    public function renewalInitiated(int $tenantId, InitiatedByType $by): void;
 
     public function renewalConversionRate(int $tenantId, float $rate): void;
 

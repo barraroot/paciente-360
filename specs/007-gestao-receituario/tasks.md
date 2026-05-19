@@ -262,57 +262,57 @@
 
 ### Tests for US-8.3 ⚠️
 
-- [ ] T123 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionAiContextEndpointTest.php` — AC-8.3.1 (payload tem exatamente 7 campos da allowlist; sem `medication_name`/`posology`/`notes` — mesmo para `common`/`Q5`)
-- [ ] T124 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionRenewalTest.php` — AC-8.3.2 (POST /renew cria row em `prescription_renewals`; vincula `appointment_id`; emite `RenovacaoSolicitadaPelaIA`)
-- [ ] T125 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionAiRenewalNotifiesDoctorTest.php` — AC-8.3.7 / Q13 (listener `EnqueueInboxTaskOnAiRenewal` cria item de tarefa na Inbox Fase 3 para o médico emissor)
-- [ ] T126 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionRenewalStateGuardTest.php` — AC-8.3.6 (tentativa de IA renovar receita já cancelada/renovada retorna 422 `prescription_not_eligible_for_renewal`)
-- [ ] T127 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionRenewedChainTest.php` — emissão de `ReceitaRenovada` quando nova receita é criada com `renewed_from_id`; receita antiga transita para `status='superseded'`; cadência de alerta da antiga é cancelada (`CancelAlertScheduleOnRenewal`)
-- [ ] T128 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionAiContextAuthorizationTest.php` — Cenário 1 quickstart passo 3: Atendente acessa `/ai/prescriptions/{id}/context` → 403 + métrica `prescription_controlled_access_denied_total` incrementa
+- [x] T123 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionAiContextEndpointTest.php` — AC-8.3.1 (payload tem exatamente 7 campos da allowlist; sem `medication_name`/`posology`/`notes` — mesmo para `common`/`Q5`)
+- [x] T124 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionRenewalTest.php` — AC-8.3.2 (POST /renew cria row em `prescription_renewals`; vincula `appointment_id`; emite `RenovacaoSolicitadaPelaIA`)
+- [x] T125 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionAiRenewalNotifiesDoctorTest.php` — AC-8.3.7 / Q13 (listener `EnqueueInboxTaskOnAiRenewal` cria item de tarefa na Inbox Fase 3 para o médico emissor)
+- [x] T126 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionRenewalStateGuardTest.php` — AC-8.3.6 (tentativa de IA renovar receita já cancelada/renovada retorna 422 `prescription_not_eligible_for_renewal`)
+- [x] T127 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionRenewedChainTest.php` — emissão de `ReceitaRenovada` quando nova receita é criada com `renewed_from_id`; receita antiga transita para `status='superseded'`; cadência de alerta da antiga é cancelada (`CancelAlertScheduleOnRenewal`)
+- [x] T128 [P] [US3] Teste `tests/Feature/Prescription/PrescriptionAiContextAuthorizationTest.php` — Cenário 1 quickstart passo 3: Atendente acessa `/ai/prescriptions/{id}/context` → 403 + métrica `prescription_controlled_access_denied_total` incrementa
 
 ### Domain — renewal aggregate
 
-- [ ] T129 [US3] Implementar `app/Domain/Prescription/Renewal/PrescriptionRenewalPolicyService.php` — `canRenew(Prescription $p): bool` (receita `active`, dentro de janela D-30, não já renovada)
-- [ ] T130 [US3] Implementar `app/Domain/Prescription/Renewal/RenewPrescriptionService.php` — `initiate(Prescription $original, InitiatedByType $by, ?int $appointmentId, ?int $userId): PrescriptionRenewal` cria row + emite evento; `complete(PrescriptionRenewal $r, Prescription $newPrescription): void` popula `renewed_prescription_id` + emite `ReceitaRenovada` + transita original para `superseded`
+- [x] T129 [US3] Implementar `app/Domain/Prescription/Renewal/PrescriptionRenewalPolicyService.php` — `canRenew(Prescription $p): bool` (receita `active`, dentro de janela D-30, não já renovada)
+- [x] T130 [US3] Implementar `app/Domain/Prescription/Renewal/RenewPrescriptionService.php` — `initiate(Prescription $original, InitiatedByType $by, ?int $appointmentId, ?int $userId): PrescriptionRenewal` cria row + emite evento; `complete(PrescriptionRenewal $r, Prescription $newPrescription): void` popula `renewed_prescription_id` + emite `ReceitaRenovada` + transita original para `superseded`
 
 ### Eventos + Listeners
 
-- [ ] T131 [P] [US3] Criar evento `app/Events/Prescription/RenovacaoSolicitadaPelaIA.php` implements `ContainsNoClinicalData` — `prescriptionId, patientId, professionalId, appointmentId`
-- [ ] T132 [P] [US3] Criar evento `app/Events/Prescription/ReceitaRenovada.php` — `oldPrescriptionId, newPrescriptionId, renewedAt`
-- [ ] T133 [P] [US3] Criar listener `app/Listeners/Prescription/EnqueueInboxTaskOnAiRenewal.php` — consome `RenovacaoSolicitadaPelaIA`, cria `InboxTask` (Fase 3) "Renovação agendada pela IA — paciente {nome}" para `prescription.professional_id`
-- [ ] T134 [P] [US3] Criar listener `app/Listeners/Prescription/CancelAlertScheduleOnRenewal.php` — consome `ReceitaRenovada`, transita alerts `pending` da receita original para `cancelled`
+- [x] T131 [P] [US3] Criar evento `app/Events/Prescription/RenovacaoSolicitadaPelaIA.php` implements `ContainsNoClinicalData` — `prescriptionId, patientId, professionalId, appointmentId`
+- [x] T132 [P] [US3] Criar evento `app/Events/Prescription/ReceitaRenovada.php` — `oldPrescriptionId, newPrescriptionId, renewedAt`
+- [x] T133 [P] [US3] Criar listener `app/Listeners/Prescription/EnqueueInboxTaskOnAiRenewal.php` — consome `RenovacaoSolicitadaPelaIA`, cria `InboxTask` (Fase 3) "Renovação agendada pela IA — paciente {nome}" para `prescription.professional_id`
+- [x] T134 [P] [US3] Criar listener `app/Listeners/Prescription/CancelAlertScheduleOnRenewal.php` — consome `ReceitaRenovada`, transita alerts `pending` da receita original para `cancelled`
 
 ### Controllers + endpoints
 
-- [ ] T135 [US3] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionRenewalController.php` — `store` (POST /prescriptions/{id}/renew)
-- [ ] T136 [US3] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionContextForAiController.php` — `show` (GET /ai/prescriptions/{id}/context); restrito a token de sistema (ability `prescription.ai_context`); valida que a receita está em janela D-15/7/1; retorna `PrescriptionForAiResource`
-- [ ] T137 [P] [US3] Implementar `app/Http/Requests/Prescriptions/RenewPrescriptionRequest.php` — `initiated_by ∈ {professional, ai, patient}`, `appointment_id` opcional, validação cross-tenant
-- [ ] T138 [P] [US3] Implementar `app/Http/Resources/Prescriptions/PrescriptionRenewalResource.php`
-- [ ] T139 [P] [US3] Implementar `app/Http/Resources/Prescriptions/PrescriptionForAiResource.php` — projeção dos 7 campos exatos; chamado APENAS pelo endpoint AI (não reutilizado em outros lugares)
-- [ ] T140 [US3] Adicionar rotas em `routes/api.php`: `POST /api/v1/prescriptions/{id}/renew` + `GET /api/v1/ai/prescriptions/{id}/context` (middleware extra `ability:prescription.ai_context` para o endpoint AI)
+- [x] T135 [US3] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionRenewalController.php` — `store` (POST /prescriptions/{id}/renew)
+- [x] T136 [US3] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionContextForAiController.php` — `show` (GET /ai/prescriptions/{id}/context); restrito a token de sistema (ability `prescription.ai_context`); valida que a receita está em janela D-15/7/1; retorna `PrescriptionForAiResource`
+- [x] T137 [P] [US3] Implementar `app/Http/Requests/Prescriptions/RenewPrescriptionRequest.php` — `initiated_by ∈ {professional, ai, patient}`, `appointment_id` opcional, validação cross-tenant
+- [x] T138 [P] [US3] Implementar `app/Http/Resources/Prescriptions/PrescriptionRenewalResource.php`
+- [x] T139 [P] [US3] Implementar `app/Http/Resources/Prescriptions/PrescriptionForAiResource.php` — projeção dos 7 campos exatos; chamado APENAS pelo endpoint AI (não reutilizado em outros lugares)
+- [x] T140 [US3] Adicionar rotas em `routes/api.php`: `POST /api/v1/prescriptions/{id}/renew` + `GET /api/v1/ai/prescriptions/{id}/context` (middleware extra `ability:prescription.ai_context` para o endpoint AI)
 
 ### Seed da ability `prescription.ai_context`
 
-- [ ] T141 [US3] Adicionar ability `prescription.ai_context` em `PrescriptionPermissionsSeeder` (token de sistema/IA somente) + atualização da seed migration T012
+- [x] T141 [US3] Adicionar ability `prescription.ai_context` em `PrescriptionPermissionsSeeder` (token de sistema/IA somente) + atualização da seed migration T012
 
 ### `StorePrescriptionRequest` reconhece `renewed_from_id`
 
-- [ ] T142 [US3] Atualizar `StorePrescriptionRequest` (T060) para aceitar `renewed_from_id` opcional; service `PrescriptionService::create()` chama `RenewPrescriptionService::complete()` quando preenchido
+- [x] T142 [US3] Atualizar `StorePrescriptionRequest` (T060) para aceitar `renewed_from_id` opcional; service `PrescriptionService::create()` chama `RenewPrescriptionService::complete()` quando preenchido
 
 ### Frontend — botão renovar + página dedicada
 
-- [ ] T143 [P] [US3] Criar `resources/js/pages/prescriptions/PrescriptionRenewPage.vue` — pré-preenche formulário com dados da original + permite editar; submete `POST /prescriptions` com `renewed_from_id` setado
-- [ ] T144 [US3] Habilitar botão "Renovar esta receita" em `PrescriptionShowPage.vue` quando `policy.canRenew && status==='active'`
-- [ ] T145 [P] [US3] Criar componente `resources/js/components/prescriptions/PrescriptionRenewalLink.vue` — exibido na agenda (Fase 5) quando `appointment.prescription_id` setado: "Renovação de receita — ref. Receita #N de DD/MM/AAAA"
+- [x] T143 [P] [US3] Criar `resources/js/pages/prescriptions/PrescriptionRenewPage.vue` — pré-preenche formulário com dados da original + permite editar; submete `POST /prescriptions` com `renewed_from_id` setado
+- [x] T144 [US3] Habilitar botão "Renovar esta receita" em `PrescriptionShowPage.vue` quando `policy.canRenew && status==='active'`
+- [x] T145 [P] [US3] Criar componente `resources/js/components/prescriptions/PrescriptionRenewalLink.vue` — exibido na agenda (Fase 5) quando `appointment.prescription_id` setado: "Renovação de receita — ref. Receita #N de DD/MM/AAAA"
 
 ### Integração com Fase 5 (agenda) — sem alter retroativo
 
-- [ ] T146 [US3] Em `PrescriptionRenewalController::store`, validar que `appointment_id` (se passado) é do mesmo tenant + pertence à agenda; armazenar somente em `prescription_renewals.appointment_id` (sem tocar em `appointments`) — convenção C7 do plan
-- [ ] T147 [US3] Criar query helper `app/Domain/Prescription/Renewal/AppointmentRenewalLookupService.php` — método `findRenewalByAppointment(int $appointmentId): ?PrescriptionRenewal` para a Fase 5 (e UI da agenda) descobrir a receita original a partir do `appointment_id`
+- [x] T146 [US3] Em `PrescriptionRenewalController::store`, validar que `appointment_id` (se passado) é do mesmo tenant + pertence à agenda; armazenar somente em `prescription_renewals.appointment_id` (sem tocar em `appointments`) — convenção C7 do plan
+- [x] T147 [US3] Criar query helper `app/Domain/Prescription/Renewal/AppointmentRenewalLookupService.php` — método `findRenewalByAppointment(int $appointmentId): ?PrescriptionRenewal` para a Fase 5 (e UI da agenda) descobrir a receita original a partir do `appointment_id`
 
 ### Métricas
 
-- [ ] T148 [P] [US3] Adicionar em `PrescriptionMetrics`: `prescription_renewals_initiated_total{initiated_by,tenant}`, `prescription_renewal_conversion_rate` (gauge atualizada por cron diário)
-- [ ] T149 [P] [US3] Adicionar log estruturado em `RenewPrescriptionService` (Pail-compatible) para investigação de funil "alerta → renovação"
+- [x] T148 [P] [US3] Adicionar em `PrescriptionMetrics`: `prescription_renewals_initiated_total{initiated_by,tenant}`, `prescription_renewal_conversion_rate` (gauge atualizada por cron diário)
+- [x] T149 [P] [US3] Adicionar log estruturado em `RenewPrescriptionService` (Pail-compatible) para investigação de funil "alerta → renovação"
 
 **Checkpoint US-8.3**: stub de IA consegue obter contexto pseudonimizado; renovação materializa em `prescription_renewals`; médico emissor recebe tarefa Inbox; cadência da receita original cancelada.
 

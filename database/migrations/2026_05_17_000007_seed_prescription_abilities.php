@@ -21,6 +21,9 @@ return new class extends Migration
         'prescription.view_controlled',
         'prescription.export',
         'prescription_alert.configure',
+        // T141 — Ability exclusiva para tokens de sistema/IA.
+        // NÃO atribuída a nenhuma role default — apenas via createToken('ai-system', ['prescription.ai_context']).
+        'prescription.ai_context',
     ];
 
     /**

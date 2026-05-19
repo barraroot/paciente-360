@@ -109,3 +109,32 @@ export const getPrescriptionAlerts = async (id) => {
   const { data } = await api.get(`/prescriptions/${id}/alerts`)
   return data.data ?? data
 }
+
+// ─── Renovação (US-8.3) ───────────────────────────────────────────────────────
+
+/**
+ * POST /api/v1/prescriptions/{id}/renew
+ * Acionado pelo profissional ou IA para registrar a intenção de renovação.
+ * Retorna 201 com PrescriptionRenewal ou 422 prescription_not_eligible_for_renewal.
+ *
+ * @param {string|number} id
+ * @param {{ initiated_by: 'professional'|'ai'|'patient', appointment_id?: number }} payload
+ */
+export const renewPrescription = (id, payload) =>
+  api.post(`/prescriptions/${id}/renew`, payload)
+
+/**
+ * Busca a renovação de receita vinculada a uma consulta.
+ *
+ * TODO: endpoint GET /api/v1/appointments/{id}/renewal ainda não existe no backend.
+ * Quando implementado, substituir o corpo desta função por:
+ *   const { data } = await api.get(`/appointments/${appointmentId}/renewal`)
+ *   return data.data ?? data
+ *
+ * @param {number} appointmentId
+ * @returns {Promise<Object|null>}
+ */
+export const getAppointmentRenewal = async (_appointmentId) => {
+  // Placeholder — retorna null até endpoint ser implementado
+  return null
+}

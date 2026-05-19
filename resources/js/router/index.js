@@ -240,6 +240,13 @@ const routes = [
         props: (route) => ({ id: route.params.id }),
         meta: { requiresAuth: true, ability: 'prescription.view', title: 'Detalhe da Receita' },
     },
+    {
+        path: '/panel/receituarios/:id/renovar',
+        name: 'prescriptions.renew',
+        component: () => import('@/pages/prescriptions/PrescriptionRenewPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { requiresAuth: true, ability: 'prescription.create', title: 'Renovar Receita' },
+    },
 
     // ─── Inbox Unificada (Omnichannel — US4) ───────────────────────────────────
     {

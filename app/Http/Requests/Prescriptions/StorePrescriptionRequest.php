@@ -61,6 +61,10 @@ class StorePrescriptionRequest extends FormRequest
             'items.*.pharmaceutical_form' => ['nullable', 'string', 'max:100'],
             'items.*.quantity' => ['nullable', 'string', 'max:100'],
             'items.*.treatment_duration' => ['nullable', 'string', 'max:100'],
+            // T142 — renewed_from_id: vínculo com receita original (US-8.3).
+            // Sem `exists` aqui — validação cross-tenant feita no service para
+            // evitar timing attack e vazamento de existência via erro.
+            'renewed_from_id' => ['nullable', 'integer'],
         ];
     }
 

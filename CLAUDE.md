@@ -10,16 +10,24 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
 - php - 8.5
+- filament/filament (FILAMENT) - v5
+- laravel/cashier (CASHIER) - v16
 - laravel/framework (LARAVEL) - v13
+- laravel/horizon (HORIZON) - v5
+- laravel/pail (PAIL) - v1
 - laravel/prompts (PROMPTS) - v0
 - laravel/reverb (REVERB) - v1
+- laravel/sanctum (SANCTUM) - v4
+- laravel/telescope (TELESCOPE) - v5
+- livewire/livewire (LIVEWIRE) - v4
 - laravel/boost (BOOST) - v2
 - laravel/mcp (MCP) - v0
-- laravel/pail (PAIL) - v1
 - laravel/pint (PINT) - v1
 - laravel/sail (SAIL) - v1
 - phpunit/phpunit (PHPUNIT) - v12
+- vue (VUE) - v3
 - laravel-echo (ECHO) - v2
+- prettier (PRETTIER) - v3
 - tailwindcss (TAILWINDCSS) - v4
 
 ## Skills Activation
@@ -99,7 +107,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Always use curly braces for control structures, even for single-line bodies.
 - Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`. Do not leave empty zero-parameter `__construct()` methods unless the constructor is private.
 - Use explicit return type declarations and type hints for all method parameters: `function isAccessible(User $user, ?string $path = null): bool`
-- Use TitleCase for Enum keys: `FavoritePerson`, `BestLake`, `Monthly`.
+- Follow existing application Enum naming conventions.
 - Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
 - Use array shape type definitions in PHPDoc blocks.
 
@@ -122,6 +130,13 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
     - Execute Node commands: `vendor/bin/sail npm run dev`
     - Execute PHP scripts: `vendor/bin/sail php [script]`
 - View all available Sail commands by running `vendor/bin/sail` without arguments.
+
+=== tests rules ===
+
+# Test Enforcement
+
+- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
+- Run the minimum number of tests needed to ensure code quality and speed. Use `vendor/bin/sail artisan test --compact` with a specific filename or filter.
 
 === laravel/core rules ===
 
@@ -178,14 +193,257 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - To run all tests in a file: `vendor/bin/sail artisan test --compact tests/Feature/ExampleTest.php`.
 - To filter on a particular test name: `vendor/bin/sail artisan test --compact --filter=testName` (recommended after making a change to a related file).
 
+=== filament/filament rules ===
+
+## Filament
+
+- Filament is a Laravel UI framework built on Livewire, Alpine.js, and Tailwind CSS. UIs are defined in PHP via fluent, chainable components. Follow existing conventions in this app.
+- Use the `search-docs` tool for official documentation on Artisan commands, code examples, testing, relationships, and idiomatic practices. If `search-docs` is unavailable, refer to https://filamentphp.com/docs.
+
+### Artisan
+
+- Always use Filament-specific Artisan commands to create files. Find available commands with the `list-artisan-commands` tool, or run `php artisan --help`.
+- Inspect required options before running, and always pass `--no-interaction`.
+
+### Patterns
+
+Always use static `make()` methods to initialize components. Most configuration methods accept a `Closure` for dynamic values.
+
+Use `Get $get` to read other form field values for conditional logic:
+
+<code-snippet name="Conditional form field visibility" lang="php">
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
+
+Select::make('type')
+    ->options(CompanyType::class)
+    ->required()
+    ->live(),
+
+TextInput::make('company_name')
+    ->required()
+    ->visible(fn (Get $get): bool => $get('type') === 'business'),
+
+</code-snippet>
+
+Use `Set $set` inside `->afterStateUpdated()` on a `->live()` field to mutate another field reactively. Prefer `->live(onBlur: true)` on text inputs to avoid per-keystroke updates:
+
+<code-snippet name="Reactive field update" lang="php">
+use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Support\Str;
+
+TextInput::make('title')
+    ->required()
+    ->live(onBlur: true)
+    ->afterStateUpdated(fn (Set $set, ?string $state) => $set(
+        'slug',
+        Str::slug($state ?? ''),
+    )),
+
+TextInput::make('slug')
+    ->required(),
+
+</code-snippet>
+
+Compose layout by nesting `Section` and `Grid`. Children need explicit `->columnSpan()` or `->columnSpanFull()`:
+
+<code-snippet name="Section and Grid layout" lang="php">
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+
+Section::make('Details')
+    ->schema([
+        Grid::make(2)->schema([
+            TextInput::make('first_name')
+                ->columnSpan(1),
+            TextInput::make('last_name')
+                ->columnSpan(1),
+            TextInput::make('bio')
+                ->columnSpanFull(),
+        ]),
+    ]),
+
+</code-snippet>
+
+Use `Repeater` for inline `HasMany` management. `->relationship()` with no args binds to the relationship matching the field name:
+
+<code-snippet name="Repeater for HasMany" lang="php">
+use Filament\Forms\Components\Repeater;
+
+Repeater::make('qualifications')
+    ->relationship()
+    ->schema([
+        TextInput::make('institution')
+            ->required(),
+        TextInput::make('qualification')
+            ->required(),
+    ])
+    ->columns(2),
+
+</code-snippet>
+
+Use `state()` with a `Closure` to compute derived column values:
+
+<code-snippet name="Computed table column value" lang="php">
+use Filament\Tables\Columns\TextColumn;
+
+TextColumn::make('full_name')
+    ->state(fn (User $record): string => "{$record->first_name} {$record->last_name}"),
+
+</code-snippet>
+
+Use `SelectFilter` for enum or relationship filters, and `Filter` with a `->query()` closure for custom logic:
+
+<code-snippet name="Table filters" lang="php">
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
+
+SelectFilter::make('status')
+    ->options(UserStatus::class),
+
+SelectFilter::make('author')
+    ->relationship('author', 'name'),
+
+Filter::make('verified')
+    ->query(fn (Builder $query) => $query->whereNotNull('email_verified_at')),
+
+</code-snippet>
+
+Actions are buttons that encapsulate optional modal forms and behavior:
+
+<code-snippet name="Action with modal form" lang="php">
+use Filament\Actions\Action;
+
+Action::make('updateEmail')
+    ->schema([
+        TextInput::make('email')
+            ->email()
+            ->required(),
+    ])
+    ->action(fn (array $data, User $record) => $record->update($data)),
+
+</code-snippet>
+
+### Testing
+
+Testing setup (requires `pestphp/pest-plugin-livewire` in `composer.json`):
+
+- Always call `$this->actingAs(User::factory()->create())` before testing panel functionality.
+- For edit pages, pass `['record' => $user->id]`, use `->call('save')` (not `->call('create')`), and do not assert `->assertRedirect()` (edit pages do not redirect after save).
+
+<code-snippet name="Table test" lang="php">
+use function Pest\Livewire\livewire;
+
+livewire(ListUsers::class)
+    ->assertCanSeeTableRecords($users)
+    ->searchTable($users->first()->name)
+    ->assertCanSeeTableRecords($users->take(1))
+    ->assertCanNotSeeTableRecords($users->skip(1));
+
+</code-snippet>
+
+<code-snippet name="Create resource test" lang="php">
+use function Pest\Laravel\assertDatabaseHas;
+
+livewire(CreateUser::class)
+    ->fillForm([
+        'name' => 'Test',
+        'email' => 'test@example.com',
+    ])
+    ->call('create')
+    ->assertNotified()
+    ->assertHasNoFormErrors()
+    ->assertRedirect();
+
+assertDatabaseHas(User::class, [
+    'name' => 'Test',
+    'email' => 'test@example.com',
+]);
+
+</code-snippet>
+
+<code-snippet name="Edit resource test" lang="php">
+livewire(EditUser::class, ['record' => $user->id])
+    ->fillForm(['name' => 'Updated'])
+    ->call('save')
+    ->assertNotified()
+    ->assertHasNoFormErrors();
+
+assertDatabaseHas(User::class, [
+    'id' => $user->id,
+    'name' => 'Updated',
+]);
+
+</code-snippet>
+
+<code-snippet name="Testing validation" lang="php">
+livewire(CreateUser::class)
+    ->fillForm([
+        'name' => null,
+        'email' => 'invalid-email',
+    ])
+    ->call('create')
+    ->assertHasFormErrors([
+        'name' => 'required',
+        'email' => 'email',
+    ])
+    ->assertNotNotified();
+
+</code-snippet>
+
+Use `->callAction(DeleteAction::class)` for page actions, or `->callAction(TestAction::make('name')->table($record))` for table actions:
+
+<code-snippet name="Calling actions" lang="php">
+use Filament\Actions\Testing\TestAction;
+
+livewire(ListUsers::class)
+    ->callAction(TestAction::make('promote')->table($user), [
+        'role' => 'admin',
+    ])
+    ->assertNotified();
+
+</code-snippet>
+
+### Correct Namespaces
+
+- Form fields (`TextInput`, `Select`, `Repeater`, etc.): `Filament\Forms\Components\`
+- Infolist entries (`TextEntry`, `IconEntry`, etc.): `Filament\Infolists\Components\`
+- Layout components (`Grid`, `Section`, `Fieldset`, `Tabs`, `Wizard`, etc.): `Filament\Schemas\Components\`
+- Schema utilities (`Get`, `Set`, etc.): `Filament\Schemas\Components\Utilities\`
+- Table columns (`TextColumn`, `IconColumn`, etc.): `Filament\Tables\Columns\`
+- Table filters (`SelectFilter`, `Filter`, etc.): `Filament\Tables\Filters\`
+- Actions (`DeleteAction`, `CreateAction`, etc.): `Filament\Actions\`. Never use `Filament\Tables\Actions\`, `Filament\Forms\Actions\`, or any other sub-namespace for actions.
+- Icons: `Filament\Support\Icons\Heroicon` enum (e.g., `Heroicon::PencilSquare`)
+
+### Common Mistakes
+
+- **Never assume public file visibility.** File visibility is `private` by default. Always use `->visibility('public')` when public access is needed.
+- **Never assume full-width layout.** `Grid`, `Section`, `Fieldset`, and `Repeater` do not span all columns by default.
+- **Use `Select::make('author_id')->relationship('author', 'name')` for BelongsTo fields.** `BelongsToSelect` does not exist in v4.
+- **`Repeater` uses `->schema()`, not `->fields()`.**
+- **Never add `->dehydrated(false)` to fields that need to be saved.** It strips the value from form state before `->action()` or the save handler runs. Only use it for helper/UI-only fields.
+- **Use correct property types when overriding `Page`, `Resource`, and `Widget` properties.** These properties have union types or changed modifiers that must be preserved:
+  - `$navigationIcon`: `protected static string | BackedEnum | null` (not `?string`)
+  - `$navigationGroup`: `protected static string | UnitEnum | null` (not `?string`)
+  - `$view`: `protected string` (not `protected static string`) on `Page` and `Widget` classes
+
 </laravel-boost-guidelines>
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: nenhuma — pronto para iniciar próxima feature (use `/speckit-specify` para criar). Última entrega `006-agenda-ux-polish` mergeada em `main` em 2026-05-17 (commit `e879e34`).
-- **Previous features delivered (6)**:
+- **Active feature**: nenhuma — aguardando próxima fase.
+- **Previous features delivered (7)**:
+  - `007-gestao-receituario` — [spec](specs/007-gestao-receituario/spec.md) — Fase 7 / Épico 8 (Gestão de Receituários) entregue em 2026-05-19. **5 lotes A-E**, **199/199 tasks**, **175/175 prescription tests verdes**, suite full **1342 tests / 1338 passed / 0 failures (1 flaky timing pré-existente)**. Commits: A `66c6c46` → B `8a9890e` → C `7780b27` → D `44d8500` → E (pendente). Highlights:
+    - 4 user stories Épico 8: US-8.1 Cadastro (mascaramento controladas 5 perfis), US-8.2 Alerta D-15/D-7/D-1, US-8.3 Renovação IA (contrato pseudonimizado 7 campos), US-8.4 Relatório + CSV
+    - 7 entidades + 9 eventos + 7 listeners + 5 cron jobs + ~13 endpoints REST + Filament super-admin
+    - **6 Gates constitucionais** verdes: ControlledPrescriptionAccessTest (Q8), ControlledPrescriptionRegulatoryTest (Portaria 344/98), PrescriptionAlertIdempotencyTest (Redis NX + DB UNIQUE), PrescriptionEventPayloadLgpdTest (reflection allowlist 7 props), CrossTenantPrescriptionTest (404 não 403), PrescriptionAlertChannelTest (template HSM)
+    - DEFERRED: InboxTask real (Inbox Fase 3 sem `createForPatient`); MessageDispatchService::send() real (mesma dep); S3 real delete em PurgeOldPdfVersions; Sentry tracing/alerting (config externa); Grafana dashboard; smoke staging E2E
+    - Constitution Check PASS 7/7 **sem amendment** (v1.4.0)
+  - `006-agenda-ux-polish` — [spec](specs/006-agenda-ux-polish/spec.md) — Polimento UX da Agenda (Fase 6 UX) entregue em 2026-05-15, mergeada em `main` em 2026-05-17. **25/25 tasks**, 4 lotes A-D. Highlights:
   - `006-agenda-ux-polish` — [spec](specs/006-agenda-ux-polish/spec.md) — Polimento UX da Agenda (Fase 6 UX) entregue em 2026-05-15, mergeada em `main` em 2026-05-17. **25/25 tasks**, 4 lotes A-D. Highlights:
     - Lote A: AppointmentTypesPage UX (modal a11y, color picker mobile, moeda pt-BR via `Intl.NumberFormat`)
     - Lote B: ScheduleConfigPage UX (skeleton, copiar dia, atalho Ctrl+S, accordion mobile)
@@ -343,3 +601,77 @@ When working on agenda features post-Fase 5, remember:
     - **Proibido**: `confirm()`, `prompt()`, `alert()` nativos em qualquer componente novo — todos inacessíveis por leitores de tela e bloqueiam tab-order.
     - **Confirmação destrutiva**: sempre modal descritivo com nome/impacto do que será deletado — nunca só "Tem certeza?".
     - **Formatação moeda**: `new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)`. Data relativa: `DateTime.fromISO(iso).toRelative({ locale: 'pt-BR' })` via Luxon (já no bundle).
+
+## Receituários (Fase 7) — Key Patterns
+
+When working on prescription features post-Fase 7, remember:
+
+1. **`PrescriptionType` define a regra regulatória (Portaria 344/98)**
+   - `controlled` (Listas A) → validade fixa 30d + EXATAMENTE 1 item (trigger DB `enforce_controlled_single_item`) + mascaramento + audit em cada visualização.
+   - `special` (Listas B) → validade fixa 30d.
+   - `common` (Lista C ou sem controle) → `duration_days ∈ {30, 60, 90, 180}` (CHECK constraint server-side).
+   - CHECK `chk_prescription_validity_by_type` enforça regra no DB; `StorePrescriptionRequest` é defesa em profundidade.
+
+2. **Mascaramento de controladas via `ControlledPrescriptionMaskingService`**
+   - Receita `type=controlled` retorna `PrescriptionMasked` (omite `items`/`notes`) para qualquer user sem ability `prescription.view_controlled`.
+   - Emissor + Admin Clínica veem completo + emitem evento `PrescricaoControladaVisualizada` (audit em `audit_logs`).
+   - **Ponto único de emissão**: `PrescriptionResource::toArray()` — evita duplicação em coleções.
+
+3. **Global scope `withControlledIfAble` em `Prescription::booted()`**
+   - Quando user não tem `prescription.view_controlled`: filtra receitas `controlled` cujo `professional_id != $user->id` antes do query DB.
+   - Isto + mascaramento no Resource = duas camadas de defesa (Princípio I + defense in depth).
+
+4. **Cadência de alertas D-15/D-7/D-1 — Idempotência dual layer**
+   - DB UNIQUE `(prescription_id, alert_type)` + Redis lock `prescription_alert:{pid}:{type}:{date}` TTL 25h (defense in depth).
+   - `PrescriptionAlertIdempotencyKey::for($pid, $alertType, $date)` gera chave Redis (padrão Fase 5 commands).
+   - Cron `prescriptions:process-alerts` daily 06:00 BRT + `prescriptions:expire-active` daily 00:30 BRT (`withoutOverlapping()`).
+   - Checkpoint passado na criação → `status=skipped` com `skip_reason='checkpoint_past_at_creation'` (não tenta disparar retroativo).
+
+5. **`ContainsNoClinicalData` marker interface — Gate LGPD por reflection**
+   - Qualquer evento consumido pela IA Matricial implementa `App\Support\Lgpd\ContainsNoClinicalData` (marker sem métodos).
+   - `PrescriptionEventPayloadLgpdTest` valida via reflection que `ReceitaProximaDoVencimento` tem EXATAMENTE 7 props: `prescriptionId, patientId, professionalId, professionalName, daysUntilExpiry, prescriptionType, defaultAppointmentTypeId`.
+   - **Qualquer field clínico (medication_name/posology/notes) quebra o gate** — adicionar nova prop exige revisão LGPD obrigatória.
+   - `PrescriptionForAiResource` projeta os mesmos 7 campos no endpoint `GET /ai/prescriptions/{id}/context`.
+
+6. **Opt-out paciente via `PatientProfessionalPreference`**
+   - `suppress_renewal_notifications` boolean por `(patient_id, professional_id)` — UNIQUE composto.
+   - `DispatchPrescriptionAlertViaMessaging` lê a preferência; se `suppress=true` → alert vira `skipped` com `skip_reason='recipient_opted_out'`. Evento `ReceitaProximaDoVencimento` ainda é emitido — apenas envio externo é suprimido.
+
+7. **Debounce 4h por destinatário via Redis** (FR-016 / Q4d)
+   - Cache key `messaging_debounce:prescription_alert:{patient_id}:{alert_type}` TTL 14400s.
+   - `Redis::set($key, 1, 'EX', 14400, 'NX')` → se já existe → `skip_reason='debounced'`.
+
+8. **Renovação via `prescription_renewals` (junção explícita)**
+   - UNIQUE parcial `original_prescription_id WHERE renewed_prescription_id IS NOT NULL` impede duas renovações concluídas da mesma origem.
+   - `RenewPrescriptionService::complete()` transita original → `superseded` + emite `ReceitaRenovada` → listener `CancelAlertScheduleOnRenewal` cancela alerts pending.
+   - `StorePrescriptionRequest` aceita `renewed_from_id` nullable; `PrescriptionService::create()` chama `complete()` na mesma transação.
+   - Política: `canRenew = status=active AND expires_at <= today+30d AND não já renovada`. Inelegível → 422 `prescription_not_eligible_for_renewal` com `reason` específico.
+
+9. **Versionamento de PDF path-based** (research §2)
+   - Path `prescriptions/{tenant_id}/{prescription_id}/v{n}.pdf` — versão atual em `pdf_version` na DB.
+   - Substituição preserva `v0.pdf` no S3 (não usa S3 native versioning — portabilidade entre disks).
+   - URL assinada TTL 15min via `PrescriptionSignedUrlService::sign()` + audit log de emissão.
+   - Job semanal `prescriptions:purge-old-pdfs` mantém últimas 5 versões — controladas preservadas TODAS dentro da janela de retenção.
+
+10. **Filament super-admin read-only para suporte** (research §7.4)
+    - `app/Filament/Resources/Prescriptions/PrescriptionResource.php` — `withoutGlobalScopes()` para enxergar cross-tenant.
+    - Apenas `ViewAction` (sem create/edit/delete). Audit log `super_admin.prescription.viewed` no boot do componente.
+    - Acessível em `crm.com.br/admin` (cookie session Fase 4).
+
+11. **Métricas Prometheus em `PrescriptionMetrics`**
+    - `prescription_alerts_dispatched_total{tenant, alert_step, status}`
+    - `prescription_alerts_blocked_total{reason, tenant}` (`no_template`, `no_channel`, `no_conversation`)
+    - `prescription_alerts_idempotency_hits_total`
+    - `prescription_alerts_processed_total`
+    - `prescription_renewals_initiated_total{initiated_by, tenant}`
+    - `prescription_pdfs_uploaded_total{status}`
+    - `prescription_signed_urls_emitted_total{tenant}`
+    - `prescription_csv_exports_total{tenant, has_controlled}`
+    - `prescription_controlled_access_denied_total{tenant, perfil}` (alerta Sentry > 10 em 5min = scan).
+
+12. **DEFERRED ao final da Fase 7** (documentados nos commits dos lotes C e D)
+    - **InboxTask real**: `EnqueueInboxTaskOnAiRenewal` e fallback em `DispatchPrescriptionAlertViaMessaging` usam `Log::warning` + métrica. Integração com `ConversationService::createForPatient()` da Fase 3 ainda não disponível (Conversation precisa `channel_id` + `external_thread_id`, modelo de inbox interna ainda não desenhado).
+    - **`MessageDispatchService::send()` real**: lookup de Conversation por paciente não existe — dispatcher atualiza `alert.status='dispatched'` diretamente.
+    - **S3 real delete** em `PurgeOldPrescriptionPdfVersionsJob`: stub `Log::info` por enquanto.
+    - **Smoke staging E2E**: 5 cenários do quickstart documentados em `docs/qa/smoke-fase7-prescriptions.md` — aguardando infra staging com módulo habilitado.
+    - **Sentry alerts**: contadores Prometheus prontos; rules de alerting precisam ser configuradas em prod.

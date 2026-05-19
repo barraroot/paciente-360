@@ -110,6 +110,22 @@ Broadcast::channel('tenant.{tenantId}.inbox', function (User $user, int $tenantI
         : false;
 });
 
+/*
+|--------------------------------------------------------------------------
+| T108 — Canal de Receituários (Fase 7)
+|--------------------------------------------------------------------------
+|
+| `prescriptions.{tenantId}` — canal privado para broadcast de alertas
+| de vencimento (ReceitaProximaDoVencimento → PrescriptionsReportRefresh).
+|
+| Qualquer user autenticado no tenant pode ingressar.
+| Usado pelo frontend para triggerar refresh do relatório de receitas.
+*/
+
+Broadcast::channel('prescriptions.{tenantId}', function (User $user, int $tenantId) {
+    return $user->tenant_id !== null && (int) $user->tenant_id === (int) $tenantId;
+});
+
 Broadcast::channel('tenant.{tenantId}.conversa.{conversationId}', function (User $user, int $tenantId, int $conversationId) {
     // (a) Pertencimento ao tenant
     if ((int) $user->tenant_id !== $tenantId) {

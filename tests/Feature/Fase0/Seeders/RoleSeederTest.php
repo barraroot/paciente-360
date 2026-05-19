@@ -53,15 +53,17 @@ class RoleSeederTest extends TestCase
         $rolesCount = DB::table('roles')->whereNull('tenant_id')->count();
         $permissionsCount = DB::table('permissions')->whereNull('tenant_id')->count();
 
-        // Após Fase 3 (T006), o RolesSeeder cria 26 permissions globais:
+        // Após Fase 7 Lote D (T141), o RolesSeeder cria 34 permissions globais:
         //   6 da Fase 0 (manage-users, manage-billing, manage-onboarding,
         //   view-audit-logs, view-billing, view-ai-usage) + 12 do CRM de
         //   pacientes (paciente.view/create/update/delete/import/export/merge/
         //   note.write + 4 sub-abilities paciente.note.view:{tipo}) +
         //   8 da Omnichannel Inbox (inbox.view/respond/assign/transfer/
-        //   takeover_ai + channel.connect/disconnect + quick_reply.manage).
+        //   takeover_ai + channel.connect/disconnect + quick_reply.manage) +
+        //   7 de receituário (create/view/update/cancel/view_controlled/export/alert.configure) +
+        //   1 de IA receituário (prescription.ai_context — token de sistema somente).
         $this->assertSame(6, $rolesCount, 'Reseed não deve duplicar roles.');
-        $this->assertSame(26, $permissionsCount, 'Reseed não deve duplicar permissions.');
+        $this->assertSame(34, $permissionsCount, 'Reseed não deve duplicar permissions.');
     }
 
     public function test_admin_clinica_has_all_permissions(): void
@@ -77,12 +79,12 @@ class RoleSeederTest extends TestCase
             ->where('guard_name', 'web')
             ->firstOrFail();
 
-        // Após Fase 3 (T006), admin-clinica recebe todas as 26 permissions
-        // (6 Fase 0 + 12 CRM pacientes + 8 Omnichannel Inbox — § 2.3 do spec da Fase 3).
+        // Após Fase 7, admin-clinica recebe 31 permissions:
+        // 26 anteriores + 5 de receituário (view/cancel/view_controlled/export/configure).
         $this->assertCount(
-            26,
+            31,
             $admin->permissions,
-            'admin-clinica deve ter as 26 permissions default (6 Fase 0 + 12 CRM pacientes + 8 Omnichannel).'
+            'admin-clinica deve ter as 31 permissions default incluindo receituário.'
         );
     }
 

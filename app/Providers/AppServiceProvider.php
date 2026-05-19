@@ -18,6 +18,7 @@ use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Observers\MessageObserver;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
 use App\Domain\Messaging\QuickReply\Models\QuickReply;
+use App\Domain\Prescription\Prescription\Prescription;
 use App\Events\Agenda\ConsultaConfirmacaoPendente;
 use App\Events\Agenda\ConsultaCriada;
 use App\Events\TenantResolved;
@@ -51,6 +52,7 @@ use App\Policies\InvitationPolicy;
 use App\Policies\MessagePolicy;
 use App\Policies\OnboardingPolicy;
 use App\Policies\PacientePolicy;
+use App\Policies\PrescriptionPolicy;
 use App\Policies\QuickReplyPolicy;
 use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
@@ -61,6 +63,8 @@ use App\Support\Metrics\AuthMetrics;
 use App\Support\Metrics\AuthMetricsContract;
 use App\Support\Metrics\MessagingMetrics;
 use App\Support\Metrics\MessagingMetricsContract;
+use App\Support\Metrics\PrescriptionMetrics;
+use App\Support\Metrics\PrescriptionMetricsContract;
 use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Cache;
@@ -123,6 +127,10 @@ class AppServiceProvider extends ServiceProvider
         // T024 (Fase 5) — AgendaMetrics: 7 métricas Prometheus do domínio Agenda.
         // Mesma estratégia graceful — degrada para Log::debug sem o pacote Prometheus.
         $this->app->singleton(AgendaMetricsContract::class, AgendaMetrics::class);
+
+        // Fase 7 — PrescriptionMetrics: 4 métricas Prometheus do domínio de receituários.
+        // Segue a mesma estratégia graceful dos domínios anteriores.
+        $this->app->singleton(PrescriptionMetricsContract::class, PrescriptionMetrics::class);
 
         // T034 — Fase 4: BearerAuthContract → TokenIssuerService (singleton).
         // Injeta em LoginController, LogoutAllController e qualquer consumer que
@@ -208,6 +216,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Tag::class, TagPolicy::class);
         Gate::policy(Convenio::class, ConvenioPolicy::class);
         Gate::policy(FunilColuna::class, FunilPolicy::class);
+        Gate::policy(Prescription::class, PrescriptionPolicy::class);
 
         // Fase 3 — Omnichannel Inbox (T076 + T119 + T154 + T239).
         Gate::policy(Channel::class, ChannelPolicy::class);

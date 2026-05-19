@@ -40,6 +40,13 @@ use App\Http\Controllers\Api\V1\Pacientes\PacienteTagsController;
 use App\Http\Controllers\Api\V1\Pacientes\PatchStatusController;
 use App\Http\Controllers\Api\V1\Pacientes\TagsController;
 use App\Http\Controllers\Api\V1\Pacientes\TimelineController;
+use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionAlertConfigController;
+use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionContextForAiController;
+use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionController;
+use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionCsvExportController;
+use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionPdfController;
+use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionRenewalController;
+use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionReportController;
 use App\Http\Controllers\Api\V1\Tenant\CurrentTenantController;
 use App\Http\Controllers\Api\V1\Tenant\RegisterController as TenantRegisterController;
 use App\Http\Controllers\Api\V1\Users\InvitationsController;
@@ -481,4 +488,100 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'agend
             ->name('appointment-types.update');
         Route::delete('appointment-types/{appointment_type}', [AppointmentTypeController::class, 'destroy'])
             ->name('appointment-types.destroy');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Prescriptions (Fase 7 — Épico 8)
+|
+| T070 — US-8.1 Cadastro de Receituário.
+| Middleware `prescription.module` gate de plano via tenant.settings.
+|
+| Routes:
+|   GET    /api/v1/prescriptions                    → index
+|   POST   /api/v1/prescriptions                    → store  (throttle:120,1)
+|   GET    /api/v1/prescriptions/{prescription}     → show
+|   PATCH  /api/v1/prescriptions/{prescription}     → update (notes only)
+|   POST   /api/v1/prescriptions/{prescription}/cancel → cancel
+|   POST   /api/v1/prescriptions/{prescription}/pdf → upload
+|   GET    /api/v1/prescriptions/{prescription}/pdf → download
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'prescription.module'])
+    ->prefix('prescriptions')
+    ->name('prescriptions.')
+    ->group(function (): void {
+        Route::get('/', [PrescriptionController::class, 'index'])
+            ->name('index');
+
+        Route::post('/', [PrescriptionController::class, 'store'])
+            ->middleware('throttle:120,1')
+            ->name('store');
+
+        Route::get('/{prescription}', [PrescriptionController::class, 'show'])
+            ->name('show');
+
+        Route::patch('/{prescription}', [PrescriptionController::class, 'update'])
+            ->name('update');
+
+        Route::post('/{prescription}/cancel', [PrescriptionController::class, 'cancel'])
+            ->name('cancel');
+
+        Route::post('/{prescription}/pdf', [PrescriptionPdfController::class, 'upload'])
+            ->name('pdf.upload');
+
+        Route::get('/{prescription}/pdf', [PrescriptionPdfController::class, 'download'])
+            ->name('pdf.download');
+
+        // T112 — US-8.2 Alertas de vencimento
+        Route::get('/{prescription}/alerts', [PrescriptionAlertConfigController::class, 'index'])
+            ->name('alerts.index');
+
+        Route::patch('/{prescription}/alert-config', [PrescriptionAlertConfigController::class, 'update'])
+            ->name('alert-config.update');
+
+        // T140 — US-8.3 Renovação via IA
+        Route::post('/{prescription}/renew', [PrescriptionRenewalController::class, 'store'])
+            ->name('renew');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| AI Prescriptions (Fase 7 — US-8.3 Renovação via IA)
+|
+| T140 — Endpoint de contexto pseudonimizado para a IA.
+| Requer ability `prescription.ai_context` no token Sanctum.
+|
+| Routes:
+|   GET /api/v1/ai/prescriptions/{prescription}/context → context
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'prescription.module'])
+    ->prefix('ai/prescriptions')
+    ->name('ai.prescriptions.')
+    ->group(function (): void {
+        Route::get('/{prescription}/context', [PrescriptionContextForAiController::class, 'show'])
+            ->name('context');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Prescription Reports (Fase 7 — US-8.4 Relatório)
+|
+| T162 — Relatório de receitas com cursor pagination + exportação CSV.
+|
+| Routes:
+|   GET /api/v1/prescription-reports         → index (cursor paginated)
+|   GET /api/v1/prescription-reports/export  → export CSV (streamed)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'prescription.module'])
+    ->prefix('prescription-reports')
+    ->name('prescription-reports.')
+    ->group(function (): void {
+        Route::get('/', [PrescriptionReportController::class, 'index'])
+            ->name('index');
+
+        Route::get('/export', [PrescriptionCsvExportController::class, 'export'])
+            ->name('export');
     });

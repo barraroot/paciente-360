@@ -101,3 +101,33 @@ Schedule::command('agenda:google-renew-watch-channels')
     ->dailyAt('02:00')
     ->timezone('America/Sao_Paulo')
     ->onOneServer();
+
+/*
+|--------------------------------------------------------------------------
+| Fase 7 — Gestão de Receituários (T107)
+|--------------------------------------------------------------------------
+|
+| prescriptions:process-alerts  — D-15/D-7/D-1 checkpoints (06:00 BRT).
+|   withoutOverlapping: evita processamento paralelo em tenants com muitas receitas.
+|
+| prescriptions:expire-active   — expiração de receitas ativas (00:30 BRT).
+|   Roda antes do cron de alertas para garantir que receitas superseded
+|   não recebam alertas desnecessários.
+*/
+
+Schedule::command('prescriptions:process-alerts')
+    ->dailyAt('06:00')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();
+
+Schedule::command('prescriptions:expire-active')
+    ->dailyAt('00:30')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();
+
+// T173 — Purge de versões antigas de PDFs (não-controladas, retém últimas 5).
+//   Roda semanalmente às segundas 02:00 BRT.
+Schedule::command('prescriptions:purge-old-pdfs')
+    ->weeklyOn(1, '02:00')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();

@@ -1,0 +1,328 @@
+{
+  "info": {
+    "_postman_id": "p360-prescriptions-fase7",
+    "name": "Paciente360 — Receituários (Fase 7)",
+    "description": "Coleção da API REST do módulo de Gestão de Receituários — Fase 7.\n\n## Pré-requisitos\n\n1. **Auth**: faça login via collection `Paciente360 API v1 (Bearer)` — `POST /auth/login` salva `{{token}}` e `{{tenant_slug}}`. Esta collection consome essas variáveis.\n2. **Tenant slug**: header `X-Tenant-Slug` injetado automaticamente em TODAS as requests autenticadas (Princípio II — triple-check anti-token-roubo cross-tenant).\n3. **Migrations + seeders**: `vendor/bin/sail artisan migrate && vendor/bin/sail artisan db:seed --class=RolesSeeder` antes de testar.\n4. **Módulo habilitado**: o tenant precisa de `tenant.settings.modules.prescriptions.enabled=true` (gate plan).\n\n## User Stories\n\n- **US-8.1** Cadastro — CRUD da receita + PDF async\n- **US-8.2** Alerta de Vencimento — cadência D-15/D-7/D-1 + toggle alert_disabled\n- **US-8.3** Renovação via IA — POST /renew + GET /ai/.../context\n- **US-8.4** Relatório — listagem com filtros + CSV export\n\n## Variáveis utilizadas\n\n- `base_url` — default `http://api.lvh.me/api/v1`\n- `token` — preenchido pelo login (collection Fase 4)\n- `tenant_slug` — preenchido pelo login (collection Fase 4)\n- `prescription_id`, `patient_id`, `professional_id`, `appointment_id` — IDs em path/body\n\n## Gates LGPD\n\n- Receitas controladas (`type=controlled`) retornam payload mascarado (`PrescriptionMasked`) para usuários sem ability `prescription.view_controlled`.\n- Endpoint AI context (`/ai/prescriptions/{id}/context`) só aceita tokens com ability `prescription.ai_context` (token de sistema/IA — não atribuída a roles humanas).\n- Cross-tenant retorna 404 (não 403) — evita leaking de existência.\n\n## Referências\n\n- Spec: `specs/007-gestao-receituario/spec.md`\n- OpenAPI: `specs/007-gestao-receituario/contracts/openapi.yaml`\n- Quickstart: `specs/007-gestao-receituario/quickstart.md`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Pre-request script (collection-level) — injeta Authorization + X-Tenant-Slug",
+          "if (pm.variables.get('skipAuth')) { return; }",
+          "",
+          "const token = pm.collectionVariables.get('token');",
+          "const tenantSlug = pm.collectionVariables.get('tenant_slug');",
+          "",
+          "if (token) {",
+          "    pm.request.headers.upsert({ key: 'Authorization', value: `Bearer ${token}` });",
+          "}",
+          "if (tenantSlug) {",
+          "    pm.request.headers.upsert({ key: 'X-Tenant-Slug', value: tenantSlug });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://api.lvh.me/api/v1", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "tenant_slug", "value": "", "type": "string" },
+    { "key": "prescription_id", "value": "1", "type": "string" },
+    { "key": "patient_id", "value": "1", "type": "string" },
+    { "key": "professional_id", "value": "1", "type": "string" },
+    { "key": "appointment_id", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "US-8.1 — Cadastro de Receituário",
+      "description": "CRUD da receita + PDF anexável async. Mascaramento de controladas para usuários sem `prescription.view_controlled`.",
+      "item": [
+        {
+          "name": "GET lista receitas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/prescriptions?status=active&type=common",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions"],
+              "query": [
+                { "key": "status", "value": "active" },
+                { "key": "type", "value": "common" },
+                { "key": "patient_id", "value": "{{patient_id}}", "disabled": true },
+                { "key": "professional_id", "value": "{{professional_id}}", "disabled": true },
+                { "key": "expires_after", "value": "2026-05-01", "disabled": true },
+                { "key": "expires_before", "value": "2026-06-30", "disabled": true },
+                { "key": "cursor", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST cria receita comum (90d)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/prescriptions", "host": ["{{base_url}}"], "path": ["prescriptions"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": {{patient_id}},\n  \"type\": \"common\",\n  \"issued_at\": \"2026-05-19\",\n  \"duration_days\": 90,\n  \"items\": [\n    {\n      \"medication_name\": \"Losartana 50mg\",\n      \"concentration\": \"50mg\",\n      \"pharmaceutical_form\": \"comprimido\",\n      \"posology\": \"1 comprimido pela manhã\",\n      \"quantity\": \"90 comprimidos\",\n      \"treatment_duration\": \"90 dias\"\n    }\n  ],\n  \"notes\": \"Renovação de uso contínuo\",\n  \"alert_disabled\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "POST cria receita especial (30d fixos)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/prescriptions", "host": ["{{base_url}}"], "path": ["prescriptions"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": {{patient_id}},\n  \"type\": \"special\",\n  \"issued_at\": \"2026-05-19\",\n  \"items\": [\n    {\n      \"medication_name\": \"Clonazepam 2mg\",\n      \"concentration\": \"2mg\",\n      \"pharmaceutical_form\": \"comprimido\",\n      \"posology\": \"1 comprimido ao deitar\",\n      \"quantity\": \"30 comprimidos\"\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "POST cria receita controlada (1 item obrigatório)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/prescriptions", "host": ["{{base_url}}"], "path": ["prescriptions"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": {{patient_id}},\n  \"type\": \"controlled\",\n  \"issued_at\": \"2026-05-19\",\n  \"items\": [\n    {\n      \"medication_name\": \"Morfina 10mg\",\n      \"concentration\": \"10mg\",\n      \"pharmaceutical_form\": \"comprimido\",\n      \"posology\": \"1 comprimido a cada 4h conforme dor\",\n      \"quantity\": \"30 comprimidos\"\n    }\n  ],\n  \"notes\": \"Manejo de dor pós-operatória\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET detalhe receita (visualização controlada emite audit)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/prescriptions/{{prescription_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions", "{{prescription_id}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH atualiza notes (único editável)",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/prescriptions/{{prescription_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions", "{{prescription_id}}"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Observação atualizada — paciente reportou efeito colateral leve.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST cancela receita (irreversível)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/prescriptions/{{prescription_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions", "{{prescription_id}}", "cancel"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancellation_reason_category\": \"erro_emissao\",\n  \"cancellation_reason\": \"Dose incorreta — receita substituída.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST upload PDF (async)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/prescriptions/{{prescription_id}}/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions", "{{prescription_id}}", "pdf"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "pdf", "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET download PDF (URL assinada TTL 15min)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/prescriptions/{{prescription_id}}/pdf",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions", "{{prescription_id}}", "pdf"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "US-8.2 — Alerta de Vencimento",
+      "description": "Cadência D-15/D-7/D-1 antes do vencimento. Idempotência via Redis lock + DB UNIQUE. Opt-out paciente. Toggle só para tipo `common`.",
+      "item": [
+        {
+          "name": "GET alertas da receita",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/prescriptions/{{prescription_id}}/alerts",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions", "{{prescription_id}}", "alerts"]
+            }
+          }
+        },
+        {
+          "name": "PATCH desativa alertas (apenas tipo common)",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/prescriptions/{{prescription_id}}/alert-config",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions", "{{prescription_id}}", "alert-config"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alert_disabled\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "PATCH reativa alertas",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/prescriptions/{{prescription_id}}/alert-config",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions", "{{prescription_id}}", "alert-config"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alert_disabled\": false\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "US-8.3 — Renovação via IA",
+      "description": "Renovação cria nova receita + supersede da original. Tabela `prescription_renewals` registra junção. Endpoint AI context expõe payload pseudonimizado.",
+      "item": [
+        {
+          "name": "POST renew (initiated_by=professional)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/prescriptions/{{prescription_id}}/renew",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions", "{{prescription_id}}", "renew"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"initiated_by\": \"professional\",\n  \"appointment_id\": {{appointment_id}}\n}"
+            }
+          }
+        },
+        {
+          "name": "POST renew (initiated_by=ai)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/prescriptions/{{prescription_id}}/renew",
+              "host": ["{{base_url}}"],
+              "path": ["prescriptions", "{{prescription_id}}", "renew"]
+            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"initiated_by\": \"ai\",\n  \"appointment_id\": {{appointment_id}}\n}"
+            }
+          }
+        },
+        {
+          "name": "POST cria nova receita com renewed_from_id (completa cadeia)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/prescriptions", "host": ["{{base_url}}"], "path": ["prescriptions"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": {{patient_id}},\n  \"type\": \"common\",\n  \"issued_at\": \"2026-05-19\",\n  \"duration_days\": 90,\n  \"renewed_from_id\": {{prescription_id}},\n  \"items\": [\n    {\n      \"medication_name\": \"Losartana 50mg\",\n      \"posology\": \"1 comprimido pela manhã\",\n      \"quantity\": \"90 comprimidos\"\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "GET AI context (exige ability prescription.ai_context)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/ai/prescriptions/{{prescription_id}}/context",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "prescriptions", "{{prescription_id}}", "context"]
+            },
+            "description": "Retorna PrescriptionForAi com 7 campos da allowlist LGPD: prescription_id, patient_id, professional_id, professional_name, days_until_expiry, prescription_type, default_appointment_type_id. ZERO dados clínicos."
+          }
+        }
+      ]
+    },
+    {
+      "name": "US-8.4 — Relatório de Receitas",
+      "description": "Listagem paginada cursor-based + CSV export. Respeita mascaramento de controladas. Prefixo CONFIDENCIAL_ no filename quando ≥1 controlada.",
+      "item": [
+        {
+          "name": "GET relatório paginado (filtros AND)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/prescription-reports?status=active&expires_before=2026-06-30",
+              "host": ["{{base_url}}"],
+              "path": ["prescription-reports"],
+              "query": [
+                { "key": "status", "value": "active" },
+                { "key": "type", "value": "controlled", "disabled": true },
+                { "key": "professional_id", "value": "{{professional_id}}", "disabled": true },
+                { "key": "patient_id", "value": "{{patient_id}}", "disabled": true },
+                { "key": "expires_after", "value": "2026-05-01", "disabled": true },
+                { "key": "expires_before", "value": "2026-06-30" },
+                { "key": "per_page", "value": "50", "disabled": true },
+                { "key": "cursor", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET export CSV (streamed)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/prescription-reports/export?status=active",
+              "host": ["{{base_url}}"],
+              "path": ["prescription-reports", "export"],
+              "query": [
+                { "key": "status", "value": "active" },
+                { "key": "type", "value": "controlled", "disabled": true }
+              ]
+            },
+            "description": "Retorna text/csv com Content-Disposition. Filename prefixado CONFIDENCIAL_ se contém ≥1 controlada. Audit log emitido com lista de IDs exportados."
+          }
+        }
+      ]
+    }
+  ]
+}

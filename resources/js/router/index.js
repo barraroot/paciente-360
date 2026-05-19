@@ -220,6 +220,40 @@ const routes = [
         },
     },
 
+    // ─── Receituários (US-8.1 — Fase 7) ───────────────────────────────────────────────
+    {
+        path: '/panel/receituarios',
+        name: 'prescriptions.index',
+        component: () => import('@/pages/prescriptions/PrescriptionsListPage.vue'),
+        meta: { requiresAuth: true, ability: 'prescription.view', title: 'Receituários' },
+    },
+    {
+        path: '/panel/receituarios/novo',
+        name: 'prescriptions.create',
+        component: () => import('@/pages/prescriptions/PrescriptionCreatePage.vue'),
+        meta: { requiresAuth: true, ability: 'prescription.create', title: 'Nova Receita' },
+    },
+    {
+        path: '/panel/receituarios/relatorio',
+        name: 'prescriptions.report',
+        component: () => import('@/pages/prescriptions/PrescriptionsReportPage.vue'),
+        meta: { requiresAuth: true, ability: 'prescription.view', title: 'Relatório de Receitas' },
+    },
+    {
+        path: '/panel/receituarios/:id',
+        name: 'prescriptions.show',
+        component: () => import('@/pages/prescriptions/PrescriptionShowPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { requiresAuth: true, ability: 'prescription.view', title: 'Detalhe da Receita' },
+    },
+    {
+        path: '/panel/receituarios/:id/renovar',
+        name: 'prescriptions.renew',
+        component: () => import('@/pages/prescriptions/PrescriptionRenewPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { requiresAuth: true, ability: 'prescription.create', title: 'Renovar Receita' },
+    },
+
     // ─── Inbox Unificada (Omnichannel — US4) ───────────────────────────────────
     {
         path: '/panel/inbox',

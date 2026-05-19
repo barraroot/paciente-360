@@ -2,6 +2,7 @@
 
 namespace App\Domain\Prescription\Prescription;
 
+use App\Domain\Prescription\Alert\PrescriptionAlertSchedulerService;
 use App\Domain\Prescription\PrescriptionItem\PrescriptionItem;
 use App\Events\Prescription\PrescricaoAtualizada;
 use App\Events\Prescription\PrescricaoCancelada;
@@ -22,6 +23,10 @@ use Illuminate\Support\Facades\Request;
  */
 class PrescriptionService
 {
+    public function __construct(
+        private readonly PrescriptionAlertSchedulerService $alertScheduler,
+    ) {}
+
     /**
      * Cria uma receita com seus items em transação atômica.
      *
@@ -82,6 +87,10 @@ class PrescriptionService
                     'items_count' => count($data['items']),
                 ],
             );
+
+            // T096 — Agenda alertas de vencimento (D-15/D-7/D-1).
+            // Dentro da mesma transação → rollback unificado se falhar.
+            $this->alertScheduler->scheduleFor($prescription);
 
             PrescricaoCriada::dispatch(
                 prescriptionId: $prescription->id,

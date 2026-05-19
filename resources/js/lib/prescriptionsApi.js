@@ -87,3 +87,25 @@ export const downloadPdf = (id) =>
  */
 export const autocompleteMedications = (q) =>
   api.get('/prescriptions/medications/autocomplete', { params: { q } })
+
+// ─── Configuração de alertas (US-8.2) ────────────────────────────────────────
+
+/**
+ * PATCH /api/v1/prescriptions/{id}/alert-config
+ * Ativa ou desativa alertas de vencimento (apenas para type=common).
+ * @param {string|number} id
+ * @param {{ alert_disabled: boolean }} payload
+ */
+export const updateAlertConfig = (id, payload) =>
+  api.patch(`/prescriptions/${id}/alert-config`, payload)
+
+/**
+ * GET /api/v1/prescriptions/{id}/alerts
+ * Retorna lista de alertas D-15/D-7/D-1 com status e skip_reason.
+ * @param {string|number} id
+ * @returns {Promise<Array>} lista de alertas
+ */
+export const getPrescriptionAlerts = async (id) => {
+  const { data } = await api.get(`/prescriptions/${id}/alerts`)
+  return data.data ?? data
+}

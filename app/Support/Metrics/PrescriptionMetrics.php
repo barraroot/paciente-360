@@ -33,6 +33,51 @@ final class PrescriptionMetrics implements PrescriptionMetricsContract
         );
     }
 
+    /** T113 — Alias legível para alertDispatchedTotal. */
+    public function alertDispatched(int $tenantId, string $alertStep, string $status): void
+    {
+        $this->alertDispatchedTotal($tenantId, $alertStep, $status);
+    }
+
+    /** T113 — Counter de alertas bloqueados por motivo. */
+    public function alertBlocked(string $reason, int $tenantId): void
+    {
+        $this->recordCounterOrLog(
+            name: 'paciente360_prescription_alerts_blocked_total',
+            labels: [
+                'reason' => $reason,
+                'tenant_id' => (string) $tenantId,
+            ],
+            help: 'Alertas de receita bloqueados por ausência de canal, template ou opt-out.',
+        );
+    }
+
+    /** T113 — Counter de hits de idempotência Redis. */
+    public function alertIdempotencyHit(int $tenantId, string $alertType): void
+    {
+        $this->recordCounterOrLog(
+            name: 'paciente360_prescription_alerts_idempotency_hits_total',
+            labels: [
+                'tenant_id' => (string) $tenantId,
+                'alert_type' => $alertType,
+            ],
+            help: 'Hits de idempotência Redis ao processar alertas de receita.',
+        );
+    }
+
+    /** T113 — Counter de alertas processados pelo job principal. */
+    public function alertsProcessed(int $tenantId, int $count): void
+    {
+        $this->recordCounterOrLog(
+            name: 'paciente360_prescription_alerts_processed_total',
+            labels: [
+                'tenant_id' => (string) $tenantId,
+                'count' => (string) $count,
+            ],
+            help: 'Total de alertas de receita processados pelo job principal.',
+        );
+    }
+
     public function renewalConversionRate(int $tenantId, float $rate): void
     {
         $this->recordGaugeOrLog(

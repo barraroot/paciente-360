@@ -14,6 +14,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { DateTime } from 'luxon'
 import { usePrescriptionsStore } from '@/stores/prescriptionsStore'
+import { useAuthStore } from '@/stores/auth'
 import { usePrescriptionFilters } from '@/composables/usePrescriptionFilters'
 import api from '@/lib/api'
 import PrescriptionTypeBadge from '@/components/prescriptions/PrescriptionTypeBadge.vue'
@@ -23,6 +24,7 @@ import PrescriptionCancelModal from '@/components/prescriptions/PrescriptionCanc
 
 const router = useRouter()
 const store = usePrescriptionsStore()
+const auth = useAuthStore()
 const { filters, applyFilter, clearFilters, activeFilterCount } = usePrescriptionFilters()
 
 // ─── Estado local ─────────────────────────────────────────────────────────────
@@ -148,10 +150,14 @@ onMounted(() => {
   load()
   loadProfessionals()
   window.addEventListener('keydown', handleKeydown)
+  // T117 — subscribe ao canal Reverb para refresh de alertas em tempo real
+  store.subscribeToReportRefresh(auth.currentTenantId)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
+  // T117 — unsubscribe do canal Reverb
+  store.unsubscribeFromReportRefresh(auth.currentTenantId)
 })
 
 // ─── Cancelamento ─────────────────────────────────────────────────────────────

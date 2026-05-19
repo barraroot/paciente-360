@@ -40,6 +40,7 @@ use App\Http\Controllers\Api\V1\Pacientes\PacienteTagsController;
 use App\Http\Controllers\Api\V1\Pacientes\PatchStatusController;
 use App\Http\Controllers\Api\V1\Pacientes\TagsController;
 use App\Http\Controllers\Api\V1\Pacientes\TimelineController;
+use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionAlertConfigController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionPdfController;
 use App\Http\Controllers\Api\V1\Tenant\CurrentTenantController;
@@ -527,4 +528,11 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'presc
 
         Route::get('/{prescription}/pdf', [PrescriptionPdfController::class, 'download'])
             ->name('pdf.download');
+
+        // T112 — US-8.2 Alertas de vencimento
+        Route::get('/{prescription}/alerts', [PrescriptionAlertConfigController::class, 'index'])
+            ->name('alerts.index');
+
+        Route::patch('/{prescription}/alert-config', [PrescriptionAlertConfigController::class, 'update'])
+            ->name('alert-config.update');
     });

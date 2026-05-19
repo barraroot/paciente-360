@@ -11,19 +11,22 @@
  *  - PrescriptionPdfUploader abaixo.
  *  - Timeline simplificada: criada em / cancelada em.
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { DateTime } from 'luxon'
 import { usePrescriptionsStore } from '@/stores/prescriptionsStore'
+import { useAuthStore } from '@/stores/auth'
 import PrescriptionTypeBadge from '@/components/prescriptions/PrescriptionTypeBadge.vue'
 import PrescriptionStatusPill from '@/components/prescriptions/PrescriptionStatusPill.vue'
 import ControlledMaskingBanner from '@/components/prescriptions/ControlledMaskingBanner.vue'
 import PrescriptionCancelModal from '@/components/prescriptions/PrescriptionCancelModal.vue'
 import PrescriptionPdfUploader from '@/components/prescriptions/PrescriptionPdfUploader.vue'
+import PrescriptionAlertConfigToggle from '@/components/prescriptions/PrescriptionAlertConfigToggle.vue'
 
 const route = useRoute()
 const router = useRouter()
 const store = usePrescriptionsStore()
+const auth = useAuthStore()
 
 const id = computed(() => route.params.id)
 
@@ -48,12 +51,52 @@ function showToast(message, type = 'success') {
 
 // ─── Carregamento ─────────────────────────────────────────────────────────────
 
+// ─── Reverb — refresh em tempo real (T116) ────────────────────────────────────
+
+function subscribeRealtimeRefresh() {
+  const echo = window.Echo
+  const tenantId = auth.currentTenantId
+  if (!echo || !tenantId) return
+
+  try {
+    echo.private(`prescriptions.${tenantId}`)
+      .listen('.PrescriptionsReportRefresh', async (event) => {
+        if (event.prescription_id && Number(event.prescription_id) === Number(id.value)) {
+          try {
+            await store.fetchOne(id.value)
+          } catch {
+            // Silencioso — erro já em store.error
+          }
+        }
+      })
+  } catch {
+    // Echo não disponível — silencioso
+  }
+}
+
+function unsubscribeRealtimeRefresh() {
+  const echo = window.Echo
+  const tenantId = auth.currentTenantId
+  if (!echo || !tenantId) return
+  try {
+    echo.leave(`prescriptions.${tenantId}`)
+  } catch {
+    // Silencioso
+  }
+}
+
 onMounted(async () => {
   try {
     await store.fetchOne(id.value)
   } catch {
     // erro já em store.error
   }
+  subscribeRealtimeRefresh()
+})
+
+onUnmounted(() => {
+  unsubscribeRealtimeRefresh()
+  if (toastTimer) clearTimeout(toastTimer)
 })
 
 const prescription = computed(() => store.current)
@@ -406,6 +449,14 @@ const timelineEvents = computed(() => {
         <!-- PDF Uploader -->
         <div class="rounded-xl border border-border bg-surface p-5 mb-4">
           <PrescriptionPdfUploader :prescription="prescription" />
+        </div>
+
+        <!-- Alertas de vencimento (T115/T116) -->
+        <div class="rounded-xl border border-border bg-surface p-5 mb-4">
+          <PrescriptionAlertConfigToggle
+            :prescription="prescription"
+            @updated="(updated) => { store.current = updated }"
+          />
         </div>
 
         <!-- Timeline simplificada -->

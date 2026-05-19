@@ -184,71 +184,71 @@
 
 ### Tests for US-8.2 ⚠️
 
-- [ ] T085 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertCadenceTest.php` — AC-8.2.1 (3 checkpoints materializados na criação; cada um dispara 1 evento)
-- [ ] T086 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertIdempotencyTest.php` — ⭐ Gate idempotência: dispara `ProcessPrescriptionAlertsJob` 2x consecutivamente → apenas 1 row em `prescription_alerts` é atualizada para `dispatched` (lock Redis + UNIQUE DB)
-- [ ] T087 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionEventPayloadLgpdTest.php` — ⭐ Gate LGPD: reflection valida que `ReceitaProximaDoVencimento` tem exatamente 7 props (research §3); detecta novos campos como falha
-- [ ] T088 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertChannelTest.php` — ⭐ Gate Conformidade Meta: sem template HSM → status `blocked_no_template` + tarefa Inbox; com template + fora janela 24h → usa HSM correto
-- [ ] T089 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertSkipTest.php` — AC-8.2.4 (receita criada com 5d restantes → D-15 e D-7 `skipped` com `skip_reason='checkpoint_past_at_creation'`)
-- [ ] T090 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertCancellationOnCancelTest.php` — AC-8.2.3 (cancelar receita → alertas `pending` transitam para `cancelled`)
-- [ ] T091 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertDisableTest.php` — AC-8.2.2 (PATCH `alert_disabled=true` em `special`/`controlled` → 422; em `common` → OK)
-- [ ] T092 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertOptOutTest.php` — AC-8.2.8 (paciente com opt-out → evento emitido, envio externo suprimido, `skip_reason='recipient_opted_out'`)
-- [ ] T093 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertDebounceTest.php` — AC-8.2.6 (3 receitas vencendo → 3 mensagens separadas com 4h entre disparos)
-- [ ] T094 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionExpirationTest.php` — AC-8.2.7 (cron `expire-active` emite `ReceitaVencida` exatamente 1x quando `expires_at < today`)
-- [ ] T095 [P] [US2] Teste `tests/Unit/Prescription/PrescriptionAlertIdempotencyKeyTest.php` — helper de chave Redis
+- [x] T085 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertCadenceTest.php` — AC-8.2.1 (3 checkpoints materializados na criação; cada um dispara 1 evento)
+- [x] T086 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertIdempotencyTest.php` — ⭐ Gate idempotência: dispara `ProcessPrescriptionAlertsJob` 2x consecutivamente → apenas 1 row em `prescription_alerts` é atualizada para `dispatched` (lock Redis + UNIQUE DB)
+- [x] T087 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionEventPayloadLgpdTest.php` — ⭐ Gate LGPD: reflection valida que `ReceitaProximaDoVencimento` tem exatamente 7 props (research §3); detecta novos campos como falha
+- [x] T088 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertChannelTest.php` — ⭐ Gate Conformidade Meta: sem template HSM → status `blocked_no_template` + tarefa Inbox; com template + fora janela 24h → usa HSM correto
+- [x] T089 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertSkipTest.php` — AC-8.2.4 (receita criada com 5d restantes → D-15 e D-7 `skipped` com `skip_reason='checkpoint_past_at_creation'`)
+- [x] T090 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertCancellationOnCancelTest.php` — AC-8.2.3 (cancelar receita → alertas `pending` transitam para `cancelled`)
+- [x] T091 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertDisableTest.php` — AC-8.2.2 (PATCH `alert_disabled=true` em `special`/`controlled` → 422; em `common` → OK)
+- [x] T092 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertOptOutTest.php` — AC-8.2.8 (paciente com opt-out → evento emitido, envio externo suprimido, `skip_reason='recipient_opted_out'`)
+- [x] T093 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionAlertDebounceTest.php` — AC-8.2.6 (3 receitas vencendo → 3 mensagens separadas com 4h entre disparos)
+- [x] T094 [P] [US2] Teste `tests/Feature/Prescription/PrescriptionExpirationTest.php` — AC-8.2.7 (cron `expire-active` emite `ReceitaVencida` exatamente 1x quando `expires_at < today`)
+- [x] T095 [P] [US2] Teste `tests/Unit/Prescription/PrescriptionAlertIdempotencyKeyTest.php` — helper de chave Redis
 
 ### Domain services
 
-- [ ] T096 [US2] Implementar `app/Domain/Prescription/Alert/PrescriptionAlertSchedulerService.php` — `scheduleFor(Prescription $p): Collection<PrescriptionAlert>` materializa 3 alerts; aplica `skipped` para checkpoints passados (Q4a); pula completamente para `alert_disabled=true` em `common`
-- [ ] T097 [US2] Implementar evento `app/Events/Prescription/ReceitaProximaDoVencimento.php` — readonly props da allowlist (7 campos exatos — Q5/research §3); implementa `ContainsNoClinicalData`
-- [ ] T098 [P] [US2] Implementar evento `app/Events/Prescription/ReceitaVencida.php` com `prescriptionId, patientId, expiredAt`
+- [x] T096 [US2] Implementar `app/Domain/Prescription/Alert/PrescriptionAlertSchedulerService.php` — `scheduleFor(Prescription $p): Collection<PrescriptionAlert>` materializa 3 alerts; aplica `skipped` para checkpoints passados (Q4a); pula completamente para `alert_disabled=true` em `common`
+- [x] T097 [US2] Implementar evento `app/Events/Prescription/ReceitaProximaDoVencimento.php` — readonly props da allowlist (7 campos exatos — Q5/research §3); implementa `ContainsNoClinicalData`
+- [x] T098 [P] [US2] Implementar evento `app/Events/Prescription/ReceitaVencida.php` com `prescriptionId, patientId, expiredAt`
 
 ### Listeners (auto-discovered)
 
-- [ ] T099 [P] [US2] Criar listener `app/Listeners/Prescription/CancelAlertScheduleOnCancellation.php` — consome `PrescricaoCancelada`, transita alerts `pending`/`dispatched` futuros para `cancelled`
-- [ ] T100 [P] [US2] Criar listener `app/Listeners/Prescription/DispatchPrescriptionAlertViaMessaging.php` — consome `ReceitaProximaDoVencimento`, invoca serviço de mensageria Fase 3 com template HSM `prescription.expiry_warning_{15d|7d|1d}`; aplica debounce 4h por destinatário; fallback Inbox em `blocked_no_*`
-- [ ] T101 [P] [US2] Criar listener `app/Listeners/Prescription/BroadcastPrescriptionExpiryToReport.php` — consome `ReceitaProximaDoVencimento` e faz broadcast no canal Reverb `prescriptions.{tenant_id}` (research §7.3)
+- [x] T099 [P] [US2] Criar listener `app/Listeners/Prescription/CancelAlertScheduleOnCancellation.php` — consome `PrescricaoCancelada`, transita alerts `pending`/`dispatched` futuros para `cancelled`
+- [x] T100 [P] [US2] Criar listener `app/Listeners/Prescription/DispatchPrescriptionAlertViaMessaging.php` — consome `ReceitaProximaDoVencimento`, invoca serviço de mensageria Fase 3 com template HSM `prescription.expiry_warning_{15d|7d|1d}`; aplica debounce 4h por destinatário; fallback Inbox em `blocked_no_*`
+- [x] T101 [P] [US2] Criar listener `app/Listeners/Prescription/BroadcastPrescriptionExpiryToReport.php` — consome `ReceitaProximaDoVencimento` e faz broadcast no canal Reverb `prescriptions.{tenant_id}` (research §7.3)
 
 ### Jobs + commands
 
-- [ ] T102 [US2] Implementar `app/Jobs/Prescription/ProcessPrescriptionAlertsJob.php` — chunk de 1.000 receitas com `expires_at` em today + {15,7,1}; aplica lock Redis `prescription_alert:{pid}:{type}:{date}` TTL 25h (research §4); dispara `DispatchPrescriptionAlertJob` por alerta elegível; métrica `prescription_alerts_processed_total`
-- [ ] T103 [US2] Implementar `app/Jobs/Prescription/DispatchPrescriptionAlertJob.php` — fila `prescription-alerts`; emite `ReceitaProximaDoVencimento`; atualiza alert para `dispatched`/`blocked_*`/`failed`
-- [ ] T104 [US2] Implementar `app/Jobs/Prescription/ExpireActivePrescriptionsJob.php` — escaneia receitas `active` com `expires_at < today` e emite `ReceitaVencida` (idempotência via update condicional)
-- [ ] T105 [P] [US2] Implementar `app/Console/Commands/PrescriptionsProcessAlertsCommand.php` — wrapper que dispara `ProcessPrescriptionAlertsJob` + opção `--retry-blocked`
-- [ ] T106 [P] [US2] Implementar `app/Console/Commands/PrescriptionsExpireActiveCommand.php` — wrapper para `ExpireActivePrescriptionsJob`
+- [x] T102 [US2] Implementar `app/Jobs/Prescription/ProcessPrescriptionAlertsJob.php` — chunk de 1.000 receitas com `expires_at` em today + {15,7,1}; aplica lock Redis `prescription_alert:{pid}:{type}:{date}` TTL 25h (research §4); dispara `DispatchPrescriptionAlertJob` por alerta elegível; métrica `prescription_alerts_processed_total`
+- [x] T103 [US2] Implementar `app/Jobs/Prescription/DispatchPrescriptionAlertJob.php` — fila `prescription-alerts`; emite `ReceitaProximaDoVencimento`; atualiza alert para `dispatched`/`blocked_*`/`failed`
+- [x] T104 [US2] Implementar `app/Jobs/Prescription/ExpireActivePrescriptionsJob.php` — escaneia receitas `active` com `expires_at < today` e emite `ReceitaVencida` (idempotência via update condicional)
+- [x] T105 [P] [US2] Implementar `app/Console/Commands/PrescriptionsProcessAlertsCommand.php` — wrapper que dispara `ProcessPrescriptionAlertsJob` + opção `--retry-blocked`
+- [x] T106 [P] [US2] Implementar `app/Console/Commands/PrescriptionsExpireActiveCommand.php` — wrapper para `ExpireActivePrescriptionsJob`
 
 ### Schedule + canal Reverb
 
-- [ ] T107 [US2] Adicionar schedule em `routes/console.php`: `prescriptions:process-alerts` daily 06:00 BRT + `prescriptions:expire-active` daily 00:30 BRT + `withoutOverlapping()` (plan §C3)
-- [ ] T108 [US2] Adicionar canal privado `prescriptions.{tenantId}` em `routes/channels.php` com auth callback `User->tenant_id === $tenantId` (research §7.3 — R-7P-04)
+- [x] T107 [US2] Adicionar schedule em `routes/console.php`: `prescriptions:process-alerts` daily 06:00 BRT + `prescriptions:expire-active` daily 00:30 BRT + `withoutOverlapping()` (plan §C3)
+- [x] T108 [US2] Adicionar canal privado `prescriptions.{tenantId}` em `routes/channels.php` com auth callback `User->tenant_id === $tenantId` (research §7.3 — R-7P-04)
 
 ### FormRequest + Controller alertas
 
-- [ ] T109 [P] [US2] Implementar `app/Http/Requests/Prescriptions/UpdateAlertConfigRequest.php` — `alert_disabled: boolean`; rejeita em `special`/`controlled`
-- [ ] T110 [P] [US2] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionAlertConfigController.php` — `index` (lista alertas de uma receita), `update` (PATCH /prescriptions/{id}/alert-config)
-- [ ] T111 [P] [US2] Implementar `app/Http/Resources/Prescriptions/PrescriptionAlertResource.php`
-- [ ] T112 [US2] Adicionar rotas `/api/v1/prescription-alerts` e `/api/v1/prescriptions/{id}/alert-config` em `routes/api.php`
+- [x] T109 [P] [US2] Implementar `app/Http/Requests/Prescriptions/UpdateAlertConfigRequest.php` — `alert_disabled: boolean`; rejeita em `special`/`controlled`
+- [x] T110 [P] [US2] Implementar `app/Http/Controllers/Api/V1/Prescriptions/PrescriptionAlertConfigController.php` — `index` (lista alertas de uma receita), `update` (PATCH /prescriptions/{id}/alert-config)
+- [x] T111 [P] [US2] Implementar `app/Http/Resources/Prescriptions/PrescriptionAlertResource.php`
+- [x] T112 [US2] Adicionar rotas `/api/v1/prescription-alerts` e `/api/v1/prescriptions/{id}/alert-config` em `routes/api.php`
 
 ### Métricas + Sentry tags
 
-- [ ] T113 [US2] Adicionar em `PrescriptionMetrics`: `prescription_alerts_dispatched_total{tenant,alert_step,status}`, `prescription_alerts_blocked_total{reason,tenant}` (incrementar no listener `DispatchPrescriptionAlertViaMessaging`)
-- [ ] T114 [P] [US2] Adicionar Sentry tags `prescription.id`, `prescription.type`, `alert.type` no boot de jobs e listeners
+- [x] T113 [US2] Adicionar em `PrescriptionMetrics`: `prescription_alerts_dispatched_total{tenant,alert_step,status}`, `prescription_alerts_blocked_total{reason,tenant}` (incrementar no listener `DispatchPrescriptionAlertViaMessaging`)
+- [x] T114 [P] [US2] Adicionar Sentry tags `prescription.id`, `prescription.type`, `alert.type` no boot de jobs e listeners
 
 ### Frontend — toggle de alerta + visualização
 
-- [ ] T115 [P] [US2] Criar `resources/js/components/prescriptions/PrescriptionAlertConfigToggle.vue` — switch habilitado só para `type=common`; desabilitado com tooltip "Alerta obrigatório por Portaria 344/98" para outros tipos
-- [ ] T116 [US2] Integrar `PrescriptionAlertConfigToggle` em `PrescriptionShowPage.vue` (refresh em tempo real via canal Reverb)
-- [ ] T117 [P] [US2] Adicionar listener Echo no Pinia store para `ReceitaProximaDoVencimento` → re-fetch da receita afetada na lista
+- [x] T115 [P] [US2] Criar `resources/js/components/prescriptions/PrescriptionAlertConfigToggle.vue` — switch habilitado só para `type=common`; desabilitado com tooltip "Alerta obrigatório por Portaria 344/98" para outros tipos
+- [x] T116 [US2] Integrar `PrescriptionAlertConfigToggle` em `PrescriptionShowPage.vue` (refresh em tempo real via canal Reverb)
+- [x] T117 [P] [US2] Adicionar listener Echo no Pinia store para `ReceitaProximaDoVencimento` → re-fetch da receita afetada na lista
 
 ### Integração mensageria Fase 3
 
-- [ ] T118 [US2] Em `DispatchPrescriptionAlertViaMessaging` — invocar `MessagingDispatchService` (Fase 3) com identificador HSM `prescription.expiry_warning_{Nd}` + `recipient.communication_preferences` lookup; respeitar opt-out (FR-017)
-- [ ] T119 [US2] Implementar fallback de Inbox manual em `DispatchPrescriptionAlertViaMessaging` quando `blocked_no_template`/`blocked_no_channel` — criar `InboxTask` (Fase 3) com motivo "Template HSM ausente — alerta de vencimento de receita não enviado a {paciente}"
-- [ ] T120 [US2] Implementar debounce 4h em `MessagingDispatchService::dispatchPrescriptionAlert()` — cache Redis `messaging_debounce:{recipient_id}:{type}` TTL 4h (FR-016/Q4d)
+- [x] T118 [US2] Em `DispatchPrescriptionAlertViaMessaging` — invocar `MessagingDispatchService` (Fase 3) com identificador HSM `prescription.expiry_warning_{Nd}` + `recipient.communication_preferences` lookup; respeitar opt-out (FR-017)
+- [x] T119 [US2] Implementar fallback de Inbox manual em `DispatchPrescriptionAlertViaMessaging` quando `blocked_no_template`/`blocked_no_channel` — criar `InboxTask` (Fase 3) com motivo "Template HSM ausente — alerta de vencimento de receita não enviado a {paciente}"
+- [x] T120 [US2] Implementar debounce 4h em `MessagingDispatchService::dispatchPrescriptionAlert()` — cache Redis `messaging_debounce:{recipient_id}:{type}` TTL 4h (FR-016/Q4d)
 
 ### Listener para preferências do paciente
 
-- [ ] T121 [P] [US2] Adicionar suporte a opt-out: em `DispatchPrescriptionAlertViaMessaging`, ler `patient.communication_preferences.opt_out_renewal_reminders` e marcar `skip_reason='recipient_opted_out'`; ainda emitir evento interno
-- [ ] T122 [US2] Verificar via teste de integração com `RegistraEventoTimelineListener` (Fase 2) que alertas **não** poluem a timeline (Q11) — apenas `PrescricaoCriada`/`Cancelada`/`Renovada` viram itens
+- [x] T121 [P] [US2] Adicionar suporte a opt-out: em `DispatchPrescriptionAlertViaMessaging`, ler `patient.communication_preferences.opt_out_renewal_reminders` e marcar `skip_reason='recipient_opted_out'`; ainda emitir evento interno
+- [x] T122 [US2] Verificar via teste de integração com `RegistraEventoTimelineListener` (Fase 2) que alertas **não** poluem a timeline (Q11) — apenas `PrescricaoCriada`/`Cancelada`/`Renovada` viram itens
 
 **Checkpoint US-8.2**: Cadência completa funciona; idempotência verde; opt-out e debounce respeitados; canal Reverb broadcasta refresh do relatório.
 

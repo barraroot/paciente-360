@@ -13,6 +13,7 @@ import {
   cancelPrescription,
   uploadPdf,
   downloadPdf,
+  updateAlertConfig,
 } from '@/lib/prescriptionsApi'
 
 export const usePrescriptionsStore = defineStore('prescriptions', () => {
@@ -39,6 +40,9 @@ export const usePrescriptionsStore = defineStore('prescriptions', () => {
   const loading = ref(false)
   const error = ref(null)
   const uploading = ref(false)
+
+  /** Controla se o canal Reverb já foi subscrito (idempotência). */
+  let _reverbSubscribed = false
 
   // ─── Getters ───────────────────────────────────────────────────────────────
 
@@ -190,6 +194,86 @@ export const usePrescriptionsStore = defineStore('prescriptions', () => {
     }
   }
 
+  async function updateAlertConfigAction(id, alertDisabled) {
+    try {
+      const { data } = await updateAlertConfig(id, { alert_disabled: alertDisabled })
+      const updated = data.data ?? data
+      if (current.value?.id === Number(id)) current.value = updated
+      const idx = list.value.findIndex((p) => p.id === Number(id))
+      if (idx >= 0) list.value[idx] = updated
+      return updated
+    } catch (e) {
+      error.value = e?.response?.data?.message ?? 'Erro ao atualizar configuração de alertas.'
+      throw e
+    }
+  }
+
+  /**
+   * T117 — Assina canal Reverb `prescriptions.{tenantId}` para receber
+   * `PrescriptionsReportRefresh` e re-fetch a receita afetada.
+   * Idempotente: se já inscrito, não duplica.
+   *
+   * @param {string|number} tenantId
+   */
+  function subscribeToReportRefresh(tenantId) {
+    const echo = window.Echo
+    if (!echo || !tenantId || _reverbSubscribed) return
+
+    _reverbSubscribed = true
+
+    try {
+      const channel = echo.private(`prescriptions.${tenantId}`)
+
+      channel.listen('.PrescriptionsReportRefresh', async (event) => {
+        const prescriptionId = event.prescription_id
+        if (!prescriptionId) return
+
+        // Atualiza item na lista se ele estiver carregado
+        const inList = list.value.some((p) => p.id === Number(prescriptionId))
+        if (inList) {
+          try {
+            const { data } = await getPrescription(prescriptionId)
+            const updated = data.data ?? data
+            const idx = list.value.findIndex((p) => p.id === Number(prescriptionId))
+            if (idx >= 0) list.value[idx] = updated
+          } catch {
+            // Silencioso — não bloqueia UI
+          }
+        }
+
+        // Atualiza `current` se for a receita atualmente aberta
+        if (current.value?.id === Number(prescriptionId)) {
+          try {
+            const { data } = await getPrescription(prescriptionId)
+            current.value = data.data ?? data
+          } catch {
+            // Silencioso — não bloqueia UI
+          }
+        }
+      })
+    } catch {
+      // Echo não disponível — silencioso
+      _reverbSubscribed = false
+    }
+  }
+
+  /**
+   * T117 — Remove subscription do canal Reverb `prescriptions.{tenantId}`.
+   *
+   * @param {string|number} tenantId
+   */
+  function unsubscribeFromReportRefresh(tenantId) {
+    const echo = window.Echo
+    if (!echo || !tenantId) return
+
+    try {
+      echo.leave(`prescriptions.${tenantId}`)
+    } catch {
+      // Silencioso
+    }
+    _reverbSubscribed = false
+  }
+
   function setFilters(newFilters) {
     filters.value = { ...filters.value, ...newFilters }
   }
@@ -211,6 +295,7 @@ export const usePrescriptionsStore = defineStore('prescriptions', () => {
     loading.value = false
     error.value = null
     uploading.value = false
+    _reverbSubscribed = false
   }
 
   return {
@@ -234,6 +319,9 @@ export const usePrescriptionsStore = defineStore('prescriptions', () => {
     cancel,
     uploadPdf: uploadPdfAction,
     requestDownloadUrl,
+    updateAlertConfig: updateAlertConfigAction,
+    subscribeToReportRefresh,
+    unsubscribeFromReportRefresh,
     setFilters,
     reset,
   }

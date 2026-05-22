@@ -131,3 +131,64 @@ Schedule::command('prescriptions:purge-old-pdfs')
     ->weeklyOn(1, '02:00')
     ->timezone('America/Sao_Paulo')
     ->withoutOverlapping();
+
+/*
+|--------------------------------------------------------------------------
+| Fase 8 — Finalização do MVP (T009)
+|--------------------------------------------------------------------------
+|
+| 8 schedules placeholder. Commands criados nos lotes correspondentes:
+|   Lote A — Privacidade (T057, T058, T075)
+|   Lote B — Super Admin (T104, T135)
+|   Lote C — Campanhas (T172)
+|   Lote D — Integrações (T202)
+|   Lote E — Relatórios (T252)
+|
+| Todos com withoutOverlapping() para evitar paralelismo em catch-up.
+| Timezone America/Sao_Paulo onde horários são sensíveis a fuso (notificações).
+|
+*/
+
+// Lote A — Auditoria semanal de pseudonimização (Q29 — runtime replay).
+Schedule::command('privacy:audit-pseudonymization-weekly')
+    ->weeklyOn(1, '04:00')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();
+
+// Lote A — Notificações progressivas LGPD (Q27 — D-5 inbox, D-2 inbox+e-mail+alerta).
+Schedule::command('privacy:notify-deadlines')
+    ->dailyAt('09:00')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();
+
+// Lote B — Métricas globais (MRR, ARR, churn, conversão, consumo IA).
+Schedule::command('super-admin:compute-global-metrics')
+    ->hourly()
+    ->withoutOverlapping();
+
+// Lote B — Detecção de anomalias (Q22 — 4 categorias).
+Schedule::command('super-admin:detect-anomalies')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping();
+
+// Lote B — Aplicação da política de retenção pós-cancelamento (Q20).
+Schedule::command('super-admin:apply-retention-policy')
+    ->dailyAt('02:00')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();
+
+// Lote C — Dispatch de campanhas agendadas (US-9.2).
+Schedule::command('campaigns:dispatch-scheduled')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
+
+// Lote D — Purge de Dead Letter Queue expirada (Q16 — 30d retention).
+Schedule::command('integrations:purge-expired-dlq')
+    ->dailyAt('03:00')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();
+
+// Lote E — Agregação horária de KPIs (Q9 — janelas ≥7d).
+Schedule::command('reports:aggregate-hourly')
+    ->hourlyAt(5)
+    ->withoutOverlapping();

@@ -435,7 +435,7 @@ livewire(ListUsers::class)
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: nenhuma — aguardando próxima fase.
+- **Active feature**: `008-finalizacao-mvp` — Fase 8 (Épicos 9, 10, 11, 12, 13) — finalização do MVP. [spec](specs/008-finalizacao-mvp/spec.md) Clarified (29/29) + [plan](specs/008-finalizacao-mvp/plan.md) Constitution Check ✅ 7/7 sem amendment. Próximo: `/speckit-tasks`. Estrutura: 5 lotes A→E (A Privacidade, B Super Admin, C Campanhas, D Integrações, E Relatórios); ~250 tasks; 24 tabelas novas + 3 ALTERs; 41 eventos; 8 cron schedules; ~175 testes feature + ~45 unit + 5 E2E Playwright.
 - **Previous features delivered (7)**:
   - `007-gestao-receituario` — [spec](specs/007-gestao-receituario/spec.md) — Fase 7 / Épico 8 (Gestão de Receituários) entregue em 2026-05-19. **5 lotes A-E**, **199/199 tasks**, **175/175 prescription tests verdes**, suite full **1342 tests / 1338 passed / 0 failures (1 flaky timing pré-existente)**. Commits: A `66c6c46` → B `8a9890e` → C `7780b27` → D `44d8500` → E (pendente). Highlights:
     - 4 user stories Épico 8: US-8.1 Cadastro (mascaramento controladas 5 perfis), US-8.2 Alerta D-15/D-7/D-1, US-8.3 Renovação IA (contrato pseudonimizado 7 campos), US-8.4 Relatório + CSV

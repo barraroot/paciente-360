@@ -52,6 +52,15 @@ return Application::configure(basePath: dirname(__DIR__))
             // No auth, no CSRF (public API keyed by public_key, not subdomain).
             Route::middleware([])
                 ->group(base_path('routes/widget.php'));
+
+            // Fase 8 (T008) — API Pública v1 para integradores externos.
+            // Prefix `api/public` separa do `api/v1` interno do tenant.
+            // Tenant resolvido pelo token, NUNCA por URL — middleware específico
+            // (ApiPublicRateLimiter + EnsureTenantNotSuspended) será aplicado em
+            // Lote D (T219-T221).
+            Route::prefix('api/public')
+                ->middleware('api')
+                ->group(base_path('routes/api-public.php'));
         },
     )
     // T061 — /broadcasting/auth com Bearer Sanctum + triple-check tenant slug.

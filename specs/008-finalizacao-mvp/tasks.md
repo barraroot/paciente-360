@@ -400,39 +400,39 @@
 
 #### Migrations & Models
 
-- [ ] T215 [P] [US-11.2] Criar migration `2026_05_25_000004_create_tenant_oauth_clients_table.php` (gated — só carregado se `config('finalization.oauth_enabled')`)
-- [ ] T216 [P] [US-11.2] Criar model `app/Domain/Integrations/Models/TenantOauthClient.php`
+- [X] T215 [P] [US-11.2] Criar migration `2026_05_25_000004_create_tenant_oauth_clients_table.php` (gated — só carregado se `config('finalization.oauth_enabled')`)
+- [X] T216 [P] [US-11.2] Criar model `app/Domain/Integrations/Models/TenantOauthClient.php`
 
 #### Services & Middleware
 
-- [ ] T217 [US-11.2] Implementar `app/Domain/Integrations/Services/ApiTokenService.php` com `create(tenant, name, scope, user): {token, model}` (token plaintext retornado UMA vez) e `revoke(token_id, user, reason)`
-- [ ] T218 [US-11.2] Implementar `app/Domain/Integrations/Services/OauthClientService.php` (gated) com `createClient(tenant, name, scopes, user)` e `issueAccessToken(client_id, client_secret): JWT` — opt-in via toggle Filament
-- [ ] T219 [US-11.2] Criar middleware `app/Http/Middleware/ApiPublicRateLimiter.php` aplicando rate limit por token (lookup `plan_version.snapshot.api_rate_limit_per_minute`) + cap por IP 10k/min — registrar em `bootstrap/app.php` para grupo `api/public`
-- [ ] T220 [P] [US-11.2] Criar middleware `app/Http/Middleware/OauthAuthenticator.php` (gated) validando JWT Passport + injetando `tenant_id` no request
-- [ ] T221 [P] [US-11.2] Criar middleware `app/Http/Middleware/EnsureTenantNotSuspended.php` — 503 `tenant_suspended` quando tenant da request está em status `suspenso`
-- [ ] T222 [P] [US-11.2] Criar 2 eventos: `TokenApiEmitido`, `TokenApiRevogado`
+- [X] T217 [US-11.2] Implementar `app/Domain/Integrations/Services/ApiTokenService.php` com `create(tenant, name, scope, user): {token, model}` (token plaintext retornado UMA vez) e `revoke(token_id, user, reason)`
+- [X] T218 [US-11.2] Implementar `app/Domain/Integrations/Services/OauthClientService.php` (gated) com `createClient(tenant, name, scopes, user)` e `issueAccessToken(client_id, client_secret): JWT` — opt-in via toggle Filament
+- [X] T219 [US-11.2] Criar middleware `app/Http/Middleware/ApiPublicRateLimiter.php` aplicando rate limit por token (lookup `plan_version.snapshot.api_rate_limit_per_minute`) + cap por IP 10k/min — registrar em `bootstrap/app.php` para grupo `api/public`
+- [X] T220 [P] [US-11.2] Criar middleware `app/Http/Middleware/OauthAuthenticator.php` (gated) validando JWT Passport + injetando `tenant_id` no request
+- [X] T221 [P] [US-11.2] Criar middleware `app/Http/Middleware/EnsureTenantNotSuspended.php` — 503 `tenant_suspended` quando tenant da request está em status `suspenso`
+- [X] T222 [P] [US-11.2] Criar 2 eventos: `TokenApiEmitido`, `TokenApiRevogado`
 
 #### Public API Controllers (6 recursos — Q14)
 
-- [ ] T223 [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/PatientsController.php` com `index`, `show`, `store`, `update` — reutiliza Service do PatientResource interno + adiciona mascaramento `share_with_integrations`
-- [ ] T224 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/AppointmentsController.php` com 4 verbos (index, show, store, update, destroy)
-- [ ] T225 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/MessagesController.php` (read-only — `index`, `show`)
-- [ ] T226 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/PrescriptionsController.php` (read-only) com mascaramento OBRIGATÓRIO de controladas no resource
-- [ ] T227 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/AppointmentTypesController.php` (read-only)
-- [ ] T228 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/ProfessionalsController.php` (read-only)
+- [X] T223 [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/PatientsController.php` com `index`, `show`, `store`, `update` — reutiliza Service do PatientResource interno + adiciona mascaramento `share_with_integrations`
+- [X] T224 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/AppointmentsController.php` com 4 verbos (index, show, store, update, destroy)
+- [X] T225 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/MessagesController.php` (read-only — `index`, `show`)
+- [X] T226 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/PrescriptionsController.php` (read-only) com mascaramento OBRIGATÓRIO de controladas no resource
+- [X] T227 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/AppointmentTypesController.php` (read-only)
+- [X] T228 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Public/ProfessionalsController.php` (read-only)
 
 #### Resources (versões "public" — mascaramento extra)
 
-- [ ] T229 [P] [US-11.2] Criar 6 resources em `app/Http/Resources/Api/Public/` correspondentes — variant do resource interno aplicando mascaramento adicional
+- [X] T229 [P] [US-11.2] Criar 6 resources em `app/Http/Resources/Api/Public/` correspondentes — variant do resource interno aplicando mascaramento adicional
 
 #### Routes
 
-- [ ] T230 [US-11.2] Popular `routes/api-public.php` com 11+ endpoints (group middleware `auth:sanctum,passport`, `EnsureTenantNotSuspended`, `ApiPublicRateLimiter`, throttle anti-DDoS) — prefix `v1`
+- [X] T230 [US-11.2] Popular `routes/api-public.php` com 11+ endpoints (group middleware `auth:sanctum,passport`, `EnsureTenantNotSuspended`, `ApiPublicRateLimiter`, throttle anti-DDoS) — prefix `v1`
 
 #### Token Management UI
 
-- [ ] T231 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Integrations/ApiTokensController.php` (interno) com CRUD de tokens
-- [ ] T232 [P] [US-11.2] Criar página Vue `ApiTokensSettingsPage.vue` com modal "Novo token" exibindo plaintext UMA vez + botão "Revogar"
+- [X] T231 [P] [US-11.2] Criar `app/Http/Controllers/Api/V1/Integrations/ApiTokensController.php` (interno) com CRUD de tokens
+- [X] T232 [P] [US-11.2] Criar página Vue `ApiTokensSettingsPage.vue` com modal "Novo token" exibindo plaintext UMA vez + botão "Revogar"
 
 #### OpenAPI
 
@@ -441,15 +441,15 @@
 
 #### Tests
 
-- [ ] T235 [US-11.2] Criar `tests/Feature/Integrations/PublicApiAuthenticationTest.php` cobrindo AC-11.2.3 — Sanctum bearer válido vs. inválido vs. revogado
-- [ ] T236 [P] [US-11.2] Criar `tests/Feature/Integrations/PublicApiRateLimitTest.php` cobrindo AC-11.2.4 — 1100 req em 1min → 1000 com 200 + 100 com 429 + headers corretos
-- [ ] T237 [P] [US-11.2] Criar `tests/Feature/Integrations/PublicApiScopeRestrictionTest.php` cobrindo AC-11.2.6 — endpoints fora do Q14 retornam 404 (não 401)
-- [ ] T238 [P] [US-11.2] Criar `tests/Feature/Integrations/PublicApiControlledMaskingTest.php` (R-8-4) — receita controlada via API pública SEMPRE mascarada independente do scope do token
-- [ ] T239 [P] [US-11.2] Criar `tests/Feature/Integrations/PublicApiIdempotencyKeyTest.php` cobrindo NFR-9 — `Idempotency-Key` em POST retorna mesmo response em 24h
-- [ ] T240 [P] [US-11.2] Criar `tests/Feature/Integrations/PublicApiTenantSuspendedTest.php` validando 503 `tenant_suspended`
-- [ ] T241 [P] [US-11.2] Criar `tests/Feature/Integrations/OauthClientCredentialsTest.php` (skip se Passport não habilitado) — token JWT 1h emitido contra client_id+client_secret
-- [ ] T242 [US-11.2] Estender `app/Support/Metrics/WebhookMetrics.php` e `ApiPublicMetrics.php` com métricas do plan.md §7
-- [ ] T243 [US-11.2] Validar `vendor/bin/sail artisan scribe:generate` produz OpenAPI consistente — adicionar `tests/Feature/Integrations/OpenApiSpecValidatesTest.php` lendo o YAML e validando contra schema OpenAPI 3.0
+- [X] T235 [US-11.2] Criar `tests/Feature/Integrations/PublicApiAuthenticationTest.php` cobrindo AC-11.2.3 — Sanctum bearer válido vs. inválido vs. revogado
+- [X] T236 [P] [US-11.2] Criar `tests/Feature/Integrations/PublicApiRateLimitTest.php` cobrindo AC-11.2.4 — 1100 req em 1min → 1000 com 200 + 100 com 429 + headers corretos
+- [X] T237 [P] [US-11.2] Criar `tests/Feature/Integrations/PublicApiScopeRestrictionTest.php` cobrindo AC-11.2.6 — endpoints fora do Q14 retornam 404 (não 401)
+- [X] T238 [P] [US-11.2] Criar `tests/Feature/Integrations/PublicApiControlledMaskingTest.php` (R-8-4) — receita controlada via API pública SEMPRE mascarada independente do scope do token
+- [X] T239 [P] [US-11.2] Criar `tests/Feature/Integrations/PublicApiIdempotencyKeyTest.php` cobrindo NFR-9 — `Idempotency-Key` em POST retorna mesmo response em 24h
+- [X] T240 [P] [US-11.2] Criar `tests/Feature/Integrations/PublicApiTenantSuspendedTest.php` validando 503 `tenant_suspended`
+- [X] T241 [P] [US-11.2] Criar `tests/Feature/Integrations/OauthClientCredentialsTest.php` (skip se Passport não habilitado) — token JWT 1h emitido contra client_id+client_secret
+- [X] T242 [US-11.2] Estender `app/Support/Metrics/WebhookMetrics.php` e `ApiPublicMetrics.php` com métricas do plan.md §7
+- [X] T243 [US-11.2] Validar `vendor/bin/sail artisan scribe:generate` produz OpenAPI consistente — adicionar `tests/Feature/Integrations/OpenApiSpecValidatesTest.php` lendo o YAML e validando contra schema OpenAPI 3.0
 
 **Checkpoint Lote D**: smoke Cenários 5 e 6 exequíveis. OpenAPI publicado e acessível.
 

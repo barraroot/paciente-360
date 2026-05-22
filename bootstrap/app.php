@@ -18,8 +18,10 @@ use App\Exceptions\Pacientes\MesclagemJaRevertidaException;
 use App\Exceptions\Users\InvalidInvitationException;
 use App\Exceptions\Users\LastAdminClinicaException;
 use App\Exceptions\Users\PlanLimitReachedException;
+use App\Http\Middleware\ApiPublicRateLimiter;
 use App\Http\Middleware\ApplyOverdueRestrictions;
 use App\Http\Middleware\EnsureAgendaModuleEnabled;
+use App\Http\Middleware\EnsureApiPublicTenantNotSuspended;
 use App\Http\Middleware\EnsurePrescriptionModuleEnabled;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureTenantNotSuspended;
@@ -27,6 +29,7 @@ use App\Http\Middleware\EnsureTenantSlugHeader;
 use App\Http\Middleware\ImpersonateContextResolver;
 use App\Http\Middleware\ImpersonateScreenAuditTrigger;
 use App\Http\Middleware\LogStructuredRequestData;
+use App\Http\Middleware\OauthAuthenticator;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetSecurityHeaders;
 use App\Http\Middleware\SlideTokenExpiration;
@@ -116,6 +119,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'super.admin' => EnsureSuperAdmin::class,
             'impersonate.resolve' => ImpersonateContextResolver::class,
             'impersonate.audit' => ImpersonateScreenAuditTrigger::class,
+            // Fase 8 Lote D US-11.2 — API Pública.
+            'api_public.rate_limit' => ApiPublicRateLimiter::class,
+            'api_public.tenant_not_suspended' => EnsureApiPublicTenantNotSuspended::class,
+            'oauth.authenticator' => OauthAuthenticator::class,
         ]);
 
         // `ResolveTenant` roda em TODA request da API. Deve rodar ANTES

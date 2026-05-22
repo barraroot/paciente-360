@@ -359,6 +359,12 @@ const routes = [
         component: () => import('@/pages/Integrations/WebhookDeliveriesPage.vue'),
         meta: { requiresAuth: true, ability: 'webhook.manage', title: 'Dead Letter Queue' },
     },
+    {
+        path: '/panel/integracoes/api-tokens',
+        name: 'integrations.api_tokens',
+        component: () => import('@/pages/Integrations/ApiTokensSettingsPage.vue'),
+        meta: { requiresAuth: true, ability: 'api_token.manage', title: 'Tokens API' },
+    },
 
     // ─── Relatórios (Fase 8 — Lote E, Épico 10) ───────────────────────────────
     {

@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\Inbox\MessagesController;
 use App\Http\Controllers\Api\V1\Inbox\PresenceController;
 use App\Http\Controllers\Api\V1\Inbox\QuickRepliesController;
 use App\Http\Controllers\Api\V1\Inbox\TakeoverController;
+use App\Http\Controllers\Api\V1\Integrations\ApiTokensController;
 use App\Http\Controllers\Api\V1\Integrations\WebhooksController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
 use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
@@ -800,4 +801,25 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
         Route::get('/{webhook}/deliveries', [WebhooksController::class, 'listDeliveries'])
             ->whereNumber('webhook')
             ->name('deliveries');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Integrations — API Tokens (Fase 8 — Lote D US-11.2)
+|--------------------------------------------------------------------------
+|
+| T231 — CRUD interno de Personal Access Tokens para a API pública.
+| Apenas admin-clinica (ability `api_token.manage`).
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('integrations/api-tokens')
+    ->name('integrations.api_tokens.')
+    ->group(function (): void {
+        Route::get('/', [ApiTokensController::class, 'index'])->name('index');
+        Route::post('/', [ApiTokensController::class, 'store'])
+            ->middleware('throttle:10,1')
+            ->name('store');
+        Route::delete('/{tokenId}', [ApiTokensController::class, 'destroy'])
+            ->whereNumber('tokenId')
+            ->name('destroy');
     });

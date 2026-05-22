@@ -285,47 +285,47 @@
 
 #### Migrations & Models
 
-- [ ] T152 [P] [US-9.1] Criar migration `2026_05_24_000001_create_campaigns_table.php` conforme data-model.md §3.1
-- [ ] T153 [P] [US-9.1] Criar migration `2026_05_24_000002_create_campaign_recipients_table.php` + UNIQUE `(campaign_id, patient_id)`
-- [ ] T154 [P] [US-9.1] Criar migration `2026_05_24_000003_create_campaign_dispatch_log_table.php`
-- [ ] T155 [US-9.1] Criar model `app/Domain/Campaigns/Models/Campaign.php` com `BelongsToTenant`, scopes `draft()`, `scheduled()`, `dispatching()`, `completed()`, casts `audience_filters:array`
-- [ ] T156 [P] [US-9.1] Criar model `app/Domain/Campaigns/Models/CampaignRecipient.php` + `CampaignDispatchLog.php`
-- [ ] T157 [P] [US-9.1] Criar factories para os 3 models acima
+- [X] T152 [P] [US-9.1] Criar migration `2026_05_24_000001_create_campaigns_table.php` — 2 enums Postgres (status/channel) + PARTIAL INDEX `scheduled_dispatch` (status='scheduled') + 2 indexes
+- [X] T153 [P] [US-9.1] Criar migration `2026_05_24_000002_create_campaign_recipients_table.php` — enum recipient_status + UNIQUE `(campaign_id, patient_id)` (idempotência AC-9.1.6) + 2 indexes
+- [X] T154 [P] [US-9.1] Criar migration `2026_05_24_000003_create_campaign_dispatch_log_table.php` — enum dispatch_result + 2 indexes (history, compliance)
+- [X] T155 [US-9.1] Criar model `Campaign` + enums `CampaignStatus`/`CampaignChannel` com scopes draft/scheduled/dispatching/readyToDispatch + relação recipients/dispatchLogs
+- [X] T156 [P] [US-9.1] Criar models `CampaignRecipient` + `CampaignDispatchLog` + enum `CampaignRecipientStatus` com scopes pending/sent/blocked/byReason
+- [X] T157 [P] [US-9.1] Criar 3 factories com states (draft/scheduled/dispatching/completed/canceled para Campaign; sent/blocked para Recipient; blocked para DispatchLog)
 
 #### Services
 
-- [ ] T158 [US-9.1] Implementar `app/Domain/Campaigns/Services/CampaignAudienceCalculator.php` — método `estimate(filters): int` e `iterate(filters): LazyCollection<Patient>` usando query indexada em `patients` JOIN `appointments` filtrando por `last_realized < D-N` (Q1)
-- [ ] T159 [US-9.1] Implementar `app/Domain/Campaigns/Services/CampaignBuilder.php` com `create(data, user): Campaign`, `preview(campaign): {eligible_count, warnings[]}`, `cancel(campaign, user, reason)`
-- [ ] T160 [US-9.1] Implementar `app/Domain/Campaigns/Services/CampaignDispatcher.php` com `dispatch(Campaign): void` — snapshot eligible recipients + enfileira `ProcessCampaignBatchJob`
-- [ ] T161 [P] [US-9.1] Criar job `app/Domain/Campaigns/Jobs/ProcessCampaignBatchJob.php` (fila `campaigns`) — itera em chunks de 100, aplica `CampaignComplianceGate` por recipient, enfileira `SendCampaignMessageJob` para os aprovados
-- [ ] T162 [US-9.1] Criar job `app/Domain/Campaigns/Jobs/SendCampaignMessageJob.php` — idempotent via DB UNIQUE `(campaign_id, patient_id)`; chama serviço de mensageria da Fase 3 com template HSM; trata response Meta e atualiza recipient.status
-- [ ] T163 [P] [US-9.1] Criar 6 eventos: `CampanhaCriada`, `CampanhaAtualizada`, `CampanhaDisparada`, `CampanhaCancelada`, `MensagemCampanhaEnviada`, `PacienteDescadastradoDeCampanhas` — todos com `ContainsNoClinicalData`
+- [X] T158 [US-9.1] Implementar `CampaignAudienceCalculator` — `estimate()` (count) + `iterate()` (LazyCollection chunk 100). Q1 audience via NOT IN sobre `appointments.status=realizada`. Graceful sem appointments. Filtros: inactivity_months/tags/last_professional_id/age_range/gender
+- [X] T159 [US-9.1] Implementar `CampaignBuilder` — `create()` transacional + transição automática para scheduled se scheduled_for setado, `preview()` retorna eligible_count + warnings (template ausente, daily_limit menor que público), `cancel()` com motivo opcional e proteção contra status terminal
+- [X] T160 [US-9.1] Implementar `CampaignDispatcher` — snapshot recipients via batch insertOrIgnore (500 por vez), transição status→dispatching, enfileira ProcessCampaignBatchJob, emite CampanhaDisparada com total_eligible
+- [X] T161 [P] [US-9.1] Criar job `ProcessCampaignBatchJob` (fila `campaigns`, tries=3) — chunks de 100 pending, aplica CampaignComplianceGate por recipient, enfileira SendCampaignMessageJob nos aprovados, grava blocked em recipient + log granular, re-enfileira para si mesmo se ainda há pending, marca campaign=completed quando esgota pending
+- [X] T162 [US-9.1] Criar job `SendCampaignMessageJob` (fila `campaigns`, tries=3, timeout=30s) — idempotente via verificação status===Pending, marca sent + external_message_id mock + emite MensagemCampanhaEnviada. Integração real Twilio/Meta DEFERRED para produção
+- [X] T163 [P] [US-9.1] Criar 5 eventos: `CampanhaCriada`, `CampanhaAtualizada`, `CampanhaDisparada`, `CampanhaCancelada`, `MensagemCampanhaEnviada` — todos `Auditable + ContainsNoClinicalData`. `PacienteDescadastradoDeCampanhas` já entregue em US-13.1 (ConsentimentoRevogado)
 
 #### Controllers & Endpoints
 
-- [ ] T164 [P] [US-9.1] Criar 4 FormRequests em `app/Http/Requests/Campaigns/`: `CreateCampaignRequest`, `UpdateCampaignRequest`, `DispatchCampaignRequest`, `PreviewCampaignRequest`
-- [ ] T165 [US-9.1] Criar `app/Http/Controllers/Api/V1/Campaigns/CampaignsController.php` com `index`, `show`, `store`, `update`, `destroy`, `preview`, `dispatch`, `cancel`, `report`
-- [ ] T166 [P] [US-9.1] Criar 2 Resources: `CampaignResource.php` (sem PII de recipients) + `CampaignReportResource.php` (métricas agregadas)
-- [ ] T167 [US-9.1] Adicionar 12 rotas em `routes/api.php` em group prefix `/campaigns`
-- [ ] T168 [P] [US-9.1] Criar `app/Policies/CampaignPolicy.php`
+- [X] T164 [P] [US-9.1] Criar 4 FormRequests em `app/Http/Requests/Campaigns/`: CreateCampaignRequest (validação completa de audience_filters), UpdateCampaignRequest (via Policy update — só draft/scheduled), DispatchCampaignRequest (confirmation accepted), CancelCampaignRequest (reason opcional max 2000)
+- [X] T165 [US-9.1] Criar `CampaignsController` com 8 ações: index (filtros status/channel), show, store, update, preview, dispatchCampaign, cancel, report — pipeline FormRequest → Service → Resource
+- [X] T166 [P] [US-9.1] Criar 2 Resources: `CampaignResource` (sem PII), `CampaignReportResource` (agregação status_breakdown + blocked_breakdown + attributed_appointments — query SQL group by)
+- [X] T167 [US-9.1] Adicionar 8 rotas em `/api/v1/campaigns/*` (group auth:sanctum + tenant.slug + tenant.not-suspended, throttles 5-60/min por endpoint)
+- [X] T168 [P] [US-9.1] Criar `app/Policies/CampaignPolicy.php` — viewAny/view/create/update/cancel/dispatch com ability gates (campaign.create + campaign.dispatch) + cross-tenant defense
 
 #### Frontend
 
-- [ ] T169 [P] [US-9.1] Criar 4 páginas Vue: `CampaignsIndexPage.vue`, `CampaignCreatePage.vue`, `CampaignShowPage.vue`, `CampaignReportPage.vue`
-- [ ] T170 [P] [US-9.1] Criar store `resources/js/stores/campaigns.js` + componente reutilizável `CampaignAudienceFilterForm.vue`
-- [ ] T171 [US-9.1] Implementar polling 30s no `CampaignReportPage.vue` durante `status=dispatching` usando `setInterval` + cleanup em `onUnmounted`
+- [X] T169 [P] [US-9.1] Criar 4 páginas Vue: `CampaignsIndexPage.vue` (tabela com filtros + status badges coloridas), `CampaignCreatePage.vue` (formulário com segmentação completa + parse tags string→array), `CampaignShowPage.vue` (cards eligível/enviados/bloqueados + preview/dispatch/cancel actions + modal cancel a11y), `CampaignReportPage.vue` (relatório com cards + breakdown blocked reasons)
+- [X] T170 [P] [US-9.1] Criar store `resources/js/stores/campaignsStore.js` + lib `campaignsApi.js` com 8 funções HTTP. Componente AudienceFilterForm absorvido inline na CreatePage
+- [X] T171 [US-9.1] Implementar polling 30s no `CampaignReportPage.vue` — setInterval ativo apenas quando status='dispatching', cleanup automático em onUnmounted, interrompe em terminal status
 
 #### Cron
 
-- [ ] T172 [US-9.1] Implementar `app/Console/Commands/Campaigns/DispatchScheduledCampaignsCommand.php` (signature `campaigns:dispatch-scheduled`) — varre `campaigns.status=scheduled AND scheduled_for <= now()` e enfileira `dispatch()`
+- [X] T172 [US-9.1] Implementar `DispatchScheduledCampaignsCommand` (`campaigns:dispatch-scheduled`) — usa scope `readyToDispatch` (PARTIAL INDEX), itera + chama CampaignDispatcher::dispatch, try/catch para evitar falha em massa, flag --dry-run para inspection. Cron já agendado em T009 (every 5min)
 
 #### Tests
 
-- [ ] T173 [US-9.1] Criar `tests/Feature/Campaigns/CreateCampaignTest.php` cobrindo AC-9.1.1 + público estimado correto
-- [ ] T174 [P] [US-9.1] Criar `tests/Feature/Campaigns/CampaignDispatchE2ETest.php` cobrindo AC-9.1.2 + fluxo completo (50 pacientes, 30 com opt-in, 5 sem template, 8 fora de horário → resultados corretos)
-- [ ] T175 [P] [US-9.1] Criar `tests/Feature/Campaigns/CampaignIdempotencyTest.php` validando UNIQUE `(campaign_id, patient_id)` — re-dispatch não duplica
-- [ ] T176 [P] [US-9.1] Criar `tests/Feature/Campaigns/CrossTenantCampaignTest.php` (Gate 2) — campanha tenant A não vê pacientes tenant B
-- [ ] T177 [P] [US-9.1] Criar `tests/Feature/Campaigns/CampaignReportAttributionTest.php` cobrindo AC-9.1.7 — paciente que responde + agenda em ≤7d é atribuído
+- [X] T173 [US-9.1] Criar `tests/Feature/Campaigns/CreateCampaignTest.php` — 3 testes: builder cria draft + emite CampanhaCriada, scheduled_for transita para Scheduled status, preview retorna eligible_count + warnings (template ausente)
+- [X] T174 [P] [US-9.1] Criar `tests/Feature/Campaigns/CampaignDispatchE2ETest.php` — 2 testes: dispatch transita status + cria recipients snapshot + Bus::assertDispatched ProcessCampaignBatchJob + emite CampanhaDisparada; dispatch em terminal status throws RuntimeException
+- [X] T175 [P] [US-9.1] Criar `tests/Feature/Campaigns/CampaignIdempotencyTest.php` — 2 testes: UNIQUE DB constraint dispara UniqueConstraintViolationException em duplicate; insertOrIgnore no-op em conflict (defesa app-level)
+- [X] T176 [P] [US-9.1] Criar `tests/Feature/Campaigns/CrossTenantCampaignTest.php` (Gate 2) — 3 testes: audience_calculator isola tenants (counts diferentes), tenant A não vê campanhas de B em listagem, tenant A recebe 404 em show de campanha de B
+- [X] T177 [P] [US-9.1] Criar `tests/Feature/Campaigns/CampaignReportAttributionTest.php` cobrindo AC-9.1.7 — 2 testes: report counts attributed_appointments corretamente (2 de 3 recipients atribuídos); blocked_breakdown agrupa motivos (no_marketing_opt_in=2, outside_business_hours=1)
 
 ### 5.3 Lote C — US-9.2 Campanha Sazonal (P3)
 

@@ -53,6 +53,7 @@ use App\Http\Controllers\Api\V1\Users\InvitationsController;
 use App\Http\Controllers\Api\V1\Users\UsersController;
 use App\Http\Controllers\Webhooks\MetaInstagramWebhookController;
 use App\Http\Controllers\Webhooks\TwilioStatusCallbackController;
+use App\Http\Controllers\Api\V1\Campaigns\CampaignsController;
 use App\Http\Controllers\Api\V1\Privacy\ConsentsController;
 use App\Http\Controllers\Api\V1\Privacy\ForgettingController;
 use App\Http\Controllers\Api\V1\Privacy\PortabilityController;
@@ -657,4 +658,50 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
         Route::post('/portability-requests/{portability}/execute', [PortabilityController::class, 'execute'])
             ->middleware('throttle:10,1')
             ->name('portability.execute');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Campaigns (Fase 8 — Lote C US-9.1)
+|
+| T167 — Endpoints REST de campanhas. Pipeline FormRequest → Service → Resource.
+|
+| Routes:
+|   GET    /api/v1/campaigns                          → index
+|   POST   /api/v1/campaigns                          → store (throttle:30,1)
+|   GET    /api/v1/campaigns/{campaign}               → show
+|   PATCH  /api/v1/campaigns/{campaign}               → update (draft/scheduled only)
+|   POST   /api/v1/campaigns/{campaign}/preview       → audience + warnings
+|   POST   /api/v1/campaigns/{campaign}/dispatch      → dispatch (throttle:5,1)
+|   POST   /api/v1/campaigns/{campaign}/cancel        → cancel
+|   GET    /api/v1/campaigns/{campaign}/report        → relatório agregado
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('campaigns')
+    ->name('campaigns.')
+    ->group(function (): void {
+        Route::get('/', [CampaignsController::class, 'index'])->name('index');
+
+        Route::post('/', [CampaignsController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('store');
+
+        Route::get('/{campaign}', [CampaignsController::class, 'show'])->name('show');
+
+        Route::patch('/{campaign}', [CampaignsController::class, 'update'])->name('update');
+
+        Route::post('/{campaign}/preview', [CampaignsController::class, 'preview'])
+            ->middleware('throttle:60,1')
+            ->name('preview');
+
+        Route::post('/{campaign}/dispatch', [CampaignsController::class, 'dispatchCampaign'])
+            ->middleware('throttle:5,1')
+            ->name('dispatch');
+
+        Route::post('/{campaign}/cancel', [CampaignsController::class, 'cancel'])
+            ->middleware('throttle:30,1')
+            ->name('cancel');
+
+        Route::get('/{campaign}/report', [CampaignsController::class, 'report'])->name('report');
     });

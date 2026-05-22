@@ -21,8 +21,11 @@ use App\Exceptions\Users\PlanLimitReachedException;
 use App\Http\Middleware\ApplyOverdueRestrictions;
 use App\Http\Middleware\EnsureAgendaModuleEnabled;
 use App\Http\Middleware\EnsurePrescriptionModuleEnabled;
+use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureTenantNotSuspended;
 use App\Http\Middleware\EnsureTenantSlugHeader;
+use App\Http\Middleware\ImpersonateContextResolver;
+use App\Http\Middleware\ImpersonateScreenAuditTrigger;
 use App\Http\Middleware\LogStructuredRequestData;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetSecurityHeaders;
@@ -109,6 +112,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'prescription.module' => EnsurePrescriptionModuleEnabled::class,
             // Fase 5 (T162 — US-6.7 / R3) — valida HMAC do header X-Goog-Channel-Token.
             'validate.google.channel.token' => ValidateGoogleChannelToken::class,
+            // Fase 8 Lote B US-12.1 (T095-T097) — Super Admin + impersonate.
+            'super.admin' => EnsureSuperAdmin::class,
+            'impersonate.resolve' => ImpersonateContextResolver::class,
+            'impersonate.audit' => ImpersonateScreenAuditTrigger::class,
         ]);
 
         // `ResolveTenant` roda em TODA request da API. Deve rodar ANTES

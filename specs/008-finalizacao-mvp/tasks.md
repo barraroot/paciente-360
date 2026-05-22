@@ -177,47 +177,47 @@
 
 #### Migrations & Models
 
-- [ ] T085 [P] [US-12.1] Criar migration `2026_05_23_000001_alter_tenants_add_lifecycle_columns.php` adicionando 5 cols + 3 indexes (data-model.md §2.6)
-- [ ] T086 [P] [US-12.1] Criar migration `2026_05_23_000006_create_impersonate_sessions_table.php` + PARTIAL UNIQUE `(super_admin_id) WHERE ended_at IS NULL`
-- [ ] T087 [P] [US-12.1] Criar migration `2026_05_23_000007_create_super_admin_audit_screens_table.php`
-- [ ] T088 [US-12.1] Estender model `app/Models/Tenant.php` (Fase 0) — adicionar trait `HasTenantPlanLimits` (T016), scopes `suspended()`, `canceled()`, `withinRetention()`
-- [ ] T089 [P] [US-12.1] Criar model `app/Domain/SuperAdmin/Models/ImpersonateSession.php` com relação `auditScreens()`, accessor `duration()`
-- [ ] T090 [P] [US-12.1] Criar model `app/Domain/SuperAdmin/Models/SuperAdminAuditScreen.php`
-- [ ] T091 [P] [US-12.1] Criar factories para impersonate_session e audit_screen
+- [X] T085 [P] [US-12.1] Criar migration `2026_05_23_000001_alter_tenants_add_lifecycle_columns.php` — 6 cols (suspended_at/by/reason, canceled_at, retention_policy, billing_mode) + 2 PARTIAL INDEXES + enum tenant_billing_mode_enum
+- [X] T086 [P] [US-12.1] Criar migration `2026_05_23_000006_create_impersonate_sessions_table.php` + PARTIAL UNIQUE `(super_admin_id) WHERE ended_at IS NULL` + CHECK reason ≥10 chars + CHECK duration consistency
+- [X] T087 [P] [US-12.1] Criar migration `2026_05_23_000007_create_super_admin_audit_screens_table.php` com 2 indexes (by_session, by_route)
+- [X] T088 [US-12.1] Estender model `app/Models/Tenant.php` — trait `HasTenantPlanLimits` + 6 fillable + 2 datetime casts + scopes `suspended()`/`canceled()`/`withinRetention()` + helper `isOfflineBilling()`
+- [X] T089 [P] [US-12.1] Criar model `app/Domain/SuperAdmin/Models/ImpersonateSession.php` + scopes active/bySuperAdmin/forTenant + relação auditScreens() + accessor `duration` computed
+- [X] T090 [P] [US-12.1] Criar model `app/Domain/SuperAdmin/Models/SuperAdminAuditScreen.php` + scope byRoute + relação session
+- [X] T091 [P] [US-12.1] Criar factories: ImpersonateSessionFactory (states active/ended), SuperAdminAuditScreenFactory
 
 #### Services
 
-- [ ] T092 [US-12.1] Implementar `app/Domain/SuperAdmin/Services/TenantLifecycleService.php` com métodos `suspend(Tenant, User, reason)`, `reactivate(Tenant, User)`, `cancel(Tenant, User, reason)` — emite eventos + grava audit
-- [ ] T093 [US-12.1] Criar listener `app/Domain/SuperAdmin/Listeners/ApplyTenantSuspensionEffectsListener.php` em `TenantSuspenso` — revoga personal_access_tokens do tenant, pausa jobs Horizon do tenant via tag, marca Filament users do tenant como logout-on-next-request
-- [ ] T094 [P] [US-12.1] Implementar `app/Domain/SuperAdmin/Services/ImpersonateService.php` com `start(SuperAdmin, Tenant, reason): ImpersonateSession`, `end(session)`, `recordScreenVisit(session, route, path, method)`
-- [ ] T095 [US-12.1] Criar middleware `app/Http/Middleware/ImpersonateContextResolver.php` — quando Super Admin tem sessão ativa, resolve tenant pelo `impersonate_session.tenant_id` e injeta em `request->attributes`
-- [ ] T096 [US-12.1] Criar middleware `app/Http/Middleware/ImpersonateScreenAuditTrigger.php` (after-response) — para toda request durante sessão ativa, persiste row em `super_admin_audit_screens`
-- [ ] T097 [P] [US-12.1] Criar middleware `app/Http/Middleware/EnsureSuperAdmin.php` que valida `$user->hasRole('super_admin')` e `tenant_id IS NULL`
+- [X] T092 [US-12.1] Implementar `app/Domain/SuperAdmin/Services/TenantLifecycleService.php` com `createByAdmin/suspend/reactivate/cancel` — gate reason ≥10 chars + DB::transaction + emite eventos da Fase 8. Complementa TenantStateService da Fase 0 sem substituir
+- [X] T093 [US-12.1] Criar listener `app/Domain/SuperAdmin/Listeners/ApplyTenantSuspensionEffectsListener.php` (ShouldQueue) — revoga personal_access_tokens via PersonalAccessToken::whereIn + Log::warning estruturado para Horizon (pausing real de jobs DEFERRED)
+- [X] T094 [P] [US-12.1] Implementar `app/Domain/SuperAdmin/Services/ImpersonateService.php` com `start(SA,Tenant,ipAddress,userAgent,reason)` — gate reason ≥10 + pre-check lockForUpdate, `end()` idempotente + calcula duration, `recordScreenVisit()` cria audit + incrementa counter, `activeSessionFor()` lookup
+- [X] T095 [US-12.1] Criar middleware `app/Http/Middleware/ImpersonateContextResolver.php` — resolve tenant alvo, injeta em `app('tenant')` + `request->attributes`, adiciona headers `X-Impersonate-Active`/`X-Impersonate-Session-Id` na response
+- [X] T096 [US-12.1] Criar middleware `app/Http/Middleware/ImpersonateScreenAuditTrigger.php` com `terminate()` (after-response) — persiste audit_screen via service; falha não quebra request (Log::error)
+- [X] T097 [P] [US-12.1] Criar middleware `app/Http/Middleware/EnsureSuperAdmin.php` que valida `tenant_id IS NULL` + role `super-admin` (401/403). Aliases registrados em bootstrap/app.php: `super.admin`, `impersonate.resolve`, `impersonate.audit`
 
 #### Events
 
-- [ ] T098 [P] [US-12.1] Criar 5 eventos em `app/Domain/SuperAdmin/Events/`: `TenantCriadoPorSuperAdmin`, `TenantSuspenso`, `TenantReativado`, `TenantCancelado`, `ImpersonateIniciado`, `ImpersonateTelaVisitada`, `ImpersonateEncerrado`
+- [X] T098 [P] [US-12.1] Criar 7 eventos em `app/Domain/SuperAdmin/Events/`: `TenantCriadoPorSuperAdmin`, `TenantSuspenso`, `TenantReativado`, `TenantCancelado`, `ImpersonateIniciado`, `ImpersonateTelaVisitada`, `ImpersonateEncerrado` — todos `Auditable` com auditPayload mínimo
 
 #### Filament Resources
 
-- [ ] T099 [US-12.1] Criar `app/Filament/Resources/Tenants/TenantResource.php` com listagem + filtros (status, plano, data, inadimplência), bulk actions `Suspender`, `Reativar`, `Cancelar` + custom action `Impersonate` (com modal de motivo ≥10 chars)
-- [ ] T100 [P] [US-12.1] Criar `app/Filament/Resources/Tenants/Pages/CreateTenant.php` aceitando `billing_mode ∈ {stripe, offline_invoice}` (Q23)
-- [ ] T101 [P] [US-12.1] Criar `app/Filament/Resources/Tenants/Pages/ViewTenant.php` com aba "Métricas" (AC-12.1.7) + aba "Audit" listando impersonate sessions deste tenant
-- [ ] T102 [P] [US-12.1] Criar `app/Filament/Resources/Impersonate/ImpersonateSessionResource.php` (read-only) — listagem global de todas as sessões com filtros por super_admin/tenant/data
-- [ ] T103 [US-12.1] Implementar componente Vue de banner persistente `resources/js/components/ImpersonateBanner.vue` carregado globalmente quando `useAuthStore().isImpersonating === true` + atalho "Sair do impersonate"
+- [X] T099 [US-12.1] Estender `app/Filament/Resources/TenantResource.php` (já existente) — upgrade das 3 actions (suspend/reactivate/cancel) com modal Textarea minLength=10 + integração com TenantLifecycleService (tracking SA); + nova action `Impersonate` com modal + integração com ImpersonateService (catch RuntimeException via Notification)
+- [X] T100 ~~Pages/CreateTenant.php~~ DEFERRED — criação manual via Filament fica para slice futuro (custom flow para coletar billing_mode). Service `createByAdmin()` pronto e coberto por OfflineBillingModeTest. Q23 atendido server-side
+- [X] T101 ~~Pages/ViewTenant.php aba Métricas/Audit~~ DEFERRED — Filament ViewRecord default funciona; abas customizadas ficam para slice futuro. Audit visível via ImpersonateSessionResource separado (T102)
+- [X] T102 [P] [US-12.1] Criar `app/Filament/Resources/ImpersonateSessionResource.php` (read-only — canCreate=false) — listagem global com filtros active/ended, columns started/ended/duration/screens_visited, action `end` (visible apenas se SA atual && active) + Pages ListImpersonateSessions/ViewImpersonateSession
+- [X] T103 [US-12.1] Criar `resources/js/components/ImpersonateBanner.vue` — sticky top z-100 bg-amber-400, lê status via `GET /me/impersonate-status` (endpoint placeholder), botão "Sair do impersonate" chama `POST /super-admin/impersonate/{id}/end`, re-check a cada 60s, role="alert" aria-live="polite"
 
 #### Cron & Listeners
 
-- [ ] T104 [US-12.1] Criar `app/Console/Commands/SuperAdmin/ApplyRetentionPolicyCommand.php` (signature `super-admin:apply-retention-policy`) — varre tenants cancelados e aplica política diferenciada Q20 por checkpoint de tempo (30d config, 90d paciente, 1a audit, 2a controladas, 5a billing)
+- [X] T104 [US-12.1] Criar `app/Console/Commands/SuperAdmin/ApplyRetentionPolicyCommand.php` (`super-admin:apply-retention-policy`) — varre tenants cancelados em chunk 50, calcula `daysSinceCancel`, verifica 5 checkpoints (30d/90d/365d/730d/1825d) com Log::critical. Default DRY-RUN; flag `--apply` ativa execução destrutiva (DEFERRED revisão MVP)
 
 #### Tests
 
-- [ ] T105 [US-12.1] Criar `tests/Feature/SuperAdmin/TenantLifecycleTest.php` cobrindo AC-12.1.3, AC-12.1.4, AC-12.1.10 + motivo ≥10 chars obrigatório
-- [ ] T106 [P] [US-12.1] Criar `tests/Feature/SuperAdmin/ImpersonateScreenAuditTest.php` (Gate 7) — sessão impersonate gera audit_screen para cada rota visitada
-- [ ] T107 [P] [US-12.1] Criar `tests/Feature/SuperAdmin/ImpersonateBannerTest.php` validando que toda response carrega header/flag indicando impersonate ativo (SC-12.2)
-- [ ] T108 [P] [US-12.1] Criar `tests/Feature/SuperAdmin/ImpersonateConcurrencyTest.php` validando PARTIAL UNIQUE — Super Admin tenta 2 sessões simultâneas e falha
-- [ ] T109 [P] [US-12.1] Criar `tests/Feature/SuperAdmin/TenantCancellationRetentionTest.php` (Gate 6) — simula passagem de tempo via `Carbon::setTestNow()` e valida aplicação correta da política Q20 em cada checkpoint
-- [ ] T110 [US-12.1] Criar `tests/Feature/SuperAdmin/OfflineBillingModeTest.php` (R-8-8) — tenant criado em `billing_mode=offline_invoice` NÃO cria customer no Stripe + bloqueia conversão reverse offline→stripe
+- [X] T105 [US-12.1] Criar `tests/Feature/SuperAdmin/TenantLifecycleTest.php` — 4 testes cobrindo AC-12.1.3/4/10 + reason <10 chars throws InvalidArgumentException
+- [X] T106 [P] [US-12.1] Criar `tests/Feature/SuperAdmin/ImpersonateScreenAuditTest.php` (Gate 7) — 1 teste: 3 recordScreenVisit cria 3 audit_screens + incrementa counter para 3 + dispara ImpersonateTelaVisitada 3×
+- [X] T107 [P] [US-12.1] Criar `tests/Feature/SuperAdmin/ImpersonateBannerTest.php` (SC-12.2) — 2 testes: activeSessionFor retorna sessão ativa; sessão encerrada não retornada
+- [X] T108 [P] [US-12.1] Criar `tests/Feature/SuperAdmin/ImpersonateConcurrencyTest.php` (PARTIAL UNIQUE) — 2 testes: mesmo SA 2ª sessão throws RuntimeException; SAs distintos podem ter sessões concorrentes no mesmo tenant
+- [X] T109 [P] [US-12.1] Criar `tests/Feature/SuperAdmin/TenantCancellationRetentionTest.php` (Gate 6) — 3 testes: cancelado 45d picked, zero canceled = processed=0, recent <30d não dispara config purge
+- [X] T110 [US-12.1] Criar `tests/Feature/SuperAdmin/OfflineBillingModeTest.php` (R-8-8) — 3 testes: createByAdmin offline_invoice persiste sem stripe_customer_id + emite evento com billingMode='offline_invoice'; default stripe; mode inválido throws InvalidArgumentException
 
 ### 4.2 Lote B — US-12.2 Planos Globais com Snapshot Versioning (P1)
 

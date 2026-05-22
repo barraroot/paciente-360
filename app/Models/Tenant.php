@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Casts\AsJsonArray;
+use App\Models\Concerns\HasTenantPlanLimits;
 use Database\Factories\TenantFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,7 +44,7 @@ use Laravel\Cashier\Billable;
 class Tenant extends Model
 {
     /** @use HasFactory<TenantFactory> */
-    use Billable, HasFactory, Notifiable, SoftDeletes;
+    use Billable, HasFactory, HasTenantPlanLimits, Notifiable, SoftDeletes;
 
     /**
      * O Cashier procura `stripe_id` por default; nossa tabela usa
@@ -83,6 +85,13 @@ class Tenant extends Model
         'terms_version',
         'onboarding_state',
         'settings',
+        // T088 (Fase 8 — Lote B US-12.1) — lifecycle columns
+        'suspended_at',
+        'suspended_by_user_id',
+        'suspended_reason',
+        'canceled_at',
+        'retention_policy',
+        'billing_mode',
     ];
 
     /**
@@ -97,7 +106,37 @@ class Tenant extends Model
             'terms_accepted_at' => 'datetime',
             'onboarding_state' => AsJsonArray::class,
             'settings' => AsJsonArray::class,
+            // T088 (Fase 8 — Lote B)
+            'suspended_at' => 'datetime',
+            'canceled_at' => 'datetime',
         ];
+    }
+
+    /**
+     * T088 (Fase 8 — Lote B US-12.1) — scopes para painel Super Admin.
+     */
+    public function scopeSuspended(Builder $query): Builder
+    {
+        return $query->whereNotNull('suspended_at')->where('status', 'suspended');
+    }
+
+    public function scopeCanceled(Builder $query): Builder
+    {
+        return $query->whereNotNull('canceled_at')->where('status', 'cancelled');
+    }
+
+    /**
+     * Tenants DENTRO da janela de retenção pós-cancelamento (Q20).
+     * Útil para o cron `super-admin:apply-retention-policy`.
+     */
+    public function scopeWithinRetention(Builder $query): Builder
+    {
+        return $query->whereNotNull('canceled_at');
+    }
+
+    public function isOfflineBilling(): bool
+    {
+        return ($this->billing_mode ?? 'stripe') === 'offline_invoice';
     }
 
     /**

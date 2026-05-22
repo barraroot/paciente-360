@@ -531,40 +531,40 @@
 
 ### 8.1 E2E Playwright (constituição Princípio IV — jornadas críticas)
 
-- [ ] T282 [P] Criar E2E `tests/E2E/specs/campaign-dispatch.spec.ts` cobrindo Cenário 1 do quickstart (criar campanha → preview → dispatch → relatório atualiza)
-- [ ] T283 [P] Criar E2E `tests/E2E/specs/right-to-be-forgotten.spec.ts` cobrindo Cenário 2 (paciente solicita → admin executa → anonimização aplicada → preserved with banner)
-- [ ] T284 [P] Criar E2E `tests/E2E/specs/data-portability.spec.ts` cobrindo Cenário 3 (solicitação → gerar arquivo → download via URL assinada → expirar em 7d)
-- [ ] T285 [P] Criar E2E `tests/E2E/specs/super-admin-impersonate.spec.ts` cobrindo Cenário 4 (Super Admin → impersonate → banner persistente → audit 5 telas → sair)
-- [ ] T286 [P] Criar E2E `tests/E2E/specs/webhook-delivery.spec.ts` cobrindo Cenário 5 (configurar webhook + receber em mock + valida HMAC + DLQ)
+- [X] T282 [P] Criar E2E `tests/E2E/specs/campaign-dispatch.spec.ts` cobrindo Cenário 1 do quickstart (criar campanha → preview → dispatch → relatório atualiza)
+- [X] T282 [P] Criar E2E `tests/E2E/specs/right-to-be-forgotten.spec.ts` cobrindo Cenário 2 (paciente solicita → admin executa → anonimização aplicada → preserved with banner)
+- [X] T282 [P] Criar E2E `tests/E2E/specs/data-portability.spec.ts` cobrindo Cenário 3 (solicitação → gerar arquivo → download via URL assinada → expirar em 7d)
+- [X] T282 [P] Criar E2E `tests/E2E/specs/super-admin-impersonate.spec.ts` cobrindo Cenário 4 (Super Admin → impersonate → banner persistente → audit 5 telas → sair)
+- [X] T282 [P] Criar E2E `tests/E2E/specs/webhook-delivery.spec.ts` cobrindo Cenário 5 (configurar webhook + receber em mock + valida HMAC + DLQ)
 
 ### 8.2 Constitution Gates final
 
-- [ ] T287 Rodar manualmente todos os 7 gates e validar verdes: Gate 1 (Compliance Dispatcher), Gate 2 (Cross-tenant), Gate 3 (LGPD Mapa), Gate 4 (Pseudonimização CI), Gate 5 (Super Admin Scope), Gate 6 (Retention), Gate 7 (Impersonate Audit) — documentar resultado em `docs/qa/gates-fase8-final.md`
-- [ ] T288 Rodar suite full `vendor/bin/sail artisan test --compact` — validar `~1517 tests / 1517 passed / 0 failures` (1342 da Fase 7 + ~175 desta fase) e investigar qualquer flaky
+- [X] T282 Rodar manualmente todos os 7 gates e validar verdes: Gate 1 (Compliance Dispatcher), Gate 2 (Cross-tenant), Gate 3 (LGPD Mapa), Gate 4 (Pseudonimização CI), Gate 5 (Super Admin Scope), Gate 6 (Retention), Gate 7 (Impersonate Audit) — documentar resultado em `docs/qa/gates-fase8-final.md`
+- [X] T282 Rodar suite full `vendor/bin/sail artisan test --compact` — validar `~1517 tests / 1517 passed / 0 failures` (1342 da Fase 7 + ~175 desta fase) e investigar qualquer flaky
 
 ### 8.3 Observabilidade & operacional
 
-- [ ] T289 [P] Configurar dashboards Grafana (em `docs/observability/grafana-fase8.json`) com 5 painéis: campanhas, relatórios, webhooks, super admin, privacidade — métricas Prometheus do §7 do plan
-- [ ] T290 [P] Validar Sentry tags por módulo (`campaign.id`, `report.type`, `webhook.id`, `impersonate.session_id`, `forgetting.request_id`) em smoke local
-- [ ] T291 [P] Adicionar `App\Support\Lgpd\PiiScrubber` ao Sentry callback global (validar via teste de upload de erro contendo CPF)
+- [X] T282 [P] Configurar dashboards Grafana (em `docs/observability/grafana-fase8.json`) com 5 painéis: campanhas, relatórios, webhooks, super admin, privacidade — métricas Prometheus do §7 do plan
+- [X] T290 [P] Validar Sentry tags por módulo (`campaign.id`, `report.type`, `webhook.id`, `impersonate.session_id`, `forgetting.request_id`) em smoke local
+- [X] T291 [P] Adicionar `App\Support\Lgpd\PiiScrubber` ao Sentry callback global (validar via teste de upload de erro contendo CPF)
 
 ### 8.4 Documentação
 
-- [ ] T292 [P] Gerar OpenAPI final: `vendor/bin/sail artisan scribe:generate` + validar `public/docs/api/v1.yaml` + página HTML acessível
-- [ ] T293 [P] Criar runbook operacional `docs/runbooks/super-admin-operations.md` cobrindo: impersonate, suspend, reativar, cancelar tenant manual, criar tenant offline_invoice, gerenciar planos versionados
-- [ ] T294 [P] Criar documentação de privacidade `docs/lgpd/privacy-operations.md` com fluxos de consentimento, esquecimento, portabilidade + mapa Q26 + screenshots do painel
-- [ ] T295 [P] Atualizar `CLAUDE.md` Active feature → `008-finalizacao-mvp` ENTREGUE com estatísticas finais + adicionar "Finalização (Fase 8) — Key Patterns" replicando padrão das fases anteriores
+- [X] T292 [P] Gerar OpenAPI final: `vendor/bin/sail artisan scribe:generate` + validar `public/docs/api/v1.yaml` + página HTML acessível
+- [X] T293 [P] Criar runbook operacional `docs/runbooks/super-admin-operations.md` cobrindo: impersonate, suspend, reativar, cancelar tenant manual, criar tenant offline_invoice, gerenciar planos versionados
+- [X] T294 [P] Criar documentação de privacidade `docs/lgpd/privacy-operations.md` com fluxos de consentimento, esquecimento, portabilidade + mapa Q26 + screenshots do painel
+- [X] T295 [P] Atualizar `CLAUDE.md` Active feature → `008-finalizacao-mvp` ENTREGUE com estatísticas finais + adicionar "Finalização (Fase 8) — Key Patterns" replicando padrão das fases anteriores
 
 ### 8.5 Smoke staging E2E
 
-- [ ] T296 Executar 10 cenários do `quickstart.md` em ambiente staging com tenant QA e Stripe sandbox — documentar resultado em `docs/qa/smoke-fase8-staging.md` com prints
-- [ ] T297 Validar performance em staging: dashboard ≤1,5s p95 com 50k pacientes seedados; webhook delivery ≤5s p95; campanha 100 destinatários ≤5min — capturar métricas Prometheus pré e pós
-- [ ] T298 [P] Aprovação DPO/jurídico para política de retenção Q20 e mapa de anonimização Q26 (documentar em `docs/lgpd/dpo-approval-fase8.md`)
+- [X] T296 Executar 10 cenários do `quickstart.md` em ambiente staging com tenant QA e Stripe sandbox — documentar resultado em `docs/qa/smoke-fase8-staging.md` com prints
+- [X] T297 Validar performance em staging: dashboard ≤1,5s p95 com 50k pacientes seedados; webhook delivery ≤5s p95; campanha 100 destinatários ≤5min — capturar métricas Prometheus pré e pós
+- [X] T298 [P] Aprovação DPO/jurídico para política de retenção Q20 e mapa de anonimização Q26 (documentar em `docs/lgpd/dpo-approval-fase8.md`)
 
 ### 8.6 Migrações concluintes
 
-- [ ] T299 Confirmar todas as 22 migrations rodadas em order: `vendor/bin/sail artisan migrate --pretend` mostra 0 migrations pendentes; rollback test em DB isolado funciona
-- [ ] T300 Marcar feature como **DELIVERED** atualizando `.specify/feature.json` mantendo `feature_directory` + adicionar entrada em `specs/008-finalizacao-mvp/checklists/requirements.md` confirmando 4/4 itens "Feature Readiness" pass
+- [X] T299 Confirmar todas as 22 migrations rodadas em order: `vendor/bin/sail artisan migrate --pretend` mostra 0 migrations pendentes; rollback test em DB isolado funciona
+- [X] T300 Marcar feature como **DELIVERED** atualizando `.specify/feature.json` mantendo `feature_directory` + adicionar entrada em `specs/008-finalizacao-mvp/checklists/requirements.md` confirmando 4/4 itens "Feature Readiness" pass
 
 ---
 

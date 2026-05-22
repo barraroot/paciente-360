@@ -435,7 +435,13 @@ livewire(ListUsers::class)
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `008-finalizacao-mvp` — Fase 8 (Épicos 9, 10, 11, 12, 13) — finalização do MVP. [spec](specs/008-finalizacao-mvp/spec.md) Clarified (29/29) + [plan](specs/008-finalizacao-mvp/plan.md) Constitution Check ✅ 7/7 sem amendment. Próximo: `/speckit-tasks`. Estrutura: 5 lotes A→E (A Privacidade, B Super Admin, C Campanhas, D Integrações, E Relatórios); ~250 tasks; 24 tabelas novas + 3 ALTERs; 41 eventos; 8 cron schedules; ~175 testes feature + ~45 unit + 5 E2E Playwright.
+- **Active feature**: `008-finalizacao-mvp` — Fase 8 (Épicos 9-13) **ENTREGUE** em 2026-05-22. **5 lotes A-E** + **Phase 8 Polish**, ~280 tasks marcadas. Commits: Lote A `66bce06`/`9c5f29f`/`f7c3211` (Privacidade) → B `628fd86`/`b8b4f38` (Super Admin) → C `cea1ec4`/`e1dcf61`/`959e0a2` (Campanhas) → E `d01d276` (Relatórios) → D-1 `bc47352` (Webhooks) → D-2 `9c5fa9c` (API Pública) → Polish (pendente commit). Highlights:
+  - **5 módulos**: Privacidade LGPD (Q24/26/28/29), Super Admin (Gates 5/7), Campanhas (Compliance Gate 1), Integrações Webhooks + API Pública (HMAC SSRF Q17), Relatórios (Q9/11/13).
+  - **22 migrations** (1 ALTER enum + 21 CREATE), **41 eventos** (todos `Auditable` + `ContainsNoClinicalData` quando consumidos por IA).
+  - **8 cron schedules**: `privacy:*` (3), `super_admin:*` (3), `campaigns:dispatch-scheduled`, `integrations:purge-expired-dlq`, `reports:aggregate-hourly`.
+  - **~175 tests feature + ~45 unit + 5 E2E Playwright** (campaign-dispatch, right-to-be-forgotten, data-portability, super-admin-impersonate, webhook-delivery).
+  - **Constitution Check PASS 7/7 sem amendment** (v1.4.0 — Gates 1-7 todos ATIVOS).
+  - **DEFERRED**: execução real da suite + scribe:generate + smoke staging + DPO approval (todos documentados em `docs/qa/*` e `docs/lgpd/dpo-approval-fase8.md`).
 - **Previous features delivered (7)**:
   - `007-gestao-receituario` — [spec](specs/007-gestao-receituario/spec.md) — Fase 7 / Épico 8 (Gestão de Receituários) entregue em 2026-05-19. **5 lotes A-E**, **199/199 tasks**, **175/175 prescription tests verdes**, suite full **1342 tests / 1338 passed / 0 failures (1 flaky timing pré-existente)**. Commits: A `66c6c46` → B `8a9890e` → C `7780b27` → D `44d8500` → E (pendente). Highlights:
     - 4 user stories Épico 8: US-8.1 Cadastro (mascaramento controladas 5 perfis), US-8.2 Alerta D-15/D-7/D-1, US-8.3 Renovação IA (contrato pseudonimizado 7 campos), US-8.4 Relatório + CSV
@@ -675,3 +681,107 @@ When working on prescription features post-Fase 7, remember:
     - **S3 real delete** em `PurgeOldPrescriptionPdfVersionsJob`: stub `Log::info` por enquanto.
     - **Smoke staging E2E**: 5 cenários do quickstart documentados em `docs/qa/smoke-fase7-prescriptions.md` — aguardando infra staging com módulo habilitado.
     - **Sentry alerts**: contadores Prometheus prontos; rules de alerting precisam ser configuradas em prod.
+
+
+## Finalização (Fase 8) — Key Patterns
+
+When working on features across Privacy/SuperAdmin/Campaigns/Integrations/Reports modules post-Fase 8, remember:
+
+1. **`ConsentFinalidade::Integracoes` é o gate de PII em payload externo (Q17)**
+   - Adicionado em migration `2026_05_25_000000_add_integracoes_to_consent_finalidade_enum.php` (ALTER TYPE).
+   - `WebhookDispatcher::applyMasking()` chama `ConsentService::hasGranted($pacienteId, ConsentFinalidade::Integracoes)`. Sem granted → `paciente.id = '<consent_withheld>'` + outros campos removidos.
+   - `PatientPublicResource` (API pública) aplica o mesmo gate.
+   - PARTIAL UNIQUE `(patient_id, finalidade) WHERE state='granted'` em `consent_records` enforce 1 consentimento ativo por finalidade.
+
+2. **Catálogo Q17 = EXATAMENTE 13 eventos no `BroadcastDomainEventToWebhooksListener::EVENT_CATALOG`**
+   - Agenda 4 (Criada/Confirmada/Cancelada/Reagendada) + Pacientes 2 + Messaging 2 + Prescrições 2 (controladas mascaradas) + Campanhas 1 + Privacidade 2.
+   - Subscriber registrado via `Event::subscribe()` em `EventServiceProvider::boot()` — NÃO usa auto-discovery (evita duplicação Fase 5 bug).
+   - Gate test `WebhookCatalogCoverageTest` valida `count === 13` + dot-notation `<recurso>.<acao>` + classes existem via reflection. Adicionar evento ao catálogo exige atualizar este gate.
+
+3. **HMAC SHA-256 + SSRF defense via `UrlGuard`**
+   - `HmacSigner::sign($payload, $secret)` → `sha256=<hex>`. Verify usa `hash_equals` (timing-safe).
+   - Header outbound: `X-Paciente360-Signature: sha256=...` + `X-Paciente360-Event` + `X-Paciente360-Event-Id` + `X-Paciente360-Correlation-Id`.
+   - `UrlGuard::assertSafeOutboundUrl()` bloqueia RFC 1918 (10/8, 172.16/12, 192.168/16), loopback (127/8, ::1), link-local (169.254/16), CGN (100.64/10), `.local/.internal/.test/.invalid`, HTTP em produção (permite em local/test para Stripe simulator).
+   - **NÃO faz DNS resolution** — defesa em profundidade adicional fica no Guzzle client (verify TLS + protocols estritos).
+
+4. **Retry policy Q16: 30s, 2min, 10min, 1h, 6h (5 tentativas) → DLQ**
+   - `DispatchWebhookJob::tries = 1` (controle manual via `next_attempt_at`, NÃO via Laravel automatic retries).
+   - Após esgotar → `MoveToDeadLetterJob` move para `webhook_dead_letter` com `expires_at=now()+30d`.
+   - DB UNIQUE `(webhook_endpoint_id, event_id)` em `webhook_deliveries` enforça idempotência.
+   - Retention DLQ via cron `integrations:purge-expired-dlq` (daily 03:00 BRT).
+
+5. **API Pública resolve tenant pelo TOKEN, NUNCA por URL/header**
+   - Trait `ResolvesApiPublicTenant` em `app/Http/Controllers/Api/V1/Public/Concerns/` — `tenantId(Request)` lê de `$user->tenant_id` (Sanctum) ou `oauth.tenant_id` (OauthAuthenticator attribute).
+   - Defesa contra cross-tenant attacks (Princípio II).
+   - Recursos fora do escopo Q14 retornam **404** (não 401 — não revela existência) — `PublicApiScopeRestrictionTest` valida.
+
+6. **Controladas (Portaria 344/98) SEMPRE mascaradas via API pública e webhooks**
+   - `PrescriptionPublicResource`: se `type='controlled'`, omite `items` e `notes`, adiciona `masked=true` e nota explicativa.
+   - `WebhookDispatcher::applyMasking()`: idem para `event_type` que começa com `prescricao.`.
+   - **Defesa em profundidade** — não confia em scope do token: independente de `prescriptions.read_controlled`, o resource mascara.
+   - `R-8-4` gate: `PublicApiControlledMaskingTest`.
+
+7. **Idempotency-Key NFR-9 (24h dedup)**
+   - POST `/api/public/v1/patients` e `/appointments` aceitam header `Idempotency-Key`.
+   - Cache key: `api_public:idempotency:{tenant_id}:{resource}:store:{key}` TTL 24h.
+   - Replay retorna 201 + header `Idempotency-Replayed: true` com mesmo body original.
+
+8. **OAuth 2.0 Client Credentials gated por `finalization.oauth_enabled` (Q18)**
+   - Default `false` — `OauthClientService::createClient()` lança `RuntimeException('oauth_disabled')`.
+   - Quando habilitado, `tenant_oauth_clients` table armazena `client_secret_hash` (SHA-256). Plaintext retornado APENAS no create.
+   - **Stub JWT-like** em formato `stub.<base64-payload>.stub` — produção exige Passport real (composer require lazy).
+   - `OauthAuthenticator` middleware decodifica payload + injeta `oauth.tenant_id` no request attributes.
+
+9. **Rate limit por token + cap IP em `ApiPublicRateLimiter`**
+   - Token: `plan.api_rate_limit_per_minute` (default 60, varia por plano via PlanVersion snapshot).
+   - IP: `finalization.api_public_ip_hard_cap_per_minute` (default 10000) — cap anti-DDoS global.
+   - Headers RFC 6585: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After` em 429.
+
+10. **`tenant_suspended` retorna 503 na API pública (não 403)**
+    - `EnsureApiPublicTenantNotSuspended` middleware ≠ `EnsureTenantNotSuspended` interno (que devolve 403).
+    - 503 sinaliza ao integrador que o problema é temporário do tenant, não da API — ele pode retentar quando regularizado.
+    - Resolve tenant via: `app('tenant')` → `$user->tenant` → `oauth.tenant_id` attribute.
+
+11. **Pseudonimização dual layer para IA (Q29)**
+    - **Layer 1 (design-time)**: marker interface `App\Support\Lgpd\ContainsNoClinicalData` — todos eventos consumidos pela IA devem implementar. CI gate `EventsForAiPseudonymizationTest` valida via reflection.
+    - **Layer 2 (runtime)**: `PseudonymizationAuditor` audita semanalmente prompts via cron `privacy:audit-pseudonymization`. Resultado em `pseudonymization_audits` table.
+    - `PiiScrubber` (T291) aplicado ao Sentry `before_send` global — mascarara CPF/email/telefone/RG/SUS em mensagens de exceção e breadcrumbs.
+
+12. **Q26 — Mapa de anonimização explícito**
+    - Cada coluna `anonymizable` está documentada em `docs/lgpd/privacy-operations.md` § 2.
+    - `ForgettingExecutor` aplica updates atômicos em uma transação.
+    - **Preservadas por obrigação legal**: receitas `controlled` (Portaria 344/98 — 5y), `audit_logs` (Princípio VII — 5y), `appointments.starts_at/ends_at` (registro contábil).
+    - Gate test `MapaAnonimizacaoTest` valida que cada coluna marcada foi realmente zerada/redigida.
+
+13. **Super Admin Impersonate — Gate 7 (audit obrigatório)**
+    - Banner sticky `ImpersonateBanner.vue` em `<App>.vue` polling 60s para validar sessão ativa.
+    - Cada tela visitada durante impersonate gera `super_admin.screen.visited` audit_log via `ImpersonateScreenAuditTrigger` middleware.
+    - Sessão sem ≥1 audit é flagged como anomalia (provavelmente bot scrape).
+    - 4 tipos de anomalias monitoradas: `mass_data_export`, `unusual_impersonate`, `controlled_prescription_scan`, `webhook_delivery_failure_spike`.
+
+14. **Estratégia Q9: agregações ≥24h, queries live ≤24h (Relatórios)**
+    - `ExecutiveDashboardService::shouldUseAggregations()` decide por janela.
+    - `metric_aggregations` table com PARTIAL UNIQUE composto `(tenant_id, metric_name, period, period_start, COALESCE(dimensions, '{}'::jsonb))` para upsert idempotente.
+    - Cron `reports:aggregate-hourly` (hourlyAt :05) chama `MetricAggregator::aggregateDailyForTenant()` para 8 métricas (leads_by_channel, conversion_rate, no_show_rate, estimated_revenue, response_time_first_p95, ai_autonomous_resolution_rate, occupancy_by_professional, top_procedure_types).
+    - `aggregation_lag_seconds` no envelope > 7200 → banner stale na SPA (R-8-5).
+
+15. **Q13: Escopo por perfil em Relatório Clínico**
+    - `ClinicalReportService::professionalScopeFor(User)` retorna `$user->id` se `hasRole('medico') AND ! hasRole('admin-clinica')`, caso contrário `null`.
+    - Médico vê apenas própria agenda; Admin Clínica vê tenant inteiro.
+    - Resource expõe `scoped_professional_id` no envelope para o front renderizar título correto.
+
+16. **`finalization.php` config como single source of truth**
+    - Lote D: `oauth_enabled`, `webhook_max_retries`, `webhook_dlq_retention_days`, `webhook_retry_backoff_seconds`, `webhook_http_timeout_seconds`, `api_public_ip_hard_cap_per_minute`, `webhook_max_endpoints_default`.
+    - Lote E: `report_aggregation_threshold_hours`, `report_max_window_months`.
+    - Overrides via env (FINALIZATION_*) — defaults conservadores.
+
+17. **DEFERRED ao final da Fase 8** (Phase 8 Polish documentado em `docs/qa/*` e `docs/lgpd/*`)
+    - **Constitution Gates execução real (T287)**: testes codificados, requer Sail rodando → `docs/qa/gates-fase8-final.md`.
+    - **Suite full execution (T288)**: validar ~1517 tests verdes → requer Sail.
+    - **OpenAPI Scribe (T292)**: `scribe:generate` requer Sail + tags @apiResource manuais nos 6 public controllers.
+    - **Sentry tags validation (T290)**: tags codificadas em `configureSentryScope()` — validação visual no painel Sentry.
+    - **Smoke staging E2E (T296-T297)**: 10 cenários documentados em `docs/qa/smoke-fase8-staging.md`.
+    - **DPO approval formal (T298)**: template em `docs/lgpd/dpo-approval-fase8.md` aguardando revisão jurídica.
+    - **Passport instalação concreta**: gated por `FINALIZATION_OAUTH_ENABLED=true` em produção enterprise.
+    - **InboxTask real** (herdado da Fase 7): `EnqueueInboxTaskOnAiRenewal` ainda usa `Log::warning` — aguardando `ConversationService::createForPatient()`.
+    - **S3 real delete** (herdado): stub `Log::info` em jobs de purga.

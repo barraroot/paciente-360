@@ -231,6 +231,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(AppointmentType::class, AppointmentTypePolicy::class);
         Gate::policy(Appointment::class, AppointmentPolicy::class);
         Gate::policy(CalendarSyncAccount::class, CalendarSyncAccountPolicy::class);
+
+        // Fase 8 Lote E — Reports (T257). Ability-based gates (sem model).
+        Gate::define('report.view', static fn ($user): bool => $user?->can('report.view') ?? false);
+        Gate::define('report.export', static fn ($user): bool => $user?->can('report.export') ?? false);
     }
 
     /**

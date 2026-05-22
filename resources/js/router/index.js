@@ -346,6 +346,26 @@ const routes = [
         // Rota pública — não exige auth (paciente solicita esquecimento sem login).
     },
 
+    // ─── Relatórios (Fase 8 — Lote E, Épico 10) ───────────────────────────────
+    {
+        path: '/panel/relatorios/executivo',
+        name: 'reports.executive',
+        component: () => import('@/pages/Reports/ExecutiveDashboardPage.vue'),
+        meta: { requiresAuth: true, ability: 'report.view', title: 'Dashboard Executivo' },
+    },
+    {
+        path: '/panel/relatorios/operacional',
+        name: 'reports.operational',
+        component: () => import('@/pages/Reports/OperationalReportPage.vue'),
+        meta: { requiresAuth: true, ability: 'report.view', title: 'Relatório Operacional' },
+    },
+    {
+        path: '/panel/relatorios/clinico',
+        name: 'reports.clinical',
+        component: () => import('@/pages/Reports/ClinicalReportPage.vue'),
+        meta: { requiresAuth: true, ability: 'report.view', title: 'Relatório Clínico' },
+    },
+
     {
         path: '/panel/:pathMatch(.*)*',
         name: 'panel.catchAll',

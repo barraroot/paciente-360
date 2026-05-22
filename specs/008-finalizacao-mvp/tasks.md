@@ -467,59 +467,59 @@
 
 #### Migrations & Models
 
-- [ ] T246 [P] [US-10.1] Criar migration `2026_05_26_000001_create_metric_aggregations_table.php` + UNIQUE composto
-- [ ] T247 [P] [US-10.1] Criar migration `2026_05_26_000002_create_report_exports_table.php`
-- [ ] T248 [US-10.1] Criar models `MetricAggregation`, `ReportExport` em `app/Domain/Reports/Models/`
+- [X] T246 [P] [US-10.1] Criar migration `2026_05_26_000001_create_metric_aggregations_table.php` + UNIQUE composto
+- [X] T247 [P] [US-10.1] Criar migration `2026_05_26_000002_create_report_exports_table.php`
+- [X] T248 [US-10.1] Criar models `MetricAggregation`, `ReportExport` em `app/Domain/Reports/Models/`
 
 #### Services & Jobs
 
-- [ ] T249 [US-10.1] Implementar `app/Domain/Reports/Services/MetricAggregator.php` com método `aggregate(tenant, metric_name, period, period_start): MetricAggregation` — upsert idempotente; suporta 8 métricas (leads_by_channel, conversion_rate, no_show_rate, estimated_revenue, response_time_first_p95, ai_autonomous_resolution_rate, occupancy_by_professional, top_procedure_types)
-- [ ] T250 [US-10.1] Implementar `app/Domain/Reports/Services/ExecutiveDashboardService.php` com `getKpis(tenant, period_start, period_end): array` — usa agregações para ≥7d e queries live para ≤24h (Q9); aplica escopo por perfil (Q13)
-- [ ] T251 [P] [US-10.1] Criar job `app/Domain/Reports/Jobs/AggregateHourlyMetricsJob.php` (fila `reports`) — varre tenants ativos e chama `MetricAggregator` para cada métrica × período
-- [ ] T252 [US-10.1] Criar command `app/Console/Commands/Reports/AggregateHourlyMetricsCommand.php` (hourly :05)
+- [X] T249 [US-10.1] Implementar `app/Domain/Reports/Services/MetricAggregator.php` com método `aggregate(tenant, metric_name, period, period_start): MetricAggregation` — upsert idempotente; suporta 8 métricas (leads_by_channel, conversion_rate, no_show_rate, estimated_revenue, response_time_first_p95, ai_autonomous_resolution_rate, occupancy_by_professional, top_procedure_types)
+- [X] T250 [US-10.1] Implementar `app/Domain/Reports/Services/ExecutiveDashboardService.php` com `getKpis(tenant, period_start, period_end): array` — usa agregações para ≥7d e queries live para ≤24h (Q9); aplica escopo por perfil (Q13)
+- [X] T251 [P] [US-10.1] Criar job `app/Domain/Reports/Jobs/AggregateHourlyMetricsJob.php` (fila `reports`) — varre tenants ativos e chama `MetricAggregator` para cada métrica × período
+- [X] T252 [US-10.1] Criar command `app/Console/Commands/Reports/AggregateHourlyMetricsCommand.php` (hourly :05)
 
 #### PDF Renderer
 
-- [ ] T253 [US-10.1] Implementar `app/Domain/Reports/Services/DashboardPdfRenderer.php` usando DOMPDF + view Blade `resources/views/reports/dashboard.blade.php` — layout com cabeçalho clínica + sumário + 5 cards + gráficos SVG estáticos + rodapé filtros
-- [ ] T254 [P] [US-10.1] Criar evento `RelatorioExportado` (audit-only)
+- [X] T253 [US-10.1] Implementar `app/Domain/Reports/Services/DashboardPdfRenderer.php` usando DOMPDF + view Blade `resources/views/reports/dashboard.blade.php` — layout com cabeçalho clínica + sumário + 5 cards + gráficos SVG estáticos + rodapé filtros
+- [X] T254 [P] [US-10.1] Criar evento `RelatorioExportado` (audit-only)
 
 #### Controllers
 
-- [ ] T255 [P] [US-10.1] Criar `app/Http/Controllers/Api/V1/Reports/ExecutiveDashboardController.php` com `show`, `drillDown(metric_name)`, `exportPdf`
-- [ ] T256 [P] [US-10.1] Criar 2 Resources: `ExecutiveDashboardResource.php`, `DrillDownListResource.php`
-- [ ] T257 [US-10.1] Adicionar rotas `/api/v1/reports/executive/*` + `ReportPolicy.php`
+- [X] T255 [P] [US-10.1] Criar `app/Http/Controllers/Api/V1/Reports/ExecutiveDashboardController.php` com `show`, `drillDown(metric_name)`, `exportPdf`
+- [X] T256 [P] [US-10.1] Criar 2 Resources: `ExecutiveDashboardResource.php`, `DrillDownListResource.php`
+- [X] T257 [US-10.1] Adicionar rotas `/api/v1/reports/executive/*` + `ReportPolicy.php`
 
 #### Frontend
 
-- [ ] T258 [P] [US-10.1] Criar página `resources/js/pages/Reports/ExecutiveDashboardPage.vue` com 5 cards + filter de período + drill-down + botão "Exportar PDF" + variação % (Q11)
-- [ ] T259 [P] [US-10.1] Criar componente `KpiCardWithTrend.vue` reutilizável (recebe valor atual + valor anterior + label)
+- [X] T258 [P] [US-10.1] Criar página `resources/js/pages/Reports/ExecutiveDashboardPage.vue` com 5 cards + filter de período + drill-down + botão "Exportar PDF" + variação % (Q11)
+- [X] T259 [P] [US-10.1] Criar componente `KpiCardWithTrend.vue` reutilizável (recebe valor atual + valor anterior + label)
 
 #### Tests
 
-- [ ] T260 [US-10.1] Criar `tests/Feature/Reports/ExecutiveDashboardKpisTest.php` cobrindo AC-10.1.1 + 5 cards com valores corretos (incluindo NPS placeholder Q8)
-- [ ] T261 [P] [US-10.1] Criar `tests/Feature/Reports/DashboardDrillDownTest.php` cobrindo AC-10.1.3 — clique em "23 leads Instagram" abre lista filtrada
-- [ ] T262 [P] [US-10.1] Criar `tests/Feature/Reports/DashboardPdfExportTest.php` cobrindo AC-10.1.5 — PDF gerado em ≤3s + audit_log + cabeçalho/rodapé corretos
-- [ ] T263 [P] [US-10.1] Criar `tests/Feature/Reports/DashboardScopeByRoleTest.php` cobrindo AC-10.1.6 (Q13/SC-10.3) — Médico só vê própria agenda; manipulação de query → 403
-- [ ] T264 [P] [US-10.1] Criar `tests/Feature/Reports/HourlyAggregationStaleAlertTest.php` (R-8-5) — quando `metric_aggregation_lag_seconds > 5400` dashboard exibe banner
+- [X] T260 [US-10.1] Criar `tests/Feature/Reports/ExecutiveDashboardKpisTest.php` cobrindo AC-10.1.1 + 5 cards com valores corretos (incluindo NPS placeholder Q8)
+- [X] T261 [P] [US-10.1] Criar `tests/Feature/Reports/DashboardDrillDownTest.php` cobrindo AC-10.1.3 — clique em "23 leads Instagram" abre lista filtrada
+- [X] T262 [P] [US-10.1] Criar `tests/Feature/Reports/DashboardPdfExportTest.php` cobrindo AC-10.1.5 — PDF gerado em ≤3s + audit_log + cabeçalho/rodapé corretos
+- [X] T263 [P] [US-10.1] Criar `tests/Feature/Reports/DashboardScopeByRoleTest.php` cobrindo AC-10.1.6 (Q13/SC-10.3) — Médico só vê própria agenda; manipulação de query → 403
+- [X] T264 [P] [US-10.1] Criar `tests/Feature/Reports/HourlyAggregationStaleAlertTest.php` (R-8-5) — quando `metric_aggregation_lag_seconds > 5400` dashboard exibe banner
 
 ### 7.2 Lote E — US-10.2 Relatórios Operacionais (P2)
 
 **Acceptance**: AC-10.2.1 → AC-10.2.5 ✅
 
-- [ ] T268 [US-10.2] Implementar `app/Domain/Reports/Services/OperationalReportService.php` — agrega `ai_decision_logs` (Fase 4 — placeholder se tabela não existe) + tempos de resposta + volumes
-- [ ] T269 [P] [US-10.2] Criar `app/Http/Controllers/Api/V1/Reports/OperationalReportController.php` + Resource
-- [ ] T270 [P] [US-10.2] Criar página `OperationalReportPage.vue`
-- [ ] T271 [US-10.2] Criar `tests/Feature/Reports/OperationalReportTest.php` cobrindo AC-10.2.1, AC-10.2.2, AC-10.2.4 (filtros de dados null)
+- [X] T268 [US-10.2] Implementar `app/Domain/Reports/Services/OperationalReportService.php` — agrega `ai_decision_logs` (Fase 4 — placeholder se tabela não existe) + tempos de resposta + volumes
+- [X] T269 [P] [US-10.2] Criar `app/Http/Controllers/Api/V1/Reports/OperationalReportController.php` + Resource
+- [X] T270 [P] [US-10.2] Criar página `OperationalReportPage.vue`
+- [X] T271 [US-10.2] Criar `tests/Feature/Reports/OperationalReportTest.php` cobrindo AC-10.2.1, AC-10.2.2, AC-10.2.4 (filtros de dados null)
 
 ### 7.3 Lote E — US-10.3 Relatórios Clínicos (P2)
 
 **Acceptance**: AC-10.3.1 → AC-10.3.6 ✅
 
-- [ ] T274 [US-10.3] Implementar `app/Domain/Reports/Services/ClinicalReportService.php` — ocupação por profissional + ranking de procedimentos + retornos (gated por feature flag `app.modules.returns.enabled`)
-- [ ] T275 [P] [US-10.3] Criar `ClinicalReportController.php` + Resource + Page Vue
-- [ ] T276 [P] [US-10.3] Criar `tests/Feature/Reports/ClinicalReportTest.php` cobrindo AC-10.3.1 + ocupação + mix
-- [ ] T277 [P] [US-10.3] Criar `tests/Feature/Reports/ClinicalReportReturnsFeatureFlaggedTest.php` cobrindo AC-10.3.3 com feature flag ON e OFF
-- [ ] T278 [US-10.3] Estender `app/Support/Metrics/ReportMetrics.php` com `reports_exported_total{type,format,tenant}`, `metric_aggregation_lag_seconds`, `dashboard_load_duration_seconds`
+- [X] T274 [US-10.3] Implementar `app/Domain/Reports/Services/ClinicalReportService.php` — ocupação por profissional + ranking de procedimentos + retornos (gated por feature flag `app.modules.returns.enabled`)
+- [X] T275 [P] [US-10.3] Criar `ClinicalReportController.php` + Resource + Page Vue
+- [X] T276 [P] [US-10.3] Criar `tests/Feature/Reports/ClinicalReportTest.php` cobrindo AC-10.3.1 + ocupação + mix
+- [X] T277 [P] [US-10.3] Criar `tests/Feature/Reports/ClinicalReportReturnsFeatureFlaggedTest.php` cobrindo AC-10.3.3 com feature flag ON e OFF
+- [X] T278 [US-10.3] Estender `app/Support/Metrics/ReportMetrics.php` com `reports_exported_total{type,format,tenant}`, `metric_aggregation_lag_seconds`, `dashboard_load_duration_seconds`
 
 **Checkpoint Lote E**: Cenário 7 do quickstart exequível. Todas as 13 user stories entregues.
 

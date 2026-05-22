@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\Billing\AiUsageController;
 use App\Http\Controllers\Api\V1\Billing\CheckoutController;
 use App\Http\Controllers\Api\V1\Billing\PlansController;
 use App\Http\Controllers\Api\V1\Billing\SubscriptionController;
+use App\Http\Controllers\Api\V1\Campaigns\CampaignsController;
 use App\Http\Controllers\Api\V1\Convenios\ConveniosController;
 use App\Http\Controllers\Api\V1\Inbox\AssignmentRulesController;
 use App\Http\Controllers\Api\V1\Inbox\AssignmentsController;
@@ -47,16 +48,18 @@ use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionCsvExportController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionPdfController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionRenewalController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionReportController;
+use App\Http\Controllers\Api\V1\Privacy\ConsentsController;
+use App\Http\Controllers\Api\V1\Privacy\ForgettingController;
+use App\Http\Controllers\Api\V1\Privacy\PortabilityController;
+use App\Http\Controllers\Api\V1\Reports\ClinicalReportController;
+use App\Http\Controllers\Api\V1\Reports\ExecutiveDashboardController;
+use App\Http\Controllers\Api\V1\Reports\OperationalReportController;
 use App\Http\Controllers\Api\V1\Tenant\CurrentTenantController;
 use App\Http\Controllers\Api\V1\Tenant\RegisterController as TenantRegisterController;
 use App\Http\Controllers\Api\V1\Users\InvitationsController;
 use App\Http\Controllers\Api\V1\Users\UsersController;
 use App\Http\Controllers\Webhooks\MetaInstagramWebhookController;
 use App\Http\Controllers\Webhooks\TwilioStatusCallbackController;
-use App\Http\Controllers\Api\V1\Campaigns\CampaignsController;
-use App\Http\Controllers\Api\V1\Privacy\ConsentsController;
-use App\Http\Controllers\Api\V1\Privacy\ForgettingController;
-use App\Http\Controllers\Api\V1\Privacy\PortabilityController;
 use App\Http\Controllers\Webhooks\TwilioWhatsAppWebhookController;
 use App\Http\Controllers\Widget\WidgetConfigController;
 use App\Http\Middleware\ValidateMetaSignature;
@@ -704,4 +707,45 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
             ->name('cancel');
 
         Route::get('/{campaign}/report', [CampaignsController::class, 'report'])->name('report');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Reports (Fase 8 — Lote E US-10.1 / US-10.2 / US-10.3)
+|
+| T257/T269/T275 — Endpoints REST de dashboard executivo, operacional e clínico.
+| Policy `ReportPolicy` enforça abilities `report.view` / `report.export`.
+| Escopo por perfil (Q13) aplicado em ClinicalReportService.
+|
+| Routes:
+|   GET  /api/v1/reports/executive                  → dashboard snapshot
+|   GET  /api/v1/reports/executive/drill/{metric}   → drill-down lista
+|   POST /api/v1/reports/executive/export-pdf       → PDF formatado
+|   GET  /api/v1/reports/operational                → relatório operacional
+|   GET  /api/v1/reports/clinical                   → relatório clínico
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('reports')
+    ->name('reports.')
+    ->group(function (): void {
+        Route::get('/executive', [ExecutiveDashboardController::class, 'show'])
+            ->middleware('throttle:60,1')
+            ->name('executive.show');
+
+        Route::get('/executive/drill/{metric}', [ExecutiveDashboardController::class, 'drillDown'])
+            ->middleware('throttle:60,1')
+            ->name('executive.drill');
+
+        Route::post('/executive/export-pdf', [ExecutiveDashboardController::class, 'exportPdf'])
+            ->middleware('throttle:10,1')
+            ->name('executive.export-pdf');
+
+        Route::get('/operational', [OperationalReportController::class, 'show'])
+            ->middleware('throttle:60,1')
+            ->name('operational.show');
+
+        Route::get('/clinical', [ClinicalReportController::class, 'show'])
+            ->middleware('throttle:60,1')
+            ->name('clinical.show');
     });

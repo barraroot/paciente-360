@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domain\Auth\Contracts\BearerAuthContract;
 use App\Domain\Auth\Services\SuspiciousTokenUsageDetector;
 use App\Domain\Auth\Services\TokenIssuerService;
+use App\Domain\Integrations\Models\WebhookEndpoint;
 use App\Domain\Messaging\Assignment\Models\AssignmentRule;
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Channel\Models\Channel;
@@ -56,6 +57,7 @@ use App\Policies\PrescriptionPolicy;
 use App\Policies\QuickReplyPolicy;
 use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
+use App\Policies\WebhookPolicy;
 use App\Services\Billing\StripeClientWrapper;
 use App\Support\Metrics\AgendaMetrics;
 use App\Support\Metrics\AgendaMetricsContract;
@@ -231,6 +233,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(AppointmentType::class, AppointmentTypePolicy::class);
         Gate::policy(Appointment::class, AppointmentPolicy::class);
         Gate::policy(CalendarSyncAccount::class, CalendarSyncAccountPolicy::class);
+
+        // Fase 8 Lote E — Reports (T257). Ability-based gates (sem model).
+        Gate::define('report.view', static fn ($user): bool => $user?->can('report.view') ?? false);
+        Gate::define('report.export', static fn ($user): bool => $user?->can('report.export') ?? false);
+
+        // Fase 8 Lote D — Webhooks (T201).
+        Gate::policy(WebhookEndpoint::class, WebhookPolicy::class);
     }
 
     /**

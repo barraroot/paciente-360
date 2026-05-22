@@ -89,6 +89,29 @@ class RolesSeeder extends Seeder
         // T141 — Ability exclusiva para tokens de sistema/IA (US-8.3).
         // NÃO atribuída a nenhuma role — apenas via createToken('ai-system', ['prescription.ai_context']).
         'prescription.ai_context',
+
+        // Fase 8 — Finalização do MVP (T003)
+        // Lote C — Campanhas (Épico 9)
+        'campaign.create',
+        'campaign.dispatch',
+        // Lote E — Relatórios (Épico 10)
+        'report.view',
+        'report.export',
+        // Lote D — Integrações (Épico 11)
+        'webhook.manage',
+        'webhook.view_deliveries',
+        'webhook.resend_dlq',
+        'api_token.manage',
+        'oauth_client.manage',
+        // Lote B — Super Admin (Épico 12) — atribuídas APENAS à role super-admin via bypass Gate.
+        'tenant.manage',
+        'tenant.impersonate',
+        'plan.manage',
+        // Lote A — Privacidade (Épico 13)
+        'privacy.view',
+        'privacy.export',
+        'forgetting.execute',
+        'portability.execute',
     ];
 
     /**
@@ -131,6 +154,20 @@ class RolesSeeder extends Seeder
             'prescription.view_controlled',
             'prescription.export',
             'prescription_alert.configure',
+            // Fase 8 — admin clínica gerencia campanhas, relatórios, integrações e privacidade do tenant.
+            'campaign.create',
+            'campaign.dispatch',
+            'report.view',
+            'report.export',
+            'webhook.manage',
+            'webhook.view_deliveries',
+            'webhook.resend_dlq',
+            'api_token.manage',
+            'oauth_client.manage',
+            'privacy.view',
+            'privacy.export',
+            'forgetting.execute',
+            'portability.execute',
         ],
         'medico' => [
             'paciente.view',
@@ -154,6 +191,9 @@ class RolesSeeder extends Seeder
             'prescription.view_controlled',
             'prescription.export',
             'prescription_alert.configure',
+            // Fase 8 — Médico vê relatórios próprios (escopo aplicado via policy/service, Q13).
+            'report.view',
+            'report.export',
         ],
         'atendente' => [
             'paciente.view',

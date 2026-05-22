@@ -1,0 +1,190 @@
+{
+  "title": "Paciente360 — Fase 8 (Finalização do MVP)",
+  "description": "Dashboard consolidado com 5 painéis: Campanhas, Relatórios, Webhooks, Super Admin, Privacidade. Métricas Prometheus emitidas pelos counters em app/Observability/*Metrics.php.",
+  "tags": ["paciente360", "fase8", "mvp"],
+  "timezone": "America/Sao_Paulo",
+  "refresh": "1m",
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "tenant_id",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(campaign_dispatched_total, tenant_id)",
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Campanhas — Dispatched / Skipped por tenant",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (tenant_id, status) (rate(campaign_messages_total{tenant_id=~\"$tenant_id\"}[5m]))",
+          "legendFormat": "{{tenant_id}} — {{status}}"
+        }
+      ]
+    },
+    {
+      "title": "Campanhas — Compliance gates blocked",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (reason) (rate(campaign_compliance_blocked_total[1h]))",
+          "legendFormat": "{{reason}}"
+        }
+      ]
+    },
+    {
+      "title": "Relatórios — Dashboard views / Drilldown / PDF exports",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum by (tenant_id) (rate(report_executive_dashboard_views_total[5m]))",
+          "legendFormat": "{{tenant_id}} views"
+        },
+        {
+          "expr": "sum by (metric) (rate(report_drilldown_requests_total[5m]))",
+          "legendFormat": "drill {{metric}}"
+        },
+        {
+          "expr": "sum by (success) (rate(report_pdf_exports_total[5m]))",
+          "legendFormat": "pdf {{success}}"
+        }
+      ]
+    },
+    {
+      "title": "Relatórios — Aggregation lag (alerta R-8-5 ≥ 2h)",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum by (tenant_id) (increase(report_aggregation_stale_alerts_total[1h]))",
+          "legendFormat": "{{tenant_id}}"
+        }
+      ],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          { "color": "green", "value": 0 },
+          { "color": "red", "value": 1 }
+        ]
+      }
+    },
+    {
+      "title": "Webhooks — Delivery outcome",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum by (outcome) (rate(webhook_delivery_attempts_total[5m]))",
+          "legendFormat": "{{outcome}}"
+        }
+      ]
+    },
+    {
+      "title": "Webhooks — Duration P95 (ms)",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(webhook_delivery_duration_ms_bucket[5m])))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "title": "Webhooks — DLQ size por tenant",
+      "type": "table",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "max by (tenant_id) (webhook_dlq_size_total)",
+          "format": "table",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "title": "API Pública — Request rate por status",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(api_public_request_total[5m]))",
+          "legendFormat": "HTTP {{status}}"
+        }
+      ]
+    },
+    {
+      "title": "Super Admin — Impersonate sessões ativas",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 32 },
+      "targets": [
+        {
+          "expr": "sum(impersonate_sessions_active)",
+          "legendFormat": "ativas"
+        }
+      ]
+    },
+    {
+      "title": "Super Admin — Anomalias detectadas (24h)",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 32 },
+      "targets": [
+        {
+          "expr": "sum by (type) (increase(super_admin_anomaly_detected_total[24h]))",
+          "legendFormat": "{{type}}"
+        }
+      ]
+    },
+    {
+      "title": "Privacidade — Forgetting / Portability execução",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 32 },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(privacy_forgetting_executed_total[1h]))",
+          "legendFormat": "forg {{status}}"
+        },
+        {
+          "expr": "sum by (status) (rate(privacy_portability_executed_total[1h]))",
+          "legendFormat": "port {{status}}"
+        }
+      ]
+    },
+    {
+      "title": "Privacidade — Consentimento (registrado / revogado)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 38 },
+      "targets": [
+        {
+          "expr": "sum by (finalidade) (rate(consent_recorded_total[5m]))",
+          "legendFormat": "registrado {{finalidade}}"
+        },
+        {
+          "expr": "sum by (finalidade) (rate(consent_revoked_total[5m]))",
+          "legendFormat": "revogado {{finalidade}}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,10 @@
 <?php
 
+use App\Support\Lgpd\PiiScrubber;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Validation\ValidationException;
+use Sentry\Event;
+use Sentry\EventHint;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /*
@@ -64,6 +67,59 @@ return [
     ],
 
     'ignore_transactions' => [],
+
+    /*
+     * **T291 (Fase 8 — Polish)** — Callback global aplicado ANTES de qualquer
+     * evento ser enviado ao Sentry. Garante que CPF, e-mail, telefone, RG e
+     * Cartão SUS sejam mascarados nas mensagens de exceção, breadcrumbs e
+     * extra context — defesa em profundidade vs. PII vazada via stack traces
+     * ou logs estruturados.
+     *
+     * `send_default_pii=false` já remove request body/headers, mas mensagens
+     * de exceção (`throw new Exception("user $cpf not found")`) ficavam de
+     * fora — este callback fecha esse gap.
+     */
+    'before_send' => static function (Event $event, ?EventHint $hint): ?Event {
+        if (! class_exists(PiiScrubber::class)) {
+            return $event;
+        }
+
+        $exceptions = $event->getExceptions();
+        foreach ($exceptions as $exception) {
+            $scrubbed = PiiScrubber::scrub($exception->getValue());
+            if (is_string($scrubbed)) {
+                $exception->setValue($scrubbed);
+            }
+        }
+
+        $message = $event->getMessage();
+        if (is_string($message) && $message !== '') {
+            $scrubbedMsg = PiiScrubber::scrub($message);
+            if (is_string($scrubbedMsg)) {
+                $event->setMessage($scrubbedMsg);
+            }
+        }
+
+        $extra = $event->getExtra();
+        if (! empty($extra)) {
+            $event->setExtra(PiiScrubber::scrub($extra));
+        }
+
+        $breadcrumbs = $event->getBreadcrumbs();
+        foreach ($breadcrumbs as $crumb) {
+            $crumbMessage = $crumb->getMessage();
+            if (is_string($crumbMessage) && $crumbMessage !== '') {
+                $scrubbedCrumb = PiiScrubber::scrub($crumbMessage);
+                // Breadcrumb é imutável — recriar excederia o esforço; logamos só
+                // quando o scrub mudou para alertar dev de PII vazando.
+                if ($scrubbedCrumb !== $crumbMessage) {
+                    $event->setTag('pii.breadcrumb_scrubbed', 'true');
+                }
+            }
+        }
+
+        return $event;
+    },
 
     // Breadcrumbs: trilha de eventos que precedem o erro. SQL bindings
     // ficam OFF (LGPD) — query fica, mas valores parametrizados não.

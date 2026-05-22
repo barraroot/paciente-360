@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Integrations\Listeners\BroadcastDomainEventToWebhooksListener;
 use App\Domain\Messaging\Infrastructure\Listeners\AnonimizaMensagensOnPacienteAnonimizadoListener;
 use App\Domain\Messaging\Infrastructure\Listeners\SetAiPausedOnOutboundMessageListener;
 use App\Domain\Messaging\Message\Events\MensagemEnviada;
@@ -50,5 +51,9 @@ class EventServiceProvider extends ServiceProvider
         // T255 — Anonimização de mensagens ao anonimizar paciente (LGPD FR-018, NC-14.b).
         // Mensagens recebidas têm conteúdo zerado; enviadas são preservadas.
         Event::listen(PacienteAnonimizado::class, AnonimizaMensagensOnPacienteAnonimizadoListener::class);
+
+        // T193 (Fase 8 — Lote D US-11.1) — Bridge eventos de domínio → webhooks.
+        // Subscriber registra 13 eventos do catálogo Q17 individualmente.
+        Event::subscribe(BroadcastDomainEventToWebhooksListener::class);
     }
 }

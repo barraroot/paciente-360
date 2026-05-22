@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\Billing\AiUsageController;
 use App\Http\Controllers\Api\V1\Billing\CheckoutController;
 use App\Http\Controllers\Api\V1\Billing\PlansController;
 use App\Http\Controllers\Api\V1\Billing\SubscriptionController;
+use App\Http\Controllers\Api\V1\Campaigns\CampaignsController;
 use App\Http\Controllers\Api\V1\Convenios\ConveniosController;
 use App\Http\Controllers\Api\V1\Inbox\AssignmentRulesController;
 use App\Http\Controllers\Api\V1\Inbox\AssignmentsController;
@@ -29,6 +30,8 @@ use App\Http\Controllers\Api\V1\Inbox\MessagesController;
 use App\Http\Controllers\Api\V1\Inbox\PresenceController;
 use App\Http\Controllers\Api\V1\Inbox\QuickRepliesController;
 use App\Http\Controllers\Api\V1\Inbox\TakeoverController;
+use App\Http\Controllers\Api\V1\Integrations\ApiTokensController;
+use App\Http\Controllers\Api\V1\Integrations\WebhooksController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
 use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
 use App\Http\Controllers\Api\V1\Pacientes\ExportacaoController;
@@ -47,6 +50,12 @@ use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionCsvExportController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionPdfController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionRenewalController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionReportController;
+use App\Http\Controllers\Api\V1\Privacy\ConsentsController;
+use App\Http\Controllers\Api\V1\Privacy\ForgettingController;
+use App\Http\Controllers\Api\V1\Privacy\PortabilityController;
+use App\Http\Controllers\Api\V1\Reports\ClinicalReportController;
+use App\Http\Controllers\Api\V1\Reports\ExecutiveDashboardController;
+use App\Http\Controllers\Api\V1\Reports\OperationalReportController;
 use App\Http\Controllers\Api\V1\Tenant\CurrentTenantController;
 use App\Http\Controllers\Api\V1\Tenant\RegisterController as TenantRegisterController;
 use App\Http\Controllers\Api\V1\Users\InvitationsController;
@@ -584,4 +593,233 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'presc
 
         Route::get('/export', [PrescriptionCsvExportController::class, 'export'])
             ->name('export');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Privacy / LGPD (Fase 8 — Lote A US-13.1)
+|
+| T031 — Endpoints de consentimento granular hierárquico (Q24).
+|
+| Routes:
+|   GET  /api/v1/privacy/consents              → listagem paginada filtros
+|   GET  /api/v1/privacy/consents/{consent}    → ficha individual
+|   POST /api/v1/privacy/consents              → registrar granted ou refused
+|   POST /api/v1/privacy/consents/revoke       → revogar por (patient,finalidade)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('privacy')
+    ->name('privacy.')
+    ->group(function (): void {
+        Route::get('/consents', [ConsentsController::class, 'index'])
+            ->name('consents.index');
+
+        Route::post('/consents', [ConsentsController::class, 'store'])
+            ->middleware('throttle:60,1')
+            ->name('consents.store');
+
+        Route::post('/consents/revoke', [ConsentsController::class, 'revoke'])
+            ->middleware('throttle:60,1')
+            ->name('consents.revoke');
+
+        Route::get('/consents/{consent}', [ConsentsController::class, 'show'])
+            ->name('consents.show');
+
+        /*
+        | T055 — Direito ao Esquecimento (US-13.2 — LGPD Art. 18º)
+        */
+        Route::get('/forgetting-requests', [ForgettingController::class, 'index'])
+            ->name('forgetting.index');
+
+        Route::post('/forgetting-requests', [ForgettingController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('forgetting.store');
+
+        Route::get('/forgetting-requests/{forgetting}', [ForgettingController::class, 'show'])
+            ->name('forgetting.show');
+
+        Route::post('/forgetting-requests/{forgetting}/execute', [ForgettingController::class, 'execute'])
+            ->middleware('throttle:10,1')
+            ->name('forgetting.execute');
+
+        Route::post('/forgetting-requests/{forgetting}/deny', [ForgettingController::class, 'deny'])
+            ->middleware('throttle:10,1')
+            ->name('forgetting.deny');
+
+        /*
+        | T055 — Portabilidade de Dados (US-13.2 — LGPD Art. 18º V — Q28)
+        */
+        Route::get('/portability-requests', [PortabilityController::class, 'index'])
+            ->name('portability.index');
+
+        Route::post('/portability-requests', [PortabilityController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('portability.store');
+
+        Route::get('/portability-requests/{portability}', [PortabilityController::class, 'show'])
+            ->name('portability.show');
+
+        Route::post('/portability-requests/{portability}/execute', [PortabilityController::class, 'execute'])
+            ->middleware('throttle:10,1')
+            ->name('portability.execute');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Campaigns (Fase 8 — Lote C US-9.1)
+|
+| T167 — Endpoints REST de campanhas. Pipeline FormRequest → Service → Resource.
+|
+| Routes:
+|   GET    /api/v1/campaigns                          → index
+|   POST   /api/v1/campaigns                          → store (throttle:30,1)
+|   GET    /api/v1/campaigns/{campaign}               → show
+|   PATCH  /api/v1/campaigns/{campaign}               → update (draft/scheduled only)
+|   POST   /api/v1/campaigns/{campaign}/preview       → audience + warnings
+|   POST   /api/v1/campaigns/{campaign}/dispatch      → dispatch (throttle:5,1)
+|   POST   /api/v1/campaigns/{campaign}/cancel        → cancel
+|   GET    /api/v1/campaigns/{campaign}/report        → relatório agregado
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('campaigns')
+    ->name('campaigns.')
+    ->group(function (): void {
+        Route::get('/', [CampaignsController::class, 'index'])->name('index');
+
+        Route::post('/', [CampaignsController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('store');
+
+        Route::get('/{campaign}', [CampaignsController::class, 'show'])->name('show');
+
+        Route::patch('/{campaign}', [CampaignsController::class, 'update'])->name('update');
+
+        Route::post('/{campaign}/preview', [CampaignsController::class, 'preview'])
+            ->middleware('throttle:60,1')
+            ->name('preview');
+
+        Route::post('/{campaign}/dispatch', [CampaignsController::class, 'dispatchCampaign'])
+            ->middleware('throttle:5,1')
+            ->name('dispatch');
+
+        Route::post('/{campaign}/cancel', [CampaignsController::class, 'cancel'])
+            ->middleware('throttle:30,1')
+            ->name('cancel');
+
+        Route::get('/{campaign}/report', [CampaignsController::class, 'report'])->name('report');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Reports (Fase 8 — Lote E US-10.1 / US-10.2 / US-10.3)
+|
+| T257/T269/T275 — Endpoints REST de dashboard executivo, operacional e clínico.
+| Policy `ReportPolicy` enforça abilities `report.view` / `report.export`.
+| Escopo por perfil (Q13) aplicado em ClinicalReportService.
+|
+| Routes:
+|   GET  /api/v1/reports/executive                  → dashboard snapshot
+|   GET  /api/v1/reports/executive/drill/{metric}   → drill-down lista
+|   POST /api/v1/reports/executive/export-pdf       → PDF formatado
+|   GET  /api/v1/reports/operational                → relatório operacional
+|   GET  /api/v1/reports/clinical                   → relatório clínico
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('reports')
+    ->name('reports.')
+    ->group(function (): void {
+        Route::get('/executive', [ExecutiveDashboardController::class, 'show'])
+            ->middleware('throttle:60,1')
+            ->name('executive.show');
+
+        Route::get('/executive/drill/{metric}', [ExecutiveDashboardController::class, 'drillDown'])
+            ->middleware('throttle:60,1')
+            ->name('executive.drill');
+
+        Route::post('/executive/export-pdf', [ExecutiveDashboardController::class, 'exportPdf'])
+            ->middleware('throttle:10,1')
+            ->name('executive.export-pdf');
+
+        Route::get('/operational', [OperationalReportController::class, 'show'])
+            ->middleware('throttle:60,1')
+            ->name('operational.show');
+
+        Route::get('/clinical', [ClinicalReportController::class, 'show'])
+            ->middleware('throttle:60,1')
+            ->name('clinical.show');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Integrations — Webhooks (Fase 8 — Lote D US-11.1)
+|--------------------------------------------------------------------------
+|
+| T200 — CRUD + DLQ. WebhookPolicy autoriza via abilities `webhook.manage`,
+| `webhook.view_deliveries`, `webhook.resend_dlq`.
+|
+| Routes:
+|   GET    /integrations/webhooks                       → index
+|   POST   /integrations/webhooks                       → store (secret 1x)
+|   GET    /integrations/webhooks/dlq                   → DLQ list
+|   POST   /integrations/webhooks/dlq/{dlq}/resend     → reenviar
+|   GET    /integrations/webhooks/{webhook}             → show
+|   PATCH  /integrations/webhooks/{webhook}             → update
+|   DELETE /integrations/webhooks/{webhook}             → destroy
+|   POST   /integrations/webhooks/{webhook}/pause       → pause/resume
+|   GET    /integrations/webhooks/{webhook}/deliveries  → histórico
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('integrations/webhooks')
+    ->name('integrations.webhooks.')
+    ->group(function (): void {
+        // DLQ tem que vir ANTES do {webhook} para não conflitar com binding.
+        Route::get('/dlq', [WebhooksController::class, 'listDeadLetter'])->name('dlq.index');
+        Route::post('/dlq/{dlq}/resend', [WebhooksController::class, 'resendFromDlq'])
+            ->whereNumber('dlq')
+            ->middleware('throttle:30,1')
+            ->name('dlq.resend');
+
+        Route::get('/', [WebhooksController::class, 'index'])->name('index');
+        Route::post('/', [WebhooksController::class, 'store'])
+            ->middleware('throttle:20,1')
+            ->name('store');
+        Route::get('/{webhook}', [WebhooksController::class, 'show'])
+            ->whereNumber('webhook')
+            ->name('show');
+        Route::patch('/{webhook}', [WebhooksController::class, 'update'])
+            ->whereNumber('webhook')
+            ->name('update');
+        Route::delete('/{webhook}', [WebhooksController::class, 'destroy'])
+            ->whereNumber('webhook')
+            ->name('destroy');
+        Route::post('/{webhook}/pause', [WebhooksController::class, 'pauseResume'])
+            ->whereNumber('webhook')
+            ->name('pause');
+        Route::get('/{webhook}/deliveries', [WebhooksController::class, 'listDeliveries'])
+            ->whereNumber('webhook')
+            ->name('deliveries');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Integrations — API Tokens (Fase 8 — Lote D US-11.2)
+|--------------------------------------------------------------------------
+|
+| T231 — CRUD interno de Personal Access Tokens para a API pública.
+| Apenas admin-clinica (ability `api_token.manage`).
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('integrations/api-tokens')
+    ->name('integrations.api_tokens.')
+    ->group(function (): void {
+        Route::get('/', [ApiTokensController::class, 'index'])->name('index');
+        Route::post('/', [ApiTokensController::class, 'store'])
+            ->middleware('throttle:10,1')
+            ->name('store');
+        Route::delete('/{tokenId}', [ApiTokensController::class, 'destroy'])
+            ->whereNumber('tokenId')
+            ->name('destroy');
     });

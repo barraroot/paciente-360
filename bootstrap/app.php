@@ -18,12 +18,18 @@ use App\Exceptions\Pacientes\MesclagemJaRevertidaException;
 use App\Exceptions\Users\InvalidInvitationException;
 use App\Exceptions\Users\LastAdminClinicaException;
 use App\Exceptions\Users\PlanLimitReachedException;
+use App\Http\Middleware\ApiPublicRateLimiter;
 use App\Http\Middleware\ApplyOverdueRestrictions;
 use App\Http\Middleware\EnsureAgendaModuleEnabled;
+use App\Http\Middleware\EnsureApiPublicTenantNotSuspended;
 use App\Http\Middleware\EnsurePrescriptionModuleEnabled;
+use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureTenantNotSuspended;
 use App\Http\Middleware\EnsureTenantSlugHeader;
+use App\Http\Middleware\ImpersonateContextResolver;
+use App\Http\Middleware\ImpersonateScreenAuditTrigger;
 use App\Http\Middleware\LogStructuredRequestData;
+use App\Http\Middleware\OauthAuthenticator;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SetSecurityHeaders;
 use App\Http\Middleware\SlideTokenExpiration;
@@ -52,6 +58,15 @@ return Application::configure(basePath: dirname(__DIR__))
             // No auth, no CSRF (public API keyed by public_key, not subdomain).
             Route::middleware([])
                 ->group(base_path('routes/widget.php'));
+
+            // Fase 8 (T008) — API Pública v1 para integradores externos.
+            // Prefix `api/public` separa do `api/v1` interno do tenant.
+            // Tenant resolvido pelo token, NUNCA por URL — middleware específico
+            // (ApiPublicRateLimiter + EnsureTenantNotSuspended) será aplicado em
+            // Lote D (T219-T221).
+            Route::prefix('api/public')
+                ->middleware('api')
+                ->group(base_path('routes/api-public.php'));
         },
     )
     // T061 — /broadcasting/auth com Bearer Sanctum + triple-check tenant slug.
@@ -100,6 +115,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'prescription.module' => EnsurePrescriptionModuleEnabled::class,
             // Fase 5 (T162 — US-6.7 / R3) — valida HMAC do header X-Goog-Channel-Token.
             'validate.google.channel.token' => ValidateGoogleChannelToken::class,
+            // Fase 8 Lote B US-12.1 (T095-T097) — Super Admin + impersonate.
+            'super.admin' => EnsureSuperAdmin::class,
+            'impersonate.resolve' => ImpersonateContextResolver::class,
+            'impersonate.audit' => ImpersonateScreenAuditTrigger::class,
+            // Fase 8 Lote D US-11.2 — API Pública.
+            'api_public.rate_limit' => ApiPublicRateLimiter::class,
+            'api_public.tenant_not_suspended' => EnsureApiPublicTenantNotSuspended::class,
+            'oauth.authenticator' => OauthAuthenticator::class,
         ]);
 
         // `ResolveTenant` roda em TODA request da API. Deve rodar ANTES

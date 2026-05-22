@@ -291,6 +291,101 @@ const routes = [
         },
     },
 
+    // ─── Campanhas (Fase 8 — Lote C, Épico 9) ─────────────────────────────────
+    {
+        path: '/panel/campanhas',
+        name: 'campaigns.index',
+        component: () => import('@/pages/Campaigns/CampaignsIndexPage.vue'),
+        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Campanhas' },
+    },
+    {
+        path: '/panel/campanhas/nova',
+        name: 'campaigns.create',
+        component: () => import('@/pages/Campaigns/CampaignCreatePage.vue'),
+        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Nova Campanha' },
+    },
+    {
+        path: '/panel/campanhas/:id',
+        name: 'campaigns.show',
+        component: () => import('@/pages/Campaigns/CampaignShowPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Detalhe da Campanha' },
+    },
+    {
+        path: '/panel/campanhas/:id/relatorio',
+        name: 'campaigns.report',
+        component: () => import('@/pages/Campaigns/CampaignReportPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Relatório da Campanha' },
+    },
+
+    // ─── Privacidade & LGPD (Fase 8 — Lote A, Épico 13) ──────────────────────
+    {
+        path: '/panel/privacidade/consentimentos',
+        name: 'privacy.consents',
+        component: () => import('@/pages/Privacy/ConsentsPage.vue'),
+        meta: { requiresAuth: true, ability: 'privacy.view', title: 'Consentimentos' },
+    },
+    {
+        path: '/panel/privacidade/esquecimento',
+        name: 'privacy.forgetting',
+        component: () => import('@/pages/Privacy/ForgettingPage.vue'),
+        meta: { requiresAuth: true, ability: 'privacy.view', title: 'Direito ao Esquecimento' },
+    },
+    {
+        path: '/panel/privacidade/portabilidade',
+        name: 'privacy.portability',
+        component: () => import('@/pages/Privacy/PortabilityPage.vue'),
+        meta: { requiresAuth: true, ability: 'privacy.view', title: 'Portabilidade de Dados' },
+    },
+    {
+        path: '/privacidade/esquecimento/publico',
+        name: 'privacy.public_forgetting',
+        component: () => import('@/pages/Privacy/PublicForgettingRequestPage.vue'),
+        meta: { requiresGuest: false, title: 'Solicitar Esquecimento' },
+        // Rota pública — não exige auth (paciente solicita esquecimento sem login).
+    },
+
+    // ─── Integrações (Fase 8 — Lote D, Épico 11) ──────────────────────────────
+    {
+        path: '/panel/integracoes/webhooks',
+        name: 'integrations.webhooks',
+        component: () => import('@/pages/Integrations/WebhooksSettingsPage.vue'),
+        meta: { requiresAuth: true, ability: 'webhook.manage', title: 'Webhooks' },
+    },
+    {
+        path: '/panel/integracoes/webhooks/dlq',
+        name: 'integrations.webhooks.dlq',
+        component: () => import('@/pages/Integrations/WebhookDeliveriesPage.vue'),
+        meta: { requiresAuth: true, ability: 'webhook.manage', title: 'Dead Letter Queue' },
+    },
+    {
+        path: '/panel/integracoes/api-tokens',
+        name: 'integrations.api_tokens',
+        component: () => import('@/pages/Integrations/ApiTokensSettingsPage.vue'),
+        meta: { requiresAuth: true, ability: 'api_token.manage', title: 'Tokens API' },
+    },
+
+    // ─── Relatórios (Fase 8 — Lote E, Épico 10) ───────────────────────────────
+    {
+        path: '/panel/relatorios/executivo',
+        name: 'reports.executive',
+        component: () => import('@/pages/Reports/ExecutiveDashboardPage.vue'),
+        meta: { requiresAuth: true, ability: 'report.view', title: 'Dashboard Executivo' },
+    },
+    {
+        path: '/panel/relatorios/operacional',
+        name: 'reports.operational',
+        component: () => import('@/pages/Reports/OperationalReportPage.vue'),
+        meta: { requiresAuth: true, ability: 'report.view', title: 'Relatório Operacional' },
+    },
+    {
+        path: '/panel/relatorios/clinico',
+        name: 'reports.clinical',
+        component: () => import('@/pages/Reports/ClinicalReportPage.vue'),
+        meta: { requiresAuth: true, ability: 'report.view', title: 'Relatório Clínico' },
+    },
+
     {
         path: '/panel/:pathMatch(.*)*',
         name: 'panel.catchAll',

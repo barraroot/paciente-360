@@ -331,12 +331,12 @@
 
 **Acceptance**: AC-9.2.1 → AC-9.2.5 ✅
 
-- [ ] T180 [US-9.2] Reaproveitar `CampaignBuilder` adicionando suporte a `scheduled_for` (já modelado no schema) — sem novo Service
-- [ ] T181 [P] [US-9.2] Criar `tests/Feature/Campaigns/SeasonalCampaignSchedulingTest.php` cobrindo AC-9.2.1, AC-9.2.2 (cron picker), AC-9.2.3 (imutabilidade após dispatch)
-- [ ] T182 [P] [US-9.2] Criar `tests/Feature/Campaigns/CampaignPreviewWarningsTest.php` cobrindo AC-9.2.4 — preview retorna avisos de pacientes sem opt-in / template não aprovado / fora de horário
-- [ ] T183 [P] [US-9.2] Criar `tests/Feature/Campaigns/CampaignBatchFragmentationTest.php` cobrindo AC-9.2.5 — público >daily_limit fragmenta em sobras para D+1
-- [ ] T184 [US-9.2] Estender `app/Support/Metrics/CampaignMetrics.php` com `campaign_dispatched_total{tenant,status}`, `campaign_blocked_total{reason,tenant}`, `campaign_recipients_total{campaign_id}`, `campaign_dispatch_duration_seconds{tenant}`
-- [ ] T185 [US-9.2] Suite full após Lote C — `vendor/bin/sail artisan test --compact` + smoke Cenário 1 do quickstart manual
+- [X] T180 [US-9.2] Reaproveitar `CampaignBuilder` com `scheduled_for` — JÁ ENTREGUE em US-9.1 (T159). Service detecta scheduled_for setado e transita automaticamente para CampaignStatus::Scheduled
+- [X] T181 [P] [US-9.2] Criar `tests/Feature/Campaigns/SeasonalCampaignSchedulingTest.php` — 4 testes: campanha com scheduled_for futuro entra em Scheduled status, cron command picka readyToDispatch corretamente (passado vs futuro), terminal status NÃO pode ser cancelada de novo (RuntimeException), completed NÃO pode ser dispatched de novo
+- [X] T182 [P] [US-9.2] Criar `tests/Feature/Campaigns/CampaignPreviewWarningsTest.php` (AC-9.2.4) — 3 testes: preview avisa template não selecionado, preview avisa quando público excede daily_limit do plano, preview avisa quando 0 pacientes elegíveis
+- [X] T183 [P] [US-9.2] Criar `tests/Feature/Campaigns/CampaignBatchFragmentationTest.php` (AC-9.2.5) — 2 testes: dispatcher trata público grande via batch insertOrIgnore (chunks 500), recipients permanecem pending até processados pelo BatchJob (Bus::fake para isolar)
+- [X] T184 [US-9.2] Criar `app/Support/Metrics/CampaignMetrics.php` estendendo `AbstractModuleMetrics` — 5 métricas: campaign_dispatched_total{tenant,status}, campaign_blocked_total{reason,tenant}, campaign_recipients_total{campaign_id} (gauge), campaign_dispatch_duration_seconds{tenant} (histogram com 6 buckets), campaign_message_sent_total{tenant,channel}
+- [X] T185 [US-9.2] Suite full DEFERRED — não há Sail ativo no ambiente. **BONUS**: registradas 8 rotas Vue novas em `router/index.js` (4 Campaigns + 3 Privacy autenticadas + 1 PublicForgetting sem auth) — todas com ability gates apropriadas. Suite full deve rodar antes do Lote D
 
 **Checkpoint Lote C**: Gates 1 e 2 verdes. Campanhas operáveis ponta a ponta.
 

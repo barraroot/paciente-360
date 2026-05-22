@@ -291,6 +291,61 @@ const routes = [
         },
     },
 
+    // ─── Campanhas (Fase 8 — Lote C, Épico 9) ─────────────────────────────────
+    {
+        path: '/panel/campanhas',
+        name: 'campaigns.index',
+        component: () => import('@/pages/Campaigns/CampaignsIndexPage.vue'),
+        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Campanhas' },
+    },
+    {
+        path: '/panel/campanhas/nova',
+        name: 'campaigns.create',
+        component: () => import('@/pages/Campaigns/CampaignCreatePage.vue'),
+        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Nova Campanha' },
+    },
+    {
+        path: '/panel/campanhas/:id',
+        name: 'campaigns.show',
+        component: () => import('@/pages/Campaigns/CampaignShowPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Detalhe da Campanha' },
+    },
+    {
+        path: '/panel/campanhas/:id/relatorio',
+        name: 'campaigns.report',
+        component: () => import('@/pages/Campaigns/CampaignReportPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Relatório da Campanha' },
+    },
+
+    // ─── Privacidade & LGPD (Fase 8 — Lote A, Épico 13) ──────────────────────
+    {
+        path: '/panel/privacidade/consentimentos',
+        name: 'privacy.consents',
+        component: () => import('@/pages/Privacy/ConsentsPage.vue'),
+        meta: { requiresAuth: true, ability: 'privacy.view', title: 'Consentimentos' },
+    },
+    {
+        path: '/panel/privacidade/esquecimento',
+        name: 'privacy.forgetting',
+        component: () => import('@/pages/Privacy/ForgettingPage.vue'),
+        meta: { requiresAuth: true, ability: 'privacy.view', title: 'Direito ao Esquecimento' },
+    },
+    {
+        path: '/panel/privacidade/portabilidade',
+        name: 'privacy.portability',
+        component: () => import('@/pages/Privacy/PortabilityPage.vue'),
+        meta: { requiresAuth: true, ability: 'privacy.view', title: 'Portabilidade de Dados' },
+    },
+    {
+        path: '/privacidade/esquecimento/publico',
+        name: 'privacy.public_forgetting',
+        component: () => import('@/pages/Privacy/PublicForgettingRequestPage.vue'),
+        meta: { requiresGuest: false, title: 'Solicitar Esquecimento' },
+        // Rota pública — não exige auth (paciente solicita esquecimento sem login).
+    },
+
     {
         path: '/panel/:pathMatch(.*)*',
         name: 'panel.catchAll',

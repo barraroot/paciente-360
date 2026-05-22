@@ -149,17 +149,17 @@
 
 **Acceptance**: AC-13.3.1 → AC-13.3.7 ✅
 
-- [ ] T070 [P] [US-13.3] Criar migration `2026_05_22_000004_create_pseudonymization_audits_table.php` conforme data-model.md §1.4
-- [ ] T071 [US-13.3] Criar model `app/Domain/Privacy/Models/PseudonymizationAudit.php` + factory + scopes `byMode(string)`, `withFindings()`
-- [ ] T072 [US-13.3] Implementar `app/Domain/Privacy/Services/PseudonymizationAuditor.php` com 2 métodos: `runStaticReflection(): PseudonymizationAudit` (varredura via reflection — reusa `EventsForAiPseudonymizationTest` lógica) e `runRuntimeReplay(int $samplePercent = 1): PseudonymizationAudit` (amostra randômica + `PiiDetector::detect()`)
-- [ ] T073 [P] [US-13.3] Criar evento `app/Domain/Privacy/Events/PoliticaPseudonimizacaoAuditada.php` + `AuditoriaPrivacidadeExportada.php`
-- [ ] T074 [P] [US-13.3] Criar job `app/Domain/Privacy/Jobs/AuditPseudonymizationJob.php` (fila `privacy`) que dispara runtime replay
-- [ ] T075 [US-13.3] Implementar command `app/Console/Commands/Privacy/AuditPseudonymizationWeeklyCommand.php` (signature `privacy:audit-pseudonymization-weekly`) que enfileira `AuditPseudonymizationJob`
-- [ ] T076 [P] [US-13.3] Criar página Filament `app/Filament/Pages/Privacy/PseudonymizationAuditReportPage.php` para Admin Clínica/Super Admin visualizar relatório
-- [ ] T077 [US-13.3] Criar `tests/Feature/Privacy/PseudonymizationStaticAuditTest.php` (Gate 4) — força adição de evento sem marker `ContainsNoClinicalData` e valida que CI gate falha
-- [ ] T078 [P] [US-13.3] Criar `tests/Feature/Privacy/PseudonymizationRuntimeReplayTest.php` inserindo evento com CPF e validando que detector encontra + cria finding com severity=critical
-- [ ] T079 [P] [US-13.3] Criar `tests/Unit/Privacy/PiiScrubberSentryIntegrationTest.php` validando AC-13.3.7 — Sentry payload com PII é scrubbed antes do envio
-- [ ] T080 [US-13.3] Estender `app/Support/Metrics/PrivacyMetrics.php` com `consent_recorded_total`, `consent_revoked_total`, `forgetting_requests_total`, `portability_requests_total`, `pseudonymization_audit_findings_total`
+- [X] T070 [P] [US-13.3] Criar migration `2026_05_22_000004_create_pseudonymization_audits_table.php` (GLOBAL — sem tenant_id) + enum `pseudonymization_audit_mode_enum`
+- [X] T071 [US-13.3] Criar model `app/Domain/Privacy/Models/PseudonymizationAudit.php` + enum `PseudonymizationAuditMode` + factory com 3 states (staticReflection, runtimeReplay, withFindings) + scopes `byMode`, `withFindings`, `recent` + helpers `hasFindings()`/`isCompliant()`
+- [X] T072 [US-13.3] Implementar `app/Domain/Privacy/Services/PseudonymizationAuditor.php` com `runStaticReflection()` (PHP Reflection sobre config('finalization.ai_consumed_events') + detecta missing_marker_interface e class_not_found) e `runRuntimeReplay(int)` (amostra randômica de audit_logs últimos 7d + `PiiDetector::detectInPayload()` — Log::critical em findings)
+- [X] T073 [P] [US-13.3] Criar eventos `PoliticaPseudonimizacaoAuditada` + `AuditoriaPrivacidadeExportada` — ambos `Auditable + ContainsNoClinicalData`
+- [X] T074 [P] [US-13.3] Criar job `app/Domain/Privacy/Jobs/AuditPseudonymizationJob.php` (fila `privacy`, tries=1 — retry duplicaria sample random, timeout=600s)
+- [X] T075 [US-13.3] Implementar command `app/Console/Commands/Privacy/AuditPseudonymizationWeeklyCommand.php` (`privacy:audit-pseudonymization-weekly`) com flags `--sample={N}` e `--sync|--force` (dispatchSync em CI)
+- [X] T076 [P] [US-13.3] Criar página Filament `app/Filament/Pages/PseudonymizationAuditReportPage.php` + view blade `pseudonymization-audit-report.blade.php` — Super Admin only, exibe latest static + latest replay como cards de status, histórico tabela 50 últimas, findings dos últimos replays (limit 10), action `run-static-audit` ad-hoc
+- [X] T077 [US-13.3] Criar `tests/Feature/Privacy/PseudonymizationStaticAuditTest.php` — complementa Gate 4 (T012) validando service-level: config vazia = compliant, detecta missing_marker_interface (stdClass), detecta class_not_found, audited_by_user_id registrado — 4 testes
+- [X] T078 [P] [US-13.3] Criar `tests/Feature/Privacy/PseudonymizationRuntimeReplayTest.php` — 3 testes: audit log sem PII = compliant, audit log com CPF leaked detectado sem expor valor real, universo vazio = compliant
+- [X] T079 [P] [US-13.3] Criar `tests/Unit/Lgpd/PiiScrubberSentryIntegrationTest.php` — 6 testes: scrub CPF/telefone/email, recursão em nested arrays, preserva tipos não-string, lida com null/array vazio, simula payload Sentry `before_send`
+- [X] T080 [US-13.3] Criar `app/Support/Metrics/PrivacyMetrics.php` estendendo `AbstractModuleMetrics` com 6 counters: consent_recorded/revoked, forgetting/portability_requests, pseudonymization_audit_findings, privacy_audit_exported
 
 **Checkpoint Lote A**: rodar `vendor/bin/sail artisan test tests/Feature/Privacy/ tests/Unit/Privacy/ tests/Unit/Lgpd/ --compact` — todos verdes. Gates 3 e 4 verdes. Smoke E2E cenários 2, 3 e 8 do quickstart.md exequíveis.
 

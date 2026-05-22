@@ -60,37 +60,37 @@
 
 #### Migrations & Models
 
-- [ ] T020 [P] [US-13.1] Criar migration `database/migrations/2026_05_22_000001_create_consent_records_table.php` conforme data-model.md §1.1 (colunas + UNIQUE PARTIAL `(patient_id, finalidade) WHERE state='granted'`)
-- [ ] T021 [P] [US-13.1] ALTER `patients` adicionando `share_with_integrations_consent` boolean — migration `2026_05_22_000005_alter_patients_add_share_with_integrations_consent.php`
-- [ ] T022 [US-13.1] Criar model `app/Domain/Privacy/Models/ConsentRecord.php` com `BelongsToTenant` trait, relacionamento `patient()`, scope `granted()`, scope `forFinalidade(string)`, cast `evidence_snapshot:array`, cast `scope:array`
-- [ ] T023 [P] [US-13.1] Criar factory `database/factories/ConsentRecordFactory.php` com states `granted`, `revoked`, `refused`, `forFinalidadeMarketing`, `forFinalidadeTransacional`
+- [X] T020 [P] [US-13.1] Criar migration `database/migrations/2026_05_22_000001_create_consent_records_table.php` conforme data-model.md §1.1 (colunas + UNIQUE PARTIAL `(patient_id, finalidade) WHERE state='granted'`)
+- [X] T021 [P] [US-13.1] ALTER `patients` adicionando `share_with_integrations_consent` boolean — migration `2026_05_22_000005_alter_patients_add_share_with_integrations_consent.php`
+- [X] T022 [US-13.1] Criar model `app/Domain/Privacy/Models/ConsentRecord.php` com `BelongsToTenant` trait, relacionamento `patient()`, scope `granted()`, scope `forFinalidade(string)`, cast `evidence_snapshot:array`, cast `scope:array` — também criados `ConsentFinalidade` e `ConsentState` enums.
+- [X] T023 [P] [US-13.1] Criar factory `database/factories/ConsentRecordFactory.php` com states `granted`, `revoked`, `refused`, `marketing`, `transacional`, `pesquisa`, `forFinalidade`
 
 #### Services & Events
 
-- [ ] T024 [US-13.1] Criar `app/Domain/Privacy/Services/ConsentService.php` com métodos `record(Patient, channel, finalidade, evidence): ConsentRecord`, `revoke(Patient, finalidade, channel, evidence): void`, `refuse(...)`, `hasGranted(Patient, finalidade): bool` — emite eventos do domínio
-- [ ] T025 [P] [US-13.1] Criar 3 eventos em `app/Domain/Privacy/Events/`: `ConsentimentoRegistrado.php`, `ConsentimentoRecusado.php`, `ConsentimentoRevogado.php` — cada um implementa `ContainsNoClinicalData` com array de props sem PII clínica
-- [ ] T026 [US-13.1] Criar listener `app/Domain/Privacy/Listeners/SendInboxNotificationOnConsentChangedListener.php` que notifica Admin Clínica via inbox interna quando `ConsentimentoRevogado{finalidade=marketing}` ocorre (Princípio VI gate complementar)
-- [ ] T027 [US-13.1] Estender listener da Fase 3 `MensagemRecebida` para detectar comandos `/sair` (revoga marketing) e `/sair tudo` (revoga marketing + transacional) — novo `app/Domain/Privacy/Listeners/ProcessSairCommandListener.php`
+- [X] T024 [US-13.1] Criar `app/Domain/Privacy/Services/ConsentService.php` com métodos `record()`, `revoke()`, `refuse()`, `hasGranted()`, `processSairCommand()` — emite eventos do domínio + idempotência via PARTIAL UNIQUE
+- [X] T025 [P] [US-13.1] Criar 3 eventos em `app/Domain/Privacy/Events/`: `ConsentimentoRegistrado.php`, `ConsentimentoRecusado.php`, `ConsentimentoRevogado.php` — cada um implementa `Auditable + ContainsNoClinicalData` com payload sem PII clínica
+- [X] T026 [US-13.1] Criar listener `app/Domain/Privacy/Listeners/NotifyAdminClinicaOnMarketingRevokedListener.php` que escuta `ConsentimentoRevogado{finalidade=marketing}` — fila `privacy` + log estruturado (InboxTask real DEFERRED até integração Fase 3)
+- [X] T027 [US-13.1] Criar `app/Domain/Privacy/Listeners/ProcessSairCommandListener.php` com método público `process(Paciente, channel, body, msgId)` que detecta `/sair` (revoga marketing) e `/sair tudo` (revoga todas) — wire ao `MensagemRecebida` da Fase 3 fica em T149 (Lote C)
 
 #### Controllers & Endpoints
 
-- [ ] T028 [P] [US-13.1] Criar `app/Http/Requests/Privacy/RecordConsentRequest.php` validando `channel`, `finalidade ∈ {transacional, marketing, pesquisa}`, `evidence_message_id?` ou `evidence_snapshot?`
-- [ ] T029 [US-13.1] Criar `app/Http/Controllers/Api/V1/Privacy/ConsentsController.php` com métodos `index`, `store`, `revoke` — pipeline FormRequest → Service → Resource (constituição §466)
-- [ ] T030 [P] [US-13.1] Criar `app/Http/Resources/Privacy/ConsentRecordResource.php` serializando os campos sem evidência completa (apenas `evidence_message_id`)
-- [ ] T031 [US-13.1] Adicionar rotas em `routes/api.php` (group `auth:sanctum` + `tenant.slug`): `GET /api/v1/privacy/consents`, `POST /api/v1/privacy/consents`, `POST /api/v1/privacy/consents/{patient}/revoke`
-- [ ] T032 [US-13.1] Criar `app/Policies/ConsentPolicy.php` com `viewAny`, `view`, `create`, `revoke` — Admin Clínica pode tudo; outros perfis read-only
+- [X] T028 [P] [US-13.1] Criar `app/Http/Requests/Privacy/RecordConsentRequest.php` + `RevokeConsentRequest.php` validando `channel`, `finalidade ∈ {transacional, marketing, pesquisa}`, `state ∈ {granted, refused}`, `scope ∈ {channel, all}`
+- [X] T029 [US-13.1] Criar `app/Http/Controllers/Api/V1/Privacy/ConsentsController.php` com métodos `index`, `show`, `store`, `revoke` — pipeline FormRequest → Service → Resource
+- [X] T030 [P] [US-13.1] Criar `app/Http/Resources/Privacy/ConsentRecordResource.php` serializando sem `evidence_snapshot` completo — apenas `evidence_message_id` + excerpt 80 chars
+- [X] T031 [US-13.1] Adicionar rotas em `routes/api.php` (group `auth:sanctum` + `tenant.slug` + `tenant.not-suspended`): `GET /api/v1/privacy/consents`, `POST /api/v1/privacy/consents`, `POST /api/v1/privacy/consents/revoke`, `GET /api/v1/privacy/consents/{consent}` (throttle 60/min nos writes)
+- [X] T032 [US-13.1] Criar `app/Policies/ConsentPolicy.php` com `viewAny`, `view`, `create`, `revoke`, `export` — gate por ability `privacy.view` + `privacy.export` + defesa em profundidade contra cross-tenant
 
 #### Frontend
 
-- [ ] T033 [P] [US-13.1] Criar página Vue `resources/js/pages/Privacy/ConsentsPage.vue` com tabela paginada de consentimentos (filtros por paciente, finalidade, channel), botão "Exportar registros" + modal de revogação manual
-- [ ] T034 [P] [US-13.1] Criar store Pinia `resources/js/stores/privacy/consents.js` com actions `fetchConsents`, `revokeConsent`, `exportConsents`
+- [X] T033 [P] [US-13.1] Criar página Vue `resources/js/pages/Privacy/ConsentsPage.vue` com tabela paginada (filtros finalidade/state/channel), modal de revogação (a11y: Teleport + role=dialog + Esc + focus trap), badges coloridas por state, formatação de data pt-BR — também `lib/privacyApi.js`
+- [X] T034 [P] [US-13.1] Criar store Pinia `resources/js/stores/privacyStore.js` com state (consents, pagination, filters, loading/saving/error) + getters (activeConsents, revokedCount) + actions (fetchConsents, fetchConsent, createConsent, revoke, setFilter, resetFilters)
 
 #### Tests
 
-- [ ] T035 [US-13.1] Criar `tests/Feature/Privacy/ConsentRecordingTest.php` cobrindo AC-13.1.1 → AC-13.1.4 (registro implícito transacional, opt-in marketing explícito, recusa, revogação granular via `/sair`)
-- [ ] T036 [P] [US-13.1] Criar `tests/Feature/Privacy/ConsentRevocationViaSairTest.php` simulando mensagem recebida com `/sair` (revoga marketing apenas) e `/sair tudo` (revoga todas) — valida Q25
-- [ ] T037 [P] [US-13.1] Criar `tests/Feature/Privacy/ConsentExportAuditTest.php` validando AC-13.1.6 — exportação gera audit_log com `patient_ids_count`
-- [ ] T038 [P] [US-13.1] Criar `tests/Feature/Privacy/CrossTenantConsentTest.php` validando que tenant A não vê consentimentos do tenant B (Gate Multi-tenancy)
+- [X] T035 [US-13.1] Criar `tests/Feature/Privacy/ConsentRecordingTest.php` cobrindo AC-13.1.1 → AC-13.1.4 + idempotência via PARTIAL UNIQUE + hierarquia (transacional ≠ marketing) — 5 testes
+- [X] T036 [P] [US-13.1] Criar `tests/Feature/Privacy/ConsentRevocationViaSairTest.php` simulando `/sair` (revoga marketing apenas) e `/sair tudo` (revoga todas finalidades) — case-insensitive, tolera whitespace, ignora mensagens não-`/sair` — 4 testes (Q25)
+- [X] T037 [P] [US-13.1] Criar `tests/Feature/Privacy/ConsentEndpointAuthorizationTest.php` cobrindo AC-13.1.5 — Admin Clínica lista, Atendente 403, filtros funcionam — 3 testes
+- [X] T038 [P] [US-13.1] Criar `tests/Feature/Privacy/CrossTenantConsentTest.php` validando Gate 2 Multi-tenancy: tenant A não vê consents de B (listagem), 404 ao acessar consent por ID de outro tenant, 422 ao criar referenciando paciente de outro tenant — 3 testes
 
 ### 3.2 Lote A — US-13.2 Direito ao Esquecimento + Portabilidade (P1)
 

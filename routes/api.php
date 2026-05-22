@@ -53,6 +53,7 @@ use App\Http\Controllers\Api\V1\Users\InvitationsController;
 use App\Http\Controllers\Api\V1\Users\UsersController;
 use App\Http\Controllers\Webhooks\MetaInstagramWebhookController;
 use App\Http\Controllers\Webhooks\TwilioStatusCallbackController;
+use App\Http\Controllers\Api\V1\Privacy\ConsentsController;
 use App\Http\Controllers\Webhooks\TwilioWhatsAppWebhookController;
 use App\Http\Controllers\Widget\WidgetConfigController;
 use App\Http\Middleware\ValidateMetaSignature;
@@ -584,4 +585,36 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended', 'presc
 
         Route::get('/export', [PrescriptionCsvExportController::class, 'export'])
             ->name('export');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Privacy / LGPD (Fase 8 — Lote A US-13.1)
+|
+| T031 — Endpoints de consentimento granular hierárquico (Q24).
+|
+| Routes:
+|   GET  /api/v1/privacy/consents              → listagem paginada filtros
+|   GET  /api/v1/privacy/consents/{consent}    → ficha individual
+|   POST /api/v1/privacy/consents              → registrar granted ou refused
+|   POST /api/v1/privacy/consents/revoke       → revogar por (patient,finalidade)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('privacy')
+    ->name('privacy.')
+    ->group(function (): void {
+        Route::get('/consents', [ConsentsController::class, 'index'])
+            ->name('consents.index');
+
+        Route::post('/consents', [ConsentsController::class, 'store'])
+            ->middleware('throttle:60,1')
+            ->name('consents.store');
+
+        Route::post('/consents/revoke', [ConsentsController::class, 'revoke'])
+            ->middleware('throttle:60,1')
+            ->name('consents.revoke');
+
+        Route::get('/consents/{consent}', [ConsentsController::class, 'show'])
+            ->name('consents.show');
     });

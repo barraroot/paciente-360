@@ -54,6 +54,8 @@ use App\Http\Controllers\Api\V1\Users\UsersController;
 use App\Http\Controllers\Webhooks\MetaInstagramWebhookController;
 use App\Http\Controllers\Webhooks\TwilioStatusCallbackController;
 use App\Http\Controllers\Api\V1\Privacy\ConsentsController;
+use App\Http\Controllers\Api\V1\Privacy\ForgettingController;
+use App\Http\Controllers\Api\V1\Privacy\PortabilityController;
 use App\Http\Controllers\Webhooks\TwilioWhatsAppWebhookController;
 use App\Http\Controllers\Widget\WidgetConfigController;
 use App\Http\Middleware\ValidateMetaSignature;
@@ -617,4 +619,42 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
 
         Route::get('/consents/{consent}', [ConsentsController::class, 'show'])
             ->name('consents.show');
+
+        /*
+        | T055 — Direito ao Esquecimento (US-13.2 — LGPD Art. 18º)
+        */
+        Route::get('/forgetting-requests', [ForgettingController::class, 'index'])
+            ->name('forgetting.index');
+
+        Route::post('/forgetting-requests', [ForgettingController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('forgetting.store');
+
+        Route::get('/forgetting-requests/{forgetting}', [ForgettingController::class, 'show'])
+            ->name('forgetting.show');
+
+        Route::post('/forgetting-requests/{forgetting}/execute', [ForgettingController::class, 'execute'])
+            ->middleware('throttle:10,1')
+            ->name('forgetting.execute');
+
+        Route::post('/forgetting-requests/{forgetting}/deny', [ForgettingController::class, 'deny'])
+            ->middleware('throttle:10,1')
+            ->name('forgetting.deny');
+
+        /*
+        | T055 — Portabilidade de Dados (US-13.2 — LGPD Art. 18º V — Q28)
+        */
+        Route::get('/portability-requests', [PortabilityController::class, 'index'])
+            ->name('portability.index');
+
+        Route::post('/portability-requests', [PortabilityController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('portability.store');
+
+        Route::get('/portability-requests/{portability}', [PortabilityController::class, 'show'])
+            ->name('portability.show');
+
+        Route::post('/portability-requests/{portability}/execute', [PortabilityController::class, 'execute'])
+            ->middleware('throttle:10,1')
+            ->name('portability.execute');
     });

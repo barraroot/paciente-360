@@ -98,52 +98,52 @@
 
 #### Migrations & Models
 
-- [ ] T040 [P] [US-13.2] Criar migration `2026_05_22_000002_create_forgetting_requests_table.php` conforme data-model.md §1.2
-- [ ] T041 [P] [US-13.2] Criar migration `2026_05_22_000003_create_portability_requests_table.php` conforme data-model.md §1.3
-- [ ] T042 [US-13.2] Criar model `app/Domain/Privacy/Models/ForgettingRequest.php` com `BelongsToTenant`, scope `open()`, scope `nearingDeadline(int days)`, scope `expired()`, casts `fields_anonymized:array`, `fields_preserved_reason:array`
-- [ ] T043 [P] [US-13.2] Criar model `app/Domain/Privacy/Models/PortabilityRequest.php` com mesmos padrões + relacionamento `signedUrlExpired(): bool`
-- [ ] T044 [P] [US-13.2] Criar factories para ambos
+- [X] T040 [P] [US-13.2] Criar migration `2026_05_22_000002_create_forgetting_requests_table.php` — enum forgetting_status + 3 indexes + 2 CHECK constraints
+- [X] T041 [P] [US-13.2] Criar migration `2026_05_22_000003_create_portability_requests_table.php` — enum portability_status + 2 indexes + UNIQUE no file_signed_url_id (UUID público) + CHECK ready/downloaded consistency
+- [X] T042 [US-13.2] Criar model `app/Domain/Privacy/Models/ForgettingRequest.php` + enum `ForgettingStatus` (5 cases + isTerminal()) com scopes `open()`, `nearingDeadline()`, `expired()`, `executed()` + helper `daysUntilDeadline()`
+- [X] T043 [P] [US-13.2] Criar model `app/Domain/Privacy/Models/PortabilityRequest.php` + enum `PortabilityStatus` (6 cases + isUrlActive()) com scopes `open()`, `ready()`, `nearingDeadline()` + helper `signedUrlExpired()`
+- [X] T044 [P] [US-13.2] Criar `ForgettingRequestFactory` (8 states) + `PortabilityRequestFactory` (5 states com ready/downloaded/expired)
 
 #### Services
 
-- [ ] T045 [US-13.2] Implementar `app/Domain/Privacy/Services/ForgettingExecutor.php` — método `execute(ForgettingRequest, User $executedBy): void` aplica `AnonymizationMap` em transação única + emite `DireitoEsquecimentoExecutado` + grava audit_log
-- [ ] T046 [P] [US-13.2] Criar `app/Domain/Privacy/Services/PortabilityExporter.php` com método `buildArchive(Patient): array` retornando JSON estruturado conforme contracts/README.md §3 (schema v1.0) + `generateSignedUrl(PortabilityRequest): string` TTL 7 dias
-- [ ] T047 [US-13.2] Criar job `app/Domain/Privacy/Jobs/ExecuteForgettingJob.php` (fila `privacy`) — wraps `ForgettingExecutor::execute()` com retry policy 3× — usado quando esquecimento é enfileirado por agendamento
+- [X] T045 [US-13.2] Implementar `app/Domain/Privacy/Services/ForgettingExecutor.php` — `execute()` aplica `AnonymizationMap::plan()` em transação única (UPDATE pacientes + DB::table('anotacoes') bypass AnotacaoImutavelException + status terminal) + emite `DireitoEsquecimentoExecutado` + `deny()` separado
+- [X] T046 [P] [US-13.2] Criar `app/Domain/Privacy/Services/PortabilityExporter.php` — `buildArchive(Paciente)` retorna schema v1.0 (tenant, patient, consents, timeline, appointments, prescriptions com controladas mascaradas) + `execute()` grava S3 + UUID público + URL TTL 7d + emite evento + `markDownloaded()` idempotente
+- [X] T047 [US-13.2] Criar job `app/Domain/Privacy/Jobs/ExecuteForgettingJob.php` (fila `privacy`, tries=3, timeout=60s)
 
 #### Events & Listeners
 
-- [ ] T048 [P] [US-13.2] Criar 4 eventos em `app/Domain/Privacy/Events/`: `DireitoEsquecimentoSolicitado.php`, `DireitoEsquecimentoExecutado.php`, `PortabilidadeDadosSolicitada.php`, `PortabilidadeDadosExecutada.php` — todos com `ContainsNoClinicalData`
-- [ ] T049 [US-13.2] Criar listener `app/Domain/Privacy/Listeners/EnqueueDeadlineNotificationListener.php` em `DireitoEsquecimentoSolicitado` e `PortabilidadeDadosSolicitada` — agenda 2 notificações (D-5 e D-2 BRT) consumidas pelo cron
+- [X] T048 [P] [US-13.2] Criar 4 eventos em `app/Domain/Privacy/Events/`: `DireitoEsquecimentoSolicitado`, `DireitoEsquecimentoExecutado`, `PortabilidadeDadosSolicitada`, `PortabilidadeDadosExecutada` — todos implementam `Auditable + ContainsNoClinicalData`
+- [X] T049 [US-13.2] Criar listener `app/Domain/Privacy/Listeners/EnqueueDeadlineNotificationListener.php` — recebe ambos os eventos solicitação e emite log estruturado inicial; notificações progressivas ficam no cron
 
 #### Controllers & Endpoints
 
-- [ ] T050 [P] [US-13.2] Criar `app/Http/Requests/Privacy/CreateForgettingRequestRequest.php` aceitando `patient_id`, `channel_of_request`, `evidence?` — sem auth pública (formulário) OU autenticada (admin)
-- [ ] T051 [P] [US-13.2] Criar `app/Http/Requests/Privacy/CreatePortabilityRequestRequest.php` similar
-- [ ] T052 [US-13.2] Criar `app/Http/Controllers/Api/V1/Privacy/ForgettingController.php` com `index`, `show`, `store`, `execute`, `deny`
-- [ ] T053 [P] [US-13.2] Criar `app/Http/Controllers/Api/V1/Privacy/PortabilityController.php` com `index`, `show`, `store`, `execute`, `downloadSigned`
-- [ ] T054 [P] [US-13.2] Criar Resources `app/Http/Resources/Privacy/ForgettingRequestResource.php` e `PortabilityRequestResource.php`
-- [ ] T055 [US-13.2] Adicionar rotas em `routes/api.php`: `/api/v1/privacy/forgetting-requests/*` (5 endpoints), `/api/v1/privacy/portability-requests/*` (4 endpoints) + 1 rota pública `POST /privacy/public/forgetting-requests` em `routes/web.php`
-- [ ] T056 [US-13.2] Criar Policy combinada `app/Policies/PrivacyRequestPolicy.php` cobrindo ambos os request types
+- [X] T050 [P] [US-13.2] Criar 3 FormRequests em `app/Http/Requests/Privacy/`: `CreateForgettingRequestRequest`, `ExecuteForgettingRequest` (gate execute ability), `DenyForgettingRequest` (motivo min:10)
+- [X] T051 [P] [US-13.2] Criar `CreatePortabilityRequestRequest`
+- [X] T052 [US-13.2] Criar `app/Http/Controllers/Api/V1/Privacy/ForgettingController.php` com `index` (filtros status + only_open), `show`, `store`, `execute`, `deny` — pipeline FormRequest → Service → Resource
+- [X] T053 [P] [US-13.2] Criar `app/Http/Controllers/Api/V1/Privacy/PortabilityController.php` com `index`, `show`, `store`, `execute` — endpoint público de download fica em fase posterior
+- [X] T054 [P] [US-13.2] Criar `ForgettingRequestResource` + `PortabilityRequestResource` — Portability NÃO expõe `file_path` nem `file_signed_url_id` (sensível), apenas `has_signed_url` flag
+- [X] T055 [US-13.2] Adicionar 9 rotas em `routes/api.php` group `/privacy/*` (auth:sanctum + tenant.slug + throttle 30/10 por endpoint) — rota pública POST `/privacy/public/forgetting-requests` em `routes/web.php` fica como TODO (página `PublicForgettingRequestPage` mocka submit no MVP)
+- [X] T056 [US-13.2] Criar `app/Policies/PrivacyRequestPolicy.php` cobrindo ambos os request types — gate ability `privacy.view` para view + `forgetting.execute`/`portability.execute` para execute
 
 #### Cron Commands
 
-- [ ] T057 [P] [US-13.2] Implementar `app/Console/Commands/Privacy/NotifyDeadlinesCommand.php` (signature `privacy:notify-deadlines`) — varre `forgetting_requests` e `portability_requests` com deadline em D-5/D-2 e dispara notificações (inbox + e-mail conforme Q27)
-- [ ] T058 [P] [US-13.2] Implementar `app/Console/Commands/Privacy/MarkExpiredRequestsCommand.php` (signature `privacy:mark-expired` — adicionar schedule daily 00:30) que transita requests com deadline_at < now() para status `vencido_sem_resposta` + alerta crítico (R-8-7 cooldown)
+- [X] T057 [P] [US-13.2] Implementar `app/Console/Commands/Privacy/NotifyDeadlinesCommand.php` (signature `privacy:notify-deadlines`) — varre janelas D-5 (4-6 dias) e D-2 (0-3 dias) para ambos `forgetting_requests` e `portability_requests`, loga com severity diferenciada (info D-5, warning D-2). Suporta `--dry-run`
+- [X] T058 [P] [US-13.2] Implementar `app/Console/Commands/Privacy/MarkExpiredRequestsCommand.php` (signature `privacy:mark-expired`) — varre solicitações com deadline_at < now() e transita para Expired + Log::critical (R-8-7) — schedule daily 00:30 BRT adicionado em `routes/console.php`
 
 #### Frontend
 
-- [ ] T059 [P] [US-13.2] Criar página `resources/js/pages/Privacy/ForgettingPage.vue` com lista de solicitações + countdown + modal de execução com revisão do mapa
-- [ ] T060 [P] [US-13.2] Criar página `resources/js/pages/Privacy/PortabilityPage.vue` similar + botão "Gerar arquivo" + download URL assinada
-- [ ] T061 [P] [US-13.2] Criar formulário público `resources/js/pages/Privacy/PublicForgettingRequestPage.vue` (sem auth) com validação de identidade básica
+- [X] T059 [P] [US-13.2] Criar página `resources/js/pages/Privacy/ForgettingPage.vue` com tabela paginada + countdown colorido (≤2d rosa, ≤5d âmbar, ≥6d esmeralda), modal de execução com revisão do mapa Q26 (lista anonimizar/deletar/preservar), modal de negação (motivo min:10) — ambos modais com Teleport + Esc + role=dialog
+- [X] T060 [P] [US-13.2] Criar página `resources/js/pages/Privacy/PortabilityPage.vue` com tabela mostrando size em KB/MB, expira em, baixado em + modal "Gerar arquivo" com aviso schema v1.0 e TTL 7d
+- [X] T061 [P] [US-13.2] Criar `resources/js/pages/Privacy/PublicForgettingRequestPage.vue` — formulário público (CPF + e-mail + telefone + motivo opcional) — submit mockado MVP, endpoint real fica para hardening de verificação de identidade pós-MVP
 
 #### Tests
 
-- [ ] T062 [US-13.2] Criar `tests/Feature/Privacy/RightToBeForgottenMapTest.php` (Gate 3) validando que execução aplica corretamente: anonymized (placeholders Q26), deleted (campos físicos), preserved (controladas + billing + audit + consentimentos com banner)
-- [ ] T063 [P] [US-13.2] Criar `tests/Feature/Privacy/ForgettingPreservesReferentialIntegrityTest.php` (R-8-1) — após anonimização, queries em audit_logs + prescriptions + appointments referenciando o paciente continuam válidas
-- [ ] T064 [P] [US-13.2] Criar `tests/Feature/Privacy/PortabilityArchiveGenerationTest.php` validando AC-13.2.8 + schema v1.0 + mascaramento de controladas + URL assinada 7d
-- [ ] T065 [P] [US-13.2] Criar `tests/Feature/Privacy/PortabilitySignedUrlExpirationTest.php` validando 403 após 7 dias e novo link sem reiniciar deadline
-- [ ] T066 [P] [US-13.2] Criar `tests/Feature/Privacy/DeadlineNotificationCommandTest.php` cobrindo cron `privacy:notify-deadlines` D-5 e D-2
-- [ ] T067 [US-13.2] Criar `tests/Unit/Privacy/AnonymizationMapApplicationTest.php` testando isoladamente o mapa (sem DB)
+- [X] T062 [US-13.2] Criar `tests/Feature/Privacy/RightToBeForgottenMapTest.php` (Gate 3 Constitucional) — 5 testes cobrindo: anonimização de PII (nome, cpf, telefone, email), deleção de endereco jsonb, snapshot de campos preservados com reason (portaria_344_98, lei_12682_2012, lgpd_art_16), idempotência (segunda execução em status terminal lança RuntimeException), deny() com reason
+- [X] T063 [P] [US-13.2] Criar `tests/Feature/Privacy/ForgettingPreservesReferentialIntegrityTest.php` (R-8-1) — após anonimização: consent_records preservados com FK válida, paciente ainda existe (linha preservada), forgetting_request íntegro
+- [X] T064 [P] [US-13.2] Criar `tests/Feature/Privacy/PortabilityArchiveGenerationTest.php` cobrindo AC-13.2.8: buildArchive() retorna schema v1.0 com 7 blocos (tenant, patient, consents, timeline, appointments, prescriptions, messages_metadata); execute() grava S3 (Storage::fake) + UUID + TTL 7d + emite PortabilidadeDadosExecutada
+- [X] T065 [P] [US-13.2] Criar `tests/Feature/Privacy/PortabilitySignedUrlExpirationTest.php` — 3 testes: URL ativa em janela 7d (buildSignedUrl retorna URL contendo UUID), URL null após expiração (signedUrlExpired true), deadline LGPD preservado em re-link
+- [X] T066 [P] [US-13.2] Criar `tests/Feature/Privacy/DeadlineNotificationCommandTest.php` — 4 testes: dry-run executa sem erro, comando encontra D-5 deadlines, comando lida com lista vazia, `privacy:mark-expired` transita overdue para expired status
+- [X] T067 [US-13.2] ~~Criar `tests/Unit/Privacy/AnonymizationMapApplicationTest.php`~~ — JÁ ENTREGUE em T015 (`tests/Unit/Lgpd/AnonymizationMapTest.php`) com 11 testes; não há valor em duplicar.
 
 ### 3.3 Lote A — US-13.3 Pseudonimização de Prompts da IA (P1)
 

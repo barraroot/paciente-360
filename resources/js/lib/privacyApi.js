@@ -34,3 +34,68 @@ export const recordConsent = (payload) =>
  */
 export const revokeConsent = (payload) =>
   api.post('/privacy/consents/revoke', payload)
+
+// ─── Forgetting Requests (US-13.2) ─────────────────────────────────────────
+
+/**
+ * GET /api/v1/privacy/forgetting-requests
+ * @param {Object} filters - status, only_open, page, per_page
+ */
+export const listForgettingRequests = (filters = {}) =>
+  api.get('/privacy/forgetting-requests', { params: filters })
+
+/**
+ * GET /api/v1/privacy/forgetting-requests/{id}
+ */
+export const getForgettingRequest = (id) =>
+  api.get(`/privacy/forgetting-requests/${id}`)
+
+/**
+ * POST /api/v1/privacy/forgetting-requests
+ * @param {Object} payload - patient_id, channel_of_request, verification_notes?
+ */
+export const createForgettingRequest = (payload) =>
+  api.post('/privacy/forgetting-requests', payload)
+
+/**
+ * POST /api/v1/privacy/forgetting-requests/{id}/execute
+ * @param {string|number} id
+ * @param {Object} payload - confirmation: boolean, notes?
+ */
+export const executeForgettingRequest = (id, payload = { confirmation: true }) =>
+  api.post(`/privacy/forgetting-requests/${id}/execute`, payload)
+
+/**
+ * POST /api/v1/privacy/forgetting-requests/{id}/deny
+ * @param {string|number} id
+ * @param {Object} payload - reason
+ */
+export const denyForgettingRequest = (id, payload) =>
+  api.post(`/privacy/forgetting-requests/${id}/deny`, payload)
+
+// ─── Portability Requests (US-13.2 — Q28) ──────────────────────────────────
+
+/**
+ * GET /api/v1/privacy/portability-requests
+ */
+export const listPortabilityRequests = (filters = {}) =>
+  api.get('/privacy/portability-requests', { params: filters })
+
+/**
+ * GET /api/v1/privacy/portability-requests/{id}
+ */
+export const getPortabilityRequest = (id) =>
+  api.get(`/privacy/portability-requests/${id}`)
+
+/**
+ * POST /api/v1/privacy/portability-requests
+ * @param {Object} payload - patient_id
+ */
+export const createPortabilityRequest = (payload) =>
+  api.post('/privacy/portability-requests', payload)
+
+/**
+ * POST /api/v1/privacy/portability-requests/{id}/execute
+ */
+export const executePortabilityRequest = (id) =>
+  api.post(`/privacy/portability-requests/${id}/execute`)

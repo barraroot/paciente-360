@@ -11,6 +11,15 @@ import {
   getConsent,
   recordConsent,
   revokeConsent,
+  listForgettingRequests,
+  getForgettingRequest,
+  createForgettingRequest,
+  executeForgettingRequest,
+  denyForgettingRequest,
+  listPortabilityRequests,
+  getPortabilityRequest,
+  createPortabilityRequest,
+  executePortabilityRequest,
 } from '@/lib/privacyApi'
 
 export const usePrivacyStore = defineStore('privacy', () => {
@@ -148,8 +157,140 @@ export const usePrivacyStore = defineStore('privacy', () => {
     }
   }
 
+  // ─── Forgetting Requests (US-13.2) ─────────────────────────────────────
+
+  const forgettingRequests = ref([])
+  const forgettingPagination = ref({ current_page: 1, last_page: 1, total: 0 })
+  const currentForgetting = ref(null)
+
+  async function fetchForgettingRequests(extraFilters = {}) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await listForgettingRequests(extraFilters)
+      forgettingRequests.value = response.data.data
+      forgettingPagination.value = {
+        current_page: response.data.meta?.current_page ?? 1,
+        last_page: response.data.meta?.last_page ?? 1,
+        total: response.data.meta?.total ?? forgettingRequests.value.length,
+      }
+    } catch (e) {
+      error.value = e?.response?.data?.message ?? 'Erro ao carregar solicitações de esquecimento.'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchForgetting(id) {
+    loading.value = true
+    try {
+      const response = await getForgettingRequest(id)
+      currentForgetting.value = response.data.data
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function submitForgetting(payload) {
+    saving.value = true
+    error.value = null
+    try {
+      const response = await createForgettingRequest(payload)
+      await fetchForgettingRequests({ only_open: true })
+      return response.data.data
+    } catch (e) {
+      error.value = e?.response?.data?.message ?? 'Erro ao criar solicitação.'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function executeForgetting(id) {
+    saving.value = true
+    error.value = null
+    try {
+      const response = await executeForgettingRequest(id, { confirmation: true })
+      await fetchForgettingRequests({ only_open: true })
+      return response.data.data
+    } catch (e) {
+      error.value = e?.response?.data?.message ?? 'Erro ao executar esquecimento.'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function denyForgetting(id, reason) {
+    saving.value = true
+    error.value = null
+    try {
+      const response = await denyForgettingRequest(id, { reason })
+      await fetchForgettingRequests({ only_open: true })
+      return response.data.data
+    } catch (e) {
+      error.value = e?.response?.data?.message ?? 'Erro ao negar solicitação.'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  // ─── Portability Requests (US-13.2 — Q28) ──────────────────────────────
+
+  const portabilityRequests = ref([])
+  const portabilityPagination = ref({ current_page: 1, last_page: 1, total: 0 })
+  const currentPortability = ref(null)
+
+  async function fetchPortabilityRequests(extraFilters = {}) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await listPortabilityRequests(extraFilters)
+      portabilityRequests.value = response.data.data
+      portabilityPagination.value = {
+        current_page: response.data.meta?.current_page ?? 1,
+        last_page: response.data.meta?.last_page ?? 1,
+        total: response.data.meta?.total ?? portabilityRequests.value.length,
+      }
+    } catch (e) {
+      error.value = e?.response?.data?.message ?? 'Erro ao carregar solicitações de portabilidade.'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function submitPortability(payload) {
+    saving.value = true
+    error.value = null
+    try {
+      const response = await createPortabilityRequest(payload)
+      await fetchPortabilityRequests()
+      return response.data.data
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function executePortability(id) {
+    saving.value = true
+    error.value = null
+    try {
+      const response = await executePortabilityRequest(id)
+      await fetchPortabilityRequests()
+      return response.data.data
+    } catch (e) {
+      error.value = e?.response?.data?.message ?? 'Erro ao gerar arquivo de portabilidade.'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
   return {
-    // state
+    // ─── consents (US-13.1) ───
     consents,
     consentsPagination,
     currentConsent,
@@ -157,15 +298,29 @@ export const usePrivacyStore = defineStore('privacy', () => {
     loading,
     saving,
     error,
-    // getters
     activeConsents,
     revokedCount,
-    // actions
     fetchConsents,
     fetchConsent,
     createConsent,
     revoke,
     setFilter,
     resetFilters,
+    // ─── forgetting (US-13.2) ───
+    forgettingRequests,
+    forgettingPagination,
+    currentForgetting,
+    fetchForgettingRequests,
+    fetchForgetting,
+    submitForgetting,
+    executeForgetting,
+    denyForgetting,
+    // ─── portability (US-13.2 — Q28) ───
+    portabilityRequests,
+    portabilityPagination,
+    currentPortability,
+    fetchPortabilityRequests,
+    submitPortability,
+    executePortability,
   }
 })

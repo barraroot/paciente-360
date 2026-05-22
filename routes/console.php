@@ -161,6 +161,12 @@ Schedule::command('privacy:notify-deadlines')
     ->timezone('America/Sao_Paulo')
     ->withoutOverlapping();
 
+// Lote A US-13.2 (T058) — Marca solicitações com deadline vencido (AC-13.2.7).
+Schedule::command('privacy:mark-expired')
+    ->dailyAt('00:30')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();
+
 // Lote B — Métricas globais (MRR, ARR, churn, conversão, consumo IA).
 Schedule::command('super-admin:compute-global-metrics')
     ->hourly()

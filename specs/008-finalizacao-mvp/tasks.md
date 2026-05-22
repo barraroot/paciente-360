@@ -270,14 +270,14 @@
 
 **Acceptance**: AC-9.3.1 → AC-9.3.5 ✅
 
-- [ ] T142 [P] [US-9.3] Criar migration `2026_05_24_000004_create_campaign_templates_meta_table.php`
-- [ ] T143 [US-9.3] Criar model `app/Domain/Campaigns/Models/CampaignTemplateMeta.php` com scope `approved()`, accessor `isApproved()` e checagem `meta_status_last_checked_at` <30min
-- [ ] T144 [US-9.3] Implementar `app/Domain/Campaigns/Services/CampaignComplianceGate.php` com método `evaluate(Campaign, Patient): ComplianceResult` retornando `{passed: bool, block_reason?: string}` aplicando 4 validações sequenciais: opt-in marketing → template aprovado → business_hours → daily_limit
-- [ ] T145 [P] [US-9.3] Criar `app/Domain/Campaigns/Services/MetaTemplateStatusChecker.php` consultando Meta Cloud API (fila `campaigns`) + cache 30min — usado pelo Gate
-- [ ] T146 [US-9.3] Validar criação de template HSM no `CampaignTemplateMetaResource` (Filament ou interna) — rejeita template sem `has_unsubscribe=true` (AC-9.3.3)
-- [ ] T147 [US-9.3] Criar `tests/Feature/Campaigns/CampaignDispatcherComplianceTest.php` (Gate 1) — testa cada uma das 4 validações em isolamento + cenário "all pass"
-- [ ] T148 [P] [US-9.3] Criar `tests/Feature/Campaigns/TemplateRejectionWithoutUnsubscribeTest.php` cobrindo AC-9.3.3
-- [ ] T149 [P] [US-9.3] Criar `tests/Feature/Campaigns/SairCommandRevokesMarketingTest.php` (já parcialmente coberto em T036 de US-13.1 — aqui valida integração: paciente após `/sair` é excluído do próximo dispatch em ≤30s)
+- [X] T142 [P] [US-9.3] Criar migration `2026_05_24_000004_create_campaign_templates_meta_table.php` SLIM (FK para messaging_channel_templates) — apenas extensão de campanha: has_unsubscribe, last_compliance_check_at, last_known_meta_status + UNIQUE + CHECK status enum
+- [X] T143 [US-9.3] Criar model `app/Domain/Campaigns/Models/CampaignTemplateMeta.php` com BelongsToTenant + scopes `approvedAndCompliant()`, `stale(int)` + helpers `isCheckFresh()`, `isDispatchReady()`. Factory com states approved/withoutUnsubscribe/rejected/staleCheck
+- [X] T144 [US-9.3] Implementar `app/Domain/Campaigns/Services/CampaignComplianceGate.php` + DTO `ComplianceResult` (passed/blockReason/details). 4 validações sequenciais: opt-in marketing → template aprovado+has_unsubscribe → business_hours (graceful sem config) → daily_limit do plano. Helper `hasReceivedSairCommandRecently(patientId, hours)` consulta consent_records revoked
+- [X] T145 [P] [US-9.3] Criar `app/Domain/Campaigns/Services/MetaTemplateStatusChecker.php` — `checkStatus()` com cache TTL `config('finalization.campaign_template_meta_status_cache_minutes')` 30min, `getOrCreateMeta()` lazy, `detectUnsubscribe()` heurística com 5 padrões (`/sair`, `/stop`, `descadastrar`, `unsubscribe`, `parar de receber`). Refresh remoto via Meta Graph DEFERRED — lê mirror da Fase 3
+- [X] T146 [US-9.3] Criar `app/Domain/Campaigns/Services/TemplateRegistrar.php` — `registerFromTemplate(int)` rejeita templates MARKETING sem unsubscribe via InvalidArgumentException (AC-9.3.3 / Princípio VI). Templates UTILITY permitidos com has_unsubscribe=false; gate runtime impede uso em campanha
+- [X] T147 [US-9.3] Criar `tests/Feature/Campaigns/CampaignDispatcherComplianceTest.php` (Gate 1) — 6 testes cobrindo cada uma das 4 validações isoladas + 2 helpers (template sem unsubscribe específico, all-pass para dispatch compliant)
+- [X] T148 [P] [US-9.3] Criar `tests/Feature/Campaigns/TemplateRejectionWithoutUnsubscribeTest.php` — 4 testes: MARKETING sem unsubscribe rejeitado (InvalidArgumentException), MARKETING com `/sair` aceito, MARKETING com `descadastrar` aceito, UTILITY sem unsubscribe aceito com flag false
+- [X] T149 [P] [US-9.3] Criar `tests/Feature/Campaigns/SairCommandRevokesMarketingTest.php` — 3 testes de integração Privacy×Campaigns: dispatcher detecta sair revoke via consent lookup imediato, sair antigo (>24h) retorna false em hasReceivedSairCommandRecently, paciente sem revoke retorna false
 
 ### 5.2 Lote C — US-9.1 Campanha de Reativação de Inativos (P2)
 

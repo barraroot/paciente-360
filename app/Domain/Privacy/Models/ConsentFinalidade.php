@@ -18,12 +18,20 @@ enum ConsentFinalidade: string
     case Marketing = 'marketing';
     case Pesquisa = 'pesquisa';
 
+    /**
+     * Compartilhamento com integrações externas (webhooks / API pública).
+     * Sem este consentimento o `WebhookDispatcher` (Lote D US-11.1) marca
+     * o campo `paciente.id` como `<consent_withheld>` no payload.
+     */
+    case Integracoes = 'integracoes';
+
     public function label(): string
     {
         return match ($this) {
             self::Transacional => 'Transacional',
             self::Marketing => 'Marketing',
             self::Pesquisa => 'Pesquisa',
+            self::Integracoes => 'Compartilhamento com Integrações',
         };
     }
 }

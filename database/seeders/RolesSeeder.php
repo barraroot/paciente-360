@@ -99,6 +99,8 @@ class RolesSeeder extends Seeder
         'report.export',
         // Lote D — Integrações (Épico 11)
         'webhook.manage',
+        'webhook.view_deliveries',
+        'webhook.resend_dlq',
         'api_token.manage',
         'oauth_client.manage',
         // Lote B — Super Admin (Épico 12) — atribuídas APENAS à role super-admin via bypass Gate.
@@ -158,6 +160,8 @@ class RolesSeeder extends Seeder
             'report.view',
             'report.export',
             'webhook.manage',
+            'webhook.view_deliveries',
+            'webhook.resend_dlq',
             'api_token.manage',
             'oauth_client.manage',
             'privacy.view',

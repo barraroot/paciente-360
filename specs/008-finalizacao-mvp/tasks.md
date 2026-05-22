@@ -354,45 +354,45 @@
 
 #### Migrations & Models
 
-- [ ] T188 [P] [US-11.1] Criar migrations `2026_05_25_000001_create_webhook_endpoints_table.php`, `000002_create_webhook_deliveries_table.php`, `000003_create_webhook_dead_letter_table.php`
-- [ ] T189 [US-11.1] Criar models `WebhookEndpoint`, `WebhookDelivery`, `WebhookDeadLetter` em `app/Domain/Integrations/Models/` com scopes apropriados e relação `endpoint -> deliveries -> deadLetter`
-- [ ] T190 [P] [US-11.1] Criar factories para os 3 models
+- [X] T188 [P] [US-11.1] Criar migrations `2026_05_25_000001_create_webhook_endpoints_table.php`, `000002_create_webhook_deliveries_table.php`, `000003_create_webhook_dead_letter_table.php`
+- [X] T189 [US-11.1] Criar models `WebhookEndpoint`, `WebhookDelivery`, `WebhookDeadLetter` em `app/Domain/Integrations/Models/` com scopes apropriados e relação `endpoint -> deliveries -> deadLetter`
+- [X] T190 [P] [US-11.1] Criar factories para os 3 models
 
 #### Services
 
-- [ ] T191 [US-11.1] Implementar `app/Domain/Integrations/Services/HmacSigner.php` com método estático `sign(string $payload, string $secret): string` retornando `sha256=<hex>` + `verify($payload, $secret, $signature): bool` usando `hash_equals`
-- [ ] T192 [US-11.1] Implementar `app/Domain/Integrations/Services/WebhookDispatcher.php` com `dispatch(event_type, event_id, payload, tenant): void` — busca endpoints ativos do tenant subscritos, aplica mascaramento condicional (controladas + share_with_integrations) + enfileira `DispatchWebhookJob` para cada
-- [ ] T193 [US-11.1] Criar listener universal `app/Domain/Integrations/Listeners/BroadcastDomainEventToWebhooksListener.php` que escuta os 13 eventos do catálogo Q17 e chama `WebhookDispatcher::dispatch()` — implementação via `subscribe()` method registrando todos os eventos
-- [ ] T194 [US-11.1] Criar job `app/Domain/Integrations/Jobs/DispatchWebhookJob.php` (fila `webhooks`) com retry policy 5×exponential (30s, 2min, 10min, 1h, 6h) — após esgotar enfileira `MoveToDeadLetterJob`
-- [ ] T195 [P] [US-11.1] Criar job `app/Domain/Integrations/Jobs/MoveToDeadLetterJob.php` — move row de `webhook_deliveries` para `webhook_dead_letter` + emite `WebhookFalhou` + `expires_at=now()+30d`
-- [ ] T196 [P] [US-11.1] Criar 4 eventos: `WebhookConfigurado`, `WebhookEntregue`, `WebhookFalhou`, `WebhookReagendado`
+- [X] T191 [US-11.1] Implementar `app/Domain/Integrations/Services/HmacSigner.php` com método estático `sign(string $payload, string $secret): string` retornando `sha256=<hex>` + `verify($payload, $secret, $signature): bool` usando `hash_equals`
+- [X] T192 [US-11.1] Implementar `app/Domain/Integrations/Services/WebhookDispatcher.php` com `dispatch(event_type, event_id, payload, tenant): void` — busca endpoints ativos do tenant subscritos, aplica mascaramento condicional (controladas + share_with_integrations) + enfileira `DispatchWebhookJob` para cada
+- [X] T193 [US-11.1] Criar listener universal `app/Domain/Integrations/Listeners/BroadcastDomainEventToWebhooksListener.php` que escuta os 13 eventos do catálogo Q17 e chama `WebhookDispatcher::dispatch()` — implementação via `subscribe()` method registrando todos os eventos
+- [X] T194 [US-11.1] Criar job `app/Domain/Integrations/Jobs/DispatchWebhookJob.php` (fila `webhooks`) com retry policy 5×exponential (30s, 2min, 10min, 1h, 6h) — após esgotar enfileira `MoveToDeadLetterJob`
+- [X] T195 [P] [US-11.1] Criar job `app/Domain/Integrations/Jobs/MoveToDeadLetterJob.php` — move row de `webhook_deliveries` para `webhook_dead_letter` + emite `WebhookFalhou` + `expires_at=now()+30d`
+- [X] T196 [P] [US-11.1] Criar 4 eventos: `WebhookConfigurado`, `WebhookEntregue`, `WebhookFalhou`, `WebhookReagendado`
 
 #### Controllers
 
-- [ ] T197 [P] [US-11.1] Criar `CreateWebhookEndpointRequest.php` validando URL HTTPS + ausência de IP privado (T007 UrlGuard) + max endpoints do plano (`webhook_max_endpoints`)
-- [ ] T198 [US-11.1] Criar `app/Http/Controllers/Api/V1/Integrations/WebhooksController.php` com `index`, `store`, `update`, `destroy`, `pauseResume`, `listDeliveries`, `listDeadLetter`, `resendFromDlq`
-- [ ] T199 [P] [US-11.1] Criar `WebhookEndpointResource.php` (segredo sempre mascarado), `WebhookDeliveryResource.php`, `WebhookDeadLetterResource.php`
-- [ ] T200 [US-11.1] Adicionar rotas `/api/v1/integrations/webhooks/*` em `routes/api.php`
-- [ ] T201 [P] [US-11.1] Criar `WebhookPolicy.php`
+- [X] T197 [P] [US-11.1] Criar `CreateWebhookEndpointRequest.php` validando URL HTTPS + ausência de IP privado (T007 UrlGuard) + max endpoints do plano (`webhook_max_endpoints`)
+- [X] T198 [US-11.1] Criar `app/Http/Controllers/Api/V1/Integrations/WebhooksController.php` com `index`, `store`, `update`, `destroy`, `pauseResume`, `listDeliveries`, `listDeadLetter`, `resendFromDlq`
+- [X] T199 [P] [US-11.1] Criar `WebhookEndpointResource.php` (segredo sempre mascarado), `WebhookDeliveryResource.php`, `WebhookDeadLetterResource.php`
+- [X] T200 [US-11.1] Adicionar rotas `/api/v1/integrations/webhooks/*` em `routes/api.php`
+- [X] T201 [P] [US-11.1] Criar `WebhookPolicy.php`
 
 #### Cron
 
-- [ ] T202 [P] [US-11.1] Implementar `app/Console/Commands/Integrations/PurgeExpiredDlqCommand.php` (daily 03:00 BRT) — deleta rows de `webhook_dead_letter` onde `expires_at < now()`
+- [X] T202 [P] [US-11.1] Implementar `app/Console/Commands/Integrations/PurgeExpiredDlqCommand.php` (daily 03:00 BRT) — deleta rows de `webhook_dead_letter` onde `expires_at < now()`
 
 #### Frontend
 
-- [ ] T203 [P] [US-11.1] Criar páginas Vue `WebhooksSettingsPage.vue`, `WebhookFormModal.vue` (criar/editar), `WebhookDeliveriesPage.vue` (histórico + DLQ + botão reenviar)
-- [ ] T204 [P] [US-11.1] Criar store `resources/js/stores/webhooks.js`
+- [X] T203 [P] [US-11.1] Criar páginas Vue `WebhooksSettingsPage.vue`, `WebhookFormModal.vue` (criar/editar), `WebhookDeliveriesPage.vue` (histórico + DLQ + botão reenviar)
+- [X] T204 [P] [US-11.1] Criar store `resources/js/stores/webhooks.js`
 
 #### Tests
 
-- [ ] T205 [US-11.1] Criar `tests/Feature/Integrations/WebhookDispatchE2ETest.php` cobrindo AC-11.1.1 → AC-11.1.4 + HMAC válido + correlation_id presente
-- [ ] T206 [P] [US-11.1] Criar `tests/Feature/Integrations/WebhookRetryPolicyTest.php` cobrindo AC-11.1.3 — simula 5xx + valida 5 tentativas com `Carbon::setTestNow()`
-- [ ] T207 [P] [US-11.1] Criar `tests/Feature/Integrations/WebhookDeadLetterTest.php` cobrindo AC-11.1.5 e AC-11.1.6 — esgota retries → DLQ → admin reenvia manualmente
-- [ ] T208 [P] [US-11.1] Criar `tests/Feature/Integrations/WebhookUrlSsrfGuardTest.php` (R-8-2) — rejeita URLs com IP privado
-- [ ] T209 [P] [US-11.1] Criar `tests/Feature/Integrations/WebhookPayloadConsentMaskingTest.php` cobrindo AC-11.1.7 — paciente sem `share_with_integrations_consent` aparece como `<consent_withheld>`
-- [ ] T210 [P] [US-11.1] Criar `tests/Feature/Integrations/WebhookCatalogCoverageTest.php` validando que todos os 13 eventos Q17 são despachados quando um endpoint os assina + os excluídos NÃO são despachados mesmo se erroneamente assinados
-- [ ] T211 [P] [US-11.1] Criar `tests/Unit/Integrations/HmacSignerTest.php` validando assinatura + verificação + timing-safe comparison
+- [X] T205 [US-11.1] Criar `tests/Feature/Integrations/WebhookDispatchE2ETest.php` cobrindo AC-11.1.1 → AC-11.1.4 + HMAC válido + correlation_id presente
+- [X] T206 [P] [US-11.1] Criar `tests/Feature/Integrations/WebhookRetryPolicyTest.php` cobrindo AC-11.1.3 — simula 5xx + valida 5 tentativas com `Carbon::setTestNow()`
+- [X] T207 [P] [US-11.1] Criar `tests/Feature/Integrations/WebhookDeadLetterTest.php` cobrindo AC-11.1.5 e AC-11.1.6 — esgota retries → DLQ → admin reenvia manualmente
+- [X] T208 [P] [US-11.1] Criar `tests/Feature/Integrations/WebhookUrlSsrfGuardTest.php` (R-8-2) — rejeita URLs com IP privado
+- [X] T209 [P] [US-11.1] Criar `tests/Feature/Integrations/WebhookPayloadConsentMaskingTest.php` cobrindo AC-11.1.7 — paciente sem `share_with_integrations_consent` aparece como `<consent_withheld>`
+- [X] T210 [P] [US-11.1] Criar `tests/Feature/Integrations/WebhookCatalogCoverageTest.php` validando que todos os 13 eventos Q17 são despachados quando um endpoint os assina + os excluídos NÃO são despachados mesmo se erroneamente assinados
+- [X] T211 [P] [US-11.1] Criar `tests/Unit/Integrations/HmacSignerTest.php` validando assinatura + verificação + timing-safe comparison
 
 ### 6.2 Lote D — US-11.2 API Pública Documentada (P3)
 

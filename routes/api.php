@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\Inbox\MessagesController;
 use App\Http\Controllers\Api\V1\Inbox\PresenceController;
 use App\Http\Controllers\Api\V1\Inbox\QuickRepliesController;
 use App\Http\Controllers\Api\V1\Inbox\TakeoverController;
+use App\Http\Controllers\Api\V1\Integrations\WebhooksController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
 use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
 use App\Http\Controllers\Api\V1\Pacientes\ExportacaoController;
@@ -748,4 +749,55 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
         Route::get('/clinical', [ClinicalReportController::class, 'show'])
             ->middleware('throttle:60,1')
             ->name('clinical.show');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Integrations — Webhooks (Fase 8 — Lote D US-11.1)
+|--------------------------------------------------------------------------
+|
+| T200 — CRUD + DLQ. WebhookPolicy autoriza via abilities `webhook.manage`,
+| `webhook.view_deliveries`, `webhook.resend_dlq`.
+|
+| Routes:
+|   GET    /integrations/webhooks                       → index
+|   POST   /integrations/webhooks                       → store (secret 1x)
+|   GET    /integrations/webhooks/dlq                   → DLQ list
+|   POST   /integrations/webhooks/dlq/{dlq}/resend     → reenviar
+|   GET    /integrations/webhooks/{webhook}             → show
+|   PATCH  /integrations/webhooks/{webhook}             → update
+|   DELETE /integrations/webhooks/{webhook}             → destroy
+|   POST   /integrations/webhooks/{webhook}/pause       → pause/resume
+|   GET    /integrations/webhooks/{webhook}/deliveries  → histórico
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('integrations/webhooks')
+    ->name('integrations.webhooks.')
+    ->group(function (): void {
+        // DLQ tem que vir ANTES do {webhook} para não conflitar com binding.
+        Route::get('/dlq', [WebhooksController::class, 'listDeadLetter'])->name('dlq.index');
+        Route::post('/dlq/{dlq}/resend', [WebhooksController::class, 'resendFromDlq'])
+            ->whereNumber('dlq')
+            ->middleware('throttle:30,1')
+            ->name('dlq.resend');
+
+        Route::get('/', [WebhooksController::class, 'index'])->name('index');
+        Route::post('/', [WebhooksController::class, 'store'])
+            ->middleware('throttle:20,1')
+            ->name('store');
+        Route::get('/{webhook}', [WebhooksController::class, 'show'])
+            ->whereNumber('webhook')
+            ->name('show');
+        Route::patch('/{webhook}', [WebhooksController::class, 'update'])
+            ->whereNumber('webhook')
+            ->name('update');
+        Route::delete('/{webhook}', [WebhooksController::class, 'destroy'])
+            ->whereNumber('webhook')
+            ->name('destroy');
+        Route::post('/{webhook}/pause', [WebhooksController::class, 'pauseResume'])
+            ->whereNumber('webhook')
+            ->name('pause');
+        Route::get('/{webhook}/deliveries', [WebhooksController::class, 'listDeliveries'])
+            ->whereNumber('webhook')
+            ->name('deliveries');
     });

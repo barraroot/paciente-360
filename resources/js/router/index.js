@@ -346,6 +346,20 @@ const routes = [
         // Rota pública — não exige auth (paciente solicita esquecimento sem login).
     },
 
+    // ─── Integrações (Fase 8 — Lote D, Épico 11) ──────────────────────────────
+    {
+        path: '/panel/integracoes/webhooks',
+        name: 'integrations.webhooks',
+        component: () => import('@/pages/Integrations/WebhooksSettingsPage.vue'),
+        meta: { requiresAuth: true, ability: 'webhook.manage', title: 'Webhooks' },
+    },
+    {
+        path: '/panel/integracoes/webhooks/dlq',
+        name: 'integrations.webhooks.dlq',
+        component: () => import('@/pages/Integrations/WebhookDeliveriesPage.vue'),
+        meta: { requiresAuth: true, ability: 'webhook.manage', title: 'Dead Letter Queue' },
+    },
+
     // ─── Relatórios (Fase 8 — Lote E, Épico 10) ───────────────────────────────
     {
         path: '/panel/relatorios/executivo',

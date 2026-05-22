@@ -90,6 +90,31 @@ class PlanResource extends Resource
                     ->label('Stripe Price ID excedente')
                     ->maxLength(100),
 
+                // T122 (Fase 8 — Lote B US-12.2) — 3 limites consumidos por Lotes C/D.
+                TextInput::make('daily_campaign_limit')
+                    ->label('Limite diário de campanhas')
+                    ->numeric()
+                    ->minValue(1)
+                    ->required()
+                    ->default(200)
+                    ->helperText('Q2 — Lote C dispatcher. Tiers sugeridos: básico 200 / pro 1000 / enterprise 5000.'),
+
+                TextInput::make('api_rate_limit_per_minute')
+                    ->label('API pública — req/min')
+                    ->numeric()
+                    ->minValue(1)
+                    ->required()
+                    ->default(100)
+                    ->helperText('Q15 — Lote D middleware. Tiers sugeridos: básico 100 / pro 1000 / enterprise 5000.'),
+
+                TextInput::make('webhook_max_endpoints')
+                    ->label('Webhooks — máx endpoints')
+                    ->numeric()
+                    ->minValue(0)
+                    ->required()
+                    ->default(5)
+                    ->helperText('Q AC-11.1.1 — Lote D. Tiers sugeridos: básico 5 / pro 20 / enterprise 100.'),
+
                 Toggle::make('is_active')
                     ->label('Ativo')
                     ->default(true),
@@ -114,6 +139,24 @@ class PlanResource extends Resource
                     ->label('Preço Mensal')
                     ->formatStateUsing(fn (int $state): string => 'R$ '.number_format($state / 100, 2, ',', '.'))
                     ->sortable(),
+
+                TextColumn::make('daily_campaign_limit')
+                    ->label('Limite campanha/dia')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(),
+
+                TextColumn::make('api_rate_limit_per_minute')
+                    ->label('API req/min')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(),
+
+                TextColumn::make('webhook_max_endpoints')
+                    ->label('Webhooks max')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(),
 
                 IconColumn::make('is_active')
                     ->label('Ativo')

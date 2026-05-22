@@ -26,6 +26,9 @@ use Illuminate\Support\Carbon;
  * @property int $overage_price_cents
  * @property int $max_users
  * @property int $max_channels
+ * @property int $daily_campaign_limit         T115 (Fase 8 / Lote B) — Q2 Lote C dispatcher.
+ * @property int $api_rate_limit_per_minute    T115 (Fase 8 / Lote B) — Q15 Lote D middleware.
+ * @property int $webhook_max_endpoints        T115 (Fase 8 / Lote B) — Q AC-11.1.1 Lote D.
  * @property string $stripe_price_id_base
  * @property string $stripe_price_id_overage
  * @property bool $is_active
@@ -50,6 +53,9 @@ class Plan extends Model
         'overage_price_cents',
         'max_users',
         'max_channels',
+        'daily_campaign_limit',
+        'api_rate_limit_per_minute',
+        'webhook_max_endpoints',
         'stripe_price_id_base',
         'stripe_price_id_overage',
         'is_active',
@@ -67,6 +73,9 @@ class Plan extends Model
             'overage_price_cents' => 'integer',
             'max_users' => 'integer',
             'max_channels' => 'integer',
+            'daily_campaign_limit' => 'integer',
+            'api_rate_limit_per_minute' => 'integer',
+            'webhook_max_endpoints' => 'integer',
             'is_active' => 'boolean',
         ];
     }

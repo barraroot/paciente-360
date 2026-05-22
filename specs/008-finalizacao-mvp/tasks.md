@@ -223,17 +223,20 @@
 
 **Acceptance**: AC-12.2.1 → AC-12.2.6 ✅
 
-- [ ] T115 [P] [US-12.2] Criar migration `2026_05_23_000002_alter_plans_add_limits_columns.php` (3 cols)
-- [ ] T116 [P] [US-12.2] Criar migration `2026_05_23_000003_create_plan_versions_table.php`
-- [ ] T117 [P] [US-12.2] Criar migration `2026_05_23_000004_create_tenant_plan_bindings_table.php` + PARTIAL UNIQUE
-- [ ] T118 [US-12.2] Criar migration `2026_05_23_000005_seed_initial_plan_versions_from_existing_plans.php` — para cada plano existente cria PlanVersion v1 + bind dos tenants atuais
-- [ ] T119 [P] [US-12.2] Criar models `app/Domain/SuperAdmin/Models/PlanVersion.php` + `TenantPlanBinding.php` com casts JSON e scopes `active()`
-- [ ] T120 [US-12.2] Implementar `app/Domain/SuperAdmin/Services/PlanVersioningService.php` com `createVersion(plan, snapshot)`, `migrateTenantToPlanVersion(tenant, plan_version, user, reason)` que dispara proration via Stripe Cashier (já existente)
-- [ ] T121 [P] [US-12.2] Criar eventos `PlanoCriado`, `PlanoEditado`, `PlanoAlteradoPeloSuperAdmin`
-- [ ] T122 [US-12.2] Criar `app/Filament/Resources/Plans/PlanResource.php` com Form (preço, limites, recursos), bulk action "Migrar tenants" (AC-12.2.5)
-- [ ] T123 [US-12.2] Criar `tests/Feature/SuperAdmin/PlanVersioningTest.php` cobrindo AC-12.2.2 (snapshot versioning) — edição cria v2; tenants existentes ficam em v1
-- [ ] T124 [P] [US-12.2] Criar `tests/Feature/SuperAdmin/PlanChangeProrationTest.php` cobrindo AC-12.2.3 — alteração de plano dispara `PlanoAlteradoPeloSuperAdmin` + proration Stripe stub
-- [ ] T125 [P] [US-12.2] Criar `tests/Feature/SuperAdmin/PlanInactiveHidesFromPublicOnboardingTest.php` cobrindo AC-12.2.4
+- [X] T115 [P] [US-12.2] Criar migration `2026_05_23_000002_alter_plans_add_limits_columns.php` — 3 cols (daily_campaign_limit=200, api_rate_limit_per_minute=100, webhook_max_endpoints=5) com helpText apontando para Q2/Q15/Q AC-11.1.1; Plan model atualizado com novos $fillable e casts
+- [X] T116 [P] [US-12.2] Criar migration `2026_05_23_000003_create_plan_versions_table.php` — UNIQUE (plan_id, version) + PARTIAL UNIQUE `(plan_id) WHERE valid_to IS NULL` + CHECK chk_plan_versions_valid_range
+- [X] T117 [P] [US-12.2] Criar migration `2026_05_23_000004_create_tenant_plan_bindings_table.php` — PARTIAL UNIQUE `(tenant_id) WHERE effective_to IS NULL` + CHECK range + CHECK reason ≥10 chars quando changed_by_user_id IS NOT NULL
+- [X] T118 [US-12.2] Criar migration `2026_05_23_000005_seed_initial_plan_versions_from_existing_plans.php` — bootstrapping idempotente: para cada Plan existente cria PlanVersion v=1 com snapshot completo (incluindo 3 cols novas); para cada Tenant com plan_id cria TenantPlanBinding ativa
+- [X] T119 [P] [US-12.2] Criar models `app/Domain/SuperAdmin/Models/PlanVersion.php` (scopes active/forPlan + helpers isActive/limit) + `TenantPlanBinding.php` (scopes active/forTenant + isActive helper). Factories com states proTier/enterpriseTier/superseded.
+- [X] T120 [US-12.2] Implementar `app/Domain/SuperAdmin/Services/PlanVersioningService.php`:
+  - `createVersion(Plan, snapshot, User?)`: transacional, fecha versão anterior + cria nova com version+1; emite `PlanoCriado` (primeira) ou `PlanoEditado` (subsequentes)
+  - `migrateTenantToPlanVersion(Tenant, PlanVersion, User, reason)`: gate reason ≥10 chars (InvalidArgumentException), fecha binding atual, cria novo, sincroniza `tenants.plan_id`, emite `PlanoAlteradoPeloSuperAdmin`. Stripe proration via Cashier DEFERRED — apenas Log::info por enquanto
+  - `activeVersionFor(Plan)` + `activeBindingFor(Tenant)` helpers
+- [X] T121 [P] [US-12.2] Criar 3 eventos em `app/Domain/SuperAdmin/Events/`: `PlanoCriado`, `PlanoEditado`, `PlanoAlteradoPeloSuperAdmin` — todos `Auditable` (sem `ContainsNoClinicalData` — não são consumidos pela IA)
+- [X] T122 [US-12.2] Estender `app/Filament/Resources/PlanResource.php` (já existente) com 3 form fields (daily_campaign_limit, api_rate_limit_per_minute, webhook_max_endpoints) + 3 table columns toggleable + integração com PlanVersioningService no `EditPlan::handleRecordUpdate()` (cria nova versão automaticamente em cada edit, Q12.2.2)
+- [X] T123 [US-12.2] Criar `tests/Feature/SuperAdmin/PlanVersioningTest.php` cobrindo AC-12.2.2 — 4 testes: primeira versão emite PlanoCriado; segunda chamada cria v2, fecha v1, emite PlanoEditado; tenant na v1 permanece (snapshot versioning); activeVersionFor retorna v atual
+- [X] T124 [P] [US-12.2] Criar `tests/Feature/SuperAdmin/PlanChangeProrationTest.php` cobrindo AC-12.2.3 — 2 testes: migração fecha binding + cria novo + emite PlanoAlteradoPeloSuperAdmin + sincroniza tenants.plan_id; reason <10 chars throws InvalidArgumentException
+- [X] T125 [P] [US-12.2] Criar `tests/Feature/SuperAdmin/PlanInactiveHidesFromPublicOnboardingTest.php` cobrindo AC-12.2.4 — 3 testes: scope `where is_active=true` filtra inativos; plano inativo acessível via query direta; tenant em plano antigo (is_active=false) mantém binding
 
 ### 4.3 Lote B — US-12.3 Métricas Globais + Anomalias (P2)
 

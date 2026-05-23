@@ -103,6 +103,7 @@ class ExecutiveDashboardController extends Controller
 
         $end = $endRaw !== '' ? Carbon::parse($endRaw) : Carbon::now();
         $start = $startRaw !== '' ? Carbon::parse($startRaw) : match ($preset) {
+            '24h' => $end->copy()->subHours(24),
             '7d' => $end->copy()->subDays(7),
             '90d' => $end->copy()->subDays(90),
             default => $end->copy()->subDays(30),

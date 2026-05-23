@@ -435,8 +435,9 @@ livewire(ListUsers::class)
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `010-dashboard-home` — [plan](specs/010-dashboard-home/plan.md) — Dashboard Home (US-1.5), conteúdo real da página inicial `/panel` que substitui o placeholder do spec 009. Spec aprovada (43 FRs, 29 acceptance scenarios, 3 clarifications, 12/12 checklist PASS) + plan + research (13 decisões) + data-model + contracts/api-panel-home.md (10 gates G1–G10) + quickstart (6 lotes A–F). **Constitution Check PASS 7/7 sem amendment**. Endpoint único `GET /api/v1/panel/home` consolida 4 seções (KPIs + próximas consultas 6h + alertas heterogêneos + atividade recente 24h). Cache Redis 30s escopado tenant+user+scope. Zero novas migrations. Próximo: `/speckit-tasks`.
-- **Previous features delivered (9)**:
+- **Active feature**: `011-dashboard-executivo` — [plan](specs/011-dashboard-executivo/plan.md) — Dashboard Executivo polish (US-10.1). Spec aprovada (39 FRs, 25 acceptance scenarios, 0 clarifications, 12/12 checklist PASS) + plan + research (13 decisões — R2 sparkline real DEFERRED) + data-model + contracts/frontend-integration.md (8 gates G1–G8) + quickstart (6 lotes A–F). **Constitution Check PASS 7/7 sem amendment**. Backend Fase 8 95% reusado — apenas 1 linha de mudança (`'24h' => subHours(24)` no `ExecutiveDashboardController::resolvePeriod()`). Frontend reescreve `ExecutiveDashboardPage.vue` + 7 novos componentes + 2 composables + persistência localStorage da window. Sparkline real fica DEFERRED (backend não retorna time-series; `Sparkline.vue` stub criado preparado para futuro). Próximo: `/speckit-tasks`.
+- **Previous features delivered (10)**:
+  - `010-dashboard-home` — Dashboard Home (US-1.5) entregue (commit `e688b60`). 51/73 tasks done (22 deferred — testes formais Feature/Unit/Playwright). 6/7 Constitution Re-Check PASS + 1 PARTIAL (Princípio IV — testes formais deferred). Endpoint único `GET /api/v1/panel/home` consolida 4 seções; cache Redis 30s escopado tenant+user+scope; 5 métricas Prometheus em `PanelHomeMetrics`; 4 collectors com degradação graceful; Humanizer com allow-list LGPD (14 event types). Frontend: 7 componentes panel-home + 3 composables (usePanelHome, usePanelHomeScope, useAutoRefresh). Build verde 1.38s, Pint passed.
   - `009-app-shell` — App Shell entregue. 2 commits (`c306e57` fixes env + `8ca018a` Spec Kit). 41/50 tasks done (9 deferred — testes E2E Playwright + audit a11y manual + suite full validação). 6/7 Constitution Re-Check PASS + 1 PARTIAL (Princípio IV — E2E Playwright deferred). Build verde, Pint OK, Vite 200 OK em todos os módulos novos. 16 arquivos novos frontend (composables, components/layout, navigation config) + router refactor para nested children + i18n duplo (pt-BR.json + lang/pt_BR/layout.php) + CLAUDE.md Key Patterns App Shell.
   - `008-finalizacao-mvp` — Fase 8 (Épicos 9-13) **ENTREGUE** em 2026-05-22. **5 lotes A-E** + **Phase 8 Polish**, ~280 tasks marcadas. Commits: Lote A `66bce06`/`9c5f29f`/`f7c3211` (Privacidade) → B `628fd86`/`b8b4f38` (Super Admin) → C `cea1ec4`/`e1dcf61`/`959e0a2` (Campanhas) → E `d01d276` (Relatórios) → D-1 `bc47352` (Webhooks) → D-2 `9c5fa9c` (API Pública) → Polish (pendente commit). Highlights:
     - **5 módulos**: Privacidade LGPD (Q24/26/28/29), Super Admin (Gates 5/7), Campanhas (Compliance Gate 1), Integrações Webhooks + API Pública (HMAC SSRF Q17), Relatórios (Q9/11/13).
@@ -907,3 +908,60 @@ When working on the Dashboard Home (`/panel`) features post-Fase 10, remember:
     - **Audit a11y Lighthouse/axe** (T065): manual via Chrome DevTools
     - **E2E Playwright** (T062): jornada US-1+US-2+US-3 deferred
     - **Suite full validation** (T068, T069): `vendor/bin/sail artisan test --compact` 1300+ tests
+
+## Dashboard Executivo (Fase 11) — Key Patterns
+
+When working on Executive Dashboard features post-Fase 11, remember:
+
+1. **Backend Fase 8 95% reusado — apenas 1 linha de mudança**
+   - `ExecutiveDashboardController::resolvePeriod()` recebeu case `'24h' => $end->copy()->subHours(24)`.
+   - Endpoints + Pinia store + ExecutiveDashboardService permanecem intactos. Gate G8 valida que `reportsStore.js` não é modificado pelo spec 011.
+
+2. **`useExecutiveDashboard` é o ÚNICO consumer recomendado do store**
+   - Wrapper sobre `reportsStore` que combina state + window persistente + auto-refresh on window change + abort handling implícito (via store).
+   - Page consome o composable; componentes consomem props.
+   - **NÃO chamar `useReportsStore().loadExecutive()` direto da page** — sempre via composable para garantir window sync.
+
+3. **localStorage `executive_dashboard:window:v1` — chave SEPARADA**
+   - 3 chaves de localStorage hoje: `app-shell:preferences:v1` (spec 009), `panel_home:scope:v1` (spec 010), `executive_dashboard:window:v1` (spec 011).
+   - Schemas independentes deliberadamente (R11 do spec 010 / R4 desta spec) para evitar acoplamento e versionar separadamente.
+   - Validação `sanitize(value)` no composable força default `'7d'` se localStorage trouxer valor fora do enum `{24h, 7d, 30d, 90d}`.
+
+4. **Polaridade invertida explícita em `KpiCardWithSparkline.vue`**
+   - Prop `inversePolarity: boolean` (default false).
+   - Métricas com polaridade invertida (menos é melhor): `no_show_rate`, `response_time_first_p95`. Aumentar é vermelho; diminuir é verde.
+   - Definição no consumer (page) — `inversePolarityMetrics` Set.
+   - Comunicação visual sempre acompanhada de ícone (↑/↓) + texto explícito além da cor (FR-039 a11y).
+
+5. **`Sparkline.vue` stub funcional — preparado para futuro**
+   - Aceita `points: number[]`; renderiza `null` se vazio.
+   - Quando backend implementar `/reports/executive/series?metric=...&window=...`, basta o consumer passar `sparklinePoints` real.
+   - **Backend atual NÃO retorna time-series por métrica** — R2 do research; FR-012/FR-017 DEFERRED.
+
+6. **`PeriodFilter.vue` com `role="tablist"` + keyboard nav**
+   - Setas Left/Right deslocam entre os 4 tabs em loop circular.
+   - Home/End para primeiro/último.
+   - `aria-selected` e `tabindex` reativos.
+
+7. **`StaleDataBanner.vue` — visibilidade condicional**
+   - Aparece SOMENTE quando `lagSeconds > 7200` AND `window !== '24h'` (FR-008 — janela 24h é live data, banner não se aplica).
+   - Timestamp relativo via Luxon (`pt-BR` locale).
+
+8. **`ExportMenu.vue` — PDF ativo, CSV deferred**
+   - Item PDF emite `@export-pdf`; page chama `useExecutiveDashboard.exportPdf()` que delega ao store (Blob download).
+   - Item CSV sempre `aria-disabled="true"` com label "em breve" — placeholder consciente (FR-028).
+   - Spinner via prop `loading` durante export (`exporting` do composable).
+
+9. **Re-uso de patterns de `KpiCardWithTrend.vue` (Fase 8) preservado**
+   - `KpiCardWithSparkline.vue` é VARIANT do existente — não substitui.
+   - Drill-down futuro pode continuar usando `KpiCardWithTrend` em outros contextos.
+
+10. **DEFERRED ao final da Fase 11** (`specs/011-dashboard-executivo/DEFERRED.md`)
+    - **Sparkline real** (FR-012, FR-017): depende de extensão backend retornando time-series por métrica.
+    - **CSV export**: backend endpoint não existe; UI mostra placeholder "em breve".
+    - **Drill-down detalhado** dentro do dashboard: rota dedicada.
+    - **Comparativo arbitrário** entre 2 períodos custom.
+    - **Auto-refresh**: intencionalmente desligado (dashboard analítico).
+    - **Filtros adicionais** por profissional/tipo: escopo OperationalReport.
+    - **E2E Playwright completo** (T018): cenários documentados em quickstart.
+    - **A11y audit Lighthouse** (T019): manual via Chrome DevTools.

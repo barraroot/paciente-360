@@ -1,194 +1,187 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import { useReportsStore } from '@/stores/reportsStore'
-import KpiCardWithTrend from '@/components/Reports/KpiCardWithTrend.vue'
+import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useExecutiveDashboard } from '@/composables/useExecutiveDashboard.js';
+import PeriodFilter from '@/components/Reports/PeriodFilter.vue';
+import ExportMenu from '@/components/Reports/ExportMenu.vue';
+import StaleDataBanner from '@/components/Reports/StaleDataBanner.vue';
+import KpiCardWithSparkline from '@/components/Reports/KpiCardWithSparkline.vue';
+import TopProceduresCard from '@/components/Reports/TopProceduresCard.vue';
+import OccupancyByProfessionalCard from '@/components/Reports/OccupancyByProfessionalCard.vue';
+import DashboardSkeleton from '@/components/Reports/DashboardSkeleton.vue';
 
-/**
- * T258 (Fase 8 — Lote E US-10.1) — Dashboard Executivo.
- *
- * 5 cards principais (Q8) + filtros de período + drill-down + export PDF.
- * Padrão Fase 6: modal a11y + toast local + skeleton + aria-live para erros.
- */
-const store = useReportsStore()
+const { t } = useI18n();
+const {
+    data,
+    loading,
+    error,
+    exporting,
+    window,
+    setWindow,
+    refresh,
+    exportPdf,
+} = useExecutiveDashboard();
 
-const preset = ref('30d')
-const drillModalOpen = ref(false)
-const drillTrigger = ref(null)
-const toast = ref(null)
-
-const periodLabel = computed(() => {
-    return { '7d': '7 dias', '30d': '30 dias', '90d': '90 dias' }[preset.value] ?? '30 dias'
-})
-
-const isStale = computed(() => {
-    const lag = store.executive.data?.aggregation_lag_seconds
-    if (typeof lag !== 'number') return false
-    return lag > 7200 // 2h
-})
+const toast = ref(null);
 
 function showToast(message, type = 'success') {
-    toast.value = { message, type }
-    setTimeout(() => { toast.value = null }, 5000)
+    toast.value = { message, type };
+    setTimeout(() => {
+        toast.value = null;
+    }, 4000);
 }
 
-function formatBRL(cents) {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents ?? 0) / 100)
+const metrics = computed(() => data.value?.metrics ?? {});
+
+function getValue(metricKey) {
+    return metrics.value?.[metricKey]?.value ?? null;
 }
 
-async function reload() {
-    await store.loadExecutive({ preset: preset.value })
-    if (store.executive.error) showToast(store.executive.error, 'error')
+function getDelta(metricKey) {
+    return metrics.value?.[metricKey]?.delta_percent ?? null;
 }
 
-async function drillInto(metric, evt) {
-    drillTrigger.value = evt?.currentTarget ?? null
-    await store.loadDrillDown(metric, { preset: preset.value })
-    if (store.drillDown.error) {
-        showToast(store.drillDown.error, 'error')
-        return
+function getJson(metricKey) {
+    return metrics.value?.[metricKey]?.json ?? null;
+}
+
+// Métricas com polaridade invertida (menos é melhor).
+const inversePolarityMetrics = new Set(['no_show_rate', 'response_time_first_p95']);
+
+const kpiCards = computed(() => [
+    { key: 'leads_by_channel', label: t('executive_dashboard.metrics.leads_by_channel.label'), formatType: 'count' },
+    { key: 'conversion_rate', label: t('executive_dashboard.metrics.conversion_rate.label'), formatType: 'percent' },
+    { key: 'no_show_rate', label: t('executive_dashboard.metrics.no_show_rate.label'), formatType: 'percent' },
+    { key: 'estimated_revenue', label: t('executive_dashboard.metrics.estimated_revenue.label'), formatType: 'currency_brl' },
+    { key: 'response_time_first_p95', label: t('executive_dashboard.metrics.response_time_first_p95.label'), formatType: 'seconds' },
+    { key: 'ai_autonomous_resolution_rate', label: t('executive_dashboard.metrics.ai_autonomous_resolution_rate.label'), formatType: 'percent' },
+]);
+
+const topProcedures = computed(() => getJson('top_procedure_types') ?? []);
+const occupancy = computed(() => getJson('occupancy_by_professional') ?? []);
+const aggregationLag = computed(() => data.value?.aggregation_lag_seconds ?? null);
+
+const hasNoDataAtAll = computed(() => {
+    if (loading.value || error.value) {
+        return false;
     }
-    drillModalOpen.value = true
-}
+    if (! data.value || ! metrics.value) {
+        return true;
+    }
+    const everyMetricNull = kpiCards.value.every((card) => getValue(card.key) === null);
+    return everyMetricNull && topProcedures.value.length === 0 && occupancy.value.length === 0;
+});
 
-async function exportPdf() {
-    const ok = await store.exportPdf({ preset: preset.value })
-    showToast(ok ? 'PDF exportado.' : (store.pdfExport.error ?? 'Falha ao exportar.'), ok ? 'success' : 'error')
+async function handleExportPdf() {
+    const ok = await exportPdf();
+    if (ok) {
+        showToast(t('executive_dashboard.export.success'), 'success');
+    } else {
+        showToast(t('executive_dashboard.export.failed'), 'error');
+    }
 }
-
-function closeDrill() {
-    drillModalOpen.value = false
-    if (drillTrigger.value) drillTrigger.value.focus()
-}
-
-onMounted(() => reload())
 </script>
 
 <template>
-    <section class="dashboard">
-        <header class="dashboard__header">
-            <h1>Dashboard Executivo</h1>
-            <div class="dashboard__filters">
-                <label for="period">Período:</label>
-                <select id="period" v-model="preset" @change="reload">
-                    <option value="7d">7 dias</option>
-                    <option value="30d">30 dias</option>
-                    <option value="90d">90 dias</option>
-                </select>
-                <button
-                    type="button"
-                    class="btn btn--secondary"
-                    :disabled="store.pdfExport.loading"
-                    @click="exportPdf"
-                >
-                    {{ store.pdfExport.loading ? 'Gerando…' : 'Exportar PDF' }}
-                </button>
+    <div class="p-4 sm:p-6 max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-semibold text-foreground">
+                    {{ t('executive_dashboard.page_title') }}
+                </h1>
+                <p class="mt-0.5 text-sm text-foreground-muted">
+                    {{ t('executive_dashboard.page_subtitle') }}
+                </p>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+                <PeriodFilter
+                    :model-value="window"
+                    @update:model-value="setWindow"
+                />
+                <ExportMenu :loading="exporting" @export-pdf="handleExportPdf" />
             </div>
         </header>
 
-        <div
-            v-if="isStale"
-            class="banner banner--warning"
-            role="status"
-            aria-live="polite"
-        >
-            ⚠ Dados agregados estão desatualizados (lag &gt; 2h). Considere recarregar.
-        </div>
-
-        <div class="dashboard__period">Mostrando {{ periodLabel }}</div>
-
-        <div class="dashboard__grid">
-            <KpiCardWithTrend
-                label="Leads"
-                :value="store.executive.data?.leads_by_channel?.value ?? 0"
-                :delta-percent="store.executive.data?.leads_by_channel?.delta_percent ?? null"
-                :loading="store.executive.loading"
-                drillable
-                @drill="(e) => drillInto('leads_by_channel', e)"
-            />
-            <KpiCardWithTrend
-                label="Conversão"
-                :value="store.executive.data?.conversion_rate?.value ?? 0"
-                unit="%"
-                :delta-percent="store.executive.data?.conversion_rate?.delta_percent ?? null"
-                :loading="store.executive.loading"
-                drillable
-                @drill="(e) => drillInto('conversion_rate', e)"
-            />
-            <KpiCardWithTrend
-                label="No-show"
-                :value="store.executive.data?.no_show_rate?.value ?? 0"
-                unit="%"
-                :delta-percent="store.executive.data?.no_show_rate?.delta_percent ?? null"
-                :loading="store.executive.loading"
-                drillable
-                @drill="(e) => drillInto('no_show_rate', e)"
-            />
-            <KpiCardWithTrend
-                label="Faturamento Estimado"
-                :value="formatBRL(store.executive.data?.estimated_revenue?.value)"
-                :delta-percent="store.executive.data?.estimated_revenue?.delta_percent ?? null"
-                :loading="store.executive.loading"
-            />
-            <KpiCardWithTrend
-                label="Resposta P95 (s)"
-                :value="store.executive.data?.response_time_first_p95?.value ?? '—'"
-                :delta-percent="store.executive.data?.response_time_first_p95?.delta_percent ?? null"
-                :loading="store.executive.loading"
-            />
-        </div>
-
-        <!-- Modal drill-down a11y (padrão Fase 6) -->
-        <Teleport to="body">
-            <div
-                v-if="drillModalOpen"
-                class="modal-overlay"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="drill-title"
-                @click.self="closeDrill"
-                @keydown.esc.prevent="closeDrill"
-            >
-                <div class="modal-panel">
-                    <header class="modal-panel__header">
-                        <h2 id="drill-title">Drill-down: {{ store.drillDown.metric }}</h2>
-                        <button type="button" class="btn-icon" aria-label="Fechar" @click="closeDrill">×</button>
-                    </header>
-                    <div class="modal-panel__body">
-                        <pre v-if="store.drillDown.data">{{ JSON.stringify(store.drillDown.data, null, 2) }}</pre>
-                        <p v-else>Carregando…</p>
-                    </div>
-                </div>
-            </div>
-        </Teleport>
-
+        <!-- Toast -->
         <div
             v-if="toast"
-            class="toast"
-            :class="`toast--${toast.type}`"
-            role="alert"
-            aria-live="assertive"
+            role="status"
+            aria-live="polite"
+            class="fixed right-4 top-20 z-50 rounded-lg px-4 py-3 text-sm font-medium shadow-popover"
+            :class="toast.type === 'success'
+                ? 'border border-success-500 bg-success-50 text-success-700'
+                : 'border border-danger-500 bg-danger-50 text-danger-700'"
         >
             {{ toast.message }}
         </div>
-    </section>
-</template>
 
-<style scoped>
-.dashboard { padding: 1.5rem; }
-.dashboard__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-.dashboard__filters { display: flex; align-items: center; gap: 0.75rem; }
-.dashboard__period { color: #64748b; font-size: 0.875rem; margin-bottom: 1rem; }
-.dashboard__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
-.banner { padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-.banner--warning { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
-.btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 500; }
-.btn--secondary { background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
-.modal-panel { background: white; border-radius: 0.75rem; padding: 1.25rem; max-width: 720px; width: 90%; max-height: 80vh; overflow: auto; }
-.modal-panel__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.btn-icon { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; }
-.toast { position: fixed; bottom: 1.5rem; right: 1.5rem; padding: 0.75rem 1rem; border-radius: 0.5rem; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-.toast--success { background: #059669; }
-.toast--error { background: #dc2626; }
-</style>
+        <!-- Stale banner -->
+        <StaleDataBanner :lag-seconds="aggregationLag" :window="window" />
+
+        <!-- Global error banner -->
+        <div
+            v-if="error"
+            role="alert"
+            class="mb-4 flex items-center justify-between gap-3 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-600"
+        >
+            <span>{{ t('executive_dashboard.errors.global') }}</span>
+            <button
+                type="button"
+                class="font-medium underline hover:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 rounded"
+                @click="refresh"
+            >
+                {{ t('executive_dashboard.errors.retry') }}
+            </button>
+        </div>
+
+        <!-- Empty state (tenant novo sem dados) -->
+        <div
+            v-if="hasNoDataAtAll"
+            class="flex flex-col items-center justify-center px-6 py-16 text-center"
+        >
+            <div class="inline-flex w-14 h-14 items-center justify-center rounded-full bg-primary-50 text-primary-700 mb-4">
+                <span class="text-2xl" aria-hidden="true">📊</span>
+            </div>
+            <h2 class="text-xl font-semibold text-foreground mb-2">
+                {{ t('executive_dashboard.empty_state.title') }}
+            </h2>
+            <p class="text-sm text-foreground-muted max-w-md">
+                {{ t('executive_dashboard.empty_state.explanation') }}
+            </p>
+        </div>
+
+        <!-- Loading skeleton (primeira carga) -->
+        <DashboardSkeleton v-else-if="loading && !data" />
+
+        <!-- Conteúdo principal -->
+        <template v-else>
+            <ul role="list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <li v-for="card in kpiCards" :key="card.key">
+                    <KpiCardWithSparkline
+                        :label="card.label"
+                        :value="getValue(card.key)"
+                        :format-type="card.formatType"
+                        :delta-percent="getDelta(card.key)"
+                        :inverse-polarity="inversePolarityMetrics.has(card.key)"
+                        :loading="loading"
+                        :error="error !== null && !data"
+                    />
+                </li>
+            </ul>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <TopProceduresCard
+                    :items="topProcedures"
+                    :loading="loading"
+                    :error="error !== null && !data"
+                />
+                <OccupancyByProfessionalCard
+                    :items="occupancy"
+                    :loading="loading"
+                    :error="error !== null && !data"
+                />
+            </div>
+        </template>
+    </div>
+</template>

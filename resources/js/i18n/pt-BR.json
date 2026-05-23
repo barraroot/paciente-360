@@ -904,5 +904,94 @@
             "heading": "Atividade recente",
             "empty": "Nenhuma atividade nas últimas 24 horas."
         }
+    },
+    "executive_dashboard": {
+        "page_title": "Dashboard Executivo",
+        "page_subtitle": "Visão analítica do desempenho da clínica.",
+        "period_filter": {
+            "label": "Período",
+            "24h": "Últimas 24h",
+            "7d": "7 dias",
+            "30d": "30 dias",
+            "90d": "90 dias"
+        },
+        "metrics": {
+            "leads_by_channel": {
+                "label": "Leads por canal",
+                "unit": ""
+            },
+            "conversion_rate": {
+                "label": "Taxa de conversão",
+                "unit": "%"
+            },
+            "no_show_rate": {
+                "label": "Taxa de no-show",
+                "unit": "%"
+            },
+            "estimated_revenue": {
+                "label": "Receita estimada",
+                "unit": "BRL"
+            },
+            "response_time_first_p95": {
+                "label": "Tempo de resposta (p95)",
+                "unit": "s"
+            },
+            "ai_autonomous_resolution_rate": {
+                "label": "Resolução autônoma IA",
+                "unit": "%"
+            },
+            "top_procedure_types": {
+                "label": "Top procedimentos"
+            },
+            "occupancy_by_professional": {
+                "label": "Ocupação por profissional"
+            }
+        },
+        "sections": {
+            "top_procedures": "Top tipos de procedimento",
+            "occupancy_by_professional": "Ocupação por profissional",
+            "high_load": "Carga alta",
+            "count_label": "{count} consultas",
+            "percentage_label": "{percentage}% do total"
+        },
+        "export": {
+            "title": "Exportar",
+            "pdf": "Exportar PDF",
+            "csv": "Exportar CSV",
+            "csv_disabled": "em breve",
+            "exporting": "Exportando...",
+            "failed": "Falha ao exportar",
+            "success": "Download iniciado."
+        },
+        "stale_banner": {
+            "title": "Dados podem estar desatualizados",
+            "updated_ago": "Última atualização há {relative}."
+        },
+        "empty_state": {
+            "title": "Ainda não temos dados suficientes",
+            "explanation": "Os dados são agregados de hora em hora. Volte em algumas horas para ver o panorama da clínica."
+        },
+        "errors": {
+            "global": "Não foi possível atualizar o dashboard.",
+            "retry": "Tentar novamente",
+            "section": "Não foi possível carregar esta seção."
+        },
+        "aria": {
+            "tablist": "Filtro de período",
+            "card_with_metric": "{label}: {value}, {trend_text}",
+            "sparkline_trend": "Tendência da métrica {label}: {summary}",
+            "occupancy_high": "{name} está com carga alta de {percent}%",
+            "export_menu": "Abrir menu de exportação"
+        },
+        "trend": {
+            "up": "alta",
+            "down": "queda",
+            "flat": "estável",
+            "no_comparison": "sem comparação anterior",
+            "change_vs_previous": "variação de {percent}% vs período anterior"
+        },
+        "kpi": {
+            "no_data": "Sem dados suficientes"
+        }
     }
 }

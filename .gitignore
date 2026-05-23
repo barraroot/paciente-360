@@ -21,6 +21,9 @@
 /storage/*.key
 /storage/app/coverage
 /storage/pail
+/test-results
+/playwright-report
+/blob-report
 /vendor
 _ide_helper.php
 Homestead.json

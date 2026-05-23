@@ -435,14 +435,18 @@ livewire(ListUsers::class)
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `008-finalizacao-mvp` — Fase 8 (Épicos 9-13) **ENTREGUE** em 2026-05-22. **5 lotes A-E** + **Phase 8 Polish**, ~280 tasks marcadas. Commits: Lote A `66bce06`/`9c5f29f`/`f7c3211` (Privacidade) → B `628fd86`/`b8b4f38` (Super Admin) → C `cea1ec4`/`e1dcf61`/`959e0a2` (Campanhas) → E `d01d276` (Relatórios) → D-1 `bc47352` (Webhooks) → D-2 `9c5fa9c` (API Pública) → Polish (pendente commit). Highlights:
-  - **5 módulos**: Privacidade LGPD (Q24/26/28/29), Super Admin (Gates 5/7), Campanhas (Compliance Gate 1), Integrações Webhooks + API Pública (HMAC SSRF Q17), Relatórios (Q9/11/13).
-  - **22 migrations** (1 ALTER enum + 21 CREATE), **41 eventos** (todos `Auditable` + `ContainsNoClinicalData` quando consumidos por IA).
-  - **8 cron schedules**: `privacy:*` (3), `super_admin:*` (3), `campaigns:dispatch-scheduled`, `integrations:purge-expired-dlq`, `reports:aggregate-hourly`.
-  - **~175 tests feature + ~45 unit + 5 E2E Playwright** (campaign-dispatch, right-to-be-forgotten, data-portability, super-admin-impersonate, webhook-delivery).
-  - **Constitution Check PASS 7/7 sem amendment** (v1.4.0 — Gates 1-7 todos ATIVOS).
-  - **DEFERRED**: execução real da suite + scribe:generate + smoke staging + DPO approval (todos documentados em `docs/qa/*` e `docs/lgpd/dpo-approval-fase8.md`).
-- **Previous features delivered (7)**:
+- **Active feature**: `009-app-shell` — [plan](specs/009-app-shell/plan.md) — App Shell do painel autenticado. Spec aprovada (32 FRs, 23 acceptance scenarios, 4 clarifications, 12/12 checklist PASS) e plan completo. **Constitution Check PASS 7/7 sem amendment** — feature 100% frontend (Vue 3), zero backend, consome auth/tenant state já existente. Próximo: `/speckit-tasks`.
+  - 4 lotes sugeridos (A foundations + US-1, B US-2/US-3, C US-4, D US-5/US-6 + Lote E testes E2E)
+  - Artefatos: research.md (13 decisões), data-model.md (localStorage schema escopado tenant+user), contracts/navigation-tree.md (árvore canônica + 7 gates G1–G7), quickstart.md
+  - Out-of-scope claro: dashboard home real (spec 010), Dashboard Executivo polish (spec 011), busca/notificações reais, dark mode, multi-tab sync
+- **Previous features delivered (8)**:
+  - `008-finalizacao-mvp` — Fase 8 (Épicos 9-13) **ENTREGUE** em 2026-05-22. **5 lotes A-E** + **Phase 8 Polish**, ~280 tasks marcadas. Commits: Lote A `66bce06`/`9c5f29f`/`f7c3211` (Privacidade) → B `628fd86`/`b8b4f38` (Super Admin) → C `cea1ec4`/`e1dcf61`/`959e0a2` (Campanhas) → E `d01d276` (Relatórios) → D-1 `bc47352` (Webhooks) → D-2 `9c5fa9c` (API Pública) → Polish (pendente commit). Highlights:
+    - **5 módulos**: Privacidade LGPD (Q24/26/28/29), Super Admin (Gates 5/7), Campanhas (Compliance Gate 1), Integrações Webhooks + API Pública (HMAC SSRF Q17), Relatórios (Q9/11/13).
+    - **22 migrations** (1 ALTER enum + 21 CREATE), **41 eventos** (todos `Auditable` + `ContainsNoClinicalData` quando consumidos por IA).
+    - **8 cron schedules**: `privacy:*` (3), `super_admin:*` (3), `campaigns:dispatch-scheduled`, `integrations:purge-expired-dlq`, `reports:aggregate-hourly`.
+    - **~175 tests feature + ~45 unit + 5 E2E Playwright** (campaign-dispatch, right-to-be-forgotten, data-portability, super-admin-impersonate, webhook-delivery).
+    - **Constitution Check PASS 7/7 sem amendment** (v1.4.0 — Gates 1-7 todos ATIVOS).
+    - **DEFERRED**: execução real da suite + scribe:generate + smoke staging + DPO approval (todos documentados em `docs/qa/*` e `docs/lgpd/dpo-approval-fase8.md`).
   - `007-gestao-receituario` — [spec](specs/007-gestao-receituario/spec.md) — Fase 7 / Épico 8 (Gestão de Receituários) entregue em 2026-05-19. **5 lotes A-E**, **199/199 tasks**, **175/175 prescription tests verdes**, suite full **1342 tests / 1338 passed / 0 failures (1 flaky timing pré-existente)**. Commits: A `66c6c46` → B `8a9890e` → C `7780b27` → D `44d8500` → E (pendente). Highlights:
     - 4 user stories Épico 8: US-8.1 Cadastro (mascaramento controladas 5 perfis), US-8.2 Alerta D-15/D-7/D-1, US-8.3 Renovação IA (contrato pseudonimizado 7 campos), US-8.4 Relatório + CSV
     - 7 entidades + 9 eventos + 7 listeners + 5 cron jobs + ~13 endpoints REST + Filament super-admin
@@ -785,3 +789,62 @@ When working on features across Privacy/SuperAdmin/Campaigns/Integrations/Report
     - **Passport instalação concreta**: gated por `FINALIZATION_OAUTH_ENABLED=true` em produção enterprise.
     - **InboxTask real** (herdado da Fase 7): `EnqueueInboxTaskOnAiRenewal` ainda usa `Log::warning` — aguardando `ConversationService::createForPatient()`.
     - **S3 real delete** (herdado): stub `Log::info` em jobs de purga.
+
+## App Shell (Fase 9) — Key Patterns
+
+When working on `/panel/*` routes post-Fase 9, remember:
+
+1. **Rota pai `/panel` com nested children renderiza `AppShell` uma única vez**
+   - `routes/index.js`: `/panel` tem `component: AppShell` e `children: panelChildren` (38 rotas).
+   - Sidebar/Topbar montam apenas no primeiro acesso ao painel; navegação interna só troca `<router-view>`.
+   - **Não declarar `/panel/*` como rota raiz** — quebra o reuso do chrome e força remount.
+   - `/panel/onboarding` é IRMÃ (não filha) — fullscreen sem chrome por design.
+
+2. **Navegação por permissões: única source of truth em `config/navigation.js`**
+   - Árvore canônica estática (10 grupos + items). Cada entry com `routeName` + `ability` (ou `anyOf`).
+   - `useNavigation()` faz filter em runtime contra `auth.permissions`. Grupos com 0 children visíveis somem inteiros.
+   - **Para adicionar item novo na sidebar**: 1) entry em `navigation.js` com `routeName` + `ability`; 2) i18n key em `pt-BR.json` (`layout.sidebar.*`); 3) `meta.title` na rota filha em `router/index.js`.
+
+3. **Preferências de UI: `localStorage` escopado por `tenant_slug + user_id`**
+   - Chave única: `app-shell:preferences:v1` com JSON aninhado `{ [tenantSlug]: { [userId]: { sidebarMode, expandedGroups } } }`.
+   - **Gate Princípio II**: NUNCA usar chave plana — multi-tenant cross-leak. `useShellPreferences` lê de `auth.tenant.slug + auth.user.id` reativamente.
+   - Fallback robusto: localStorage indisponível ou JSON corrompido → defaults silenciosos. Operações nunca lançam.
+
+4. **Breakpoints reativos via `useBreakpoint`**
+   - 3 refs: `isMobile` (< 768px), `isTablet` (768–1023px), `isDesktop` (≥ 1024px).
+   - Implementação via `useMediaQuery` do `@vueuse/core` (já dep).
+   - AppShell tem watcher `isMobile` que fecha drawer ao cruzar para desktop (FR-022).
+
+5. **Drawer mobile: `<Teleport to="body">` + focus trap próprio + Esc/click-outside**
+   - `MobileDrawer.vue` reusa `Sidebar mode="expanded"` internamente (DRY).
+   - `useShellFocusTrap` — implementação manual ~80 linhas; alternativa para `@vueuse/integrations` que requer 2 deps a mais.
+   - Q1 clarification: drawer fecha **imediatamente** ao clicar item; navegação ocorre em paralelo.
+
+6. **Document.title via `router.afterEach` + fallback estático**
+   - Lê `to.meta.title` (i18n key, string literal, ou função); formata `{tenantName} — {pageTitle}`.
+   - Fallback: `findLabelKeyForRoute(name)` faz lookup estático em `NAVIGATION` (sem usar `useNavigation()` fora de setup context).
+   - Topbar exibe o mesmo título contextual entre tenant name e ícones à direita.
+
+7. **UserMenu: logout fail-safe via `auth.logout() → router.push('auth.login')`**
+   - Em erro de rede, ainda chama `auth.reset()` e redireciona — token Bearer pode estar inválido de qualquer forma (princípio VII).
+   - Dropdown em `<Teleport to="body">` para escapar overflow/transform do parent.
+
+8. **Heroicons SVG inline em componente único `HeroIcon.vue`**
+   - Switch por `name` prop — 15 ícones (~15 KB bundle). Sem dep nova de pacote (research R10).
+   - Adicionar ícone novo = adicionar bloco `v-else-if="name === 'foo'"` no componente.
+
+9. **i18n: `pt-BR.json` (SPA) ≠ `lang/pt_BR/*.php` (backend)**
+   - SPA usa JSON único em `resources/js/i18n/pt-BR.json`.
+   - Bloco `layout.*` adicionado com `sidebar`, `topbar`, `user_menu`, `drawer`, `empty_state`, `panel_home`.
+   - Backend `lang/pt_BR/layout.php` espelha apenas para mensagens de response (não usado pelo Vue I18n).
+
+10. **Empty state quando user não tem nenhuma permission de módulo**
+    - `useNavigation().isEmpty` true → AppShell substitui `<router-view>` por mensagem + botão "Sair".
+    - Sidebar e topbar continuam visíveis com chrome mínimo (tenant name + user menu).
+
+11. **DEFERRED ao final da Fase 9**
+    - **Testes E2E Playwright** (T011/T020/T024/T027/T040): especificados no `quickstart.md § Lote E` — requer Sail + browser headless. Cenários documentados; pendentes de implementação concreta.
+    - **Audit a11y** (T041): roda manualmente via Chrome DevTools Lighthouse; meta SC-007 = 0 violations sérias/críticas.
+    - **Suite full PHP** (T047): rodar `vendor/bin/sail artisan test --compact` para confirmar zero regressão pós router refactor.
+    - **Smoke checklist** (T044): validar 6 maiores rotas (Agenda, Pacientes, Inbox, Receituários, Campanhas, Relatórios Executivo) sem regressão visual.
+    - **`pacientes.show` route precedence**: ordem das rotas dinâmicas (`:id`) vs estáticas (`/novo`, `/mesclagem`, `/funil`, `/importar`) ajustada para evitar shadow — verificar manualmente.

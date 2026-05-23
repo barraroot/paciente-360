@@ -1,16 +1,327 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.js';
+import { NAVIGATION } from '@/config/navigation.js';
+import AppShell from '@/layouts/AppShell.vue';
+import { i18n } from '@/i18n/index.js';
 
-const PanelPlaceholder = {
-    template: `
-        <main class="flex min-h-screen items-center justify-center bg-surface text-foreground">
-            <div class="text-center">
-                <h1 class="text-2xl font-semibold">Paciente 360</h1>
-                <p class="mt-2 text-foreground-muted">Painel em construção.</p>
-            </div>
-        </main>
-    `,
-};
+function findLabelKeyForRoute(name) {
+    for (const entry of NAVIGATION) {
+        if (Array.isArray(entry.children)) {
+            const found = entry.children.find((c) => c.routeName === name);
+            if (found) {
+                return found.labelKey;
+            }
+        } else if (entry.routeName === name) {
+            return entry.labelKey;
+        }
+    }
+    return null;
+}
+
+/**
+ * Rotas do painel autenticado — todas filhas da rota pai `/panel` que renderiza
+ * o AppShell. Paths relativos (sem barra inicial). Cada rota declara
+ * `meta.title` (string) usada pela topbar e por `document.title` (US-6).
+ *
+ * `/panel/onboarding` permanece como IRMÃ (não filha) para ficar fora do shell —
+ * onboarding é tela cheia para reduzir distração durante o setup inicial.
+ */
+const panelChildren = [
+    {
+        path: '',
+        name: 'panel.home',
+        component: () => import('@/pages/PanelHome.vue'),
+        meta: { title: 'layout.sidebar.dashboard' },
+    },
+    {
+        path: 'billing/plans',
+        name: 'billing.plans',
+        component: () => import('@/pages/billing/PlansPage.vue'),
+        meta: { title: 'layout.sidebar.settings.plans' },
+    },
+    {
+        path: 'billing/subscription',
+        name: 'billing.subscription',
+        component: () => import('@/pages/billing/SubscriptionPage.vue'),
+        meta: { title: 'layout.sidebar.settings.subscription' },
+    },
+    {
+        path: 'billing/ai-usage',
+        name: 'billing.ai-usage',
+        component: () => import('@/pages/billing/AiUsagePage.vue'),
+        meta: { title: 'layout.sidebar.settings.ai_usage' },
+    },
+    {
+        path: 'users',
+        name: 'users.list',
+        component: () => import('@/pages/users/UsersListPage.vue'),
+        meta: { title: 'layout.sidebar.settings.users' },
+    },
+    {
+        path: 'users/invite',
+        name: 'users.invite',
+        component: () => import('@/pages/users/InviteUserPage.vue'),
+        meta: { title: 'layout.sidebar.settings.users' },
+    },
+    {
+        path: 'audit-logs',
+        name: 'audit.list',
+        component: () => import('@/pages/audit/AuditLogsPage.vue'),
+        meta: { title: 'layout.sidebar.settings.audit' },
+    },
+    // ─── Agenda ────────────────────────────────────────────────────────────
+    {
+        path: 'agenda',
+        name: 'agenda.index',
+        component: () => import('@/pages/agenda/AgendaPage.vue'),
+        meta: { title: 'layout.sidebar.agenda.calendar', ability: 'agenda.view' },
+    },
+    {
+        path: 'agenda/lista-espera',
+        name: 'agenda.waitlist',
+        component: () => import('@/pages/agenda/WaitlistPage.vue'),
+        meta: { title: 'layout.sidebar.agenda.waitlist', ability: 'agenda.view' },
+    },
+    // ─── Pacientes ─────────────────────────────────────────────────────────
+    {
+        path: 'pacientes',
+        name: 'pacientes.list',
+        component: () => import('@/pages/pacientes/PacientesListPage.vue'),
+        meta: { title: 'layout.sidebar.pacientes.list', ability: 'paciente.view' },
+    },
+    {
+        path: 'pacientes/novo',
+        name: 'pacientes.create',
+        component: () => import('@/pages/pacientes/PacienteFormPage.vue'),
+        meta: { title: 'layout.sidebar.pacientes.list', ability: 'paciente.create' },
+    },
+    {
+        path: 'pacientes/mesclagem',
+        name: 'pacientes.mesclagem',
+        component: () => import('@/pages/pacientes/MesclagemPage.vue'),
+        meta: { title: 'layout.sidebar.pacientes.mesclagem', ability: 'paciente.merge' },
+    },
+    {
+        path: 'pacientes/funil',
+        name: 'pacientes.funil.kanban',
+        component: () => import('@/pages/pacientes/FunilKanbanPage.vue'),
+        meta: { title: 'layout.sidebar.pacientes.funil', ability: 'paciente.view' },
+    },
+    {
+        path: 'pacientes/funil/config',
+        name: 'pacientes.funil.config',
+        component: () => import('@/pages/pacientes/FunilConfigPage.vue'),
+        meta: { title: 'layout.sidebar.pacientes.funil', ability: 'paciente.manage' },
+    },
+    {
+        path: 'pacientes/importar',
+        name: 'pacientes.import.upload',
+        component: () => import('@/pages/pacientes/ImportacaoPage.vue'),
+        meta: { title: 'layout.sidebar.pacientes.import', ability: 'paciente.import' },
+    },
+    {
+        path: 'pacientes/importacao/:id',
+        name: 'pacientes.import.status',
+        component: () => import('@/pages/pacientes/ImportacaoStatusPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { title: 'layout.sidebar.pacientes.import', ability: 'paciente.import' },
+    },
+    {
+        path: 'pacientes/:id',
+        name: 'pacientes.show',
+        component: () => import('@/pages/pacientes/PacienteShowPage.vue'),
+        meta: { title: 'layout.sidebar.pacientes.list', ability: 'paciente.view' },
+    },
+    {
+        path: 'pacientes/:id/editar',
+        name: 'pacientes.edit',
+        component: () => import('@/pages/pacientes/PacienteFormPage.vue'),
+        props: (route) => ({ id: Number(route.params.id) }),
+        meta: { title: 'layout.sidebar.pacientes.list', ability: 'paciente.update' },
+    },
+    // ─── Configurações ─────────────────────────────────────────────────────
+    {
+        path: 'configuracoes/sessoes',
+        name: 'auth.tokens',
+        component: () => import('@/pages/auth/TokensPage.vue'),
+        meta: { title: 'layout.sidebar.settings.sessions' },
+    },
+    // ─── Canais ────────────────────────────────────────────────────────────
+    {
+        path: 'canais',
+        name: 'canais.index',
+        component: () => import('@/pages/Canais/Index.vue'),
+        meta: { title: 'layout.sidebar.inbox.channels', ability: 'inbox.view' },
+    },
+    {
+        path: 'canais/conectar-whatsapp',
+        name: 'canais.conectar_whatsapp',
+        component: () => import('@/pages/Canais/ConectarWhatsApp.vue'),
+        meta: { title: 'layout.sidebar.inbox.channels', ability: 'channel.connect' },
+    },
+    {
+        path: 'canais/conectar-instagram',
+        name: 'canais.conectar_instagram',
+        component: () => import('@/pages/Canais/ConectarInstagram.vue'),
+        meta: { title: 'layout.sidebar.inbox.channels', ability: 'channel.connect' },
+    },
+    {
+        path: 'canais/:id',
+        name: 'canais.show',
+        component: () => import('@/pages/Canais/Detalhe.vue'),
+        props: true,
+        meta: { title: 'layout.sidebar.inbox.channels', ability: 'inbox.view' },
+    },
+    // ─── Receituários ──────────────────────────────────────────────────────
+    {
+        path: 'receituarios',
+        name: 'prescriptions.index',
+        component: () => import('@/pages/prescriptions/PrescriptionsListPage.vue'),
+        meta: { title: 'layout.sidebar.prescriptions', ability: 'prescription.view' },
+    },
+    {
+        path: 'receituarios/novo',
+        name: 'prescriptions.create',
+        component: () => import('@/pages/prescriptions/PrescriptionCreatePage.vue'),
+        meta: { title: 'layout.sidebar.prescriptions', ability: 'prescription.create' },
+    },
+    {
+        path: 'receituarios/relatorio',
+        name: 'prescriptions.report',
+        component: () => import('@/pages/prescriptions/PrescriptionsReportPage.vue'),
+        meta: { title: 'layout.sidebar.prescriptions', ability: 'prescription.view' },
+    },
+    {
+        path: 'receituarios/:id',
+        name: 'prescriptions.show',
+        component: () => import('@/pages/prescriptions/PrescriptionShowPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { title: 'layout.sidebar.prescriptions', ability: 'prescription.view' },
+    },
+    {
+        path: 'receituarios/:id/renovar',
+        name: 'prescriptions.renew',
+        component: () => import('@/pages/prescriptions/PrescriptionRenewPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { title: 'layout.sidebar.prescriptions', ability: 'prescription.create' },
+    },
+    // ─── Inbox ─────────────────────────────────────────────────────────────
+    {
+        path: 'inbox',
+        name: 'inbox.index',
+        component: () => import('@/pages/Inbox/Index.vue'),
+        meta: { title: 'layout.sidebar.inbox.conversations', ability: 'inbox.view' },
+    },
+    {
+        path: 'inbox/conversa/:id',
+        name: 'inbox.conversation',
+        component: () => import('@/pages/Inbox/Index.vue'),
+        props: true,
+        meta: { title: 'layout.sidebar.inbox.conversations', ability: 'inbox.view' },
+    },
+    {
+        path: 'inbox/regras-atribuicao',
+        name: 'inbox.regras_atribuicao',
+        component: () => import('@/pages/Inbox/RegrasAtribuicao.vue'),
+        meta: { title: 'layout.sidebar.inbox.assignment_rules', ability: 'inbox.assign' },
+    },
+    {
+        path: 'inbox/respostas-rapidas',
+        name: 'inbox.respostas_rapidas',
+        component: () => import('@/pages/Inbox/RespostasRapidas.vue'),
+        meta: { title: 'layout.sidebar.inbox.quick_replies', ability: 'inbox.view' },
+    },
+    // ─── Campanhas ─────────────────────────────────────────────────────────
+    {
+        path: 'campanhas',
+        name: 'campaigns.index',
+        component: () => import('@/pages/Campaigns/CampaignsIndexPage.vue'),
+        meta: { title: 'layout.sidebar.campaigns', ability: 'campaign.create' },
+    },
+    {
+        path: 'campanhas/nova',
+        name: 'campaigns.create',
+        component: () => import('@/pages/Campaigns/CampaignCreatePage.vue'),
+        meta: { title: 'layout.sidebar.campaigns', ability: 'campaign.create' },
+    },
+    {
+        path: 'campanhas/:id',
+        name: 'campaigns.show',
+        component: () => import('@/pages/Campaigns/CampaignShowPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { title: 'layout.sidebar.campaigns', ability: 'campaign.create' },
+    },
+    {
+        path: 'campanhas/:id/relatorio',
+        name: 'campaigns.report',
+        component: () => import('@/pages/Campaigns/CampaignReportPage.vue'),
+        props: (route) => ({ id: route.params.id }),
+        meta: { title: 'layout.sidebar.campaigns', ability: 'campaign.create' },
+    },
+    // ─── Privacidade ───────────────────────────────────────────────────────
+    {
+        path: 'privacidade/consentimentos',
+        name: 'privacy.consents',
+        component: () => import('@/pages/Privacy/ConsentsPage.vue'),
+        meta: { title: 'layout.sidebar.privacy.consents', ability: 'privacy.view' },
+    },
+    {
+        path: 'privacidade/esquecimento',
+        name: 'privacy.forgetting',
+        component: () => import('@/pages/Privacy/ForgettingPage.vue'),
+        meta: { title: 'layout.sidebar.privacy.forgetting', ability: 'privacy.view' },
+    },
+    {
+        path: 'privacidade/portabilidade',
+        name: 'privacy.portability',
+        component: () => import('@/pages/Privacy/PortabilityPage.vue'),
+        meta: { title: 'layout.sidebar.privacy.portability', ability: 'privacy.view' },
+    },
+    // ─── Integrações ───────────────────────────────────────────────────────
+    {
+        path: 'integracoes/webhooks',
+        name: 'integrations.webhooks',
+        component: () => import('@/pages/Integrations/WebhooksSettingsPage.vue'),
+        meta: { title: 'layout.sidebar.integrations.webhooks', ability: 'webhook.manage' },
+    },
+    {
+        path: 'integracoes/webhooks/dlq',
+        name: 'integrations.webhooks.dlq',
+        component: () => import('@/pages/Integrations/WebhookDeliveriesPage.vue'),
+        meta: { title: 'layout.sidebar.integrations.dlq', ability: 'webhook.manage' },
+    },
+    {
+        path: 'integracoes/api-tokens',
+        name: 'integrations.api_tokens',
+        component: () => import('@/pages/Integrations/ApiTokensSettingsPage.vue'),
+        meta: { title: 'layout.sidebar.integrations.api_tokens', ability: 'api_token.manage' },
+    },
+    // ─── Relatórios ────────────────────────────────────────────────────────
+    {
+        path: 'relatorios/executivo',
+        name: 'reports.executive',
+        component: () => import('@/pages/Reports/ExecutiveDashboardPage.vue'),
+        meta: { title: 'layout.sidebar.reports.executive', ability: 'report.view' },
+    },
+    {
+        path: 'relatorios/operacional',
+        name: 'reports.operational',
+        component: () => import('@/pages/Reports/OperationalReportPage.vue'),
+        meta: { title: 'layout.sidebar.reports.operational', ability: 'report.view' },
+    },
+    {
+        path: 'relatorios/clinico',
+        name: 'reports.clinical',
+        component: () => import('@/pages/Reports/ClinicalReportPage.vue'),
+        meta: { title: 'layout.sidebar.reports.clinical', ability: 'report.view' },
+    },
+    // Catch-all dentro do shell
+    {
+        path: ':pathMatch(.*)*',
+        name: 'panel.catchAll',
+        component: () => import('@/pages/PanelHome.vue'),
+    },
+];
 
 const routes = [
     {
@@ -43,354 +354,35 @@ const routes = [
         component: () => import('@/pages/tenant-register/RegisterTenantPage.vue'),
         meta: { requiresGuest: true },
     },
-
-    // ─── Painel (requer autenticação) ───────────────────────────────────────────
     {
-        path: '/panel',
-        name: 'panel.home',
-        component: PanelPlaceholder,
-        meta: { requiresAuth: true },
+        path: '/accept-invitation',
+        name: 'users.accept',
+        component: () => import('@/pages/invitations/AcceptInvitationPage.vue'),
+        meta: { requiresGuest: false },
     },
+
+    // ─── Onboarding (FULLSCREEN — fora do shell, decisão deliberada) ───────────
     {
         path: '/panel/onboarding',
         name: 'panel.onboarding',
         component: () => import('@/pages/onboarding/OnboardingWizardPage.vue'),
         meta: { requiresAuth: true },
     },
+
+    // ─── Painel autenticado (envolto por AppShell) ─────────────────────────────
     {
-        path: '/panel/billing/plans',
-        name: 'billing.plans',
-        component: () => import('@/pages/billing/PlansPage.vue'),
+        path: '/panel',
+        component: AppShell,
         meta: { requiresAuth: true },
-    },
-    {
-        path: '/panel/billing/subscription',
-        name: 'billing.subscription',
-        component: () => import('@/pages/billing/SubscriptionPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/panel/billing/ai-usage',
-        name: 'billing.ai-usage',
-        component: () => import('@/pages/billing/AiUsagePage.vue'),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/panel/users',
-        name: 'users.list',
-        component: () => import('@/pages/users/UsersListPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/panel/users/invite',
-        name: 'users.invite',
-        component: () => import('@/pages/users/InviteUserPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/accept-invitation',
-        name: 'users.accept',
-        component: () => import('@/pages/invitations/AcceptInvitationPage.vue'),
-        meta: { requiresGuest: true },
-    },
-    {
-        path: '/panel/audit-logs',
-        name: 'audit.list',
-        component: () => import('@/pages/audit/AuditLogsPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    // ─── Agenda (US-6.3 / US-6.4 / US-6.6) ────────────────────────────────────
-    {
-        path: '/panel/agenda',
-        name: 'agenda.index',
-        component: () => import('@/pages/agenda/AgendaPage.vue'),
-        meta: { requiresAuth: true, title: 'Agenda' },
-    },
-    {
-        path: '/panel/agenda/lista-espera',
-        name: 'agenda.waitlist',
-        component: () => import('@/pages/agenda/WaitlistPage.vue'),
-        meta: { requiresAuth: true, title: 'Lista de Espera' },
+        children: panelChildren,
     },
 
-    // ─── Pacientes ──────────────────────────────────────────────────────────────
-    {
-        path: '/panel/pacientes',
-        name: 'pacientes.list',
-        component: () => import('@/pages/pacientes/PacientesListPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/panel/pacientes/novo',
-        name: 'pacientes.create',
-        component: () => import('@/pages/pacientes/PacienteFormPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/panel/pacientes/mesclagem',
-        name: 'pacientes.mesclagem',
-        component: () => import('@/pages/pacientes/MesclagemPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/panel/pacientes/:id',
-        name: 'pacientes.show',
-        component: () => import('@/pages/pacientes/PacienteShowPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/panel/pacientes/:id/editar',
-        name: 'pacientes.edit',
-        component: () => import('@/pages/pacientes/PacienteFormPage.vue'),
-        props: (route) => ({ id: Number(route.params.id) }),
-        meta: { requiresAuth: true },
-    },
-    // US4 — Funil Kanban
-    {
-        path: '/panel/pacientes/funil',
-        name: 'pacientes.funil.kanban',
-        component: () => import('@/pages/pacientes/FunilKanbanPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/panel/pacientes/funil/config',
-        name: 'pacientes.funil.config',
-        component: () => import('@/pages/pacientes/FunilConfigPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    // US3 — Importação em massa
-    {
-        path: '/panel/pacientes/importar',
-        name: 'pacientes.import.upload',
-        component: () => import('@/pages/pacientes/ImportacaoPage.vue'),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: '/panel/pacientes/importacao/:id',
-        name: 'pacientes.import.status',
-        component: () => import('@/pages/pacientes/ImportacaoStatusPage.vue'),
-        props: (route) => ({ id: route.params.id }),
-        meta: { requiresAuth: true },
-    },
-
-    // ─── Configurações → Sessões (US2 — Bearer token management) ──────────────
-    {
-        path: '/panel/configuracoes/sessoes',
-        name: 'auth.tokens',
-        component: () => import('@/pages/auth/TokensPage.vue'),
-        meta: { requiresAuth: true },
-    },
-
-    // ─── Canais (Omnichannel Inbox — US1) ──────────────────────────────────────
-    {
-        path: '/panel/canais',
-        name: 'canais.index',
-        component: () => import('@/pages/Canais/Index.vue'),
-        meta: { requiresAuth: true, ability: 'inbox.view', title: 'Canais' },
-    },
-    {
-        path: '/panel/canais/conectar-whatsapp',
-        name: 'canais.conectar_whatsapp',
-        component: () => import('@/pages/Canais/ConectarWhatsApp.vue'),
-        meta: {
-            requiresAuth: true,
-            ability: 'channel.connect',
-            title: 'Conectar WhatsApp',
-        },
-    },
-    {
-        path: '/panel/canais/conectar-instagram',
-        name: 'canais.conectar_instagram',
-        component: () => import('@/pages/Canais/ConectarInstagram.vue'),
-        meta: {
-            requiresAuth: true,
-            ability: 'channel.connect',
-            title: 'Conectar Instagram',
-        },
-    },
-    {
-        path: '/panel/canais/:id',
-        name: 'canais.show',
-        component: () => import('@/pages/Canais/Detalhe.vue'),
-        props: true,
-        meta: {
-            requiresAuth: true,
-            ability: 'inbox.view',
-            title: 'Detalhes do canal',
-        },
-    },
-
-    // ─── Receituários (US-8.1 — Fase 7) ───────────────────────────────────────────────
-    {
-        path: '/panel/receituarios',
-        name: 'prescriptions.index',
-        component: () => import('@/pages/prescriptions/PrescriptionsListPage.vue'),
-        meta: { requiresAuth: true, ability: 'prescription.view', title: 'Receituários' },
-    },
-    {
-        path: '/panel/receituarios/novo',
-        name: 'prescriptions.create',
-        component: () => import('@/pages/prescriptions/PrescriptionCreatePage.vue'),
-        meta: { requiresAuth: true, ability: 'prescription.create', title: 'Nova Receita' },
-    },
-    {
-        path: '/panel/receituarios/relatorio',
-        name: 'prescriptions.report',
-        component: () => import('@/pages/prescriptions/PrescriptionsReportPage.vue'),
-        meta: { requiresAuth: true, ability: 'prescription.view', title: 'Relatório de Receitas' },
-    },
-    {
-        path: '/panel/receituarios/:id',
-        name: 'prescriptions.show',
-        component: () => import('@/pages/prescriptions/PrescriptionShowPage.vue'),
-        props: (route) => ({ id: route.params.id }),
-        meta: { requiresAuth: true, ability: 'prescription.view', title: 'Detalhe da Receita' },
-    },
-    {
-        path: '/panel/receituarios/:id/renovar',
-        name: 'prescriptions.renew',
-        component: () => import('@/pages/prescriptions/PrescriptionRenewPage.vue'),
-        props: (route) => ({ id: route.params.id }),
-        meta: { requiresAuth: true, ability: 'prescription.create', title: 'Renovar Receita' },
-    },
-
-    // ─── Inbox Unificada (Omnichannel — US4) ───────────────────────────────────
-    {
-        path: '/panel/inbox',
-        name: 'inbox.index',
-        component: () => import('@/pages/Inbox/Index.vue'),
-        meta: { requiresAuth: true, ability: 'inbox.view', title: 'Inbox' },
-    },
-    {
-        path: '/panel/inbox/conversa/:id',
-        name: 'inbox.conversation',
-        component: () => import('@/pages/Inbox/Index.vue'),
-        props: true,
-        meta: { requiresAuth: true, ability: 'inbox.view', title: 'Conversa' },
-    },
-    // US-4.5 — Regras de atribuição automática
-    {
-        path: '/panel/inbox/regras-atribuicao',
-        name: 'inbox.regras_atribuicao',
-        component: () => import('@/pages/Inbox/RegrasAtribuicao.vue'),
-        meta: {
-            requiresAuth: true,
-            ability: 'inbox.assign',
-            title: 'Regras de Atribuição',
-        },
-    },
-    // US-4.7 — Respostas Rápidas
-    {
-        path: '/panel/inbox/respostas-rapidas',
-        name: 'inbox.respostas_rapidas',
-        component: () => import('@/pages/Inbox/RespostasRapidas.vue'),
-        meta: {
-            requiresAuth: true,
-            ability: 'inbox.view',
-            title: 'Respostas Rápidas',
-        },
-    },
-
-    // ─── Campanhas (Fase 8 — Lote C, Épico 9) ─────────────────────────────────
-    {
-        path: '/panel/campanhas',
-        name: 'campaigns.index',
-        component: () => import('@/pages/Campaigns/CampaignsIndexPage.vue'),
-        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Campanhas' },
-    },
-    {
-        path: '/panel/campanhas/nova',
-        name: 'campaigns.create',
-        component: () => import('@/pages/Campaigns/CampaignCreatePage.vue'),
-        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Nova Campanha' },
-    },
-    {
-        path: '/panel/campanhas/:id',
-        name: 'campaigns.show',
-        component: () => import('@/pages/Campaigns/CampaignShowPage.vue'),
-        props: (route) => ({ id: route.params.id }),
-        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Detalhe da Campanha' },
-    },
-    {
-        path: '/panel/campanhas/:id/relatorio',
-        name: 'campaigns.report',
-        component: () => import('@/pages/Campaigns/CampaignReportPage.vue'),
-        props: (route) => ({ id: route.params.id }),
-        meta: { requiresAuth: true, ability: 'campaign.create', title: 'Relatório da Campanha' },
-    },
-
-    // ─── Privacidade & LGPD (Fase 8 — Lote A, Épico 13) ──────────────────────
-    {
-        path: '/panel/privacidade/consentimentos',
-        name: 'privacy.consents',
-        component: () => import('@/pages/Privacy/ConsentsPage.vue'),
-        meta: { requiresAuth: true, ability: 'privacy.view', title: 'Consentimentos' },
-    },
-    {
-        path: '/panel/privacidade/esquecimento',
-        name: 'privacy.forgetting',
-        component: () => import('@/pages/Privacy/ForgettingPage.vue'),
-        meta: { requiresAuth: true, ability: 'privacy.view', title: 'Direito ao Esquecimento' },
-    },
-    {
-        path: '/panel/privacidade/portabilidade',
-        name: 'privacy.portability',
-        component: () => import('@/pages/Privacy/PortabilityPage.vue'),
-        meta: { requiresAuth: true, ability: 'privacy.view', title: 'Portabilidade de Dados' },
-    },
+    // ─── Pública (LGPD) ────────────────────────────────────────────────────────
     {
         path: '/privacidade/esquecimento/publico',
         name: 'privacy.public_forgetting',
         component: () => import('@/pages/Privacy/PublicForgettingRequestPage.vue'),
         meta: { requiresGuest: false, title: 'Solicitar Esquecimento' },
-        // Rota pública — não exige auth (paciente solicita esquecimento sem login).
-    },
-
-    // ─── Integrações (Fase 8 — Lote D, Épico 11) ──────────────────────────────
-    {
-        path: '/panel/integracoes/webhooks',
-        name: 'integrations.webhooks',
-        component: () => import('@/pages/Integrations/WebhooksSettingsPage.vue'),
-        meta: { requiresAuth: true, ability: 'webhook.manage', title: 'Webhooks' },
-    },
-    {
-        path: '/panel/integracoes/webhooks/dlq',
-        name: 'integrations.webhooks.dlq',
-        component: () => import('@/pages/Integrations/WebhookDeliveriesPage.vue'),
-        meta: { requiresAuth: true, ability: 'webhook.manage', title: 'Dead Letter Queue' },
-    },
-    {
-        path: '/panel/integracoes/api-tokens',
-        name: 'integrations.api_tokens',
-        component: () => import('@/pages/Integrations/ApiTokensSettingsPage.vue'),
-        meta: { requiresAuth: true, ability: 'api_token.manage', title: 'Tokens API' },
-    },
-
-    // ─── Relatórios (Fase 8 — Lote E, Épico 10) ───────────────────────────────
-    {
-        path: '/panel/relatorios/executivo',
-        name: 'reports.executive',
-        component: () => import('@/pages/Reports/ExecutiveDashboardPage.vue'),
-        meta: { requiresAuth: true, ability: 'report.view', title: 'Dashboard Executivo' },
-    },
-    {
-        path: '/panel/relatorios/operacional',
-        name: 'reports.operational',
-        component: () => import('@/pages/Reports/OperationalReportPage.vue'),
-        meta: { requiresAuth: true, ability: 'report.view', title: 'Relatório Operacional' },
-    },
-    {
-        path: '/panel/relatorios/clinico',
-        name: 'reports.clinical',
-        component: () => import('@/pages/Reports/ClinicalReportPage.vue'),
-        meta: { requiresAuth: true, ability: 'report.view', title: 'Relatório Clínico' },
-    },
-
-    {
-        path: '/panel/:pathMatch(.*)*',
-        name: 'panel.catchAll',
-        component: PanelPlaceholder,
-        meta: { requiresAuth: true },
     },
 ];
 
@@ -425,8 +417,6 @@ router.beforeEach(async (to) => {
     }
 
     // Auto-redirect para onboarding quando tenant ainda não concluiu o setup.
-    // Só aplica em /panel (exato) para não criar loops — /panel/onboarding e
-    // demais sub-rotas do painel ficam isentas.
     if (
         to.name === 'panel.home' &&
         auth.isAuthenticated &&
@@ -434,6 +424,53 @@ router.beforeEach(async (to) => {
     ) {
         return { name: 'panel.onboarding' };
     }
+});
+
+/**
+ * Atualiza `document.title` com `{tenantName} — {pageTitle}` baseado em
+ * `to.meta.title` (i18n key ou string literal) — cumpre US-6 / FR-011.
+ */
+router.afterEach((to) => {
+    if (typeof document === 'undefined') {
+        return;
+    }
+    const auth = useAuthStore();
+    const tenantName = auth.tenant?.name ?? 'Paciente360';
+    let pageTitle = '';
+
+    const metaTitle = to.meta?.title;
+    if (typeof metaTitle === 'function') {
+        try {
+            pageTitle = metaTitle(to) ?? '';
+        } catch {
+            pageTitle = '';
+        }
+    } else if (typeof metaTitle === 'string') {
+        // Pode ser uma chave i18n (ex.: 'layout.sidebar.agenda.calendar')
+        // ou uma string literal.
+        if (metaTitle.includes('.')) {
+            try {
+                const translated = i18n.global.t(metaTitle);
+                pageTitle = translated === metaTitle ? metaTitle : translated;
+            } catch {
+                pageTitle = metaTitle;
+            }
+        } else {
+            pageTitle = metaTitle;
+        }
+    } else {
+        // Fallback: lookup pela árvore de navegação (static, sem Vue setup context).
+        const key = findLabelKeyForRoute(to.name);
+        if (key) {
+            try {
+                pageTitle = i18n.global.t(key);
+            } catch {
+                pageTitle = '';
+            }
+        }
+    }
+
+    document.title = pageTitle ? `${tenantName} — ${pageTitle}` : tenantName;
 });
 
 export default router;

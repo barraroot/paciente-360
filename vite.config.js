@@ -25,6 +25,21 @@ export default defineConfig({
         },
     },
     server: {
+        host: '0.0.0.0',
+        port: 5173,
+        strictPort: true,
+        cors: {
+            origin: [
+                /^https?:\/\/([a-z0-9-]+\.)*lvh\.me(:\d+)?$/,
+                /^https?:\/\/localhost(:\d+)?$/,
+                /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
+            ],
+            credentials: true,
+        },
+        hmr: {
+            host: 'localhost',
+            protocol: 'ws',
+        },
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },

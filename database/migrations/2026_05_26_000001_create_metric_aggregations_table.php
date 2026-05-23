@@ -45,11 +45,11 @@ return new class extends Migration
             $table->string('period', 10);
             $table->timestampTz('period_start');
 
-            $table->json('dimensions')->nullable();
+            $table->jsonb('dimensions')->nullable();
             // {channel, professional_id, etc.}
 
             $table->decimal('value_numeric', 20, 4)->nullable();
-            $table->json('value_json')->nullable();
+            $table->jsonb('value_json')->nullable();
 
             $table->timestampTz('computed_at');
 

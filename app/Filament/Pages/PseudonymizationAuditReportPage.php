@@ -11,6 +11,8 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Database\Eloquent\Collection;
+use UnitEnum;
 
 /**
  * **T076 (Fase 8 — Lote A US-13.3)** — Painel de auditoria de pseudonimização.
@@ -30,14 +32,14 @@ class PseudonymizationAuditReportPage extends Page
 
     protected static ?string $title = 'Auditoria de Pseudonimização (Q29)';
 
-    protected static ?string $navigationGroup = 'Privacidade & LGPD';
+    protected static string|UnitEnum|null $navigationGroup = 'Privacidade & LGPD';
 
     protected string $view = 'filament.pages.pseudonymization-audit-report';
 
     protected static ?string $slug = 'pseudonymization-audit';
 
     /**
-     * @return list<\Filament\Actions\Action>
+     * @return list<Action>
      */
     protected function getHeaderActions(): array
     {
@@ -64,7 +66,7 @@ class PseudonymizationAuditReportPage extends Page
     }
 
     /**
-     * @return array{audits: \Illuminate\Database\Eloquent\Collection<int, PseudonymizationAudit>, latest_static: PseudonymizationAudit|null, latest_replay: PseudonymizationAudit|null}
+     * @return array{audits: Collection<int, PseudonymizationAudit>, latest_static: PseudonymizationAudit|null, latest_replay: PseudonymizationAudit|null}
      */
     public function getViewData(): array
     {

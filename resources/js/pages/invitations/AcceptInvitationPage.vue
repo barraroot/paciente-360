@@ -44,7 +44,6 @@ async function onSubmit() {
     loading.value = true;
 
     try {
-        await api.getCsrfCookie();
         const response = await api.post('/users/invitations/accept', {
             token: token.value,
             name: form.name,

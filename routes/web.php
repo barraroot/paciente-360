@@ -32,7 +32,13 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'app');
 
 // US-1.1 — cadastro público de tenant (tela renderizada pela SPA).
+// Aliases: ambos resolvem para a mesma rota Vue (/register-clinic).
 Route::view('/cadastro', 'app');
+Route::view('/register-clinic', 'app');
+Route::view('/login', 'app');
+Route::view('/forgot-password', 'app');
+Route::view('/reset-password/{token}', 'app');
+Route::view('/accept-invitation', 'app');
 
 // SPA autenticada. /panel sem sufixo + catch-all para HTML5 mode.
 Route::view('/panel', 'app');

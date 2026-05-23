@@ -3,9 +3,11 @@ import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '@/lib/api.js';
+import { useAuthStore } from '@/stores/auth.js';
 
 const { t } = useI18n();
 const router = useRouter();
+const auth = useAuthStore();
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -72,9 +74,11 @@ async function fetchState() {
         state.value = data.data;
 
         if (state.value.completed) {
-            setTimeout(() => {
-                router.push('/panel');
-            }, 2000);
+            try {
+                await auth.fetchMe();
+            } catch {
+                // best-effort refresh
+            }
         }
     } catch {
         globalError.value = t('common.error_generic');
@@ -92,6 +96,15 @@ async function completeStep(key, payload) {
         state.value = data.data;
         activeStep.value = null;
         showToast(t('tenant.onboarding.step_completed'));
+
+        if (state.value.completed) {
+            try {
+                await auth.fetchMe();
+            } catch {
+                // ignore — refresh apenas best-effort; usuário ainda pode clicar
+                // "Ir para o painel" e o guard recarrega via fetchMe se necessário.
+            }
+        }
     } catch (err) {
         const status = err.response?.status;
         const body = err.response?.data;

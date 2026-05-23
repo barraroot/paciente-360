@@ -140,7 +140,10 @@ final class OnboardingService
                 'payload' => $payload,
             ];
 
-            $fresh->onboarding_state = ['steps' => $persistedSteps];
+            $fresh->onboarding_state = [
+                'steps' => $persistedSteps,
+                'completed' => $this->computeCompleted($persistedSteps),
+            ];
             $fresh->save();
 
             Event::dispatch(new OnboardingStepCompleted($fresh, $stepKey));
@@ -190,12 +193,37 @@ final class OnboardingService
                 'skipped_at' => now()->toIso8601String(),
             ];
 
-            $fresh->onboarding_state = ['steps' => $persistedSteps];
+            $fresh->onboarding_state = [
+                'steps' => $persistedSteps,
+                'completed' => $this->computeCompleted($persistedSteps),
+            ];
             $fresh->save();
 
             Event::dispatch(new OnboardingStepSkipped($fresh, $stepKey));
 
             return $this->getState($fresh);
         });
+    }
+
+    /**
+     * Verifica se todos os steps `required` estão `completed`.
+     *
+     * @param array<string, array{status: string}> $persistedSteps
+     */
+    private function computeCompleted(array $persistedSteps): bool
+    {
+        foreach (self::STEPS as $key => $definition) {
+            if (! $definition['required']) {
+                continue;
+            }
+
+            $status = $persistedSteps[$key]['status'] ?? $definition['status'];
+
+            if ($status !== 'completed') {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

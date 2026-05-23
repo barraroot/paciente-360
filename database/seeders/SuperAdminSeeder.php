@@ -26,8 +26,8 @@ class SuperAdminSeeder extends Seeder
     {
         $isProduction = app()->environment('production');
 
-        $email = $this->resolveEnv('SUPER_ADMIN_EMAIL', $isProduction, 'super@admin.local');
-        $password = $this->resolveEnv('SUPER_ADMIN_PASSWORD', $isProduction, 'change-me-now-1234');
+        $email = $this->resolveEnv('SUPER_ADMIN_EMAIL', $isProduction, 'admin@flowsys.com.br');
+        $password = $this->resolveEnv('SUPER_ADMIN_PASSWORD', $isProduction, 'password');
 
         // Garante team id "global" (NULL) durante a criação do usuário —
         // Spatie usa o team id corrente ao gravar a pivot row em

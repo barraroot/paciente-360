@@ -123,7 +123,6 @@ async function onSubmit() {
     }
 
     try {
-        await api.getCsrfCookie();
         const { data } = await api.post('/tenants/register', payload);
 
         success.value = true;

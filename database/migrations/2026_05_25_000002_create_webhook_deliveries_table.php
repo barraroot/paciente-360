@@ -50,7 +50,9 @@ return new class extends Migration
             $table->index('next_attempt_at');
         });
 
+        DB::statement('ALTER TABLE webhook_deliveries ALTER COLUMN status DROP DEFAULT');
         DB::statement('ALTER TABLE webhook_deliveries ALTER COLUMN status TYPE webhook_delivery_status_enum USING status::webhook_delivery_status_enum');
+        DB::statement("ALTER TABLE webhook_deliveries ALTER COLUMN status SET DEFAULT 'pending'::webhook_delivery_status_enum");
     }
 
     public function down(): void

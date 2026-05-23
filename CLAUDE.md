@@ -435,11 +435,9 @@ livewire(ListUsers::class)
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `009-app-shell` — [plan](specs/009-app-shell/plan.md) — App Shell do painel autenticado. Spec aprovada (32 FRs, 23 acceptance scenarios, 4 clarifications, 12/12 checklist PASS) e plan completo. **Constitution Check PASS 7/7 sem amendment** — feature 100% frontend (Vue 3), zero backend, consome auth/tenant state já existente. Próximo: `/speckit-tasks`.
-  - 4 lotes sugeridos (A foundations + US-1, B US-2/US-3, C US-4, D US-5/US-6 + Lote E testes E2E)
-  - Artefatos: research.md (13 decisões), data-model.md (localStorage schema escopado tenant+user), contracts/navigation-tree.md (árvore canônica + 7 gates G1–G7), quickstart.md
-  - Out-of-scope claro: dashboard home real (spec 010), Dashboard Executivo polish (spec 011), busca/notificações reais, dark mode, multi-tab sync
-- **Previous features delivered (8)**:
+- **Active feature**: `010-dashboard-home` — [plan](specs/010-dashboard-home/plan.md) — Dashboard Home (US-1.5), conteúdo real da página inicial `/panel` que substitui o placeholder do spec 009. Spec aprovada (43 FRs, 29 acceptance scenarios, 3 clarifications, 12/12 checklist PASS) + plan + research (13 decisões) + data-model + contracts/api-panel-home.md (10 gates G1–G10) + quickstart (6 lotes A–F). **Constitution Check PASS 7/7 sem amendment**. Endpoint único `GET /api/v1/panel/home` consolida 4 seções (KPIs + próximas consultas 6h + alertas heterogêneos + atividade recente 24h). Cache Redis 30s escopado tenant+user+scope. Zero novas migrations. Próximo: `/speckit-tasks`.
+- **Previous features delivered (9)**:
+  - `009-app-shell` — App Shell entregue. 2 commits (`c306e57` fixes env + `8ca018a` Spec Kit). 41/50 tasks done (9 deferred — testes E2E Playwright + audit a11y manual + suite full validação). 6/7 Constitution Re-Check PASS + 1 PARTIAL (Princípio IV — E2E Playwright deferred). Build verde, Pint OK, Vite 200 OK em todos os módulos novos. 16 arquivos novos frontend (composables, components/layout, navigation config) + router refactor para nested children + i18n duplo (pt-BR.json + lang/pt_BR/layout.php) + CLAUDE.md Key Patterns App Shell.
   - `008-finalizacao-mvp` — Fase 8 (Épicos 9-13) **ENTREGUE** em 2026-05-22. **5 lotes A-E** + **Phase 8 Polish**, ~280 tasks marcadas. Commits: Lote A `66bce06`/`9c5f29f`/`f7c3211` (Privacidade) → B `628fd86`/`b8b4f38` (Super Admin) → C `cea1ec4`/`e1dcf61`/`959e0a2` (Campanhas) → E `d01d276` (Relatórios) → D-1 `bc47352` (Webhooks) → D-2 `9c5fa9c` (API Pública) → Polish (pendente commit). Highlights:
     - **5 módulos**: Privacidade LGPD (Q24/26/28/29), Super Admin (Gates 5/7), Campanhas (Compliance Gate 1), Integrações Webhooks + API Pública (HMAC SSRF Q17), Relatórios (Q9/11/13).
     - **22 migrations** (1 ALTER enum + 21 CREATE), **41 eventos** (todos `Auditable` + `ContainsNoClinicalData` quando consumidos por IA).
@@ -848,3 +846,64 @@ When working on `/panel/*` routes post-Fase 9, remember:
     - **Suite full PHP** (T047): rodar `vendor/bin/sail artisan test --compact` para confirmar zero regressão pós router refactor.
     - **Smoke checklist** (T044): validar 6 maiores rotas (Agenda, Pacientes, Inbox, Receituários, Campanhas, Relatórios Executivo) sem regressão visual.
     - **`pacientes.show` route precedence**: ordem das rotas dinâmicas (`:id`) vs estáticas (`/novo`, `/mesclagem`, `/funil`, `/importar`) ajustada para evitar shadow — verificar manualmente.
+
+## Dashboard Home (Fase 10) — Key Patterns
+
+When working on the Dashboard Home (`/panel`) features post-Fase 10, remember:
+
+1. **Endpoint único consolidado em `GET /api/v1/panel/home?scope=user|clinic`**
+   - Retorna 4 seções (kpis + upcoming_appointments + attention_items + recent_activity) em UMA response — atende SC-008 (1 request por carga).
+   - Cache Redis 30s escopado por `panel_home:{tenant_id}:{user_id}:{scope}` (R2/R4).
+   - **NÃO criar endpoints separados por seção** — viola scope-of-1 e fragmenta cache.
+
+2. **4 collectors com degradação graceful em `PanelHomeService::safeRun()`**
+   - `KpiCollector`, `UpcomingAppointmentsCollector`, `AttentionItemsCollector`, `RecentActivityCollector`.
+   - Falha em 1 collector → `section = null + error=true`, demais seções permanecem normais (R13). Sentry tag `panel_home.section_failed=<section>` + métrica `panel_home_section_failures_total`.
+   - **Nunca lançar 500 por falha parcial** — usuário perde valor de todas as outras seções.
+
+3. **`PanelHomePolicy` é o ÚNICO ponto de auth dentro do dashboard**
+   - `canSeeClinicScope`: força `scope_applied='user'` se user não tem `admin-clinica` (Q1 da clarification — sem 403, downgrade silencioso).
+   - `canSeeWebhookDlqAlerts`: filtra alertas `webhook_dlq` da lista.
+   - `canSeeConfirmationAlerts`: filtra alertas `confirmation_pending`.
+   - **Defesa em profundidade**: gates dentro do payload (não no middleware) para retornar 200 com lista filtrada.
+
+4. **Q1 — "Minha visão" para admin+medico escopa como profissional**
+   - `scope_applied='user'` SEMPRE filtra por `professional_id = Professional.where(user_id=current).pluck('id')` em appointments e pacientes; por `professional_id = current.user_id` em prescriptions (modelo divergente — Prescription.professional_id → User direto).
+   - Toggle continua disponível para alternar para "clinic".
+
+5. **Q3 — Alerta `paciente_funil_stale` filtra por `funilColuna.is_terminal=false`**
+   - Implementação simplificou Q3: usa o flag `is_terminal` da `FunilColuna` (model) ao invés de hardcoded slugs.
+   - Estágios terminais (`agendado`, `concluído`, `perdido`) ficam fora automaticamente.
+   - Config `panel.funil_alert_stages` mantida para uso futuro como restrição adicional opcional.
+
+6. **`AttentionItemDto` heterogêneo com `severityRank()` para sort determinístico**
+   - 5 tipos: `conversation_escalated`, `prescription_expiring`, `paciente_funil_stale`, `confirmation_pending`, `webhook_dlq`.
+   - Severity ranking: `danger=3 > warn=2 > info=1`. Ordenação: severity DESC → occurredAt DESC.
+   - Sort no PHP (Collection::sortBy com 2 callbacks) — não em DB porque a coleção é heterogênea.
+
+7. **Humanizer da timeline com allow-list de event types (LGPD)**
+   - `App\Support\AuditLog\Humanizer::humanize($event): { description, link }`.
+   - Allow-list em `config/panel.recent_activity_allowlist` — 14 event types curados.
+   - **Nunca incluir CPF/email/telefone/conteúdo clínico nas descrições** — gate G6 obrigatório.
+   - `paciente.viewed` (visualização de prontuário) NÃO entra na allow-list por design.
+
+8. **Frontend: `usePanelHome` é a única source of truth da página**
+   - Encapsula: fetch, loading, error, scope (via `usePanelHomeScope`), refresh manual e auto-refresh.
+   - Cancela request anterior via `AbortController` quando scope muda mid-flight (evita dados misturados).
+   - Reconcilia scope local quando backend faz downgrade (`data.scope_applied !== local scope` → `setScope(applied)`).
+
+9. **`useAutoRefresh` com Page Visibility API + trigger no return-to-focus**
+   - `setInterval` rodando só quando `visibilityState='visible'`.
+   - Pausa automática em background (SC-009: 0 requests com aba oculta).
+   - Retorno ao foco após mais de `intervalMs/2` em background → refresh imediato.
+
+10. **localStorage `panel_home:scope:v1` separado do `app-shell:preferences:v1`**
+    - Aninhado por `tenant_slug → user_id`. Princípio II: chave escopada.
+    - **NÃO compartilhar chave com app-shell** — schemas independentes evita acoplamento.
+    - Default: `'user'`. Fallback se localStorage indisponível: memória volátil.
+
+11. **DEFERRED ao final da Fase 10** (documentado em `specs/010-dashboard-home/DEFERRED.md`)
+    - **11 arquivos de teste** (T013–T017, T023–T025, T030–T033, T039–T041) — gates G1–G10 codificados no contract mas Feature/Unit tests não criados nesta sessão; cenários documentados em quickstart.md
+    - **Audit a11y Lighthouse/axe** (T065): manual via Chrome DevTools
+    - **E2E Playwright** (T062): jornada US-1+US-2+US-3 deferred
+    - **Suite full validation** (T068, T069): `vendor/bin/sail artisan test --compact` 1300+ tests

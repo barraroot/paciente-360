@@ -43,6 +43,7 @@ use App\Http\Controllers\Api\V1\Pacientes\PacienteTagsController;
 use App\Http\Controllers\Api\V1\Pacientes\PatchStatusController;
 use App\Http\Controllers\Api\V1\Pacientes\TagsController;
 use App\Http\Controllers\Api\V1\Pacientes\TimelineController;
+use App\Http\Controllers\Api\V1\Panel\PanelHomeController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionAlertConfigController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionContextForAiController;
 use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionController;
@@ -148,6 +149,12 @@ Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->group(function (): 
         ->name('onboarding.complete');
     Route::post('/onboarding/steps/{stepKey}/skip', [OnboardingController::class, 'skip'])
         ->name('onboarding.skip');
+});
+
+// US-1.5 (Spec 010) — Dashboard Home consolidado.
+Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->group(function (): void {
+    Route::get('/panel/home', PanelHomeController::class)
+        ->name('panel.home');
 });
 
 // US-1.3 — Billing: planos públicos (sem auth) e checkout/assinatura autenticados.

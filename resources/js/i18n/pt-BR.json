@@ -844,5 +844,65 @@
             "subtitle": "Use o menu lateral para começar.",
             "shortcuts_heading": "Atalhos rápidos"
         }
+    },
+    "panel_home": {
+        "greeting": "Bem-vindo de volta, {name}.",
+        "subtitle": "Aqui está o que precisa da sua atenção agora.",
+        "refresh": "Atualizar",
+        "refreshing": "Atualizando...",
+        "scope": {
+            "label": "Visão",
+            "user": "Minha visão",
+            "clinic": "Visão da clínica"
+        },
+        "errors": {
+            "global": "Não foi possível atualizar. Tentar novamente.",
+            "retry": "Tentar novamente",
+            "section": "Não foi possível carregar esta seção. Recarregue para tentar novamente."
+        },
+        "kpis": {
+            "appointments_today": {
+                "label": "Consultas hoje",
+                "sub_info_split": "{confirmed} confirmadas, {pending} pendentes",
+                "sub_info_empty": "Sem consultas hoje",
+                "aria": "Consultas hoje, {total} total, {confirmed} confirmadas"
+            },
+            "conversations_pending": {
+                "label": "Conversas pendentes",
+                "sub_info_split": "{unassigned} sem atribuir",
+                "sub_info_empty": "Inbox em dia",
+                "aria": "Conversas pendentes, {total} total, {unassigned} sem atribuir"
+            },
+            "leads_new_7d": {
+                "label": "Leads novos (7d)",
+                "sub_info": "Últimos 7 dias",
+                "sub_info_empty": "Sem leads novos",
+                "aria": "Leads novos nos últimos 7 dias, {total} total"
+            },
+            "prescriptions_expiring_30d": {
+                "label": "Receitas vencendo (30d)",
+                "sub_info": "Próximos 30 dias",
+                "sub_info_empty": "Nenhuma receita vencendo",
+                "aria": "Receitas vencendo nos próximos 30 dias, {total} total"
+            }
+        },
+        "upcoming": {
+            "heading": "Próximas consultas (6h)",
+            "empty": "Sem consultas nas próximas 6 horas.",
+            "see_all": "Ver agenda completa",
+            "status_confirmed": "Confirmada",
+            "status_scheduled": "Pendente"
+        },
+        "attention": {
+            "heading": "Alertas de atenção",
+            "empty": "Tudo em dia",
+            "severity_danger": "Urgente",
+            "severity_warn": "Atenção",
+            "severity_info": "Informativo"
+        },
+        "activity": {
+            "heading": "Atividade recente",
+            "empty": "Nenhuma atividade nas últimas 24 horas."
+        }
     }
 }

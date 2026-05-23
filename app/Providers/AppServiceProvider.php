@@ -65,6 +65,8 @@ use App\Support\Metrics\AuthMetrics;
 use App\Support\Metrics\AuthMetricsContract;
 use App\Support\Metrics\MessagingMetrics;
 use App\Support\Metrics\MessagingMetricsContract;
+use App\Support\Metrics\PanelHomeMetrics;
+use App\Support\Metrics\PanelHomeMetricsContract;
 use App\Support\Metrics\PrescriptionMetrics;
 use App\Support\Metrics\PrescriptionMetricsContract;
 use Illuminate\Auth\Events\Authenticated;
@@ -133,6 +135,12 @@ class AppServiceProvider extends ServiceProvider
         // Fase 7 — PrescriptionMetrics: 4 métricas Prometheus do domínio de receituários.
         // Segue a mesma estratégia graceful dos domínios anteriores.
         $this->app->singleton(PrescriptionMetricsContract::class, PrescriptionMetrics::class);
+
+        // Spec 010 (Fase 10) — PanelHomeMetrics: 5 métricas Prometheus do Dashboard Home.
+        $this->app->singleton(
+            PanelHomeMetricsContract::class,
+            PanelHomeMetrics::class,
+        );
 
         // T034 — Fase 4: BearerAuthContract → TokenIssuerService (singleton).
         // Injeta em LoginController, LogoutAllController e qualquer consumer que

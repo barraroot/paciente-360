@@ -436,51 +436,18 @@ For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
 - **Active feature**: `012-professionals-management` — [plan](specs/012-professionals-management/plan.md) — Gestão de Profissionais + Unlock Onboarding Step 2 (US-1.2.2). Spec aprovada (37 FRs, 31 acceptance scenarios, 3 clarifications, 12/12 checklist PASS) + plan + research (13 decisões) + data-model + contracts/api-professionals.md (9 gates G1–G9) + quickstart (7 lotes A–G). **Constitution Check PASS 7/7 sem amendment**. Destrava onboarding step 2 (`first_professional`) que ficava locked + cria CRUD interno de Professional pelo painel. Backend: 1 migration (ALTER `professionals` + UNIQUE composto parcial), 1 nova permission `professional.manage`, 4 eventos auditáveis (3 novos + 1 reuso Fase 5), 8 endpoints REST, listener que ativa Professional pendente ao aceite de Invitation. Onboarding `unlockStep` com triggers: step 1→2 unlock; step 2→4 unlock; step 2 skip não unlocka step 4. Próximo: `/speckit-tasks`.
-- **Previous features delivered (11)**:
-  - `011-dashboard-executivo` — Dashboard Executivo polish (US-10.1) entregue na branch `011-dashboard-executivo` e mergeada em main em 2026-05-23 (commit `2f7b03c`). 23/27 tasks done (4 deferred — E2E Playwright, audit a11y, suite full, smoke browser). 6/7 Constitution Re-Check PASS + 1 PARTIAL. Backend 95% reusado da Fase 8 (1 linha — preset 24h). Frontend: 8 components + 2 composables. Sparkline real DEFERRED (backend não retorna time-series; `Sparkline.vue` stub preparado).
-  - `010-dashboard-home` — Dashboard Home (US-1.5) entregue (commit `e688b60`). 51/73 tasks done (22 deferred — testes formais Feature/Unit/Playwright). 6/7 Constitution Re-Check PASS + 1 PARTIAL (Princípio IV — testes formais deferred). Endpoint único `GET /api/v1/panel/home` consolida 4 seções; cache Redis 30s escopado tenant+user+scope; 5 métricas Prometheus em `PanelHomeMetrics`; 4 collectors com degradação graceful; Humanizer com allow-list LGPD (14 event types). Frontend: 7 componentes panel-home + 3 composables (usePanelHome, usePanelHomeScope, useAutoRefresh). Build verde 1.38s, Pint passed.
-  - `009-app-shell` — App Shell entregue. 2 commits (`c306e57` fixes env + `8ca018a` Spec Kit). 41/50 tasks done (9 deferred — testes E2E Playwright + audit a11y manual + suite full validação). 6/7 Constitution Re-Check PASS + 1 PARTIAL (Princípio IV — E2E Playwright deferred). Build verde, Pint OK, Vite 200 OK em todos os módulos novos. 16 arquivos novos frontend (composables, components/layout, navigation config) + router refactor para nested children + i18n duplo (pt-BR.json + lang/pt_BR/layout.php) + CLAUDE.md Key Patterns App Shell.
-  - `008-finalizacao-mvp` — Fase 8 (Épicos 9-13) **ENTREGUE** em 2026-05-22. **5 lotes A-E** + **Phase 8 Polish**, ~280 tasks marcadas. Commits: Lote A `66bce06`/`9c5f29f`/`f7c3211` (Privacidade) → B `628fd86`/`b8b4f38` (Super Admin) → C `cea1ec4`/`e1dcf61`/`959e0a2` (Campanhas) → E `d01d276` (Relatórios) → D-1 `bc47352` (Webhooks) → D-2 `9c5fa9c` (API Pública) → Polish (pendente commit). Highlights:
-    - **5 módulos**: Privacidade LGPD (Q24/26/28/29), Super Admin (Gates 5/7), Campanhas (Compliance Gate 1), Integrações Webhooks + API Pública (HMAC SSRF Q17), Relatórios (Q9/11/13).
-    - **22 migrations** (1 ALTER enum + 21 CREATE), **41 eventos** (todos `Auditable` + `ContainsNoClinicalData` quando consumidos por IA).
-    - **8 cron schedules**: `privacy:*` (3), `super_admin:*` (3), `campaigns:dispatch-scheduled`, `integrations:purge-expired-dlq`, `reports:aggregate-hourly`.
-    - **~175 tests feature + ~45 unit + 5 E2E Playwright** (campaign-dispatch, right-to-be-forgotten, data-portability, super-admin-impersonate, webhook-delivery).
-    - **Constitution Check PASS 7/7 sem amendment** (v1.4.0 — Gates 1-7 todos ATIVOS).
-    - **DEFERRED**: execução real da suite + scribe:generate + smoke staging + DPO approval (todos documentados em `docs/qa/*` e `docs/lgpd/dpo-approval-fase8.md`).
-  - `007-gestao-receituario` — [spec](specs/007-gestao-receituario/spec.md) — Fase 7 / Épico 8 (Gestão de Receituários) entregue em 2026-05-19. **5 lotes A-E**, **199/199 tasks**, **175/175 prescription tests verdes**, suite full **1342 tests / 1338 passed / 0 failures (1 flaky timing pré-existente)**. Commits: A `66c6c46` → B `8a9890e` → C `7780b27` → D `44d8500` → E (pendente). Highlights:
-    - 4 user stories Épico 8: US-8.1 Cadastro (mascaramento controladas 5 perfis), US-8.2 Alerta D-15/D-7/D-1, US-8.3 Renovação IA (contrato pseudonimizado 7 campos), US-8.4 Relatório + CSV
-    - 7 entidades + 9 eventos + 7 listeners + 5 cron jobs + ~13 endpoints REST + Filament super-admin
-    - **6 Gates constitucionais** verdes: ControlledPrescriptionAccessTest (Q8), ControlledPrescriptionRegulatoryTest (Portaria 344/98), PrescriptionAlertIdempotencyTest (Redis NX + DB UNIQUE), PrescriptionEventPayloadLgpdTest (reflection allowlist 7 props), CrossTenantPrescriptionTest (404 não 403), PrescriptionAlertChannelTest (template HSM)
-    - DEFERRED: InboxTask real (Inbox Fase 3 sem `createForPatient`); MessageDispatchService::send() real (mesma dep); S3 real delete em PurgeOldPdfVersions; Sentry tracing/alerting (config externa); Grafana dashboard; smoke staging E2E
-    - Constitution Check PASS 7/7 **sem amendment** (v1.4.0)
-  - `006-agenda-ux-polish` — [spec](specs/006-agenda-ux-polish/spec.md) — Polimento UX da Agenda (Fase 6 UX) entregue em 2026-05-15, mergeada em `main` em 2026-05-17. **25/25 tasks**, 4 lotes A-D. Highlights:
-  - `006-agenda-ux-polish` — [spec](specs/006-agenda-ux-polish/spec.md) — Polimento UX da Agenda (Fase 6 UX) entregue em 2026-05-15, mergeada em `main` em 2026-05-17. **25/25 tasks**, 4 lotes A-D. Highlights:
-    - Lote A: AppointmentTypesPage UX (modal a11y, color picker mobile, moeda pt-BR via `Intl.NumberFormat`)
-    - Lote B: ScheduleConfigPage UX (skeleton, copiar dia, atalho Ctrl+S, accordion mobile)
-    - Lote C: CalendarSyncPage UX (estados rich, watch channel `aria-live`, Outlook placeholder)
-    - Lote D: AttendanceMarkButton refactor (popover inline substitui `prompt()`/`confirm()` nativos)
-    - Padrões reutilizáveis consolidados em parágrafo 11 de "Agendamento (Fase 5) — Key Patterns": modal a11y (`Teleport` + focus trap + Esc), toast local, popover inline, formatação pt-BR
-    - Pré-requisitos entregues na branch 005: AgendaPage + WaitlistPage refinement
-    - Suite full: 1167 tests / 1164 passed / 0 failures (zero regressão vs Fase 5)
-  - `005-agendamento-consultas` — [spec](specs/005-agendamento-consultas/spec.md) — Fase 5 entregue em 2026-05-14, mergeada em `main` em 2026-05-16 (PR #1). 8 lotes (A-H), **185/185 tasks**, **37 tests verdes**. Commits: A `a7087eb` → H pendente. Highlights:
-    - 7 user stories Épico 6 (agenda, tipos, drag-and-drop, confirmação automática, reagendamento via chat, lista de espera FIFO sequencial K=1, sync Google Calendar)
-    - 14 entidades + 16 eventos de domínio + 6 cron jobs + ~30 endpoints REST + 1 webhook
-    - Gates críticos: PARTIAL UNIQUE em appointments (SC-008/FR-011a) + sub-calendário Google tenant-scoped (clarify nº 15) + payload Google sem PII (FR-038/038a)
-    - Outlook DEFERRED → Fase 6 (modelo `provider` enum preparado — clarify nº 11)
-    - Constitution Check PASS nos 7 princípios **sem amendment** (v1.4.0 cobriu todos os gates)
-    - Stubs Google API em `GoogleCalendarApiClient` — implementação real fica para integração de produção (smoke E2E QA staging)
-    - Bug arquitetural descoberto e corrigido (Lote F): Laravel 11+ Event Discovery duplica listeners se registrado manualmente em AppServiceProvider
-  - `004-token-auth-migration` — [spec](specs/004-token-auth-migration/spec.md) — Cookie→Bearer migration entregue em 2026-05-13. 8 lotes (D-K), suite full **1130 tests / 1127 passed / 0 failures**. Commits: D `40af4ec` → K `1db8e96`. Highlights:
-    - 6 endpoints Bearer (`/auth/login`, `/auth/me`, `/auth/logout[-all]`, `/auth/tokens[/{id}]`) + Reverb broadcast Bearer
-    - SPA Vue migrada para Bearer + X-Tenant-Slug em `axios` + Echo authorizer
-    - CSP estrita configurável (`config/csp.php`) + CORS env-driven (`CORS_ALLOWED_ORIGINS`)
-    - **Bug arquitetural corrigido** (Lote F): `User::guardName()` pina Spatie no guard `web` — sem o pin, `Auth::shouldUse('sanctum')` quebraria silenciosamente `$user->can()` em produção sob Bearer
-    - 4 métricas Prometheus em `AuthMetrics` + Sentry tags `auth.token_id` / `auth.token_name`
-    - Comando `auth:tokens-purge-expired` schedulado diário 03:00 BRT (retention 90d)
-    - Constitution amendment v1.4.0 aplicado em `2791c54` (Princípio VII — Bearer formato adicional)
-  - `003-omnichannel-inbox` — [spec](specs/003-omnichannel-inbox/spec.md) — 290/290 tasks, 352 tests Fase 3, 47/47 ACs, 7/7 user stories. Mergeado em `main` 2026-05-12.
-  - `002-crm-pacientes` — [plan](specs/002-crm-pacientes/plan.md) — 650 testes verdes
-  - `001-fundacao-multitenant` — [plan](specs/001-fundacao-multitenant/plan.md) — 467 testes verdes
+- **Previous features delivered (11)** — sumário enxuto; detalhe técnico de cada fase vive nos blocos "Key Patterns" abaixo e em `specs/<feature>/`:
+  - `011-dashboard-executivo` — Dashboard Executivo (US-10.1), merge main 2026-05-23. Backend Fase 8 reusado (1 linha). Sparkline/CSV DEFERRED.
+  - `010-dashboard-home` — Dashboard Home (US-1.5). Endpoint único `GET /api/v1/panel/home` (4 seções, cache Redis 30s, collectors graceful).
+  - `009-app-shell` — App Shell `/panel` (sidebar/topbar/drawer, navegação por permissões, router nested children).
+  - `008-finalizacao-mvp` — Fase 8: Privacidade LGPD + Super Admin + Campanhas + Webhooks/API Pública (HMAC/SSRF) + Relatórios. 22 migrations, 41 eventos, 8 cron.
+  - `007-gestao-receituario` — Receituários (Épico 8): cadastro/mascaramento controladas, alertas D-15/7/1, renovação IA, relatório. 6 gates constitucionais.
+  - `006-agenda-ux-polish` — Polimento UX da Agenda (modal a11y, popover inline, formatação pt-BR).
+  - `005-agendamento-consultas` — Agenda completa (Épico 6): tipos, drag-and-drop, confirmação automática, lista de espera FIFO, sync Google Calendar. Outlook DEFERRED.
+  - `004-token-auth-migration` — Cookie→Bearer Sanctum. CSP/CORS env-driven. Constitution amendment v1.4.0.
+  - `003-omnichannel-inbox` — Inbox omnichannel (Fase 3). 7/7 user stories.
+  - `002-crm-pacientes` — CRM Pacientes (Fase 2).
+  - `001-fundacao-multitenant` — Fundação multi-tenant (Fase 1).
 - **Constitution**: [.specify/memory/constitution.md](.specify/memory/constitution.md) (**v1.4.0** — amendment aplicado em 2026-05-12 para feature 004)
 <!-- SPECKIT END -->
 
@@ -1020,9 +987,16 @@ When working on Professional features post-Fase 12, remember:
     - Skip de `first_professional` NÃO unlocka `schedule_setup` (faz sentido — sem profissional, não há agenda para configurar).
     - Steps 3 (`channel_connection`) e 5 (`ai_knowledge_base`) permanecem locked até specs futuras.
 
-11. **DEFERRED ao final da Fase 12**
-    - 9 Feature tests + 1 Unit (G1–G9) codificados na spec mas não escritos nesta sessão
-    - Audit a11y Lighthouse manual
+11. **Confirmações destrutivas/sensíveis via modal a11y — NUNCA `window.confirm()`**
+    - `DeactivateConfirmModal.vue` (desativação — FR-015/FR-032) e `EmailAlreadyUserModal.vue` (Q2 confirmação de email já-é-user — FR-005a) substituíram os `window.confirm()` que existiam em `ProfessionalsListPage.vue` e `ProfessionalFormModal.vue`.
+    - Padrão: `role="alertdialog"` + `aria-modal` + `aria-labelledby`/`aria-describedby` + `useShellFocusTrap(modalEl, openRef)` + Esc/overlay fecham + foco retorna ao trigger. Mesmo padrão do `ProfessionalFormModal`.
+    - `EmailAlreadyUserModal` fica aninhado dentro do `ProfessionalFormModal` (z-[60] > z-50) mas Teleporta para body; os dois focus-traps NÃO brigam porque o trap do form vira no-op quando o `document.activeElement` não está na sua lista de focáveis.
+    - Reforça a regra global da Fase 6: proibido `confirm()`/`prompt()`/`alert()` nativos em componente novo.
+
+12. **DEFERRED ao final da Fase 12** (commit `d2a3d99` fechou os gaps de teste + UX)
+    - ~~9 Feature tests + 1 Unit (G1–G9)~~ **FEITO**: 7 arquivos escritos nesta sessão (os 4 que já existiam + CRUD/Deactivation/EmailAlreadyUser/Especialidades/OnboardingUnlock/unit). Suíte full 1577/1572/0 failures.
+    - ~~Onboarding wizard step 2 UI inline~~ **FEITO**: `ProfessionalFormModal` embarcado no `OnboardingWizardPage` (step `first_professional`).
+    - Audit a11y Lighthouse/axe na página + modais (manual)
     - Smoke browser real nas 3 personas
-    - Onboarding wizard step 2 UI inline (page standalone funciona; integração no wizard fica para iteração)
     - Backfill onboarding (`onboarding:backfill-unlocks` command) para tenants existentes
+    - Constitution Re-Check formal + `.specify/feature.json` → DELIVERED

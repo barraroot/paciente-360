@@ -6,6 +6,7 @@ namespace Tests\Feature\Integrations;
 
 use App\Support\Url\UrlGuard;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -16,9 +17,7 @@ use Tests\TestCase;
  */
 class WebhookUrlSsrfGuardTest extends TestCase
 {
-    /**
-     * @dataProvider unsafeUrls
-     */
+    #[DataProvider('unsafeUrls')]
     public function test_rejects_unsafe_urls(string $url, string $reason): void
     {
         $this->expectException(InvalidArgumentException::class);

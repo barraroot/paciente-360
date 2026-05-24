@@ -30,7 +30,9 @@ use Illuminate\Support\Facades\Event;
  * **Atomicidade**: revogação é transação: cria linha state='revoked' E atualiza
  * a linha granted anterior. Ambas devem ter sucesso ou nenhuma.
  */
-final class ConsentService
+// NB: não-final para permitir doubling (createMock) em testes de integração
+// que dependem de ConsentService injetado (ex: WebhookDispatcher).
+class ConsentService
 {
     /**
      * Registra um novo consentimento (state=granted).

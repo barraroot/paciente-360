@@ -5,6 +5,7 @@ import { useProfessionalsStore } from '@/stores/professionalsStore.js';
 import { useShellFocusTrap } from '@/composables/useFocusTrap.js';
 import HeroIcon from '@/components/layout/icons/HeroIcon.vue';
 import CouncilTypeSelect from './CouncilTypeSelect.vue';
+import EmailAlreadyUserModal from './EmailAlreadyUserModal.vue';
 
 const props = defineProps({
     open: { type: Boolean, default: false },
@@ -36,6 +37,7 @@ const form = reactive({
 
 const errors = ref({});
 const saving = ref(false);
+const emailAlreadyUser = ref(null); // { id, name } quando 409 Q2 exige confirmação
 const isEdit = computed(() => props.professional !== null);
 
 watch(() => props.professional, (p) => {
@@ -63,6 +65,7 @@ watch(() => props.professional, (p) => {
         });
     }
     errors.value = {};
+    emailAlreadyUser.value = null;
 }, { immediate: true });
 
 function close() {
@@ -113,21 +116,25 @@ async function submit() {
         if (status === 422 && body?.errors) {
             errors.value = body.errors;
         } else if (status === 409 && body?.code === 'email_already_user_requires_confirmation') {
-            // Q2 — re-submeter com confirmação após confirm modal
-            const ok = window.confirm(
-                t('professionals.modal.email_already_user_body', { name: body.existing_user?.name ?? '?' }),
-            );
-            if (ok) {
-                form.confirmed_existing_user = true;
-                await submit();
-                return;
-            }
+            // Q2 / FR-005a — abre modal de confirmação explícita (a11y).
+            emailAlreadyUser.value = body.existing_user ?? { id: null, name: '?' };
         } else {
             errors.value = { _global: [body?.message ?? t('professionals.errors.save_failed')] };
         }
     } finally {
         saving.value = false;
     }
+}
+
+async function confirmEmailLink() {
+    form.confirmed_existing_user = true;
+    emailAlreadyUser.value = null;
+    await submit();
+}
+
+function cancelEmailLink() {
+    emailAlreadyUser.value = null;
+    form.confirmed_existing_user = false;
 }
 </script>
 
@@ -281,6 +288,15 @@ async function submit() {
                     </footer>
                 </form>
             </div>
+
+            <!-- Q2 / FR-005a — confirmação explícita de email já-é-user -->
+            <EmailAlreadyUserModal
+                :open="emailAlreadyUser !== null"
+                :existing-user="emailAlreadyUser"
+                :loading="saving"
+                @confirm="confirmEmailLink"
+                @cancel="cancelEmailLink"
+            />
         </div>
     </Teleport>
 </template>

@@ -81,4 +81,41 @@ final class ProfessionalsPermissionGateTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_medico_cannot_access_check_email_endpoint(): void
+    {
+        [$tenant] = $this->tenantAndUserForRole('gate-medico-check', 'medico');
+
+        $response = $this->withHeaders(['X-Tenant-Slug' => $tenant->slug])->postJson(
+            $this->tenantUrl($tenant, '/professionals/check-email'),
+            ['email' => 'alguem@example.com']
+        );
+
+        $response->assertForbidden();
+    }
+
+    public function test_recepcionista_cannot_access_especialidades_autocomplete(): void
+    {
+        [$tenant] = $this->tenantAndUserForRole('gate-recep-auto', 'recepcionista');
+
+        $response = $this->withHeaders(['X-Tenant-Slug' => $tenant->slug])->getJson(
+            $this->tenantUrl($tenant, '/professionals/especialidades')
+        );
+
+        $response->assertForbidden();
+    }
+
+    public function test_medico_cannot_activate_professional(): void
+    {
+        [$tenant] = $this->tenantAndUserForRole('gate-medico-act', 'medico');
+
+        $professional = Professional::factory()->forTenant($tenant)->create(['is_active' => false]);
+        $professional->delete();
+
+        $response = $this->withHeaders(['X-Tenant-Slug' => $tenant->slug])->postJson(
+            $this->tenantUrl($tenant, "/professionals/{$professional->id}/activate")
+        );
+
+        $response->assertForbidden();
+    }
 }

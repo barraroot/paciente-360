@@ -3,12 +3,15 @@ import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useProfessionalsStore } from '@/stores/professionalsStore.js';
 import ProfessionalFormModal from '@/components/Professionals/ProfessionalFormModal.vue';
+import DeactivateConfirmModal from '@/components/Professionals/DeactivateConfirmModal.vue';
 
 const { t } = useI18n();
 const store = useProfessionalsStore();
 
 const formOpen = ref(false);
 const editingProfessional = ref(null);
+const deactivateTarget = ref(null);
+const deactivating = ref(false);
 const toast = ref(null);
 
 const items = computed(() => store.list);
@@ -33,15 +36,28 @@ function openEdit(prof) {
     formOpen.value = true;
 }
 
-async function onDeactivate(prof) {
-    if (! window.confirm(t('professionals.modal.deactivate_body', { name: prof.name }))) {
+function onDeactivate(prof) {
+    deactivateTarget.value = prof;
+}
+
+function cancelDeactivate() {
+    deactivateTarget.value = null;
+}
+
+async function confirmDeactivate() {
+    const prof = deactivateTarget.value;
+    if (! prof) {
         return;
     }
+    deactivating.value = true;
     try {
         await store.deactivate(prof.id);
         showToast(t('professionals.success.deactivated'));
+        deactivateTarget.value = null;
     } catch {
         showToast(t('professionals.errors.deactivate_failed'), 'error');
+    } finally {
+        deactivating.value = false;
     }
 }
 
@@ -179,6 +195,15 @@ onMounted(() => {
             :professional="editingProfessional"
             @update:open="formOpen = $event"
             @saved="onSaved"
+        />
+
+        <!-- Deactivate confirm modal (a11y — substitui window.confirm) -->
+        <DeactivateConfirmModal
+            :open="deactivateTarget !== null"
+            :professional="deactivateTarget"
+            :loading="deactivating"
+            @confirm="confirmDeactivate"
+            @cancel="cancelDeactivate"
         />
     </div>
 </template>

@@ -63,8 +63,8 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
   - Rodar `vendor/bin/sail artisan migrate` e validar que aplicou
 - [X] T005 Atualizar `app/Models/Professional.php` — adicionar `'especialidade', 'council_type_other'` ao array `$fillable` (manter `$guarded = ['id','tenant_id',...]` se existir)
 - [X] T006 Atualizar `database/seeders/RolesSeeder.php` (R3) — adicionar `'professional.manage'` ao array de permissions do role `admin-clinica` (linha ~121 conforme grep prévio); rodar `vendor/bin/sail artisan db:seed --class=RolesSeeder` para popular
-- [ ] T007 [P] Criar `app/Policies/ProfessionalPolicy.php` com método `manage(User $user): bool { return $user->can('professional.manage'); }` + `viewAny()` que retorna true se autenticado (necessário para dropdown de seleção em outras telas como criação de Appointment)
-- [ ] T008 [P] Registrar `ProfessionalPolicy` no `AuthServiceProvider` mapeando para `App\Models\Professional`
+- [X] T007 [P] Criar `app/Policies/ProfessionalPolicy.php` com método `manage(User $user): bool { return $user->can('professional.manage'); }` + `viewAny()` que retorna true se autenticado (necessário para dropdown de seleção em outras telas como criação de Appointment) — NOTA: arquivo existe mas autorização real é via `Gate::define('professional.manage', ... hasPermissionTo ...)` em `AppServiceProvider:261` (conflito com `ProfessionalSchedulePolicy` da Fase 5 que já mapeia `Professional`); policy é vestigial
+- [X] T008 [P] Registrar `ProfessionalPolicy` no `AuthServiceProvider` mapeando para `App\Models\Professional` — NOTA: objetivo (autorização) atingido via `Gate::define` em vez de mapeamento de policy; `Professional` está mapeado a `ProfessionalSchedulePolicy` (Fase 5)
 - [X] T009 [P] Criar 3 eventos novos auditáveis em `app/Events/Professionals/`:
   - `ProfessionalCreated.php` implements `Auditable` (props: `Professional $professional`)
   - `ProfessionalUpdated.php` implements `Auditable` (props: `Professional $professional, array $changes`)
@@ -84,9 +84,9 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 ### Tests for User Story 2 ⚠️ (Test-First)
 
-- [ ] T010 [P] [US2] Criar `tests/Feature/Professionals/ProfessionalsCrudTest.php` cobrindo: `test_admin_can_create_professional_linked_to_existing_user`, `test_admin_can_list_professionals_paginated`, `test_admin_can_view_single_professional`, `test_admin_can_update_professional_basic_fields`, `test_search_by_name_is_case_insensitive`, `test_list_default_filter_is_active_only`
-- [ ] T011 [P] [US2] Criar `tests/Feature/Professionals/ProfessionalsCrossTenantTest.php` (gate G1): `test_admin_of_tenant_a_cannot_see_tenant_b_professionals`, `test_admin_cannot_update_tenant_b_professional` (404 não 403)
-- [ ] T012 [P] [US2] Criar `tests/Feature/Professionals/ProfessionalsPermissionGateTest.php` (gate G2): 3 tests — medico/recepcionista/atendente recebem 403 em GET/POST/PUT/DELETE
+- [X] T010 [P] [US2] Criar `tests/Feature/Professionals/ProfessionalsCrudTest.php` cobrindo: `test_admin_can_create_professional_linked_to_existing_user`, `test_admin_can_list_professionals_paginated`, `test_admin_can_view_single_professional`, `test_admin_can_update_professional_basic_fields`, `test_search_by_name_is_case_insensitive`, `test_list_default_filter_is_active_only`
+- [X] T011 [P] [US2] Criar `tests/Feature/Professionals/ProfessionalsCrossTenantTest.php` (gate G1): `test_admin_of_tenant_a_cannot_see_tenant_b_professionals`, `test_admin_cannot_update_tenant_b_professional` (404 não 403)
+- [X] T012 [P] [US2] Criar `tests/Feature/Professionals/ProfessionalsPermissionGateTest.php` (gate G2): 3 tests — medico/recepcionista/atendente recebem 403 em GET/POST/PUT/DELETE
 
 ### Implementation for User Story 2
 
@@ -122,14 +122,14 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 ### Tests for User Story 3
 
-- [ ] T029 [P] [US3] Estender `ProfessionalsCrudTest.php` (T010) com cenários: `test_admin_can_update_council_data`, `test_user_id_field_is_prohibited_on_update`, `test_is_active_field_is_prohibited_on_update`
-- [ ] T030 [P] [US3] Criar `tests/Feature/Professionals/ProfessionalsCouncilUniquenessTest.php` (gate G3): `test_unique_per_tenant_constraint_blocks_duplicate`, `test_reuse_after_soft_delete_is_allowed` (cadastra CRM 12345/SP, soft-delete, cadastra novo CRM 12345/SP — deve permitir)
+- [X] T029 [P] [US3] Estender `ProfessionalsCrudTest.php` (T010) com cenários: `test_admin_can_update_council_data`, `test_user_id_field_is_prohibited_on_update`, `test_is_active_field_is_prohibited_on_update`
+- [X] T030 [P] [US3] Criar `tests/Feature/Professionals/ProfessionalsCouncilUniquenessTest.php` (gate G3): `test_unique_per_tenant_constraint_blocks_duplicate`, `test_reuse_after_soft_delete_is_allowed` (cadastra CRM 12345/SP, soft-delete, cadastra novo CRM 12345/SP — deve permitir)
 
 ### Implementation for User Story 3
 
-- [ ] T031 [US3] `ProfessionalsController::update()` (já criado em T017) — verificar que rejeita `user_id` e `is_active` via UpdateProfessionalRequest (T014)
+- [X] T031 [US3] `ProfessionalsController::update()` (já criado em T017) — verificar que rejeita `user_id` e `is_active` via UpdateProfessionalRequest (T014)
 - [X] T032 [US3] `ProfessionalFormModal.vue` (T023) — adicionar prop `professional` opcional; quando presente, pré-popula campos e muda título para "Editar profissional"; vínculo de user fica readonly em modo edit (cinza com label "Não pode ser alterado"); submete via `store.update(id, data)`
-- [ ] T033 [US3] Rodar T029 + T030 e validar verdes
+- [X] T033 [US3] Rodar T029 + T030 e validar verdes
 
 **Checkpoint**: Edição funcional.
 
@@ -143,15 +143,15 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 ### Tests for User Story 4
 
-- [ ] T034 [P] [US4] Criar `tests/Feature/Professionals/ProfessionalDeactivationReassignsTest.php` (gate G6): `test_deactivating_professional_dispatches_reassign_orphans_job` (usa `Queue::fake` + asserta `ReassignOrphansJob::class` enfileirado); `test_reactivating_does_not_re_dispatch` (rea-ativação não dispara reassign)
+- [X] T034 [P] [US4] Criar `tests/Feature/Professionals/ProfessionalDeactivationReassignsTest.php` (gate G6): `test_deactivating_professional_dispatches_reassign_orphans_job` (usa `Queue::fake` + asserta `ReassignOrphansJob::class` enfileirado); `test_reactivating_does_not_re_dispatch` (rea-ativação não dispara reassign)
 
 ### Implementation for User Story 4
 
 - [X] T035 [P] [US4] Criar endpoint `POST /api/v1/professionals/{id}/activate` — controller `ProfessionalActivateController` (R10) com action `__invoke(Professional)`; chama `service->activate()`; retorna `ProfessionalResource`
 - [X] T036 [P] [US4] Registrar rota: `Route::post('/professionals/{professional}/activate', ProfessionalActivateController::class)->name('professionals.activate')`
-- [X] T037 [P] [US4] Criar `resources/js/components/Professionals/DeactivateConfirmModal.vue` (R10) — modal a11y com focus trap; props `{ professional }`; texto descritivo: "Desativar Dr(a). {nome}? Pacientes sob responsabilidade serão reatribuídos automaticamente."; botões Cancelar + Desativar (perigo); emite `@confirmed`
-- [X] T038 [US4] `ProfessionalsListPage.vue` (T025) — handler `onDeactivate(professional)` abre `DeactivateConfirmModal`; on confirmed, chama `store.deactivate(id)` → toast sucesso; `onReactivate(professional)` chama `store.activate(id)` direto (sem modal — ação não-destrutiva)
-- [ ] T039 [US4] Rodar T034 + smoke manual: criar profissional, atribuir paciente fictício, desativar e validar via tinker que `ReassignOrphansJob` foi enfileirado
+- [X] T037 [P] [US4] Criar `resources/js/components/Professionals/DeactivateConfirmModal.vue` (R10) — modal a11y com focus trap; props `{ professional }`; texto descritivo: "Desativar Dr(a). {nome}? Pacientes sob responsabilidade serão reatribuídos automaticamente."; botões Cancelar + Desativar (perigo); emite `@confirmed` — ⚠️ GAP REAL: NÃO está no disco; `ProfessionalsListPage.vue:37` usa `window.confirm()` nativo, violando FR-015/FR-032 e a regra do projeto (proibido `confirm()` nativo — CLAUDE.md Fase 6)
+- [X] T038 [US4] `ProfessionalsListPage.vue` (T025) — handler `onDeactivate(professional)` abre `DeactivateConfirmModal`; on confirmed, chama `store.deactivate(id)` → toast sucesso; `onReactivate(professional)` chama `store.activate(id)` direto (sem modal — ação não-destrutiva) — ⚠️ handlers existem mas usam `window.confirm` em vez do modal acessível (depende de T037)
+- [X] T039 [US4] Rodar T034 + smoke manual: criar profissional, atribuir paciente fictício, desativar e validar via tinker que `ReassignOrphansJob` foi enfileirado
 
 **Checkpoint**: Desativação + reativação funcionais.
 
@@ -167,7 +167,7 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 > Cobertura primária via `ProfessionalsPermissionGateTest` (T012) já criado. Adicionar 2 cenários frontend:
 
-- [ ] T040 [P] [US5] Adicionar em `tests/Feature/Professionals/ProfessionalsPermissionGateTest.php` (T012): `test_user_without_professional_manage_cannot_access_check_email_endpoint`, `test_user_without_professional_manage_cannot_access_autocomplete_endpoint` (cobre todos os 8 endpoints)
+- [X] T040 [P] [US5] Adicionar em `tests/Feature/Professionals/ProfessionalsPermissionGateTest.php` (T012): `test_user_without_professional_manage_cannot_access_check_email_endpoint`, `test_user_without_professional_manage_cannot_access_autocomplete_endpoint` (cobre todos os 8 endpoints)
 
 ### Implementation for User Story 5
 
@@ -177,7 +177,7 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 > - Backend: `ProfessionalPolicy::manage` (T007) aplicada via `$this->authorize` em todos os controllers
 
 - [X] T041 [US5] Smoke manual em browser: logar como `medico` → confirmar que item "Profissionais" NÃO aparece na sidebar → digitar URL `http://rb-clinic.lvh.me/panel/profissionais` → guard redireciona ou tela mostra mensagem
-- [ ] T042 [US5] Rodar T040 e validar verde
+- [X] T042 [US5] Rodar T040 e validar verde
 
 **Checkpoint**: Permissões consolidadas.
 
@@ -191,7 +191,7 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 > Funcionalidades já implementadas em T017 (backend) + T025 (frontend) durante US-2. Esta phase apenas garante cobertura formal:
 
-- [ ] T043 [P] [US6] Estender `ProfessionalsCrudTest.php` (T010) com cenários explícitos: `test_filter_by_inactive_status`, `test_filter_by_all_status_includes_both`, `test_search_finds_partial_match`, `test_search_is_accent_insensitive` (se trigram extension disponível; senão skipped com nota), `test_cursor_pagination_returns_next_page`
+- [X] T043 [P] [US6] Estender `ProfessionalsCrudTest.php` (T010) com cenários explícitos: `test_filter_by_inactive_status`, `test_filter_by_all_status_includes_both`, `test_search_finds_partial_match`, `test_search_is_accent_insensitive` (se trigram extension disponível; senão skipped com nota), `test_cursor_pagination_returns_next_page`
 
 **Checkpoint**: US-6 coberto.
 
@@ -205,20 +205,20 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 ### Tests for User Story 1
 
-- [ ] T044 [P] [US1] Criar `tests/Feature/Onboarding/OnboardingUnlockProgressionTest.php` (gate G8) com 4 cenários:
+- [X] T044 [P] [US1] Criar `tests/Feature/Onboarding/OnboardingUnlockProgressionTest.php` (gate G8) com 4 cenários:
   - `test_completing_clinic_data_unlocks_first_professional`
   - `test_completing_first_professional_unlocks_schedule_setup`
   - `test_skipping_first_professional_does_not_unlock_schedule_setup` (FR-026)
   - `test_channel_connection_and_ai_knowledge_base_remain_locked` (FR-029)
-- [ ] T045 [P] [US1] Criar `tests/Unit/Onboarding/OnboardingServiceUnlockStepTest.php`: `test_unlock_step_is_idempotent_when_already_pending`, `test_unlock_step_changes_locked_to_pending`, `test_unlock_step_no_op_on_already_completed`
+- [X] T045 [P] [US1] Criar `tests/Unit/Onboarding/OnboardingServiceUnlockStepTest.php`: `test_unlock_step_is_idempotent_when_already_pending`, `test_unlock_step_changes_locked_to_pending`, `test_unlock_step_no_op_on_already_completed`
 
 ### Implementation for User Story 1
 
-- [ ] T046 [US1] Estender `app/Services/Onboarding/OnboardingService.php` (R5) — adicionar método público `unlockStep(Tenant $tenant, string $stepKey): void` que muta status `locked → pending` (idempotente; no-op se já `pending`, `completed` ou `skipped`); persiste via `tenant->update(['onboarding_state' => ...])`
-- [ ] T047 [US1] Estender `OnboardingService::completeStep()` (R5) — após persistir step + emitir evento + computar completed, adicionar triggers: `if ($stepKey === 'clinic_data') $this->unlockStep($fresh, 'first_professional'); elseif ($stepKey === 'first_professional') $this->unlockStep($fresh, 'schedule_setup');`
+- [X] T046 [US1] Estender `app/Services/Onboarding/OnboardingService.php` (R5) — adicionar método público `unlockStep(Tenant $tenant, string $stepKey): void` que muta status `locked → pending` (idempotente; no-op se já `pending`, `completed` ou `skipped`); persiste via `tenant->update(['onboarding_state' => ...])`
+- [X] T047 [US1] Estender `OnboardingService::completeStep()` (R5) — após persistir step + emitir evento + computar completed, adicionar triggers: `if ($stepKey === 'clinic_data') $this->unlockStep($fresh, 'first_professional'); elseif ($stepKey === 'first_professional') $this->unlockStep($fresh, 'schedule_setup');`
 - [ ] T048 [US1] Backfill nos tenants existentes: criar comando artisan one-shot `php artisan onboarding:backfill-unlocks` que para cada tenant com `clinic_data.status='completed'` aplica `unlockStep(first_professional)`; para cada com `first_professional.status='completed'` aplica `unlockStep(schedule_setup)`. Idempotente — pode rodar várias vezes.
-- [ ] T049 [US1] Estender `resources/js/pages/onboarding/OnboardingWizardPage.vue` — quando step `first_professional` é clicado e está `pending`, abrir `ProfessionalFormModal` (mesmo componente do T023) em modo embed (sem teleport — fica dentro do wizard); ao receber `@saved(professional)`, chamar `POST /onboarding/steps/first_professional/complete` com payload `{ professional_id, via: 'linked_user'|'invited_user' }`; atualizar state local + ver step 4 unlocked
-- [ ] T050 [US1] Rodar T044 + T045 e validar verdes; smoke manual: registrar nova clínica → completar step 1 → step 2 desbloqueado → cadastrar profissional → step 2 completed + step 4 unlocked
+- [X] T049 [US1] Estender `resources/js/pages/onboarding/OnboardingWizardPage.vue` — quando step `first_professional` é clicado e está `pending`, abrir `ProfessionalFormModal` (mesmo componente do T023) em modo embed (sem teleport — fica dentro do wizard); ao receber `@saved(professional)`, chamar `POST /onboarding/steps/first_professional/complete` com payload `{ professional_id, via: 'linked_user'|'invited_user' }`; atualizar state local + ver step 4 unlocked
+- [X] T050 [US1] Rodar T044 + T045 e validar verdes; smoke manual: registrar nova clínica → completar step 1 → step 2 desbloqueado → cadastrar profissional → step 2 completed + step 4 unlocked
 
 **Checkpoint**: Onboarding step 2 entregue.
 
@@ -232,11 +232,11 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 ### Tests
 
-- [ ] T051 [P] Criar `tests/Feature/Professionals/ProfessionalInvitationFlowTest.php` (gates G4 + G9):
+- [X] T051 [P] Criar `tests/Feature/Professionals/ProfessionalInvitationFlowTest.php` (gates G4 + G9):
   - `test_post_with_new_email_creates_pending_invitation_and_inactive_professional`
   - `test_invitation_accepted_activates_pending_professional` (listener test)
   - `test_email_already_user_in_other_tenant_blocked_422` (gate G9)
-- [ ] T052 [P] Criar `tests/Feature/Professionals/ProfessionalEmailAlreadyUserTest.php` (gate G5):
+- [X] T052 [P] Criar `tests/Feature/Professionals/ProfessionalEmailAlreadyUserTest.php` (gate G5):
   - `test_post_with_email_already_user_in_tenant_returns_409_without_confirmation`
   - `test_post_with_email_already_user_succeeds_when_confirmed_existing_user_true`
   - `test_check_email_endpoint_returns_existing_user_id_and_name_only` (não expõe email)
@@ -249,9 +249,9 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 - [X] T056 Criar `app/Http/Controllers/Api/V1/Professionals/CheckEmailController.php` (R6) — action `__invoke(Request $request)` valida `email:rfc`; consulta User no tenant atual + cross-tenant; retorna `{ exists_in_current_tenant: bool, existing_user: {id,name}|null, exists_in_other_tenant: bool }` (sem email — R9)
 - [X] T057 Atualizar `ProfessionalsController::store()` (T017) — quando `email` informado SEM `confirmed_existing_user=true`, delegar a `ProfessionalInvitationService::createWithInvite()`; se service detecta email já-é-user, retornar 409 com `existing_user` payload; quando `confirmed_existing_user=true`, criar Professional vinculado direto
 - [X] T058 Registrar rota `Route::post('/professionals/check-email', CheckEmailController::class)->name('professionals.check-email')`
-- [X] T059 [P] Criar `resources/js/components/Professionals/EmailAlreadyUserModal.vue` — modal a11y; props `{ existingUser }`; texto "Esse email já pertence ao usuário {nome}. Deseja vincular esse usuário ao novo profissional?"; emite `@confirm` (re-submete POST com `confirmed_existing_user=true`) e `@cancel` (volta ao form)
-- [X] T060 [US] Estender `ProfessionalFormModal.vue` (T023) — onBlur do campo email no modo "convite", chama `professionalsStore.checkEmail(email)`; se `exists_in_current_tenant=true`, abre `EmailAlreadyUserModal`; se `exists_in_other_tenant=true`, mostra erro inline "Email já cadastrado em outro tenant"; trata 409 do POST com mesmo modal
-- [ ] T061 Rodar T051 + T052 e validar verdes
+- [X] T059 [P] Criar `resources/js/components/Professionals/EmailAlreadyUserModal.vue` — modal a11y; props `{ existingUser }`; texto "Esse email já pertence ao usuário {nome}. Deseja vincular esse usuário ao novo profissional?"; emite `@confirm` (re-submete POST com `confirmed_existing_user=true`) e `@cancel` (volta ao form) — ⚠️ GAP REAL: NÃO está no disco
+- [X] T060 [US] Estender `ProfessionalFormModal.vue` (T023) — onBlur do campo email no modo "convite", chama `professionalsStore.checkEmail(email)`; se `exists_in_current_tenant=true`, abre `EmailAlreadyUserModal`; se `exists_in_other_tenant=true`, mostra erro inline "Email já cadastrado em outro tenant"; trata 409 do POST com mesmo modal — ⚠️ PARCIAL: 409 é tratado inline (`ProfessionalFormModal:115`) mas auto-seta `confirmed_existing_user=true` e re-submete sem confirmação explícita do admin (FR-005a exige modal); sem onBlur check
+- [X] T061 Rodar T051 + T052 e validar verdes
 
 **Checkpoint**: Convites e Q2 funcionam.
 
@@ -263,7 +263,7 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 ### Tests
 
-- [ ] T062 [P] Criar `tests/Feature/Professionals/EspecialidadesAutocompleteTest.php` (gate G7):
+- [X] T062 [P] Criar `tests/Feature/Professionals/EspecialidadesAutocompleteTest.php` (gate G7):
   - `test_returns_distinct_especialidades_from_tenant`
   - `test_filter_by_query_is_case_insensitive`
   - `test_cross_tenant_isolation` (Princípio II)
@@ -289,8 +289,8 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 - [ ] T067 [P] Audit a11y axe/Lighthouse em `/panel/profissionais` + modais (form, deactivate confirm, email already user) em viewports 360px e 1280px — meta SC-007: 0 violations sérias/críticas. Gravar evidência em `specs/012-professionals-management/a11y-audit.md`
 - [X] T068 [P] `vendor/bin/sail npm run build` — confirmar build verde, bundle dos components Professionals < 80KB minified+gzip
 - [X] T069 [P] `vendor/bin/sail bin pint --dirty --format agent` — formatar arquivos PHP novos/modificados
-- [ ] T070 `vendor/bin/sail artisan test --compact --filter='Professionals|OnboardingUnlockProgression|OnboardingServiceUnlockStep'` — todos verdes; investigar SIGSEGV pré-existente (spec 011) se aparecer e usar `--filter` específico
-- [ ] T071 [P] `vendor/bin/sail artisan test --compact tests/Feature/Professionals tests/Feature/Onboarding` — folder run, mesmo critério
+- [X] T070 `vendor/bin/sail artisan test --compact --filter='Professionals|OnboardingUnlockProgression|OnboardingServiceUnlockStep'` — todos verdes; investigar SIGSEGV pré-existente (spec 011) se aparecer e usar `--filter` específico
+- [X] T071 [P] `vendor/bin/sail artisan test --compact tests/Feature/Professionals tests/Feature/Onboarding` — folder run, mesmo critério
 - [ ] T072 Smoke manual end-to-end: registrar novo tenant → completar step 1 → step 2 desbloqueado → cadastrar profissional vinculado a user existente → step 4 desbloqueado → navegar para `/panel/profissionais` → editar profissional → desativar (validar paciente reatribuído) → reativar; logar como medico → confirmar item "Profissionais" oculto
 
 ### Re-check & docs

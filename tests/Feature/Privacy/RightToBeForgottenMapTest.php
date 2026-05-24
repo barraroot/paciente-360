@@ -9,8 +9,6 @@ use App\Domain\Privacy\Models\ForgettingRequest;
 use App\Domain\Privacy\Models\ForgettingStatus;
 use App\Domain\Privacy\Services\ForgettingExecutor;
 use App\Models\Paciente;
-use App\Models\User;
-use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -95,7 +93,8 @@ class RightToBeForgottenMapTest extends TestCase
         $executor->execute($request, $admin);
 
         $patient->refresh();
-        $this->assertNull($patient->endereco);
+        // DB grava NULL (PII removida); o cast AsJsonArray lê JSONB null como [].
+        $this->assertEmpty($patient->endereco);
     }
 
     public function test_execute_preserves_fields_under_legal_obligation_in_snapshot(): void

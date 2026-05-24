@@ -7,7 +7,6 @@ namespace Tests\Feature\Privacy;
 use App\Domain\Privacy\Models\PseudonymizationAuditMode;
 use App\Domain\Privacy\Services\PseudonymizationAuditor;
 use App\Models\AuditLog;
-use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Spatie\Permission\PermissionRegistrar;
@@ -46,7 +45,6 @@ class PseudonymizationRuntimeReplayTest extends TestCase
             'action' => 'paciente.viewed',
             'payload' => ['paciente_id' => 42, 'channel' => 'web'],
             'created_at' => Carbon::now()->subDay(),
-            'updated_at' => Carbon::now()->subDay(),
         ]);
 
         /** @var PseudonymizationAuditor $auditor */
@@ -73,7 +71,6 @@ class PseudonymizationRuntimeReplayTest extends TestCase
                 'cpf_leaked' => '123.456.789-09', // INTENCIONAL — simula vazamento.
             ],
             'created_at' => Carbon::now()->subHours(2),
-            'updated_at' => Carbon::now()->subHours(2),
         ]);
 
         /** @var PseudonymizationAuditor $auditor */

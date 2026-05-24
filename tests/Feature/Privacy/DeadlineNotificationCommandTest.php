@@ -6,7 +6,7 @@ namespace Tests\Feature\Privacy;
 
 use App\Domain\Privacy\Models\ForgettingRequest;
 use App\Domain\Privacy\Models\PortabilityRequest;
-use Database\Seeders\RolesSeeder;
+use App\Models\Paciente;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\PermissionRegistrar;
@@ -40,8 +40,8 @@ class DeadlineNotificationCommandTest extends TestCase
 
     public function test_command_finds_d5_deadlines_for_forgetting(): void
     {
-        [$tenant, ] = $this->tenantAndUserForRole('clinica-d5-find', 'admin-clinica');
-        $patient = \App\Models\Paciente::factory()->state(['tenant_id' => $tenant->id])->create();
+        [$tenant] = $this->tenantAndUserForRole('clinica-d5-find', 'admin-clinica');
+        $patient = Paciente::factory()->state(['tenant_id' => $tenant->id])->create();
 
         // Deadline em 5 dias — deve entrar na janela D-5.
         ForgettingRequest::factory()
@@ -69,8 +69,8 @@ class DeadlineNotificationCommandTest extends TestCase
 
     public function test_mark_expired_command_transitions_overdue_requests(): void
     {
-        [$tenant, ] = $this->tenantAndUserForRole('clinica-expire', 'admin-clinica');
-        $patient = \App\Models\Paciente::factory()->state(['tenant_id' => $tenant->id])->create();
+        [$tenant] = $this->tenantAndUserForRole('clinica-expire', 'admin-clinica');
+        $patient = Paciente::factory()->state(['tenant_id' => $tenant->id])->create();
 
         $overdue = ForgettingRequest::factory()
             ->state(['tenant_id' => $tenant->id, 'patient_id' => $patient->id])
@@ -81,7 +81,8 @@ class DeadlineNotificationCommandTest extends TestCase
         $overdueP = PortabilityRequest::factory()
             ->state(['tenant_id' => $tenant->id, 'patient_id' => $patient->id])
             ->open()
-            ->state(['deadline_at' => now()->subDay()])
+            // requested_at recuado para honrar o CHECK (deadline posterior ao request).
+            ->state(['requested_at' => now()->subDays(22), 'deadline_at' => now()->subDay()])
             ->create();
 
         $this->artisan('privacy:mark-expired')

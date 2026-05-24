@@ -28,7 +28,14 @@ class RecordConsentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'patient_id' => ['required', 'integer', 'exists:pacientes,id'],
+            'patient_id' => [
+                'required',
+                'integer',
+                // Tenant-scoped (Princípio II): paciente de outro tenant → 422,
+                // sem revelar existência. `exists:pacientes,id` cru ignora o
+                // TenantScope do model (é query DB direta), por isso o where manual.
+                Rule::exists('pacientes', 'id')->where(fn ($q) => $q->where('tenant_id', $this->user()?->tenant_id)),
+            ],
             'channel' => ['required', 'string', 'max:50', Rule::in(['whatsapp', 'instagram', 'web', 'form', 'manual', 'phone', 'email'])],
             'finalidade' => ['required', 'string', Rule::in(array_column(ConsentFinalidade::cases(), 'value'))],
             'state' => ['required', 'string', Rule::in(['granted', 'refused'])],

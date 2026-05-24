@@ -222,11 +222,11 @@ final class PortabilityExporter
         return DB::table('eventos_timeline')
             ->where('paciente_id', $patient->id)
             ->where('tenant_id', $patient->tenant_id)
-            ->orderBy('ocorreu_em')
+            ->orderBy('created_at')
             ->get()
             ->map(fn (object $row): array => [
                 'type' => $row->tipo ?? null,
-                'occurred_at' => isset($row->ocorreu_em) ? Carbon::parse($row->ocorreu_em)->toIso8601String() : null,
+                'occurred_at' => isset($row->created_at) ? Carbon::parse($row->created_at)->toIso8601String() : null,
             ])
             ->all();
     }
@@ -241,7 +241,7 @@ final class PortabilityExporter
         }
 
         return DB::table('appointments')
-            ->where('patient_id', $patient->id)
+            ->where('paciente_id', $patient->id)
             ->where('tenant_id', $patient->tenant_id)
             ->orderBy('starts_at')
             ->get()

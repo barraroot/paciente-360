@@ -20,6 +20,9 @@ use App\Domain\Messaging\Message\Observers\MessageObserver;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
 use App\Domain\Messaging\QuickReply\Models\QuickReply;
 use App\Domain\Prescription\Prescription\Prescription;
+use App\Domain\Privacy\Models\ConsentRecord;
+use App\Domain\Privacy\Models\ForgettingRequest;
+use App\Domain\Privacy\Models\PortabilityRequest;
 use App\Events\Agenda\ConsultaConfirmacaoPendente;
 use App\Events\Agenda\ConsultaCriada;
 use App\Events\TenantResolved;
@@ -46,6 +49,7 @@ use App\Policies\AnotacaoPolicy;
 use App\Policies\AssignmentPolicy;
 use App\Policies\AuditLogPolicy;
 use App\Policies\ChannelPolicy;
+use App\Policies\ConsentPolicy;
 use App\Policies\ConvenioPolicy;
 use App\Policies\ConversationPolicy;
 use App\Policies\FunilPolicy;
@@ -54,6 +58,7 @@ use App\Policies\MessagePolicy;
 use App\Policies\OnboardingPolicy;
 use App\Policies\PacientePolicy;
 use App\Policies\PrescriptionPolicy;
+use App\Policies\PrivacyRequestPolicy;
 use App\Policies\QuickReplyPolicy;
 use App\Policies\TagPolicy;
 use App\Policies\UserPolicy;
@@ -257,6 +262,13 @@ class AppServiceProvider extends ServiceProvider
 
         // Fase 8 Lote D — Webhooks (T201).
         Gate::policy(WebhookEndpoint::class, WebhookPolicy::class);
+
+        // Fase 8 Lote A — Privacidade/LGPD. As policies não seguem o nome do
+        // model (ConsentPolicy ≠ ConsentRecordPolicy), então o auto-discovery
+        // do Laravel não as associa — registro explícito obrigatório.
+        Gate::policy(ConsentRecord::class, ConsentPolicy::class);
+        Gate::policy(ForgettingRequest::class, PrivacyRequestPolicy::class);
+        Gate::policy(PortabilityRequest::class, PrivacyRequestPolicy::class);
     }
 
     /**

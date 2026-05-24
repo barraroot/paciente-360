@@ -246,6 +246,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('report.view', static fn ($user): bool => $user?->can('report.view') ?? false);
         Gate::define('report.export', static fn ($user): bool => $user?->can('report.export') ?? false);
 
+        // Spec 012 — Gestão de Profissionais. Ability-based (sem model policy
+        // para não conflitar com ProfessionalSchedulePolicy da Fase 5).
+        Gate::define('professional.manage', static fn ($user): bool => $user?->can('professional.manage') ?? false);
+
         // Fase 8 Lote D — Webhooks (T201).
         Gate::policy(WebhookEndpoint::class, WebhookPolicy::class);
     }

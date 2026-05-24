@@ -54,6 +54,10 @@ use App\Http\Controllers\Api\V1\Prescriptions\PrescriptionReportController;
 use App\Http\Controllers\Api\V1\Privacy\ConsentsController;
 use App\Http\Controllers\Api\V1\Privacy\ForgettingController;
 use App\Http\Controllers\Api\V1\Privacy\PortabilityController;
+use App\Http\Controllers\Api\V1\Professionals\CheckEmailController;
+use App\Http\Controllers\Api\V1\Professionals\EspecialidadesAutocompleteController;
+use App\Http\Controllers\Api\V1\Professionals\ProfessionalActivateController;
+use App\Http\Controllers\Api\V1\Professionals\ProfessionalsController;
 use App\Http\Controllers\Api\V1\Reports\ClinicalReportController;
 use App\Http\Controllers\Api\V1\Reports\ExecutiveDashboardController;
 use App\Http\Controllers\Api\V1\Reports\OperationalReportController;
@@ -155,6 +159,26 @@ Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->group(function (): 
 Route::middleware(['auth:sanctum', 'tenant.not-suspended'])->group(function (): void {
     Route::get('/panel/home', PanelHomeController::class)
         ->name('panel.home');
+});
+
+// US-1.2.2 (Spec 012) — Gestão de Profissionais (CRUD + activate + autocomplete + check-email).
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('professionals')
+    ->name('professionals.')
+    ->group(function (): void {
+        // Rotas estáticas ANTES da rota com {professional} para evitar colisão.
+        Route::get('/especialidades', EspecialidadesAutocompleteController::class)
+            ->name('especialidades');
+        Route::post('/check-email', CheckEmailController::class)
+            ->name('check-email');
+        Route::post('/{professional}/activate', ProfessionalActivateController::class)
+            ->whereNumber('professional')
+            ->name('activate');
+    });
+
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])->group(function (): void {
+    Route::apiResource('/professionals', ProfessionalsController::class)
+        ->parameters(['professionals' => 'professional']);
 });
 
 // US-1.3 — Billing: planos públicos (sem auth) e checkout/assinatura autenticados.

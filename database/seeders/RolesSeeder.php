@@ -112,6 +112,8 @@ class RolesSeeder extends Seeder
         'privacy.export',
         'forgetting.execute',
         'portability.execute',
+        // Spec 012 — Gestão de profissionais
+        'professional.manage',
     ];
 
     /**
@@ -168,6 +170,8 @@ class RolesSeeder extends Seeder
             'privacy.export',
             'forgetting.execute',
             'portability.execute',
+            // Spec 012 — admin clínica gerencia profissionais clínicos.
+            'professional.manage',
         ],
         'medico' => [
             'paciente.view',

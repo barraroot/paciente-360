@@ -47,10 +47,13 @@ class Professional extends Model
     /** @var array<int, string> */
     protected $fillable = [
         'user_id',
+        'pending_invitation_email',
         'name',
         'council_type',
+        'council_type_other',
         'council_number',
         'council_state',
+        'especialidade',
         'is_active',
     ];
 

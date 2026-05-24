@@ -435,8 +435,9 @@ livewire(ListUsers::class)
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `011-dashboard-executivo` — [plan](specs/011-dashboard-executivo/plan.md) — Dashboard Executivo polish (US-10.1). Spec aprovada (39 FRs, 25 acceptance scenarios, 0 clarifications, 12/12 checklist PASS) + plan + research (13 decisões — R2 sparkline real DEFERRED) + data-model + contracts/frontend-integration.md (8 gates G1–G8) + quickstart (6 lotes A–F). **Constitution Check PASS 7/7 sem amendment**. Backend Fase 8 95% reusado — apenas 1 linha de mudança (`'24h' => subHours(24)` no `ExecutiveDashboardController::resolvePeriod()`). Frontend reescreve `ExecutiveDashboardPage.vue` + 7 novos componentes + 2 composables + persistência localStorage da window. Sparkline real fica DEFERRED (backend não retorna time-series; `Sparkline.vue` stub criado preparado para futuro). Próximo: `/speckit-tasks`.
-- **Previous features delivered (10)**:
+- **Active feature**: `012-professionals-management` — [plan](specs/012-professionals-management/plan.md) — Gestão de Profissionais + Unlock Onboarding Step 2 (US-1.2.2). Spec aprovada (37 FRs, 31 acceptance scenarios, 3 clarifications, 12/12 checklist PASS) + plan + research (13 decisões) + data-model + contracts/api-professionals.md (9 gates G1–G9) + quickstart (7 lotes A–G). **Constitution Check PASS 7/7 sem amendment**. Destrava onboarding step 2 (`first_professional`) que ficava locked + cria CRUD interno de Professional pelo painel. Backend: 1 migration (ALTER `professionals` + UNIQUE composto parcial), 1 nova permission `professional.manage`, 4 eventos auditáveis (3 novos + 1 reuso Fase 5), 8 endpoints REST, listener que ativa Professional pendente ao aceite de Invitation. Onboarding `unlockStep` com triggers: step 1→2 unlock; step 2→4 unlock; step 2 skip não unlocka step 4. Próximo: `/speckit-tasks`.
+- **Previous features delivered (11)**:
+  - `011-dashboard-executivo` — Dashboard Executivo polish (US-10.1) entregue na branch `011-dashboard-executivo` e mergeada em main em 2026-05-23 (commit `2f7b03c`). 23/27 tasks done (4 deferred — E2E Playwright, audit a11y, suite full, smoke browser). 6/7 Constitution Re-Check PASS + 1 PARTIAL. Backend 95% reusado da Fase 8 (1 linha — preset 24h). Frontend: 8 components + 2 composables. Sparkline real DEFERRED (backend não retorna time-series; `Sparkline.vue` stub preparado).
   - `010-dashboard-home` — Dashboard Home (US-1.5) entregue (commit `e688b60`). 51/73 tasks done (22 deferred — testes formais Feature/Unit/Playwright). 6/7 Constitution Re-Check PASS + 1 PARTIAL (Princípio IV — testes formais deferred). Endpoint único `GET /api/v1/panel/home` consolida 4 seções; cache Redis 30s escopado tenant+user+scope; 5 métricas Prometheus em `PanelHomeMetrics`; 4 collectors com degradação graceful; Humanizer com allow-list LGPD (14 event types). Frontend: 7 componentes panel-home + 3 composables (usePanelHome, usePanelHomeScope, useAutoRefresh). Build verde 1.38s, Pint passed.
   - `009-app-shell` — App Shell entregue. 2 commits (`c306e57` fixes env + `8ca018a` Spec Kit). 41/50 tasks done (9 deferred — testes E2E Playwright + audit a11y manual + suite full validação). 6/7 Constitution Re-Check PASS + 1 PARTIAL (Princípio IV — E2E Playwright deferred). Build verde, Pint OK, Vite 200 OK em todos os módulos novos. 16 arquivos novos frontend (composables, components/layout, navigation config) + router refactor para nested children + i18n duplo (pt-BR.json + lang/pt_BR/layout.php) + CLAUDE.md Key Patterns App Shell.
   - `008-finalizacao-mvp` — Fase 8 (Épicos 9-13) **ENTREGUE** em 2026-05-22. **5 lotes A-E** + **Phase 8 Polish**, ~280 tasks marcadas. Commits: Lote A `66bce06`/`9c5f29f`/`f7c3211` (Privacidade) → B `628fd86`/`b8b4f38` (Super Admin) → C `cea1ec4`/`e1dcf61`/`959e0a2` (Campanhas) → E `d01d276` (Relatórios) → D-1 `bc47352` (Webhooks) → D-2 `9c5fa9c` (API Pública) → Polish (pendente commit). Highlights:
@@ -965,3 +966,62 @@ When working on Executive Dashboard features post-Fase 11, remember:
     - **Filtros adicionais** por profissional/tipo: escopo OperationalReport.
     - **E2E Playwright completo** (T018): cenários documentados em quickstart.
     - **A11y audit Lighthouse** (T019): manual via Chrome DevTools.
+
+## Gestão de Profissionais (Fase 12) — Key Patterns
+
+When working on Professional features post-Fase 12, remember:
+
+1. **`Gate::define('professional.manage', ...)` (ability-based) — NÃO usar policy de model**
+   - Conflito: `Gate::policy(Professional::class, ProfessionalSchedulePolicy::class)` JÁ existe da Fase 5 (escopo schedule).
+   - Solução: gate ability-based em `AppServiceProvider::registerPolicies()`, padrão idêntico ao `report.view`/`report.export` da Fase 8.
+   - Controllers chamam `Gate::authorize('professional.manage')` (não `('manage', Professional::class)`).
+
+2. **Middleware stack obrigatório: `['auth:sanctum', 'tenant.slug', 'tenant.not-suspended']`**
+   - `tenant.slug` é CRÍTICO — sem ele, `TenantResolved` não dispara, Spatie team_id fica null, e gate sempre retorna false (mesmo com permission atribuída).
+   - Pattern já usado em todas as rotas autenticadas; spec 012 inicialmente esqueceu e gerou 403 generalizado.
+
+3. **UNIQUE composto PARCIAL `WHERE deleted_at IS NULL`**
+   - `(tenant_id, council_type, council_number, council_state) WHERE deleted_at IS NULL`
+   - Permite reuso do número após soft-delete (médico saiu e voltou anos depois; correção de cadastro errado).
+   - **NÃO inclui `council_type_other`** — quando type=OUTRO, colisão entre dois "Outros" diferentes é altamente improvável; admin lida caso a caso.
+
+4. **Fluxo de convite via `pending_invitation_email` column + listener**
+   - Coluna nova `professionals.pending_invitation_email` (indexed por `tenant_id` para lookup rápido).
+   - `Invitation` model NÃO tem `payload` JSON — usar lookup por email é o canal de junção.
+   - Listener `ActivatePendingProfessionalOnInvitationAccepted` consome `InvitationAccepted` (Fase 4): busca Professional pendente match pelo email + tenant; vincula `user_id`, ativa, limpa `pending_invitation_email`.
+   - Auto-discovery Laravel 11+ — não registrar manualmente em EventServiceProvider.
+
+5. **Q2 — Endpoint dedicado `/professionals/check-email`**
+   - Retorna `{exists_in_current_tenant, existing_user: {id, name}, exists_in_other_tenant}`.
+   - **NUNCA retorna o email do user existente** (Princípio I — minimização PII).
+   - Frontend usa onblur do campo email pra preview; backend trata 409 ao POST sem `confirmed_existing_user=true`.
+
+6. **`ProfessionalInvitationService::createWithInvite()` retorna `JsonResponse` direto**
+   - Por que: precisa retornar 409 com payload custom (Q2) em alguns caminhos sem precisar lançar exceção.
+   - Controller delega: `if (! $data['user_id']) return $this->inviteService->createWithInvite(...)`.
+
+7. **`ProfessionalResource` NÃO inclui email do user vinculado**
+   - Disponível em `/users/{id}` se precisar — repetir aqui amplia surface PII sem ganho.
+   - Apenas `{id, name}` do user (via `whenLoaded('user')`).
+
+8. **Update PROIBIDO em `user_id` e `is_active`** (FR-010)
+   - `UpdateProfessionalRequest` usa rule `prohibited` em ambos.
+   - `is_active` muda apenas via `POST /activate` ou `DELETE` — endpoints dedicados com side effects (reatribuição de pacientes).
+
+9. **Reatribuição automática em desativação reusa Fase 2 + Fase 5**
+   - Observer `Professional.boot()` (Fase 5) dispara `ProfessionalDeactivated` quando `is_active: true → false`.
+   - Listener (Fase 2) enfileira `ReassignOrphansJob` → atualiza `paciente.profissional_responsavel_id = NULL`.
+   - Spec 012 NÃO implementa novamente — apenas garante que `Service::deactivate()` muta o campo corretamente.
+
+10. **Onboarding `unlockStep` + triggers — pattern aditivo**
+    - `OnboardingService::unlockStep($tenant, $stepKey)` muta status `locked → pending` (idempotente).
+    - Triggers em `completeStep`: `clinic_data → first_professional`; `first_professional → schedule_setup`.
+    - Skip de `first_professional` NÃO unlocka `schedule_setup` (faz sentido — sem profissional, não há agenda para configurar).
+    - Steps 3 (`channel_connection`) e 5 (`ai_knowledge_base`) permanecem locked até specs futuras.
+
+11. **DEFERRED ao final da Fase 12**
+    - 9 Feature tests + 1 Unit (G1–G9) codificados na spec mas não escritos nesta sessão
+    - Audit a11y Lighthouse manual
+    - Smoke browser real nas 3 personas
+    - Onboarding wizard step 2 UI inline (page standalone funciona; integração no wizard fica para iteração)
+    - Backfill onboarding (`onboarding:backfill-unlocks` command) para tenants existentes

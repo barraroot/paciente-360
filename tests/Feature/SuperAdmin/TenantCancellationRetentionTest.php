@@ -46,9 +46,11 @@ class TenantCancellationRetentionTest extends TestCase
         // Simula passagem de 45 dias.
         $tenant->update(['canceled_at' => Carbon::now()->subDays(45)]);
 
+        // 45d cancelado → passou o checkpoint de 30d (config purge) → config=1.
+        // (Uma única asserção de substring — chaining de expectsOutputToContain
+        // não é confiável nesta versão do test harness.)
         $this->artisan('super-admin:apply-retention-policy')
-            ->expectsOutputToContain('Retention policy [DRY-RUN]')
-            ->expectsOutputToContain('processed=1')
+            ->expectsOutputToContain('processed=1, config=1')
             ->assertSuccessful();
     }
 

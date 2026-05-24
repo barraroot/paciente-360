@@ -30,7 +30,7 @@ class SuperAdminSeederTest extends TestCase
             '--force' => true,
         ]);
 
-        $user = User::query()->where('email', 'super@admin.local')->first();
+        $user = User::query()->where('email', 'admin@flowsys.com.br')->first();
 
         $this->assertNotNull($user, 'Super Admin deve existir após o seed.');
         $this->assertNull($user->tenant_id, 'Super Admin deve ter tenant_id NULL.');
@@ -44,7 +44,7 @@ class SuperAdminSeederTest extends TestCase
         Artisan::call('db:seed', ['--class' => SuperAdminSeeder::class, '--force' => true]);
         Artisan::call('db:seed', ['--class' => SuperAdminSeeder::class, '--force' => true]);
 
-        $count = User::query()->where('email', 'super@admin.local')->count();
+        $count = User::query()->where('email', 'admin@flowsys.com.br')->count();
         $this->assertSame(1, $count, 'Reseed do Super Admin não pode duplicar.');
     }
 

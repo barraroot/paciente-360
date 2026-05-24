@@ -1,9 +1,15 @@
-# Débito QA — Falhas pré-existentes da Fase 8 (Privacy/Campaigns/Integrations)
+# Débito QA — Falhas pré-existentes da Fase 8 — ✅ RESOLVIDO (spec 013)
 
 **Descoberto em 2026-05-24** durante o fechamento da Spec 012. A Fase 8 foi
 marcada "DELIVERED" mas **a suíte completa nunca foi executada** (T288 deferido).
 A primeira execução real revelou **56 testes vermelhos** — todos em módulos
 secundários (não no caminho crítico do produto).
+
+> **STATUS 2026-05-24 — TODAS as 56 falhas corrigidas** na spec
+> `013-fase8-suite-stabilization`. Suíte completa: **1534 passed, 0 failed**
+> (5 risky / 1 incomplete / 5 skipped pré-existentes). Lotes Privacy (37/37),
+> Integrations (37/37), Campaigns (34/34) e misc (SuperAdmin/LGPD/Constitutional/
+> Filament) todos verdes. Detalhe dos fixes nos commits da branch 013.
 
 ## Já corrigido (commitado na main)
 

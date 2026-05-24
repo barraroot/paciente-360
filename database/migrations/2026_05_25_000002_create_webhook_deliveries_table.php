@@ -33,7 +33,9 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('webhook_endpoint_id')->constrained()->cascadeOnDelete();
             $table->string('event_type'); // ex: 'agendamento.criado' (Q17)
-            $table->uuid('event_id'); // ID estável do evento dispatched
+            // String (não uuid): além de uuids, carrega IDs de evento externos e
+            // sufixos de reenvio do DLQ (ex: "{uuid}-resent-{rand}").
+            $table->string('event_id');
             $table->string('correlation_id', 36);
             $table->jsonb('payload');
             $table->string('status')->default('pending');

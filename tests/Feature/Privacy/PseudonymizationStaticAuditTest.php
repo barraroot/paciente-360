@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Privacy;
 
+use App\Domain\Privacy\Events\ConsentimentoRegistrado;
 use App\Domain\Privacy\Events\PoliticaPseudonimizacaoAuditada;
 use App\Domain\Privacy\Models\PseudonymizationAuditMode;
 use App\Domain\Privacy\Services\PseudonymizationAuditor;
-use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
@@ -48,7 +48,9 @@ class PseudonymizationStaticAuditTest extends TestCase
         $this->assertSame(0, $audit->non_conformant_events);
         $this->assertTrue($audit->isCompliant());
         $this->assertSame(PseudonymizationAuditMode::StaticReflection, $audit->mode);
-        $this->assertNull($audit->findings);
+        // Cast AsJsonArray normaliza colunas JSONB para array (nunca null) —
+        // zero findings ⇒ array vazio.
+        $this->assertEmpty($audit->findings);
 
         Event::assertDispatched(PoliticaPseudonimizacaoAuditada::class);
     }
@@ -57,7 +59,7 @@ class PseudonymizationStaticAuditTest extends TestCase
     {
         Config::set('finalization.ai_consumed_events', [
             // Evento real do Lote A — implementa ContainsNoClinicalData ✅
-            \App\Domain\Privacy\Events\ConsentimentoRegistrado::class,
+            ConsentimentoRegistrado::class,
             // Classe stdClass — NÃO implementa marker ❌
             \stdClass::class,
         ]);

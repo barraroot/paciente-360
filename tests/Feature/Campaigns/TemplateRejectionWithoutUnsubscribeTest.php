@@ -6,7 +6,6 @@ namespace Tests\Feature\Campaigns;
 
 use App\Domain\Campaigns\Services\TemplateRegistrar;
 use App\Models\Tenant;
-use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -38,7 +37,7 @@ class TemplateRejectionWithoutUnsubscribeTest extends TestCase
 
     public function test_marketing_template_without_unsubscribe_is_rejected(): void
     {
-        [$tenant, ] = $this->tenantAndUserForRole('clinica-tpl-reject', 'admin-clinica');
+        [$tenant] = $this->tenantAndUserForRole('clinica-tpl-reject', 'admin-clinica');
 
         $templateId = $this->seedTemplate(
             $tenant,
@@ -54,7 +53,7 @@ class TemplateRejectionWithoutUnsubscribeTest extends TestCase
 
     public function test_marketing_template_with_sair_is_accepted(): void
     {
-        [$tenant, ] = $this->tenantAndUserForRole('clinica-tpl-sair', 'admin-clinica');
+        [$tenant] = $this->tenantAndUserForRole('clinica-tpl-sair', 'admin-clinica');
 
         $templateId = $this->seedTemplate(
             $tenant,
@@ -70,7 +69,7 @@ class TemplateRejectionWithoutUnsubscribeTest extends TestCase
 
     public function test_marketing_template_with_descadastrar_is_accepted(): void
     {
-        [$tenant, ] = $this->tenantAndUserForRole('clinica-tpl-descadastrar', 'admin-clinica');
+        [$tenant] = $this->tenantAndUserForRole('clinica-tpl-descadastrar', 'admin-clinica');
 
         $templateId = $this->seedTemplate(
             $tenant,
@@ -88,7 +87,7 @@ class TemplateRejectionWithoutUnsubscribeTest extends TestCase
         // Templates UTILITY (ex.: confirmação de consulta) podem não ter
         // unsubscribe — registrar permitido, mas gate runtime impede uso
         // em campanhas (has_unsubscribe=false).
-        [$tenant, ] = $this->tenantAndUserForRole('clinica-tpl-utility', 'admin-clinica');
+        [$tenant] = $this->tenantAndUserForRole('clinica-tpl-utility', 'admin-clinica');
 
         $templateId = $this->seedTemplate(
             $tenant,
@@ -109,11 +108,10 @@ class TemplateRejectionWithoutUnsubscribeTest extends TestCase
     {
         $channelId = DB::table('messaging_channels')->insertGetId([
             'tenant_id' => $tenant->id,
-            'provider' => 'twilio',
-            'channel_type' => 'whatsapp',
-            'status' => 'connected',
-            'external_id' => 'wa_'.fake()->uuid(),
-            'display_name' => fake()->company(),
+            'type' => 'whatsapp',
+            'name' => fake()->company(),
+            'status' => 'ativo',
+            'provider_metadata' => json_encode(['external_id' => 'wa_'.fake()->uuid()]),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

@@ -173,9 +173,10 @@ final class AnomalyDetectorService
 
         $stats = DB::table('webhook_deliveries')
             ->select('tenant_id', DB::raw('COUNT(*) as total'), DB::raw("SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) as failed"))
-            ->where('executed_at', '>=', $oneHourAgo)
+            ->where('created_at', '>=', $oneHourAgo)
             ->groupBy('tenant_id')
-            ->having('total', '>=', 10)
+            // Postgres não aceita alias de SELECT em HAVING — repete a expressão.
+            ->havingRaw('COUNT(*) >= 10')
             ->get();
 
         foreach ($stats as $row) {
@@ -239,8 +240,8 @@ final class AnomalyDetectorService
     /**
      * Cria row + dispara evento, respeitando cooldown.
      *
-     * @param  array<string, mixed>  $thresholdBreached
-     * @return list<AnomalyDetected>  array vazio se cooldown ativo, ou [anomaly]
+     * @param array<string, mixed> $thresholdBreached
+     * @return list<AnomalyDetected> array vazio se cooldown ativo, ou [anomaly]
      */
     private function record(
         AnomalyCategory $categoria,

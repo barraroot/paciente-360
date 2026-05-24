@@ -75,25 +75,21 @@ class RegisterTenantFrontendTest extends TestCase
 
     // ── CSRF antes do POST ────────────────────────────────────────────────────
 
-    public function test_page_calls_get_csrf_cookie_before_post(): void
+    public function test_page_posts_to_register_via_bearer_flow(): void
     {
+        // Pós-migração Bearer (Fase 4): a SPA é stateless e NÃO usa o fluxo de
+        // CSRF cookie. O registro de tenant é um POST público direto.
         $vue = file_get_contents($this->pagePath);
 
-        $getCsrfPos = strpos($vue, 'getCsrfCookie');
-        $postPos = strpos($vue, "'/tenants/register'");
-
-        $this->assertNotFalse(
-            $getCsrfPos,
-            'RegisterTenantPage deve chamar api.getCsrfCookie() antes do POST.'
-        );
-        $this->assertNotFalse(
-            $postPos,
+        $this->assertStringContainsString(
+            "'/tenants/register'",
+            $vue,
             "RegisterTenantPage deve chamar api.post('/tenants/register', ...)."
         );
-        $this->assertLessThan(
-            $postPos,
-            $getCsrfPos,
-            'getCsrfCookie() deve aparecer antes de /tenants/register no código.'
+        $this->assertStringNotContainsString(
+            'getCsrfCookie',
+            $vue,
+            'Fluxo Bearer não usa getCsrfCookie (removido na Fase 4).'
         );
     }
 

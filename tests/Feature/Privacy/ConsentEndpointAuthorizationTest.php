@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Privacy;
 
+use App\Domain\Privacy\Models\ConsentFinalidade;
 use App\Domain\Privacy\Models\ConsentRecord;
 use App\Models\Paciente;
 use Database\Seeders\RolesSeeder;
@@ -33,17 +34,16 @@ class ConsentEndpointAuthorizationTest extends TestCase
 
     public function test_admin_clinica_can_list_consents(): void
     {
-        [$tenant, ] = $this->tenantAndUserForRole('clinica-list-ok', 'admin-clinica');
-        $patient = Paciente::factory()->state(['tenant_id' => $tenant->id])->create();
+        [$tenant] = $this->tenantAndUserForRole('clinica-list-ok', 'admin-clinica');
 
-        ConsentRecord::factory()
-            ->forFinalidade(\App\Domain\Privacy\Models\ConsentFinalidade::Marketing)
-            ->state([
-                'tenant_id' => $tenant->id,
-                'patient_id' => $patient->id,
-            ])
-            ->count(3)
-            ->create();
+        // 3 consents granted de marketing, um por paciente distinto — o PARTIAL
+        // UNIQUE (patient_id, finalidade) WHERE state='granted' impede 2 grants
+        // ativos da mesma finalidade para o mesmo paciente.
+        Paciente::factory()->count(3)->state(['tenant_id' => $tenant->id])->create()
+            ->each(fn (Paciente $patient) => ConsentRecord::factory()
+                ->forFinalidade(ConsentFinalidade::Marketing)
+                ->state(['tenant_id' => $tenant->id, 'patient_id' => $patient->id])
+                ->create());
 
         $response = $this->getJson(
             $this->tenantUrl($tenant, '/privacy/consents'),
@@ -56,7 +56,7 @@ class ConsentEndpointAuthorizationTest extends TestCase
 
     public function test_atendente_without_privacy_view_gets_403(): void
     {
-        [$tenant, ] = $this->tenantAndUserForRole('clinica-list-no-perm', 'atendente');
+        [$tenant] = $this->tenantAndUserForRole('clinica-list-no-perm', 'atendente');
         // Atendente não tem privacy.view por padrão (RolesSeeder Fase 8).
 
         $response = $this->getJson(
@@ -69,21 +69,22 @@ class ConsentEndpointAuthorizationTest extends TestCase
 
     public function test_filtering_by_finalidade_and_state_works(): void
     {
-        [$tenant, ] = $this->tenantAndUserForRole('clinica-filter', 'admin-clinica');
-        $patient = Paciente::factory()->state(['tenant_id' => $tenant->id])->create();
+        [$tenant] = $this->tenantAndUserForRole('clinica-filter', 'admin-clinica');
 
-        ConsentRecord::factory()
-            ->marketing()
-            ->granted()
-            ->state(['tenant_id' => $tenant->id, 'patient_id' => $patient->id])
-            ->count(2)
-            ->create();
+        // 2 grants de marketing em pacientes distintos (PARTIAL UNIQUE) + 1 recusa
+        // de pesquisa, para validar o filtro finalidade=marketing&state=granted.
+        Paciente::factory()->count(2)->state(['tenant_id' => $tenant->id])->create()
+            ->each(fn (Paciente $patient) => ConsentRecord::factory()
+                ->marketing()
+                ->granted()
+                ->state(['tenant_id' => $tenant->id, 'patient_id' => $patient->id])
+                ->create());
 
+        $patientPesquisa = Paciente::factory()->state(['tenant_id' => $tenant->id])->create();
         ConsentRecord::factory()
             ->pesquisa()
             ->refused()
-            ->state(['tenant_id' => $tenant->id, 'patient_id' => $patient->id])
-            ->count(1)
+            ->state(['tenant_id' => $tenant->id, 'patient_id' => $patientPesquisa->id])
             ->create();
 
         $response = $this->getJson(

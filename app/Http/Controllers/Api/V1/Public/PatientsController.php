@@ -65,7 +65,13 @@ class PatientsController extends Controller
             }
         }
 
-        $patient = Paciente::query()->create($validated + ['tenant_id' => $tenantId]);
+        // tenant_id NÃO é fillable em Paciente (Princípio II) e a coluna do
+        // telefone é `telefone_primario` — set direto evita perda silenciosa.
+        $patient = new Paciente(['nome' => $validated['nome']]);
+        $patient->tenant_id = $tenantId;
+        $patient->telefone_primario = $validated['telefone'] ?? null;
+        $patient->email = $validated['email'] ?? null;
+        $patient->save();
 
         $response = (new PatientPublicResource($patient))->resolve();
 

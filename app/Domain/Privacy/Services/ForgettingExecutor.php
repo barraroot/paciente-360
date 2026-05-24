@@ -140,7 +140,7 @@ final class ForgettingExecutor
      * Aqui aplicamos apenas os campos que de fato existem em `pacientes`.
      *
      * @param array<string, string|null> $anonymizeMap chave=field simbólico, valor=placeholder
-     * @return array<string, mixed>                    chave=coluna real, valor=placeholder
+     * @return array<string, mixed> chave=coluna real, valor=placeholder
      */
     private function buildPatientUpdates(array $anonymizeMap, int $patientId): array
     {
@@ -196,7 +196,7 @@ final class ForgettingExecutor
             ->where('tenant_id', $tenantId)
             ->update([
                 'texto' => null,
-                'updated_at' => Carbon::now(),
             ]);
+        // NB: `anotacoes` não possui coluna `updated_at` (apenas `created_at`).
     }
 }

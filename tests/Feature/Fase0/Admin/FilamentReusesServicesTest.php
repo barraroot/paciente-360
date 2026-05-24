@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Fase0\Admin;
 
+use App\Domain\SuperAdmin\Services\TenantLifecycleService;
 use App\Filament\Resources\PlanResource\Pages\ListPlans;
 use App\Filament\Resources\TenantResource\Pages\ListTenants;
 use App\Models\Plan;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Billing\PlanService;
-use App\Services\Tenant\TenantStateService;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -52,17 +52,18 @@ class FilamentReusesServicesTest extends TestCase
     {
         $tenant = Tenant::factory()->create(['status' => 'active']);
 
-        $spy = Mockery::spy(TenantStateService::class);
+        $spy = Mockery::spy(TenantLifecycleService::class);
         $spy->shouldReceive('suspend')
             ->once()
-            ->with(Mockery::on(fn (Tenant $t): bool => $t->id === $tenant->id));
+            ->with(Mockery::on(fn (Tenant $t): bool => $t->id === $tenant->id), Mockery::any(), Mockery::any());
 
-        $this->app->instance(TenantStateService::class, $spy);
+        $this->app->instance(TenantLifecycleService::class, $spy);
 
         Sanctum::actingAs($this->superAdmin, ['*']);
 
+        // A action exige o campo `reason` (min 10 chars) no schema do modal.
         Livewire::test(ListTenants::class)
-            ->callTableAction('suspend', $tenant);
+            ->callTableAction('suspend', $tenant, ['reason' => 'Inadimplência confirmada']);
 
         $spy->shouldHaveReceived('suspend')->once();
     }
@@ -72,12 +73,12 @@ class FilamentReusesServicesTest extends TestCase
     {
         $tenant = Tenant::factory()->create(['status' => 'suspended']);
 
-        $spy = Mockery::spy(TenantStateService::class);
+        $spy = Mockery::spy(TenantLifecycleService::class);
         $spy->shouldReceive('reactivate')
             ->once()
-            ->with(Mockery::on(fn (Tenant $t): bool => $t->id === $tenant->id));
+            ->with(Mockery::on(fn (Tenant $t): bool => $t->id === $tenant->id), Mockery::any());
 
-        $this->app->instance(TenantStateService::class, $spy);
+        $this->app->instance(TenantLifecycleService::class, $spy);
 
         Sanctum::actingAs($this->superAdmin, ['*']);
 

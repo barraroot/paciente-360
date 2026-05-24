@@ -6,7 +6,6 @@ namespace Tests\Feature\Privacy;
 
 use App\Domain\Privacy\Models\ConsentRecord;
 use App\Models\Paciente;
-use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenantWithRoles;
@@ -38,7 +37,7 @@ class CrossTenantConsentTest extends TestCase
     public function test_tenant_a_cannot_list_tenant_b_consents(): void
     {
         // Tenant A com seu próprio consent.
-        [$tenantA, ] = $this->tenantAndUserForRole('clinica-a', 'admin-clinica');
+        [$tenantA] = $this->tenantAndUserForRole('clinica-a', 'admin-clinica');
         $patientA = Paciente::factory()->state(['tenant_id' => $tenantA->id])->create();
         ConsentRecord::factory()
             ->marketing()
@@ -47,12 +46,13 @@ class CrossTenantConsentTest extends TestCase
 
         // Tenant B em separado (sem auth).
         $tenantB = $this->bootstrapTenantWithRoles('clinica-b');
-        $patientB = Paciente::factory()->state(['tenant_id' => $tenantB->id])->create();
-        ConsentRecord::factory()
-            ->marketing()
-            ->state(['tenant_id' => $tenantB->id, 'patient_id' => $patientB->id])
-            ->count(3)
-            ->create();
+        // 3 consents do tenant B em pacientes distintos (PARTIAL UNIQUE por
+        // patient_id+finalidade impede grants duplicados no mesmo paciente).
+        Paciente::factory()->count(3)->state(['tenant_id' => $tenantB->id])->create()
+            ->each(fn (Paciente $patientB) => ConsentRecord::factory()
+                ->marketing()
+                ->state(['tenant_id' => $tenantB->id, 'patient_id' => $patientB->id])
+                ->create());
 
         // Auth como tenant A — lista deve mostrar APENAS 1 consent (do tenant A).
         $response = $this->getJson(
@@ -68,7 +68,7 @@ class CrossTenantConsentTest extends TestCase
     public function test_tenant_a_gets_404_when_reading_tenant_b_consent_by_id(): void
     {
         // Tenant A logado.
-        [$tenantA, ] = $this->tenantAndUserForRole('clinica-a-show', 'admin-clinica');
+        [$tenantA] = $this->tenantAndUserForRole('clinica-a-show', 'admin-clinica');
 
         // Consent existe no tenant B.
         $tenantB = $this->bootstrapTenantWithRoles('clinica-b-show');
@@ -89,7 +89,7 @@ class CrossTenantConsentTest extends TestCase
 
     public function test_creating_consent_for_other_tenant_patient_is_rejected(): void
     {
-        [$tenantA, ] = $this->tenantAndUserForRole('clinica-a-create', 'admin-clinica');
+        [$tenantA] = $this->tenantAndUserForRole('clinica-a-create', 'admin-clinica');
 
         $tenantB = $this->bootstrapTenantWithRoles('clinica-b-create');
         $patientB = Paciente::factory()->state(['tenant_id' => $tenantB->id])->create();

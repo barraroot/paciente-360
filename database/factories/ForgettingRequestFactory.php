@@ -76,8 +76,11 @@ class ForgettingRequestFactory extends Factory
 
     public function expired(): self
     {
+        // requested_at recuado para honrar o CHECK chk_forgetting_deadline_after_request
+        // (deadline_at deve ser posterior a requested_at), simulando prazo já vencido.
         return $this->state(fn (): array => [
             'status' => ForgettingStatus::Expired,
+            'requested_at' => Carbon::now()->subDays(22),
             'deadline_at' => Carbon::now()->subDay(),
         ]);
     }

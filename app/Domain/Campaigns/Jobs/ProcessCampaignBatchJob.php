@@ -38,12 +38,17 @@ final class ProcessCampaignBatchJob implements ShouldQueue
     use SerializesModels;
 
     public int $tries = 3;
+
     public int $timeout = 120;
-    public string $queue = 'campaigns';
 
     public function __construct(
         public readonly int $campaignId,
-    ) {}
+    ) {
+        // NB: a fila é definida via onQueue() (não como propriedade tipada) —
+        // PHP 8.5 trata `public string $queue` como conflito incompatível com
+        // a propriedade não-tipada da trait Queueable (erro fatal de composição).
+        $this->onQueue('campaigns');
+    }
 
     public function handle(
         CampaignComplianceGate $gate,
@@ -118,6 +123,7 @@ final class ProcessCampaignBatchJob implements ShouldQueue
                     'blocked_reason' => 'no_reachable_channel',
                     'dispatched_at' => Carbon::now(),
                 ]);
+
                 continue;
             }
 
@@ -135,6 +141,7 @@ final class ProcessCampaignBatchJob implements ShouldQueue
                     'dispatched_at' => Carbon::now(),
                 ]);
                 $this->logDispatch($campaign, $patient->id, 'blocked', $result->blockReason, $result->details);
+
                 continue;
             }
 
@@ -159,7 +166,7 @@ final class ProcessCampaignBatchJob implements ShouldQueue
     }
 
     /**
-     * @param  array<string, mixed>|string|null  $details
+     * @param array<string, mixed>|string|null $details
      */
     private function logDispatch(Campaign $campaign, int $patientId, string $result, ?string $blockReason, mixed $details): void
     {

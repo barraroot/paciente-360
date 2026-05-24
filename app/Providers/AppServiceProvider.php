@@ -243,8 +243,17 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(CalendarSyncAccount::class, CalendarSyncAccountPolicy::class);
 
         // Fase 8 Lote E — Reports (T257). Ability-based gates (sem model).
-        Gate::define('report.view', static fn ($user): bool => $user?->can('report.view') ?? false);
-        Gate::define('report.export', static fn ($user): bool => $user?->can('report.export') ?? false);
+        // hasPermissionTo() (não can()) evita recursão: o before do Spatie retorna
+        // null em negação, então can() voltaria à própria ability → SIGSEGV.
+        Gate::define('report.view', static fn ($user): bool => $user instanceof User && $user->hasPermissionTo('report.view'));
+        Gate::define('report.export', static fn ($user): bool => $user instanceof User && $user->hasPermissionTo('report.export'));
+
+        // Spec 012 — Gestão de Profissionais. Ability-based (sem model policy
+        // para não conflitar com ProfessionalSchedulePolicy da Fase 5).
+        // IMPORTANTE: usa hasPermissionTo() (Spatie) em vez de can() — can() volta
+        // ao Gate e, como o before do Spatie retorna null em negação, a ability
+        // recursaria infinitamente (stack overflow → SIGSEGV) em todo path negado.
+        Gate::define('professional.manage', static fn ($user): bool => $user instanceof User && $user->hasPermissionTo('professional.manage'));
 
         // Fase 8 Lote D — Webhooks (T201).
         Gate::policy(WebhookEndpoint::class, WebhookPolicy::class);

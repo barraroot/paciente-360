@@ -146,6 +146,12 @@ const panelChildren = [
         component: () => import('@/pages/auth/TokensPage.vue'),
         meta: { title: 'layout.sidebar.settings.sessions' },
     },
+    {
+        path: 'profissionais',
+        name: 'professionals.list',
+        component: () => import('@/pages/Professionals/ProfessionalsListPage.vue'),
+        meta: { title: 'layout.sidebar.settings.professionals', ability: 'professional.manage' },
+    },
     // ─── Canais ────────────────────────────────────────────────────────────
     {
         path: 'canais',

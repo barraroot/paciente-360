@@ -98,6 +98,7 @@
             "title": "Vamos configurar sua clínica",
             "subtitle": "Complete as etapas para começar a usar o Paciente360.",
             "step_completed": "Etapa concluída.",
+            "step_skipped": "Etapa pulada.",
             "all_steps_completed": "Onboarding finalizado!",
             "continue": "Continuar",
             "skip": "Pular",
@@ -813,7 +814,8 @@
                 "audit": "Audit Logs",
                 "plans": "Planos",
                 "subscription": "Assinatura",
-                "ai_usage": "Uso de IA"
+                "ai_usage": "Uso de IA",
+                "professionals": "Profissionais"
             }
         },
         "topbar": {
@@ -992,6 +994,90 @@
         },
         "kpi": {
             "no_data": "Sem dados suficientes"
+        }
+    },
+    "professionals": {
+        "page_title": "Profissionais",
+        "page_subtitle": "Gerencie os profissionais clínicos da sua clínica.",
+        "table": {
+            "name": "Nome",
+            "council": "Conselho",
+            "especialidade": "Especialidade",
+            "status": "Status",
+            "actions": "Ações",
+            "status_active": "Ativo",
+            "status_inactive": "Inativo"
+        },
+        "toolbar": {
+            "new": "Novo profissional",
+            "filter_label": "Status",
+            "filter_active": "Ativos",
+            "filter_inactive": "Inativos",
+            "filter_all": "Todos",
+            "search_placeholder": "Buscar por nome..."
+        },
+        "form": {
+            "title_create": "Novo profissional",
+            "title_edit": "Editar profissional",
+            "name_label": "Nome completo",
+            "name_placeholder": "Dr. João Silva",
+            "council_type_label": "Tipo de conselho",
+            "council_type_other_label": "Nome do conselho",
+            "council_type_other_placeholder": "CREFITO, CFN, CFFa...",
+            "council_number_label": "Número do conselho",
+            "council_state_label": "UF",
+            "especialidade_label": "Especialidade",
+            "especialidade_placeholder": "Cardiologia, Pediatria...",
+            "link_mode_label": "Vincular usuário",
+            "link_mode_existing": "Vincular a usuário existente",
+            "link_mode_invite": "Convidar por email",
+            "user_id_label": "Usuário",
+            "user_id_placeholder": "Selecione um usuário...",
+            "email_label": "Email do convidado",
+            "email_placeholder": "medico@example.com",
+            "save": "Salvar",
+            "cancel": "Cancelar",
+            "user_link_immutable_note": "O vínculo de usuário não pode ser alterado após o cadastro."
+        },
+        "council_types": {
+            "CRM": "CRM",
+            "CRO": "CRO",
+            "COREN": "COREN",
+            "CRP": "CRP",
+            "OUTRO": "Outro"
+        },
+        "modal": {
+            "deactivate_title": "Desativar profissional",
+            "deactivate_body": "Tem certeza que deseja desativar {name}? Os pacientes sob sua responsabilidade serão reatribuídos automaticamente.",
+            "deactivate_confirm": "Desativar",
+            "deactivate_cancel": "Cancelar",
+            "email_already_user_title": "Email já cadastrado",
+            "email_already_user_body": "O email informado já pertence ao usuário {name}. Deseja vincular esse usuário ao novo profissional?",
+            "email_already_user_link": "Vincular"
+        },
+        "actions": {
+            "edit": "Editar",
+            "deactivate": "Desativar",
+            "reactivate": "Reativar"
+        },
+        "empty_state": {
+            "title": "Nenhum profissional cadastrado",
+            "body": "Comece cadastrando o primeiro profissional da sua clínica.",
+            "cta": "Cadastrar primeiro"
+        },
+        "errors": {
+            "load_failed": "Não foi possível carregar a lista de profissionais.",
+            "save_failed": "Não foi possível salvar. Verifique os campos.",
+            "deactivate_failed": "Não foi possível desativar o profissional.",
+            "email_other_tenant": "Este email já está cadastrado em outra clínica.",
+            "council_duplicate": "Já existe outro profissional com este conselho."
+        },
+        "success": {
+            "created": "Profissional cadastrado com sucesso.",
+            "updated": "Profissional atualizado.",
+            "deactivated": "Profissional desativado.",
+            "reactivated": "Profissional reativado.",
+            "invitation_sent": "Convite enviado para o email."
         }
     }
 }

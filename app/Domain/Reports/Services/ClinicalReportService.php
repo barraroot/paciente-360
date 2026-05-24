@@ -120,8 +120,8 @@ final class ClinicalReportService
             ->whereBetween('starts_at', [$start, $end])
             ->where('status', 'realizada')
             ->join('appointment_types', 'appointments.appointment_type_id', '=', 'appointment_types.id')
-            ->selectRaw('appointment_types.id, appointment_types.name, COUNT(*) as total, SUM(appointment_types.price_cents) as revenue_cents')
-            ->groupBy('appointment_types.id', 'appointment_types.name')
+            ->selectRaw('appointment_types.id, appointment_types.nome as name, COUNT(*) as total, SUM(appointment_types.valor_particular * 100) as revenue_cents')
+            ->groupBy('appointment_types.id', 'appointment_types.nome')
             ->orderByDesc('total')
             ->limit(10);
 

@@ -4,10 +4,14 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import api from '@/lib/api.js';
 import { useAuthStore } from '@/stores/auth.js';
+import ProfessionalFormModal from '@/components/Professionals/ProfessionalFormModal.vue';
 
 const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
+
+// ─── Spec 012 — Step 2 (first_professional) integration ───────────────────────
+const professionalModalOpen = ref(false);
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -130,8 +134,43 @@ function onSubmitClinicData() {
 
 function toggleStep(step) {
     if (step.status === 'locked') return;
+    // Spec 012 — step 2 abre modal em vez de painel inline.
+    if (step.key === 'first_professional' && step.status === 'pending') {
+        professionalModalOpen.value = true;
+        return;
+    }
     activeStep.value = activeStep.value === step.key ? null : step.key;
     clinicFormErrors.value = {};
+}
+
+/**
+ * Handler do @saved do ProfessionalFormModal no contexto de onboarding.
+ * Marca step 2 como completo, gravando { professional_id, via } no payload.
+ */
+async function onProfessionalSaved(saved) {
+    const via = saved?.user_id ? 'linked_user' : 'invited_user';
+    await completeStep('first_professional', {
+        professional_id: saved.id,
+        via,
+    });
+}
+
+async function skipStep(stepKey) {
+    saving.value = true;
+    globalError.value = null;
+    try {
+        const { data } = await api.post(`/onboarding/steps/${stepKey}/skip`);
+        state.value = data.data;
+        activeStep.value = null;
+        showToast(t('tenant.onboarding.step_skipped'));
+        if (state.value.completed) {
+            try { await auth.fetchMe(); } catch { /* best-effort */ }
+        }
+    } catch {
+        globalError.value = t('common.error_generic');
+    } finally {
+        saving.value = false;
+    }
 }
 
 function fieldError(field) {
@@ -283,8 +322,17 @@ onMounted(() => {
                                 </button>
                             </template>
 
-                            <!-- Pending: botão Iniciar -->
+                            <!-- Pending: botão Iniciar (+ Pular se opcional) -->
                             <template v-else-if="step.status === 'pending'">
+                                <button
+                                    v-if="!step.required && step.key === 'first_professional'"
+                                    type="button"
+                                    :disabled="saving"
+                                    class="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground-muted transition hover:border-foreground-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
+                                    @click="skipStep(step.key)"
+                                >
+                                    {{ t('tenant.onboarding.cta_skip') }}
+                                </button>
                                 <button
                                     type="button"
                                     class="rounded-lg bg-primary-700 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
@@ -432,5 +480,12 @@ onMounted(() => {
                 </li>
             </ol>
         </div>
+
+        <!-- Spec 012 — modal de novo profissional para step 2 do wizard -->
+        <ProfessionalFormModal
+            v-model:open="professionalModalOpen"
+            :professional="null"
+            @saved="onProfessionalSaved"
+        />
     </main>
 </template>

@@ -223,6 +223,12 @@ export const NAVIGATION = [
                 routeName: 'auth.tokens',
             },
             {
+                key: 'settings.professionals',
+                labelKey: 'layout.sidebar.settings.professionals',
+                routeName: 'professionals.list',
+                ability: 'professional.manage',
+            },
+            {
                 key: 'settings.users',
                 labelKey: 'layout.sidebar.settings.users',
                 routeName: 'users.list',

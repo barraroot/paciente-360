@@ -140,6 +140,11 @@ final class OnboardingService
                 'payload' => $payload,
             ];
 
+            // Spec 012 — desbloqueio progressivo:
+            // clinic_data completed → first_professional unlocked
+            // first_professional completed → schedule_setup unlocked
+            $persistedSteps = $this->applyUnlockTriggers($persistedSteps, $stepKey);
+
             $fresh->onboarding_state = [
                 'steps' => $persistedSteps,
                 'completed' => $this->computeCompleted($persistedSteps),
@@ -150,6 +155,72 @@ final class OnboardingService
 
             return $this->getState($fresh);
         });
+    }
+
+    /**
+     * **Spec 012 (US-1.2.2)** — Desbloqueia um step (transita `locked → pending`).
+     *
+     * Idempotente: se o step já está em outro estado (pending/completed/skipped),
+     * é no-op silencioso. Chamado tanto via trigger automático em completeStep
+     * quanto via comando de backfill para tenants existentes.
+     *
+     * @throws UnknownStepException
+     */
+    public function unlockStep(Tenant $tenant, string $stepKey): void
+    {
+        if (! array_key_exists($stepKey, self::STEPS)) {
+            throw new UnknownStepException($stepKey);
+        }
+
+        DB::transaction(function () use ($tenant, $stepKey): void {
+            /** @var Tenant $fresh */
+            $fresh = Tenant::lockForUpdate()->findOrFail($tenant->id);
+
+            $persistedState = is_array($fresh->onboarding_state) ? $fresh->onboarding_state : [];
+            $persistedSteps = $persistedState['steps'] ?? [];
+
+            $currentStatus = $persistedSteps[$stepKey]['status'] ?? self::STEPS[$stepKey]['status'];
+
+            if ($currentStatus !== 'locked') {
+                return; // Idempotente: já está pending/completed/skipped.
+            }
+
+            $persistedSteps[$stepKey] = ['status' => 'pending'];
+
+            $fresh->onboarding_state = [
+                'steps' => $persistedSteps,
+                'completed' => $this->computeCompleted($persistedSteps),
+            ];
+            $fresh->save();
+        });
+    }
+
+    /**
+     * Aplica triggers de desbloqueio progressivo após um step ser concluído.
+     *
+     * @param array<string, array{status: string}> $persistedSteps
+     * @return array<string, array{status: string}>
+     */
+    private function applyUnlockTriggers(array $persistedSteps, string $completedStepKey): array
+    {
+        $unlockMap = [
+            'clinic_data' => 'first_professional',
+            'first_professional' => 'schedule_setup',
+        ];
+
+        $stepToUnlock = $unlockMap[$completedStepKey] ?? null;
+
+        if ($stepToUnlock === null) {
+            return $persistedSteps;
+        }
+
+        $currentStatus = $persistedSteps[$stepToUnlock]['status'] ?? self::STEPS[$stepToUnlock]['status'];
+
+        if ($currentStatus === 'locked') {
+            $persistedSteps[$stepToUnlock] = ['status' => 'pending'];
+        }
+
+        return $persistedSteps;
     }
 
     /**

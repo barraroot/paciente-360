@@ -973,8 +973,9 @@ When working on Professional features post-Fase 12, remember:
 
 1. **`Gate::define('professional.manage', ...)` (ability-based) — NÃO usar policy de model**
    - Conflito: `Gate::policy(Professional::class, ProfessionalSchedulePolicy::class)` JÁ existe da Fase 5 (escopo schedule).
-   - Solução: gate ability-based em `AppServiceProvider::registerPolicies()`, padrão idêntico ao `report.view`/`report.export` da Fase 8.
+   - Solução: gate ability-based em `AppServiceProvider::registerPolicies()`.
    - Controllers chamam `Gate::authorize('professional.manage')` (não `('manage', Professional::class)`).
+   - **CRÍTICO — recursão/SIGSEGV**: a closure DEVE usar `$user->hasPermissionTo('professional.manage')`, NUNCA `$user->can(...)`. O `Gate::before` do Spatie retorna `null` em negação → `can()` volta à própria ability → recursão infinita → stack overflow → segfault em todo path negado. Aplicado também a `report.view`/`report.export` (mesmo bug latente da Fase 8, corrigido na 012).
 
 2. **Middleware stack obrigatório: `['auth:sanctum', 'tenant.slug', 'tenant.not-suspended']`**
    - `tenant.slug` é CRÍTICO — sem ele, `TenantResolved` não dispara, Spatie team_id fica null, e gate sempre retorna false (mesmo com permission atribuída).

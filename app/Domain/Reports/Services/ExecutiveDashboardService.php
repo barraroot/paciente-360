@@ -104,7 +104,8 @@ final class ExecutiveDashboardService
 
         return [
             'metric' => $metric,
-            'period' => ['start' => $start->toIso8601String(), 'end' => $end->toIso8601String()],
+            'period_start' => $start->toIso8601String(),
+            'period_end' => $end->toIso8601String(),
             'detail' => $result['json'] ?? null,
         ];
     }

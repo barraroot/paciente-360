@@ -45,7 +45,22 @@ final class StoreProfessionalRequest extends FormRequest
                 'max:50',
                 Rule::requiredIf(fn () => $this->input('council_type') === 'OUTRO'),
             ],
-            'council_number' => ['required', 'string', 'min:5', 'max:20', 'regex:/^[A-Za-z0-9.\-]+$/'],
+            'council_number' => [
+                'required',
+                'string',
+                'min:5',
+                'max:20',
+                'regex:/^[A-Za-z0-9.\-]+$/',
+                // Espelha o UNIQUE composto parcial (tenant_id, council_type,
+                // council_number, council_state) WHERE deleted_at IS NULL.
+                // Defesa em profundidade: devolve 422 antes de bater na constraint do DB.
+                Rule::unique('professionals', 'council_number')
+                    ->where(fn ($q) => $q
+                        ->where('tenant_id', $this->user()?->tenant_id)
+                        ->where('council_type', $this->input('council_type'))
+                        ->where('council_state', $this->input('council_state'))
+                        ->whereNull('deleted_at')),
+            ],
             'council_state' => ['required', 'string', 'size:2', Rule::in(self::UFS)],
             'especialidade' => ['nullable', 'string', 'max:100'],
 
@@ -73,6 +88,7 @@ final class StoreProfessionalRequest extends FormRequest
     {
         return [
             'council_type_other.required' => trans('professionals.validation.council_type_other_required'),
+            'council_number.unique' => trans('professionals.validation.council_duplicate'),
             'user_id.exists' => trans('professionals.validation.user_belongs_to_other_tenant'),
         ];
     }

@@ -98,6 +98,7 @@
             "title": "Vamos configurar sua clínica",
             "subtitle": "Complete as etapas para começar a usar o Paciente360.",
             "step_completed": "Etapa concluída.",
+            "step_skipped": "Etapa pulada.",
             "all_steps_completed": "Onboarding finalizado!",
             "continue": "Continuar",
             "skip": "Pular",

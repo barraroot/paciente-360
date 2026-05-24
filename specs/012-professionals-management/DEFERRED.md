@@ -196,3 +196,36 @@ Os "próximos passos" acima foram entregues:
 - ⏳ T072 — Smoke browser real nas 3 personas (manual)
 - ⏳ T076 — `.specify/feature.json` → DELIVERED (gated em T067/T072)
 - ⛔ T020/T022/T024 — skipped-by-design: `useProfessionals.js`, `EspecialidadeAutocomplete.vue`, `ProfessionalsTable.vue` já funcionam via store + `<datalist>` + tabela inline; rebuild não agrega valor funcional.
+
+---
+
+## Smoke HTTP 2026-05-24 (via curl — T072 parcial)
+
+Sem ferramenta de browser disponível (sem Playwright), foi feito smoke **HTTP-level**
+contra o stack real (`localhost:8088`, tenant `flowsys`, Bearer + `X-Tenant-Slug`),
+exercitando middleware (`auth:sanctum`/`tenant.slug`/`tenant.not-suspended`), gate
+`professional.manage`, routing e serialização.
+
+**Resultado: 11/11 verde** após corrigir o ambiente:
+1. GET list → 200 · 2. POST vincular user → 201 (sem vazar email) · 3. GET show → 200 ·
+4. PUT update → 200 · 5. PUT com `user_id` → 422 (proibido) · 6. POST conselho duplicado
+→ 422 (UNIQUE) · 7. GET autocomplete → 200 · 8. POST check-email → 200 (sem email) ·
+9. DELETE desativar → 204 · 10. lista ativos não mostra o desativado · 11. POST activate → 200.
+OUTRO sem `council_type_other` → 422. Onboarding `state` → 200.
+
+### ⚠️ Achados de PROVISIONAMENTO/DEPLOY (não são defeitos de código — o código está correto)
+
+1. **Migrations não aplicadas no DB de dev**: `2026_05_24_000001` (+ várias da Fase 8) estavam
+   `Pending`. Smoke dava 500 (`column "especialidade" does not exist`). **Fix de deploy:
+   `artisan migrate`** (aplicado durante o smoke).
+2. **Permission `professional.manage` ausente + não atribuída ao role admin-clinica**: tenants
+   existentes davam **403** generalizado. RolesSeeder (T006) já contém a permission, mas precisa
+   ser reexecutado. **Fix de deploy: `artisan db:seed --class=RolesSeeder` + `artisan
+   permission:cache-reset`** (cache do Spatie não enxerga permission nova sem reset).
+3. **`APP_LOCALE=en` no dev**: mensagens de validação backend (`lang/pt_BR/professionals.php` →
+   ex.: `council_duplicate`) retornam a chave crua em vez do texto PT. Pré-existente e
+   transversal a todos os módulos. **Fix: `APP_LOCALE=pt_BR`** (ou mover strings p/ locale ativo).
+
+### Ainda pendente (browser real)
+- Smoke visual/UX nas 3 personas (renderização Vue, modais a11y na prática)
+- T067 audit a11y axe/Lighthouse

@@ -29,7 +29,8 @@ use InvalidArgumentException;
  *   - `reactivate(Tenant, Super Admin)` — AC-12.1.4
  *   - `cancel(Tenant, Super Admin, reason)` — AC-12.1.10
  */
-final class TenantLifecycleService
+// NB: não-final para permitir spy/mock (Mockery) nos testes das actions Filament.
+class TenantLifecycleService
 {
     public function createByAdmin(array $data, User $createdBy, string $billingMode = 'stripe'): Tenant
     {
@@ -104,7 +105,7 @@ final class TenantLifecycleService
     {
         $this->assertReasonOk($reason);
 
-        return DB::transaction(function () use ($tenant, $canceledBy, $reason): Tenant {
+        return DB::transaction(function () use ($tenant, $canceledBy): Tenant {
             $now = Carbon::now();
 
             $tenant->update([

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Constitutional;
 
 use App\Support\Lgpd\ContainsNoClinicalData;
+use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionClass;
 use Tests\TestCase;
 
@@ -44,11 +45,15 @@ class EventsForAiPseudonymizationTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider aiConsumedEventsProvider
-     */
+    #[DataProvider('aiConsumedEventsProvider')]
     public function test_event_implements_contains_no_clinical_data(string $eventClass): void
     {
+        // Sentinela do provider quando ai_consumed_events está vazia (fase IA ainda
+        // não entregue) — não há evento real para validar.
+        if ($eventClass === 'stdClass') {
+            $this->markTestSkipped('Nenhum evento consumido por IA registrado em finalization.ai_consumed_events.');
+        }
+
         $this->assertTrue(
             class_exists($eventClass),
             "Evento {$eventClass} listado em ai_consumed_events não existe. ".
@@ -71,7 +76,10 @@ class EventsForAiPseudonymizationTest extends TestCase
      */
     public static function aiConsumedEventsProvider(): array
     {
-        $events = config('finalization.ai_consumed_events', []);
+        // Data providers rodam ANTES do boot do app (sem container) — não pode
+        // usar config(). Lê o arquivo de config diretamente.
+        $config = require dirname(__DIR__, 3).'/config/finalization.php';
+        $events = $config['ai_consumed_events'] ?? [];
 
         // PHPUnit exige ≥1 item para data provider — quando lista vazia, retorna
         // um caso "noop" que apenas valida que a config existe (test acima).

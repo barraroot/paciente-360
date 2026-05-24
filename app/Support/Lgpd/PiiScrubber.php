@@ -23,7 +23,7 @@ namespace App\Support\Lgpd;
  *
  * **NÃO usar** para pseudonimização de payload do LLM — para isso, eventos
  * devem ser projetados explicitamente sem PII desde o design (padrão
- * {@see \App\Support\Lgpd\ContainsNoClinicalData} da Fase 7).
+ * {@see ContainsNoClinicalData} da Fase 7).
  *
  * @see specs/008-finalizacao-mvp/research.md §3.3
  */
@@ -35,14 +35,17 @@ final class PiiScrubber
      * @var array<string, string>
      */
     private const PATTERNS = [
-        // CPF — preserva máscara para indicar que era CPF, mas oculta dígitos.
-        '/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/' => '***.***.***-**',
         // E-mail.
         '/[\w.+-]+@[\w-]+\.[\w.-]+/' => '<email>',
         // Cartão SUS (15 dígitos) — antes do telefone para não conflitar.
         '/\b\d{15}\b/' => '<sus>',
-        // Telefone BR — móvel (com 9) ou fixo, com ou sem DDD.
+        // Telefone BR — móvel (com 9) ou fixo, com ou sem DDD. ANTES do CPF: um
+        // celular bare de 11 dígitos (11999998888) também casa o padrão de CPF;
+        // CPF formatado (com pontos/traço) não casa o de telefone, então a ordem
+        // preserva ambos os rótulos. PII é mascarada em qualquer ordem.
         '/\(?\b\d{2}\)?\s?9?\d{4,5}-?\d{4}\b/' => '<phone>',
+        // CPF — preserva máscara para indicar que era CPF, mas oculta dígitos.
+        '/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/' => '***.***.***-**',
         // RG SP/RJ — 8-9 dígitos com dígito verificador opcional (X/x/0-9).
         '/\b\d{2}\.?\d{3}\.?\d{3}-?[\dXx]\b/' => '<rg>',
     ];

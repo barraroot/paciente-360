@@ -52,11 +52,11 @@ function onKeydown(e) {
                 aria-describedby="email-already-user-body"
                 class="relative bg-surface-elevated rounded-xl shadow-popover w-full max-w-md"
             >
-                <header class="px-5 py-4 border-b border-border">
+                <div class="px-5 py-4 border-b border-border">
                     <h2 id="email-already-user-title" class="text-lg font-semibold text-foreground">
                         {{ t('professionals.modal.email_already_user_title') }}
                     </h2>
-                </header>
+                </div>
 
                 <div class="px-5 py-4">
                     <p id="email-already-user-body" class="text-sm text-foreground-muted">

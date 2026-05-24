@@ -422,13 +422,42 @@ router.beforeEach(async (to) => {
         return { path: '/panel' };
     }
 
+    // Enforce de permissão em rotas gated (`meta.ability` / `meta.anyOf`).
+    // Sem isto, rotas gated eram alcançáveis por URL direta — só a sidebar
+    // escondia o link. O backend ainda devolve 403, mas a página renderizava
+    // com empty state enganoso. Redireciona para a home do painel.
+    if (auth.isAuthenticated) {
+        const { ability, anyOf } = to.meta ?? {};
+        const lacksAbility = ability && !auth.hasPermission(ability);
+        const lacksAnyOf =
+            Array.isArray(anyOf) &&
+            anyOf.length > 0 &&
+            !anyOf.some((permission) => auth.hasPermission(permission));
+
+        if (lacksAbility || lacksAnyOf) {
+            return { name: 'panel.home' };
+        }
+    }
+
+    // Onboarding é gerenciável apenas por admin-clinica / super-admin
+    // (OnboardingPolicy::manage). Demais perfis (ex.: médico) não devem ser
+    // redirecionados nem alcançar a tela — senão tomam 403 em /onboarding/state.
+    const canManageOnboarding =
+        auth.isAuthenticated &&
+        (auth.hasRole('admin-clinica') || auth.hasRole('super-admin'));
+
     // Auto-redirect para onboarding quando tenant ainda não concluiu o setup.
     if (
         to.name === 'panel.home' &&
-        auth.isAuthenticated &&
+        canManageOnboarding &&
         auth.tenant?.onboarding_completed === false
     ) {
         return { name: 'panel.onboarding' };
+    }
+
+    // Não-gestores que tentam abrir o wizard por URL direta voltam à home.
+    if (to.name === 'panel.onboarding' && auth.isAuthenticated && !canManageOnboarding) {
+        return { name: 'panel.home' };
     }
 });
 

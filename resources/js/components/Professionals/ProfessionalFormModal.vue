@@ -149,21 +149,24 @@ function cancelEmailLink() {
                 :aria-label="isEdit ? t('professionals.form.title_edit') : t('professionals.form.title_create')"
                 class="relative bg-surface-elevated rounded-xl shadow-popover w-full max-w-xl max-h-[90vh] overflow-y-auto"
             >
-                <header class="flex items-center justify-between px-5 py-4 border-b border-border">
+                <!-- div (não <header>): teleportado ao body, <header> viraria
+                     um landmark `banner` duplicado da topbar (axe). -->
+                <div class="flex items-center justify-between px-5 py-4 border-b border-border">
                     <h2 class="text-lg font-semibold text-foreground">
                         {{ isEdit ? t('professionals.form.title_edit') : t('professionals.form.title_create') }}
                     </h2>
                     <button type="button" :aria-label="t('professionals.form.cancel')" class="text-foreground-muted hover:text-foreground" @click="close">
                         <HeroIcon name="close" class="w-5 h-5" />
                     </button>
-                </header>
+                </div>
 
                 <form @submit.prevent="submit" class="p-5 space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-foreground mb-1">
+                        <label for="prof-name" class="block text-sm font-medium text-foreground mb-1">
                             {{ t('professionals.form.name_label') }} <span class="text-danger-500">*</span>
                         </label>
                         <input
+                            id="prof-name"
                             v-model="form.name"
                             type="text"
                             required
@@ -184,10 +187,11 @@ function cancelEmailLink() {
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-sm font-medium text-foreground mb-1">
+                            <label for="prof-council-number" class="block text-sm font-medium text-foreground mb-1">
                                 {{ t('professionals.form.council_number_label') }} <span class="text-danger-500">*</span>
                             </label>
                             <input
+                                id="prof-council-number"
                                 v-model="form.council_number"
                                 type="text"
                                 required
@@ -199,10 +203,11 @@ function cancelEmailLink() {
                             <p v-if="errors.council_number" class="mt-1 text-xs text-danger-500">{{ errors.council_number[0] }}</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-foreground mb-1">
+                            <label for="prof-council-state" class="block text-sm font-medium text-foreground mb-1">
                                 {{ t('professionals.form.council_state_label') }} <span class="text-danger-500">*</span>
                             </label>
                             <select
+                                id="prof-council-state"
                                 v-model="form.council_state"
                                 required
                                 class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -214,10 +219,11 @@ function cancelEmailLink() {
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-foreground mb-1">
+                        <label for="prof-especialidade" class="block text-sm font-medium text-foreground mb-1">
                             {{ t('professionals.form.especialidade_label') }}
                         </label>
                         <input
+                            id="prof-especialidade"
                             v-model="form.especialidade"
                             type="text"
                             maxlength="100"
@@ -246,8 +252,9 @@ function cancelEmailLink() {
                         </div>
 
                         <div v-if="form.link_mode === 'existing'">
-                            <label class="block text-xs font-medium text-foreground-muted mb-1">{{ t('professionals.form.user_id_label') }}</label>
+                            <label for="prof-user-id" class="block text-xs font-medium text-foreground-muted mb-1">{{ t('professionals.form.user_id_label') }}</label>
                             <input
+                                id="prof-user-id"
                                 v-model="form.user_id"
                                 type="number"
                                 :placeholder="t('professionals.form.user_id_placeholder')"
@@ -258,8 +265,9 @@ function cancelEmailLink() {
                         </div>
 
                         <div v-else>
-                            <label class="block text-xs font-medium text-foreground-muted mb-1">{{ t('professionals.form.email_label') }}</label>
+                            <label for="prof-invite-email" class="block text-xs font-medium text-foreground-muted mb-1">{{ t('professionals.form.email_label') }}</label>
                             <input
+                                id="prof-invite-email"
                                 v-model="form.email"
                                 type="email"
                                 :placeholder="t('professionals.form.email_placeholder')"

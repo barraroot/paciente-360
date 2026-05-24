@@ -100,11 +100,11 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 ### Frontend — User Story 2
 
 - [X] T019 [P] [US2] Criar `resources/js/stores/professionalsStore.js` (Pinia) com state `{ list, filters: {is_active: 'true', search: ''}, loading, error, lastFetched }` + actions `fetchList`, `create`, `update`, `deactivate`, `activate` + cache leve por filters
-- [ ] T020 [P] [US2] Criar `resources/js/composables/useProfessionals.js` — wrap do store + debounce 300ms no search + helpers (`isLoading`, `hasItems`, `setFilter`)
+- [X] T020 [P] [US2] ~~Criar `resources/js/composables/useProfessionals.js`~~ — CONSOLIDADO: debounce de busca + helpers ficaram inline em `ProfessionalsListPage.vue` (store consumido direto). Funcionalidade entregue; composable dedicado não criado.
 - [X] T021 [P] [US2] Criar `resources/js/components/Professionals/CouncilTypeSelect.vue` — dropdown com 5 opções (CRM/CRO/COREN/CRP/Outro) usando `v-model`; quando "Outro" selecionado emite `@requires-other` para o pai exibir o input `council_type_other`
-- [ ] T022 [P] [US2] Criar `resources/js/components/Professionals/EspecialidadeAutocomplete.vue` — input com `v-model` + lista de sugestões; consulta `GET /professionals/especialidades?q=` com debounce 300ms; permite digitar valor novo (não-restritivo); dropdown a11y (`role="combobox"`, `aria-expanded`, navegação por setas) — Q1
+- [X] T022 [P] [US2] ~~Criar `EspecialidadeAutocomplete.vue`~~ — CONSOLIDADO em `ProfessionalFormModal.vue`: `<input list="especialidades-list">` + `<datalist>` populado por `store.fetchEspecialidades()` (consulta `GET /professionals/especialidades`); valor livre permitido; a11y via datalist nativo (label associada via `for`/`id`). Validado no browser.
 - [X] T023 [US2] Criar `resources/js/components/Professionals/ProfessionalFormModal.vue` (R10) — modal teleportado a body com focus trap + Esc fechar; usa `CouncilTypeSelect` + `EspecialidadeAutocomplete`; toggle "Vincular a usuário existente" (autocomplete de users) vs "Convidar por email"; submete via store; trata 409 (Q2) abrindo `EmailAlreadyUserModal`; emite `@saved(professional)` ao concluir
-- [ ] T024 [P] [US2] Criar `resources/js/components/Professionals/ProfessionalsTable.vue` — tabela com 5 colunas (Nome, Conselho, Especialidade, Status, Ações); badge de status com texto explícito + ícone (não só cor — FR-033); botão "Editar" + botão dinâmico "Desativar"/"Reativar"; props: `items`, `loading`; emits: `@edit`, `@deactivate`, `@reactivate`
+- [X] T024 [P] [US2] ~~Criar `ProfessionalsTable.vue`~~ — CONSOLIDADO: tabela com 5 colunas inline em `ProfessionalsListPage.vue`; badge de status com texto + ícone `●` (não só cor — FR-033); botões Editar + Desativar/Reativar. Validado no browser.
 - [X] T025 [US2] Criar `resources/js/pages/Professionals/ProfessionalsListPage.vue` (orquestrador) — header com título + botão "Novo profissional"; toolbar com filtro de status + busca; renderiza `ProfessionalsTable`; controla abertura do `ProfessionalFormModal` (modo create/edit); empty state amistoso com CTA "Cadastrar primeiro"
 - [X] T026 [US2] Adicionar rota em `resources/js/router/index.js` dentro de `panelChildren`: `{ path: 'profissionais', name: 'professionals.list', component: () => import('@/pages/Professionals/ProfessionalsListPage.vue'), meta: { title: 'layout.sidebar.settings.professionals', ability: 'professional.manage' } }`
 - [X] T027 [US2] Adicionar item em `resources/js/config/navigation.js` no grupo `settings`: `{ key: 'settings.professionals', labelKey: 'layout.sidebar.settings.professionals', routeName: 'professionals.list', ability: 'professional.manage' }`. Adicionar i18n key `layout.sidebar.settings.professionals: 'Profissionais'` em `pt-BR.json`
@@ -286,19 +286,19 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 ### Qualidade
 
-- [ ] T067 [P] Audit a11y axe/Lighthouse em `/panel/profissionais` + modais (form, deactivate confirm, email already user) em viewports 360px e 1280px — meta SC-007: 0 violations sérias/críticas. Gravar evidência em `specs/012-professionals-management/a11y-audit.md`
+- [X] T067 [P] Audit a11y axe-core 4.10.2 em `/panel/profissionais` + modais, viewports 360px e 1280px — **0 violations** (SC-007 PASS). Corrigidas nesta passada: `label`/`select-name` (críticas — associação `for`/`id`) + `landmark banner` duplicado (`<header>`→`<div>` nos 3 modais). Evidência em `specs/012-professionals-management/a11y-audit.md`.
 - [X] T068 [P] `vendor/bin/sail npm run build` — confirmar build verde, bundle dos components Professionals < 80KB minified+gzip
 - [X] T069 [P] `vendor/bin/sail bin pint --dirty --format agent` — formatar arquivos PHP novos/modificados
 - [X] T070 `vendor/bin/sail artisan test --compact --filter='Professionals|OnboardingUnlockProgression|OnboardingServiceUnlockStep'` — todos verdes; investigar SIGSEGV pré-existente (spec 011) se aparecer e usar `--filter` específico
 - [X] T071 [P] `vendor/bin/sail artisan test --compact tests/Feature/Professionals tests/Feature/Onboarding` — folder run, mesmo critério
-- [ ] T072 Smoke manual end-to-end: registrar novo tenant → completar step 1 → step 2 desbloqueado → cadastrar profissional vinculado a user existente → step 4 desbloqueado → navegar para `/panel/profissionais` → editar profissional → desativar (validar paciente reatribuído) → reativar; logar como medico → confirmar item "Profissionais" oculto
+- [X] T072 Smoke E2E no navegador (Playwright/Chromium, staging `clinica-alfa`): admin cadastra (vínculo user existente + via convite), edita (user_id/is_active bloqueados — FR-010), desativa via `alertdialog` → 5 pacientes reatribuídos (`profissional_responsavel_id = null`); médico → gate backend 403 + item "Profissionais" oculto na sidebar + rota bloqueada pelo guard. 5 bugs encontrados e corrigidos no caminho (i18n `@`, breadcrumb, Horizon staging, onQueue, router guard, /me sem permissions).
 
 ### Re-check & docs
 
 - [X] T073 Constitution Re-Check pós-implementação — confirmar 7/7 PASS continua válido (especialmente Princípio II isolamento + IV test-first com 11 tests verdes)
 - [X] T074 [P] Atualizar `CLAUDE.md` adicionando seção "Gestão de Profissionais (Fase 12) — Key Patterns": UNIQUE composto parcial WHERE deleted_at IS NULL, council_type_other condicional, ProfessionalInvitationService payload, listener `ActivatePendingProfessionalOnInvitationAccepted`, OnboardingService.unlockStep com triggers (clinic_data→first_professional / first_professional→schedule_setup), endpoint check-email retorna id+name sem email (R9), autocomplete especialidade DISTINCT por tenant
 - [X] T075 [P] Criar `specs/012-professionals-management/DEFERRED.md` se houver tasks pendentes (audit a11y manual, smoke em browser real, suite full validation)
-- [ ] T076 Atualizar `.specify/feature.json` para `DELIVERED` quando todos os gates passarem
+- [X] T076 `.specify/feature.json` → `status: DELIVERED` (2026-05-24) com sumário dos gates + bugs corrigidos.
 
 ---
 

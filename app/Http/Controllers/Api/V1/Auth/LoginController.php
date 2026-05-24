@@ -10,8 +10,8 @@ use App\Exceptions\Auth\InvalidCredentialsException;
 use App\Exceptions\Auth\TenantSuspendedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Resources\AuthenticatedUserResource;
 use App\Http\Resources\TenantResource;
-use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Support\Metrics\AuthMetricsContract;
 use Illuminate\Http\JsonResponse;
@@ -144,7 +144,7 @@ final class LoginController extends Controller
         return response()->json([
             'token' => $result['token'],
             'token_expires_at' => $result['expires_at']->toIso8601String(),
-            'user' => UserResource::make($user),
+            'user' => AuthenticatedUserResource::make($user),
             'tenant' => TenantResource::make($user->tenant),
         ], 201);
     }

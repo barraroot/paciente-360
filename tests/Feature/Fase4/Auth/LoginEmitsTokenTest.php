@@ -51,7 +51,7 @@ class LoginEmitsTokenTest extends TestCase
             ->assertJsonStructure([
                 'token',
                 'token_expires_at',
-                'user' => ['id', 'name', 'email'],
+                'user' => ['id', 'name', 'email', 'roles', 'permissions'],
                 'tenant' => ['id', 'slug', 'name'],
             ])
             ->assertJsonFragment(['id' => $this->user->id])

@@ -10,6 +10,7 @@ export const useProfessionalsStore = defineStore('professionals', {
         filters: { is_active: 'true', search: '' },
         loading: false,
         error: null,
+        forbidden: false,
         especialidadesSuggestions: [],
     }),
 
@@ -17,10 +18,17 @@ export const useProfessionalsStore = defineStore('professionals', {
         async fetchList() {
             this.loading = true;
             this.error = null;
+            this.forbidden = false;
             try {
                 const { data } = await api.get('/professionals', { params: this.filters });
                 this.list = data.data ?? data;
             } catch (e) {
+                // 403: distingue "sem permissão" de lista vazia, para a página
+                // renderizar acesso negado em vez do empty state enganoso.
+                if (e?.response?.status === 403) {
+                    this.forbidden = true;
+                    this.list = [];
+                }
                 this.error = e?.response?.data?.message ?? 'Falha ao carregar profissionais.';
             } finally {
                 this.loading = false;

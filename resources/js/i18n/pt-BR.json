@@ -1034,7 +1034,7 @@
             "user_id_label": "Usuário",
             "user_id_placeholder": "Selecione um usuário...",
             "email_label": "Email do convidado",
-            "email_placeholder": "medico@example.com",
+            "email_placeholder": "medico{'@'}example.com",
             "save": "Salvar",
             "cancel": "Cancelar",
             "user_link_immutable_note": "O vínculo de usuário não pode ser alterado após o cadastro."
@@ -1064,6 +1064,10 @@
             "title": "Nenhum profissional cadastrado",
             "body": "Comece cadastrando o primeiro profissional da sua clínica.",
             "cta": "Cadastrar primeiro"
+        },
+        "forbidden": {
+            "title": "Acesso negado",
+            "body": "Você não tem permissão para gerenciar profissionais. Fale com um administrador da clínica."
         },
         "errors": {
             "load_failed": "Não foi possível carregar a lista de profissionais.",

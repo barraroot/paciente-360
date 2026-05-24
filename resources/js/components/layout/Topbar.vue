@@ -15,7 +15,7 @@ defineProps({
 
 const emit = defineEmits(['open-drawer', 'toggle-sidebar']);
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const auth = useAuthStore();
 const route = useRoute();
 const { labelKeyForRoute } = useNavigation();
@@ -32,6 +32,11 @@ const contextTitle = computed(() => {
         }
     }
     if (typeof meta === 'string' && meta.length > 0) {
+        // Pode ser uma chave i18n (ex.: 'layout.sidebar.settings.professionals')
+        // ou uma string literal — espelha o resolver de `document.title`.
+        if (meta.includes('.') && te(meta)) {
+            return t(meta);
+        }
         return meta;
     }
     const fallbackKey = labelKeyForRoute(route.name);

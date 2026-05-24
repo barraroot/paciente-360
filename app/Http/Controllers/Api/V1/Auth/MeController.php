@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AuthenticatedUserResource;
 use App\Http\Resources\TenantResource;
-use App\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -48,7 +48,7 @@ final class MeController extends Controller
             : null;
 
         return response()->json([
-            'user' => UserResource::make($user),
+            'user' => AuthenticatedUserResource::make($user),
             'tenant' => TenantResource::make($user->tenant),
             'token' => [
                 'id' => $token?->id,

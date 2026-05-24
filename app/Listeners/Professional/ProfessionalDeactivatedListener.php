@@ -51,8 +51,11 @@ class ProfessionalDeactivatedListener
             'criada_em' => now(),
         ]);
 
-        // Dispara o job de reatribuição
+        // Dispara o job de reatribuição na fila padrão. NÃO usar
+        // `config('queue.default')` aqui: isso retorna o nome da CONEXÃO
+        // ('redis'), não da fila — o job acabaria numa fila "redis" que
+        // nenhum supervisor do Horizon consome (job preso indefinidamente).
         ReassignOrphansJob::dispatch($pacienteIds)
-            ->onQueue(config('queue.default'));
+            ->onQueue('default');
     }
 }

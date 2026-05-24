@@ -56,7 +56,12 @@ final class ProfessionalDeactivationReassignsTest extends TestCase
 
         $response->assertNoContent();
 
-        Queue::assertPushed(ReassignOrphansJob::class);
+        // Deve cair na fila 'default' (consumida pelo Horizon), nunca numa
+        // fila com nome de conexão como 'redis' (regressão: onQueue recebia
+        // config('queue.default') que retorna o nome da conexão).
+        Queue::assertPushed(ReassignOrphansJob::class, function (ReassignOrphansJob $job): bool {
+            return $job->queue === 'default';
+        });
 
         $this->assertFalse((bool) $professional->fresh()->is_active);
         $this->assertSoftDeleted('professionals', ['id' => $professional->id]);

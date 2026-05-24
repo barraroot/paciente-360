@@ -16,7 +16,10 @@ const toast = ref(null);
 
 const items = computed(() => store.list);
 const loading = computed(() => store.loading);
-const isEmpty = computed(() => ! loading.value && items.value.length === 0);
+const forbidden = computed(() => store.forbidden);
+const isEmpty = computed(
+    () => ! loading.value && ! forbidden.value && items.value.length === 0,
+);
 
 let searchTimer = null;
 function onSearchInput(value) {
@@ -120,6 +123,12 @@ onMounted(() => {
         <ul v-if="loading && items.length === 0" role="list" aria-hidden="true" class="space-y-2">
             <li v-for="n in 4" :key="n" class="h-14 rounded-lg bg-surface-muted animate-pulse"></li>
         </ul>
+
+        <!-- Acesso negado (403) -->
+        <div v-else-if="forbidden" role="alert" class="text-center py-12 border border-dashed border-danger-300 rounded-xl bg-danger-50">
+            <p class="text-base font-semibold text-danger-700">{{ t('professionals.forbidden.title') }}</p>
+            <p class="mt-1 text-sm text-danger-600">{{ t('professionals.forbidden.body') }}</p>
+        </div>
 
         <!-- Empty state -->
         <div v-else-if="isEmpty" class="text-center py-12 border border-dashed border-border rounded-xl">

@@ -44,8 +44,12 @@ class MeEndpointTest extends TestCase
         ])->getJson('/api/v1/auth/me');
 
         $response->assertStatus(200)
+            // `permissions` + `roles` são obrigatórios: o SPA depende deles para
+            // a navegação por permissões e o route guard de `meta.ability`.
+            // Regressão: MeController havia voltado a usar UserResource (sem
+            // permissions), deixando a sidebar vazia e bloqueando rotas gated.
             ->assertJsonStructure([
-                'user' => ['id', 'name', 'email'],
+                'user' => ['id', 'name', 'email', 'roles', 'permissions'],
                 'tenant' => ['id', 'slug'],
                 'token' => ['id', 'name', 'abilities', 'expires_at'],
             ])

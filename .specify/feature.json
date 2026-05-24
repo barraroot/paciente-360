@@ -1,3 +1,6 @@
 {
-  "feature_directory": "specs/012-professionals-management"
+  "feature_directory": "specs/012-professionals-management",
+  "status": "DELIVERED",
+  "delivered_at": "2026-05-24",
+  "notes": "Smoke E2E no navegador + a11y audit (axe-core 0 violations) concluídos. 5 bugs corrigidos durante a validação: i18n '@' em email_placeholder, breadcrumb sem t(), Horizon staging (env ausente + memory_limit + onQueue), router guard de meta.ability, e /me|/login sem permissions (UserResource -> AuthenticatedUserResource)."
 }

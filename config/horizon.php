@@ -183,7 +183,7 @@ return [
     |
     */
 
-    'memory_limit' => 64,
+    'memory_limit' => 128,
 
     /*
     |--------------------------------------------------------------------------
@@ -276,6 +276,54 @@ return [
                 'timeout' => 600,
             ],
             // Fase 8 (T004) — Same supervisors em local com processes reduzidos para dev.
+            'campaigns' => [
+                'connection' => 'redis',
+                'queue' => ['campaigns'],
+                'balance' => 'simple',
+                'processes' => 2,
+                'tries' => 3,
+                'timeout' => 120,
+            ],
+            'reports' => [
+                'connection' => 'redis',
+                'queue' => ['reports'],
+                'balance' => 'simple',
+                'processes' => 1,
+                'tries' => 3,
+                'timeout' => 300,
+            ],
+            'webhooks' => [
+                'connection' => 'redis',
+                'queue' => ['webhooks'],
+                'balance' => 'simple',
+                'processes' => 3,
+                'tries' => 1,
+                'timeout' => 30,
+            ],
+            'privacy' => [
+                'connection' => 'redis',
+                'queue' => ['privacy'],
+                'balance' => 'simple',
+                'processes' => 1,
+                'tries' => 3,
+                'timeout' => 600,
+            ],
+        ],
+
+        // Staging (APP_ENV=staging) — sem este bloco nenhum supervisor sobe
+        // e TODA fila Redis fica presa. Espelha `local` com processos enxutos.
+        'staging' => [
+            'supervisor-1' => [
+                'maxProcesses' => 3,
+            ],
+            'imports' => [
+                'connection' => 'imports',
+                'queue' => ['imports'],
+                'balance' => 'simple',
+                'processes' => 2,
+                'tries' => 3,
+                'timeout' => 600,
+            ],
             'campaigns' => [
                 'connection' => 'redis',
                 'queue' => ['campaigns'],

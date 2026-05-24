@@ -19,10 +19,11 @@ const isOther = computed(() => props.modelValue === 'OUTRO');
 
 <template>
     <div class="space-y-2">
-        <label class="block text-sm font-medium text-foreground">
+        <label for="prof-council-type" class="block text-sm font-medium text-foreground">
             {{ t('professionals.form.council_type_label') }} <span class="text-danger-500">*</span>
         </label>
         <select
+            id="prof-council-type"
             :value="modelValue"
             @change="emit('update:modelValue', $event.target.value)"
             class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
@@ -36,10 +37,11 @@ const isOther = computed(() => props.modelValue === 'OUTRO');
         <p v-if="error" class="text-xs text-danger-500">{{ error }}</p>
 
         <div v-if="isOther" class="space-y-1">
-            <label class="block text-xs font-medium text-foreground-muted">
+            <label for="prof-council-type-other" class="block text-xs font-medium text-foreground-muted">
                 {{ t('professionals.form.council_type_other_label') }} <span class="text-danger-500">*</span>
             </label>
             <input
+                id="prof-council-type-other"
                 type="text"
                 :value="otherValue"
                 @input="emit('update:otherValue', $event.target.value)"

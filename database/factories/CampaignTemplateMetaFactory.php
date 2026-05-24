@@ -27,11 +27,10 @@ class CampaignTemplateMetaFactory extends Factory
         // (Fase 3 — modelo MessagingChannelTemplate pode não ser accessible).
         $channelId = DB::table('messaging_channels')->insertGetId([
             'tenant_id' => $tenant->id,
-            'provider' => 'twilio',
-            'channel_type' => 'whatsapp',
-            'status' => 'connected',
-            'external_id' => 'wa_'.fake()->uuid(),
-            'display_name' => fake()->company(),
+            'type' => 'whatsapp',
+            'name' => fake()->company(),
+            'status' => 'ativo',
+            'provider_metadata' => json_encode(['external_id' => 'wa_'.fake()->uuid()]),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

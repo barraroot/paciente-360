@@ -32,7 +32,7 @@ final class CampaignAudienceCalculator
     /**
      * Conta o público elegível sem materializar (para pré-visualização).
      *
-     * @param  array<string, mixed>  $filters
+     * @param array<string, mixed> $filters
      */
     public function estimate(int $tenantId, array $filters): int
     {
@@ -42,7 +42,7 @@ final class CampaignAudienceCalculator
     /**
      * Itera o público elegível em LazyCollection — uso pelo dispatcher batch.
      *
-     * @param  array<string, mixed>  $filters
+     * @param array<string, mixed> $filters
      * @return LazyCollection<int, Paciente>
      */
     public function iterate(int $tenantId, array $filters): LazyCollection
@@ -51,7 +51,7 @@ final class CampaignAudienceCalculator
     }
 
     /**
-     * @param  array<string, mixed>  $filters
+     * @param array<string, mixed> $filters
      */
     private function buildQuery(int $tenantId, array $filters): Builder
     {
@@ -66,7 +66,7 @@ final class CampaignAudienceCalculator
 
             if ($hasAppointments) {
                 $query->whereNotIn('id', function ($sub) use ($cutoff): void {
-                    $sub->select('patient_id')
+                    $sub->select('paciente_id')
                         ->from('appointments')
                         ->where('status', 'realizada')
                         ->where('starts_at', '>=', $cutoff);
@@ -96,7 +96,7 @@ final class CampaignAudienceCalculator
             $hasAppointments = DB::getSchemaBuilder()->hasTable('appointments');
             if ($hasAppointments) {
                 $query->whereIn('id', function ($sub) use ($filters): void {
-                    $sub->select('patient_id')
+                    $sub->select('paciente_id')
                         ->from('appointments')
                         ->where('professional_id', (int) $filters['last_professional_id']);
                 });

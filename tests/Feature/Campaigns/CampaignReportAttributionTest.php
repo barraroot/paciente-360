@@ -7,8 +7,8 @@ namespace Tests\Feature\Campaigns;
 use App\Domain\Campaigns\Models\Campaign;
 use App\Domain\Campaigns\Models\CampaignRecipient;
 use App\Domain\Campaigns\Models\CampaignRecipientStatus;
+use App\Models\Agenda\Appointment;
 use App\Models\Paciente;
-use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenantWithRoles;
@@ -49,12 +49,20 @@ class CampaignReportAttributionTest extends TestCase
         $patients = Paciente::factory()->count(3)->state(['tenant_id' => $tenant->id])->create();
 
         foreach ($patients as $i => $p) {
+            // FK real em attributed_appointment_id → cria appointment para os 2 primeiros.
+            $appointmentId = $i < 2
+                ? Appointment::factory()->create([
+                    'tenant_id' => $tenant->id,
+                    'paciente_id' => $p->id,
+                ])->id
+                : null;
+
             CampaignRecipient::factory()->state([
                 'tenant_id' => $tenant->id,
                 'campaign_id' => $campaign->id,
                 'patient_id' => $p->id,
                 'status' => CampaignRecipientStatus::Sent,
-                'attributed_appointment_id' => $i < 2 ? ($p->id + 1000) : null, // simula appointment_id arbitrário
+                'attributed_appointment_id' => $appointmentId,
             ])->create();
         }
 

@@ -7,7 +7,7 @@ namespace Tests\Feature\Campaigns;
 use App\Domain\Campaigns\Models\Campaign;
 use App\Domain\Campaigns\Services\CampaignBuilder;
 use App\Models\Paciente;
-use Database\Seeders\RolesSeeder;
+use App\Models\Plan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Concerns\CreatesTenantWithRoles;
@@ -58,8 +58,11 @@ class CampaignPreviewWarningsTest extends TestCase
     {
         [$tenant, $admin] = $this->tenantAndUserForRole('clinica-preview-overlimit', 'admin-clinica');
 
-        // Plan default daily_campaign_limit=200. Forçamos limite baixo via update.
-        $tenant->plan->update(['daily_campaign_limit' => 5]);
+        // Tenant de teste nasce sem plano (plan_id null). Cria e vincula um plano
+        // com limite baixo para exercitar o warning de excedente.
+        $plan = Plan::factory()->create(['daily_campaign_limit' => 5]);
+        $tenant->update(['plan_id' => $plan->id]);
+        $tenant->refresh();
 
         // 10 pacientes — excede o limite de 5.
         Paciente::factory()->count(10)->state(['tenant_id' => $tenant->id])->create();

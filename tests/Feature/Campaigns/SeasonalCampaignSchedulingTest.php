@@ -8,7 +8,7 @@ use App\Domain\Campaigns\Events\CampanhaCriada;
 use App\Domain\Campaigns\Models\Campaign;
 use App\Domain\Campaigns\Models\CampaignStatus;
 use App\Domain\Campaigns\Services\CampaignBuilder;
-use Database\Seeders\RolesSeeder;
+use App\Domain\Campaigns\Services\CampaignDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
@@ -53,7 +53,11 @@ class SeasonalCampaignSchedulingTest extends TestCase
 
         $this->assertSame(CampaignStatus::Scheduled, $campaign->status);
         $this->assertNotNull($campaign->scheduled_for);
-        $this->assertTrue($campaign->scheduled_for->equalTo($scheduledFor));
+        // Coluna é timestamp(0): compara em granularidade de segundo (sem micros).
+        $this->assertSame(
+            $scheduledFor->startOfSecond()->toIso8601String(),
+            $campaign->scheduled_for->toIso8601String(),
+        );
 
         Event::assertDispatched(CampanhaCriada::class);
     }
@@ -107,6 +111,6 @@ class SeasonalCampaignSchedulingTest extends TestCase
         ])->completed()->create();
 
         $this->expectException(\RuntimeException::class);
-        app(\App\Domain\Campaigns\Services\CampaignDispatcher::class)->dispatch($campaign);
+        app(CampaignDispatcher::class)->dispatch($campaign);
     }
 }

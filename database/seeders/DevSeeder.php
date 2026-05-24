@@ -45,14 +45,23 @@ class DevSeeder extends Seeder
         }
 
         // Garante baseline: roles, planos, super admin.
+        // AgendaPermissionsSeeder atribui as permissions de agenda (Fase 5) aos
+        // roles-template ANTES do clone por tenant — sem isto, os tenants de dev
+        // ficam sem `appointment.*`/`schedule.configure`/etc. e a Agenda some da
+        // sidebar (a navegação é filtrada por permissão).
         $this->call([
             RolesSeeder::class,
+            AgendaPermissionsSeeder::class,
             PlansSeeder::class,
             SuperAdminSeeder::class,
         ]);
 
         $this->seedTenantAlfa();
         $this->seedTenantBeta();
+
+        // Reaplica para os tenants recém-criados (passo 3 do seeder cobre
+        // tenants existentes) — garante agenda mesmo se o clone não copiar.
+        $this->call(AgendaPermissionsSeeder::class);
 
         // T039 — popular pacientes apenas em clinica-alfa (tenant ativo).
         $this->seedPacientesClinicaAlfa();

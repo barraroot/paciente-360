@@ -163,3 +163,36 @@ Esta sessão entregou **MVP do CRUD interno via página standalone**. Pendência
 3. **4 Feature tests bloqueantes** (G1, G2, G3, G4)
 
 Sugestão de organização: PR atual com o MVP do CRUD; PR subsequente com onboarding integration + tests formais.
+
+---
+
+## Atualização 2026-05-24 — gaps fechados (commits `d2a3d99`, `ff9e21e`)
+
+Os "próximos passos" acima foram entregues:
+
+- ✅ `OnboardingService::unlockStep` + triggers (T046/T047) — já existiam; cobertos agora por testes.
+- ✅ Wizard integration (T049) — `ProfessionalFormModal` embarcado no `OnboardingWizardPage`.
+- ✅ Testes G1–G9 + CRUD + unit (T010/T029/T034/T040/T043/T044/T045/T052/T062): 7 arquivos novos.
+- ✅ Fixes a11y: `DeactivateConfirmModal` (FR-015/032) + `EmailAlreadyUserModal` (FR-005a) — substituem `window.confirm()`.
+- ✅ Backfill command `onboarding:backfill-unlocks` (T048) — idempotente, `--dry-run`, com 4 testes.
+
+**Suíte full**: 1577 tests / 1572 passed / 0 failures (5 skipped, 1 incomplete, 5 risky — pré-existentes). Build verde. Pint clean.
+
+### Constitution Re-Check (T073) — 7/7 PASS mantido
+
+| Princípio | Status | Nota |
+|---|---|---|
+| I. Privacidade/LGPD | ✅ PASS | `ProfessionalResource` não vaza email do user vinculado (teste `test_resource_does_not_expose_linked_user_email`); `check-email` retorna só id+name. |
+| II. Isolamento Multi-Tenant | ✅ PASS | Gates G1/G7/G9 verdes; backfill itera tenants e usa `unlockStep` escopado por tenant. |
+| III. Segurança Clínica/IA | ✅ N/A | Feature não interage com IA. |
+| IV. Spec-Driven/Test-First | ✅ PASS | 8 arquivos de teste novos; suíte full sem regressão. |
+| V. Observabilidade | ✅ PASS | Eventos auditáveis inalterados; backfill loga cada unlock. |
+| VI. Conformidade Meta | ✅ N/A | Sem disparo em canal externo. |
+| VII. Segurança Operacional | ✅ PASS | Gate `professional.manage` (G2) cobre check-email/autocomplete/activate; modais a11y substituem `window.confirm()`. |
+
+### Ainda pendente (manual / fora de escopo desta sessão)
+
+- ⏳ T067 — Audit a11y axe/Lighthouse (manual, requer browser)
+- ⏳ T072 — Smoke browser real nas 3 personas (manual)
+- ⏳ T076 — `.specify/feature.json` → DELIVERED (gated em T067/T072)
+- ⛔ T020/T022/T024 — skipped-by-design: `useProfessionals.js`, `EspecialidadeAutocomplete.vue`, `ProfessionalsTable.vue` já funcionam via store + `<datalist>` + tabela inline; rebuild não agrega valor funcional.

@@ -216,7 +216,7 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 - [X] T046 [US1] Estender `app/Services/Onboarding/OnboardingService.php` (R5) — adicionar método público `unlockStep(Tenant $tenant, string $stepKey): void` que muta status `locked → pending` (idempotente; no-op se já `pending`, `completed` ou `skipped`); persiste via `tenant->update(['onboarding_state' => ...])`
 - [X] T047 [US1] Estender `OnboardingService::completeStep()` (R5) — após persistir step + emitir evento + computar completed, adicionar triggers: `if ($stepKey === 'clinic_data') $this->unlockStep($fresh, 'first_professional'); elseif ($stepKey === 'first_professional') $this->unlockStep($fresh, 'schedule_setup');`
-- [ ] T048 [US1] Backfill nos tenants existentes: criar comando artisan one-shot `php artisan onboarding:backfill-unlocks` que para cada tenant com `clinic_data.status='completed'` aplica `unlockStep(first_professional)`; para cada com `first_professional.status='completed'` aplica `unlockStep(schedule_setup)`. Idempotente — pode rodar várias vezes.
+- [X] T048 [US1] Backfill nos tenants existentes: criar comando artisan one-shot `php artisan onboarding:backfill-unlocks` que para cada tenant com `clinic_data.status='completed'` aplica `unlockStep(first_professional)`; para cada com `first_professional.status='completed'` aplica `unlockStep(schedule_setup)`. Idempotente — pode rodar várias vezes.
 - [X] T049 [US1] Estender `resources/js/pages/onboarding/OnboardingWizardPage.vue` — quando step `first_professional` é clicado e está `pending`, abrir `ProfessionalFormModal` (mesmo componente do T023) em modo embed (sem teleport — fica dentro do wizard); ao receber `@saved(professional)`, chamar `POST /onboarding/steps/first_professional/complete` com payload `{ professional_id, via: 'linked_user'|'invited_user' }`; atualizar state local + ver step 4 unlocked
 - [X] T050 [US1] Rodar T044 + T045 e validar verdes; smoke manual: registrar nova clínica → completar step 1 → step 2 desbloqueado → cadastrar profissional → step 2 completed + step 4 unlocked
 
@@ -295,7 +295,7 @@ Backend Laravel + Frontend Vue SPA. Caminhos:
 
 ### Re-check & docs
 
-- [ ] T073 Constitution Re-Check pós-implementação — confirmar 7/7 PASS continua válido (especialmente Princípio II isolamento + IV test-first com 11 tests verdes)
+- [X] T073 Constitution Re-Check pós-implementação — confirmar 7/7 PASS continua válido (especialmente Princípio II isolamento + IV test-first com 11 tests verdes)
 - [X] T074 [P] Atualizar `CLAUDE.md` adicionando seção "Gestão de Profissionais (Fase 12) — Key Patterns": UNIQUE composto parcial WHERE deleted_at IS NULL, council_type_other condicional, ProfessionalInvitationService payload, listener `ActivatePendingProfessionalOnInvitationAccepted`, OnboardingService.unlockStep com triggers (clinic_data→first_professional / first_professional→schedule_setup), endpoint check-email retorna id+name sem email (R9), autocomplete especialidade DISTINCT por tenant
 - [X] T075 [P] Criar `specs/012-professionals-management/DEFERRED.md` se houver tasks pendentes (audit a11y manual, smoke em browser real, suite full validation)
 - [ ] T076 Atualizar `.specify/feature.json` para `DELIVERED` quando todos os gates passarem

@@ -35,6 +35,8 @@ Catálogo por tenant que mapeia tipo de notificação → template aprovado do p
 - CHECK `notification_type` ∈ enum; `channel_type` ∈ {`whatsapp`}.
 - **Allow-list de `variables_map`** (validada na aplicação): `patient_name`, `appointment_datetime`, `professional_name`, `clinic_name`, `days_until_expiry`, `offer_expires_at`. Qualquer chave fora da lista → rejeição (gate LGPD).
 
+**Gate de aprovação Princípio VI (D1)**: o `provider_template_id` aqui DEVE corresponder a um `ChannelTemplate` (`messaging_channel_templates`) com `meta_template_status='approved'` no canal resolvido. Antes de qualquer disparo fora da janela 24h, o `NotificationTemplateResolver`/dispatcher consulta o status de aprovação real no `ChannelTemplate` (fonte de verdade já sincronizada da Meta/Twilio). Sem `ChannelTemplate` aprovado correspondente → `pending_manual/no_template`. Isso satisfaz literalmente "o dispatcher MUST consultar status do template antes do disparo e bloquear se não aprovado" sem denormalizar o status (evita drift).
+
 ## Tabela: `outbound_notifications`
 
 Rastreia cada tentativa de notificar um paciente.

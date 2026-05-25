@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\V1\Inbox\QuickRepliesController;
 use App\Http\Controllers\Api\V1\Inbox\TakeoverController;
 use App\Http\Controllers\Api\V1\Integrations\ApiTokensController;
 use App\Http\Controllers\Api\V1\Integrations\WebhooksController;
+use App\Http\Controllers\Api\V1\Notifications\NotificationTemplateController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
 use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
 use App\Http\Controllers\Api\V1\Pacientes\ExportacaoController;
@@ -179,6 +180,13 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
 Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])->group(function (): void {
     Route::apiResource('/professionals', ProfessionalsController::class)
         ->parameters(['professionals' => 'professional']);
+});
+
+// Feature 013 — Catálogo de templates de notificação outbound (US5).
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])->group(function (): void {
+    Route::apiResource('/notification-templates', NotificationTemplateController::class)
+        ->parameters(['notification-templates' => 'notificationTemplate'])
+        ->only(['index', 'store', 'update', 'destroy']);
 });
 
 // US-1.3 — Billing: planos públicos (sem auth) e checkout/assinatura autenticados.

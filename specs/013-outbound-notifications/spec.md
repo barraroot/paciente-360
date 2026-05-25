@@ -69,7 +69,7 @@ Quando uma vaga é liberada e há lista de espera, o próximo paciente da fila r
 
 ---
 
-### User Story 4 - Entrega impossível vira tarefa de contato manual (Priority: P2)
+### User Story 4 - Entrega impossível vira pendência de contato manual (Priority: P2)
 
 Quando uma notificação não pode ser entregue automaticamente (paciente sem canal conectado, sem template configurado para aquele tipo, ou fora da janela sem template válido), o sistema **não falha silenciosamente**: registra a notificação como "pendente de contato manual" e a torna visível para a equipe agir.
 

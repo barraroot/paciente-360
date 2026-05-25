@@ -1,3 +1,6 @@
 {
-  "feature_directory": "specs/013-outbound-notifications"
+  "feature_directory": "specs/013-outbound-notifications",
+  "status": "DELIVERED",
+  "delivered_at": "2026-05-25",
+  "notes": "Entrega de Notificações Outbound. 41/46 tasks concluídas + 3 DEFERRED (UI Vue T039, seeder T040, E2E/smoke T045) + T044/T046. Motor OutboundNotificationDispatcher (ordem R5) + 2 tabelas + resolvers + 6 listeners religados + reconciliação via MessageObserver. Gates G1–G11 + unit resolvers = 30 testes verdes. Suíte cheia 1615/1610/0 failures. Constitution PASS 7/7 — gate de aprovação Princípio VI implementado via consulta runtime ao ChannelTemplate (decisão D1 do /speckit-analyze); E2E Playwright DEFERRED (D2, padrão das fases anteriores)."
 }

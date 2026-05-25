@@ -2,27 +2,38 @@
 
 namespace App\Listeners\Agenda;
 
+use App\Domain\Messaging\Notification\DataTransfer\NotificationRequest;
+use App\Domain\Messaging\Notification\Enums\NotificationType;
+use App\Domain\Messaging\Notification\Services\OutboundNotificationDispatcher;
 use App\Events\Agenda\CancelamentoSolicitadoForaDoPrazo;
-use Illuminate\Support\Facades\Log;
+use App\Models\Agenda\Appointment;
 
 /**
- * T125 — Escala cancelamento fora do prazo para inbox da Fase 3 (clarify nº 3).
+ * Feature 013 — Escalonamento de cancelamento fora do prazo (FR-010).
  *
- * Stub para integração — Fase 3 cria handoff/note quando MessagingDispatcher
- * expor entry-point. Por enquanto loga.
+ * Entrega via {@see OutboundNotificationDispatcher}; quando não houver canal/template
+ * aprovado, o dispatcher roteia para contato manual (mensagem de sistema na conversa).
+ *
+ * Auto-discovered (Laravel 11+) — NÃO registrar manualmente.
  */
 class EscalateCancellationOutsideWindowToInbox
 {
+    public function __construct(
+        private readonly OutboundNotificationDispatcher $dispatcher,
+    ) {}
+
     public function handle(CancelamentoSolicitadoForaDoPrazo $event): void
     {
-        Log::info('agenda.cancellation.escalated_to_inbox', [
-            'tenant_id' => $event->appointment->tenant_id,
-            'appointment_id' => $event->appointment->id,
-            'requested_by' => $event->requestedBy,
-            'window_hours' => $event->windowHours,
-            'current_hours_until_appt' => $event->currentHoursUntilAppt,
-        ]);
+        $appointment = $event->appointment;
 
-        // TODO: chamar MessagingDispatcher::createHandoffForCancellation($event)
+        $this->dispatcher->dispatch(new NotificationRequest(
+            tenantId: $appointment->tenant_id,
+            patientId: $appointment->paciente_id,
+            type: NotificationType::CancellationEscalation,
+            milestone: 'escalation',
+            sourceType: Appointment::class,
+            sourceId: $appointment->id,
+            professionalId: $appointment->professional_id,
+        ));
     }
 }

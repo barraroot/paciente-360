@@ -70,6 +70,8 @@ use App\Support\Metrics\AuthMetrics;
 use App\Support\Metrics\AuthMetricsContract;
 use App\Support\Metrics\MessagingMetrics;
 use App\Support\Metrics\MessagingMetricsContract;
+use App\Support\Metrics\OutboundNotificationMetrics;
+use App\Support\Metrics\OutboundNotificationMetricsContract;
 use App\Support\Metrics\PanelHomeMetrics;
 use App\Support\Metrics\PanelHomeMetricsContract;
 use App\Support\Metrics\PrescriptionMetrics;
@@ -145,6 +147,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(
             PanelHomeMetricsContract::class,
             PanelHomeMetrics::class,
+        );
+
+        // Feature 013 — OutboundNotificationMetrics: métricas de entrega de notificações.
+        $this->app->singleton(
+            OutboundNotificationMetricsContract::class,
+            OutboundNotificationMetrics::class,
         );
 
         // T034 — Fase 4: BearerAuthContract → TokenIssuerService (singleton).

@@ -2,23 +2,38 @@
 
 namespace App\Listeners\Agenda;
 
+use App\Domain\Messaging\Notification\DataTransfer\NotificationRequest;
+use App\Domain\Messaging\Notification\Enums\NotificationType;
+use App\Domain\Messaging\Notification\Services\OutboundNotificationDispatcher;
 use App\Events\Agenda\LimiteDeReagendamentoExcedido;
-use Illuminate\Support\Facades\Log;
+use App\Models\Agenda\Appointment;
 
 /**
- * T126 — Escala limite de reagendamentos excedido para inbox da Fase 3 (clarify nº 7).
+ * Feature 013 — Escalonamento de limite de reagendamento excedido (FR-010).
+ *
+ * Entrega via {@see OutboundNotificationDispatcher}; sem canal/template aprovado,
+ * roteia para contato manual.
+ *
+ * Auto-discovered (Laravel 11+) — NÃO registrar manualmente.
  */
 class EscalateRescheduleLimitExceededToInbox
 {
+    public function __construct(
+        private readonly OutboundNotificationDispatcher $dispatcher,
+    ) {}
+
     public function handle(LimiteDeReagendamentoExcedido $event): void
     {
-        Log::info('agenda.reschedule.limit_exceeded.escalated', [
-            'tenant_id' => $event->appointment->tenant_id,
-            'appointment_id' => $event->appointment->id,
-            'current_count' => $event->currentCount,
-            'limit' => $event->limit,
-        ]);
+        $appointment = $event->appointment;
 
-        // TODO: chamar MessagingDispatcher::createHandoffForRescheduleLimit($event)
+        $this->dispatcher->dispatch(new NotificationRequest(
+            tenantId: $appointment->tenant_id,
+            patientId: $appointment->paciente_id,
+            type: NotificationType::RescheduleLimitEscalation,
+            milestone: 'escalation',
+            sourceType: Appointment::class,
+            sourceId: $appointment->id,
+            professionalId: $appointment->professional_id,
+        ));
     }
 }

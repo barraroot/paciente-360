@@ -101,9 +101,11 @@ class PrescriptionAiRenewalNotifiesDoctorTest extends TestCase
     }
 
     /**
-     * Q13 — Listener log é registrado com payload correto.
+     * Feature 013 — o listener agora ENTREGA/ROTEIA via OutboundNotificationDispatcher
+     * (substitui o stub de Log::info da Fase 7). Cria uma OutboundNotification
+     * rastreável do tipo `ai_renewal_task` para o paciente.
      */
-    public function test_listener_logs_inbox_task_request_with_correct_payload(): void
+    public function test_listener_dispatches_ai_renewal_notification(): void
     {
         [$tenant, $medico] = $this->tenantAndUserForRole('clinica-notify-log', 'medico');
         $tenant->update(['settings' => ['modules' => ['prescriptions' => ['enabled' => true]]]]);
@@ -121,8 +123,6 @@ class PrescriptionAiRenewalNotifiesDoctorTest extends TestCase
                 'status' => 'active',
             ]);
 
-        Log::spy();
-
         $event = new RenovacaoSolicitadaPelaIA(
             prescriptionId: $prescription->id,
             patientId: $prescription->patient_id,
@@ -130,14 +130,14 @@ class PrescriptionAiRenewalNotifiesDoctorTest extends TestCase
             appointmentId: null,
         );
 
-        $listener = app(EnqueueInboxTaskOnAiRenewal::class);
-        $listener->handle($event);
+        app(EnqueueInboxTaskOnAiRenewal::class)->handle($event);
 
-        Log::shouldHaveReceived('info')
-            ->withArgs(function (string $channel, array $context) use ($prescription): bool {
-                return $channel === 'prescription.ai_renewal.inbox_task_requested'
-                    && isset($context['prescription_id'])
-                    && $context['prescription_id'] === $prescription->id;
-            });
+        $this->assertDatabaseHas('outbound_notifications', [
+            'tenant_id' => $tenant->id,
+            'patient_id' => $paciente->id,
+            'notification_type' => 'ai_renewal_task',
+            'source_type' => Prescription::class,
+            'source_id' => $prescription->id,
+        ]);
     }
 }

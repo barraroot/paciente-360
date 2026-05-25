@@ -1001,3 +1001,50 @@ When working on Professional features post-Fase 12, remember:
     - Smoke browser real nas 3 personas
     - Backfill onboarding (`onboarding:backfill-unlocks` command) para tenants existentes
     - Constitution Re-Check formal + `.specify/feature.json` → DELIVERED
+
+## Notificações Outbound (Fase 13) — Key Patterns
+
+When working on outbound notification delivery post-Fase 13, remember:
+
+1. **`OutboundNotificationDispatcher` é o ÚNICO ponto que chama `MessageDispatchService::send`**
+   - Listeners (Agenda/Prescription) ficam finos: montam um `NotificationRequest` (DTO imutável em `app/Domain/Messaging/Notification/DataTransfer/`) e chamam `dispatch()`.
+   - Ordem determinística R5 (curto-circuita no 1º bloqueio): **opt_out → debounce 4h → idempotência → resolver canal → janela/template → envio**.
+   - **NUNCA lança** ao listener — toda falha vira `OutboundNotification` terminal (`pending_manual`/`skipped`). Garante SC-003 (nada "some").
+
+2. **Gate de aprovação Princípio VI = consulta runtime ao `ChannelTemplate` (decisão D1)**
+   - `NotificationTemplateResolver::resolve(tenant, type, Channel)` só retorna o `NotificationTemplate` se existir um `ChannelTemplate` (`messaging_channel_templates`) com `meta_template_status='approved'` para `(channel, provider_template_id)`.
+   - Sem template aprovado fora da janela → `pending_manual/no_template`. Isso satisfaz LITERALMENTE "o dispatcher MUST consultar status do template antes do disparo" sem denormalizar o status (evita drift). `notification_templates` é o catálogo por tenant (tipo→provider_template_id); `ChannelTemplate` é a fonte de verdade da aprovação.
+
+3. **Resolução de canal é WhatsApp-only para proativo (R1)**
+   - `OutboundChannelResolver`: `Channel` WhatsApp `status='ativo'` do tenant + `paciente.telefone_primario_normalizado` como `external_thread_id`. Sem WhatsApp ativo OU sem telefone → `null` → `pending_manual/no_channel`.
+   - `withinWindow` = existe `Conversation` com `last_inbound_message_at` < 24h → texto livre permitido (`freeFormBody`); fora da janela exige template.
+   - `ConversationService::findOrCreateForPatientChannel()` abre conversa para envio proativo SEM marcar sinais de inbound (`last_inbound_message_at`/`received_outside_hours`).
+
+4. **Fallback `pending_manual` = mensagem de sistema na conversa + `priority='alta'` (R10, clarify Q1)**
+   - Não há modelo de tarefa novo. `routeToManual()` posta `Message` `sender_type='system'` descrevendo motivo+contexto (sem PII clínica) e eleva `Conversation.priority='alta'` (NÃO há coluna de tag — sinalização é só priority, decisão U1).
+   - Para `no_channel` (sem canal ativo), usa a conversa existente do paciente se houver; senão o próprio `OutboundNotification` é o artefato rastreável.
+
+5. **Reconciliação de status via `MessageObserver::updated()` (R7/U2)**
+   - O `TwilioStatusCallbackController` faz `Message->update(['status'=>...])`. O `MessageObserver::updated()` detecta `wasChanged('status')` para `delivered`/`failed`, acha a `OutboundNotification` por `message_id` e chama `dispatcher->reconcileDelivered()`/`reconcileFailed()`.
+   - `delivered` → `sent→delivered` + latência. `failed` (definitivo) → `failed→pending_manual/send_failed`. **"lido" NÃO é rastreado.**
+
+6. **Idempotência dual-layer + debounce por (paciente, tipo)**
+   - UNIQUE parcial `(tenant, patient, type, milestone, created_at::date) WHERE status <> 'skipped'` em `outbound_notifications` + `Message.idempotency_key` (`notif:{tenant}:{type}:{patient}:{milestone}:{date}`).
+   - Debounce 4h: Redis `messaging_debounce:notification:{type}:{patient}` NX. Marcos distintos (`t_minus_24h` vs `t_minus_2h`) só não colidem na idempotência; o debounce é por tipo (em produção os marcos estão a >4h). Testes isolam o gate de idempotência via `Redis::flushdb()` entre dispatches.
+
+7. **Eventos auditáveis sem PII clínica**
+   - `NotificacaoEnviada` / `NotificacaoSuprimida` / `NotificacaoRoteadaParaManual` implementam `Auditable` + `ContainsNoClinicalData`; payload = `notification_id, patient_id, type, milestone, reason`. Persistidos em `audit_logs` via `PersistAuditLogListener`.
+
+8. **Listener de prescrição é ADITIVO (não quebra a Fase 7)**
+   - `DispatchPrescriptionAlertViaMessaging` mantém sua máquina de estados do `PrescriptionAlert` (opt-out/debounce/canal/template-por-nome/status) e, no passo de sucesso, chama o dispatcher para entrega REAL + rastreio. Os ~8 testes existentes de alerta continuam verdes.
+   - `EnqueueInboxTaskOnAiRenewal` agora despacha `ai_renewal_task` (substituiu o stub `Log::info`; teste atualizado para asserir a `OutboundNotification`).
+
+9. **US5 — CRUD de `notification-templates` permission-gated por `channel.connect`**
+   - `GET/POST/PUT/DELETE /api/v1/notification-templates` (middleware `auth:sanctum`+`tenant.slug`+`tenant.not-suspended`). `StoreNotificationTemplateRequest` valida a allow-list não-clínica de `variables_map` (`patient_name, appointment_datetime, professional_name, clinic_name, days_until_expiry, offer_expires_at`).
+   - Cross-tenant → 404 (route model binding via global scope). `notification_type`/`channel_type` são `prohibited` no update (imutáveis).
+
+10. **DEFERRED ao final da Fase 13**
+    - UI Vue `NotificationTemplatesPage.vue` + store (T039) — backend + seed operam; provisionável por seed.
+    - Seeder de templates default (T040).
+    - E2E Playwright da confirmação (D2 — desvio consciente do Princípio IV, padrão das fases anteriores) + smoke staging (T045).
+    - Instagram-within-window free-text: resolver foca WhatsApp; Instagram dentro da janela é caminho futuro (nenhum AC depende dele).

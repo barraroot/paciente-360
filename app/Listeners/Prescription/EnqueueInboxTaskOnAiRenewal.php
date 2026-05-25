@@ -2,6 +2,9 @@
 
 namespace App\Listeners\Prescription;
 
+use App\Domain\Messaging\Notification\DataTransfer\NotificationRequest;
+use App\Domain\Messaging\Notification\Enums\NotificationType;
+use App\Domain\Messaging\Notification\Services\OutboundNotificationDispatcher;
 use App\Domain\Prescription\Prescription\Prescription;
 use App\Domain\Prescription\Renewal\InitiatedByType;
 use App\Events\Prescription\RenovacaoSolicitadaPelaIA;
@@ -9,22 +12,19 @@ use App\Support\Metrics\PrescriptionMetricsContract;
 use Illuminate\Support\Facades\Log;
 
 /**
- * T133 — Cria item de tarefa na Inbox para o médico emissor quando a IA
- * solicita renovação de receita (AC-8.3.7 / Q13).
+ * Feature 013 — Renovação solicitada pela IA: entrega/roteia via dispatcher.
  *
- * IMPORTANT: Auto-discovered pelo Laravel 13 via type-hint de handle().
- * NÃO registrar manualmente em AppServiceProvider.
+ * Substitui o stub de log (Fase 7). O dispatcher entrega ao paciente quando há
+ * canal/template aprovado, ou roteia para contato manual (mensagem de sistema na
+ * conversa) — garantindo que a pendência seja visível ao médico emissor (Q13).
  *
- * DEFERRED: Integração real com Inbox Fase 3 (`ConversationService::createForPatient`)
- * não está disponível nesta fase. MVP usa Log::info com payload completo + métrica.
- * TODO: Integrar com InboxTask real quando ConversationService suportar criação de
- *       tarefa médico (Q13 — "Renovação agendada pela IA — paciente {nome}").
- *       Referência: specs/007-gestao-receituario/spec.md Q13.
+ * Auto-discovered (Laravel 11+) — NÃO registrar manualmente.
  */
 class EnqueueInboxTaskOnAiRenewal
 {
     public function __construct(
         private readonly PrescriptionMetricsContract $metrics,
+        private readonly OutboundNotificationDispatcher $dispatcher,
     ) {}
 
     public function handle(RenovacaoSolicitadaPelaIA $event): void
@@ -41,18 +41,16 @@ class EnqueueInboxTaskOnAiRenewal
             return;
         }
 
-        // MVP: Log estruturado em substituição à criação real de InboxTask.
-        // Pail-compatible para debug em dev.
-        Log::info('prescription.ai_renewal.inbox_task_requested', [
-            'prescription_id' => $event->prescriptionId,
-            'patient_id' => $event->patientId,
-            'professional_id' => $event->professionalId,
-            'appointment_id' => $event->appointmentId,
-            'tenant_id' => $prescription->tenant_id,
-            'note' => 'Inbox Fase 3 integration deferred — criar tarefa real ao médico emissor.',
-        ]);
+        $this->dispatcher->dispatch(new NotificationRequest(
+            tenantId: $prescription->tenant_id,
+            patientId: $event->patientId,
+            type: NotificationType::AiRenewalTask,
+            milestone: 'escalation',
+            sourceType: Prescription::class,
+            sourceId: $prescription->id,
+            professionalId: $event->professionalId,
+        ));
 
-        // Métrica de renovação iniciada pela IA (T148).
         $this->metrics->renewalInitiated($prescription->tenant_id, InitiatedByType::Ai);
     }
 }

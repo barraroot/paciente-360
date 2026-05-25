@@ -4,6 +4,9 @@ namespace App\Listeners\Prescription;
 
 use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Messaging\Channel\Models\ChannelTemplate;
+use App\Domain\Messaging\Notification\DataTransfer\NotificationRequest;
+use App\Domain\Messaging\Notification\Enums\NotificationType;
+use App\Domain\Messaging\Notification\Services\OutboundNotificationDispatcher;
 use App\Domain\Prescription\Alert\AlertStatus;
 use App\Domain\Prescription\Alert\AlertType;
 use App\Domain\Prescription\Alert\PrescriptionAlert;
@@ -198,12 +201,22 @@ class DispatchPrescriptionAlertViaMessaging
             return;
         }
 
-        // --- 5. Envia via MessageDispatchService ---
-        // T118 — Usa MessageDispatchService::send() com OutboundMessage template.
-        // Conversation lookup: sem conversation existente → log warning + blocked.
-        // TODO: criar conversation se não existir — depende de Conversation::createForPatient()
-        //       da Fase 3 que pode não estar disponível neste escopo.
+        // --- 5. Envia via OutboundNotificationDispatcher (feature 013) ---
+        // Entrega REAL + rastreio em outbound_notifications. O dispatcher resolve
+        // canal/conversa, aplica o gate de template aprovado (Princípio VI) e,
+        // se não entregável, roteia para contato manual (mensagem de sistema).
         try {
+            app(OutboundNotificationDispatcher::class)->dispatch(new NotificationRequest(
+                tenantId: $tenantId,
+                patientId: $prescription->patient_id,
+                type: NotificationType::PrescriptionExpiryAlert,
+                milestone: "d_{$event->daysUntilExpiry}",
+                sourceType: Prescription::class,
+                sourceId: $prescription->id,
+                context: ['days_until_expiry' => $event->daysUntilExpiry],
+                professionalId: $prescription->professional_id,
+            ));
+
             $alert->update([
                 'status' => AlertStatus::Dispatched,
                 'dispatched_at' => now(),

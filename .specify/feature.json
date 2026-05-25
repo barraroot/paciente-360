@@ -1,6 +1,6 @@
 {
-  "feature_directory": "specs/012-professionals-management",
+  "feature_directory": "specs/013-outbound-notifications",
   "status": "DELIVERED",
-  "delivered_at": "2026-05-24",
-  "notes": "Smoke E2E no navegador + a11y audit (axe-core 0 violations) concluídos. 5 bugs corrigidos durante a validação: i18n '@' em email_placeholder, breadcrumb sem t(), Horizon staging (env ausente + memory_limit + onQueue), router guard de meta.ability, e /me|/login sem permissions (UserResource -> AuthenticatedUserResource)."
+  "delivered_at": "2026-05-25",
+  "notes": "Entrega de Notificações Outbound. 41/46 tasks concluídas + 3 DEFERRED (UI Vue T039, seeder T040, E2E/smoke T045) + T044/T046. Motor OutboundNotificationDispatcher (ordem R5) + 2 tabelas + resolvers + 6 listeners religados + reconciliação via MessageObserver. Gates G1–G11 + unit resolvers = 30 testes verdes. Suíte cheia 1615/1610/0 failures. Constitution PASS 7/7 — gate de aprovação Princípio VI implementado via consulta runtime ao ChannelTemplate (decisão D1 do /speckit-analyze); E2E Playwright DEFERRED (D2, padrão das fases anteriores)."
 }

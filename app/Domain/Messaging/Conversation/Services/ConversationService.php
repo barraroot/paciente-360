@@ -69,6 +69,52 @@ final class ConversationService
     }
 
     /**
+     * Encontra ou cria conversa para envio OUTBOUND proativo (feature 013).
+     *
+     * Mesma chave de unicidade `(tenant, channel, external_thread_id)` do inbound,
+     * mas NÃO marca sinais de "mensagem recebida" (`last_inbound_message_at`,
+     * `received_outside_hours`) — não é inbound. Garante `patient_id` setado.
+     *
+     * @see specs/013-outbound-notifications/research.md §R2
+     */
+    public function findOrCreateForPatientChannel(
+        Channel $channel,
+        string $externalThreadId,
+        int $patientId,
+    ): Conversation {
+        /** @var Conversation|null $conversation */
+        $conversation = Conversation::withoutGlobalScopes()
+            ->where('tenant_id', $channel->tenant_id)
+            ->where('channel_id', $channel->id)
+            ->where('external_thread_id', $externalThreadId)
+            ->first();
+
+        if ($conversation !== null) {
+            if ($conversation->patient_id === null) {
+                $conversation->update(['patient_id' => $patientId]);
+            }
+
+            return $conversation;
+        }
+
+        $conversation = Conversation::create([
+            'tenant_id' => $channel->tenant_id,
+            'channel_id' => $channel->id,
+            'patient_id' => $patientId,
+            'external_thread_id' => $externalThreadId,
+            'status' => 'aberta',
+            'opened_at' => now(),
+            'priority' => 'normal',
+            'received_outside_hours' => false,
+            'unread_count' => 0,
+        ]);
+
+        event(new ConversaCriada($conversation));
+
+        return $conversation;
+    }
+
+    /**
      * Resolve uma conversa (manual ou automático).
      *
      * @throws InvalidConversationTransitionException

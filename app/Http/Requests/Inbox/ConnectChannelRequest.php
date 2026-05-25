@@ -49,15 +49,21 @@ class ConnectChannelRequest extends FormRequest
     public function rules(): array
     {
         $type = $this->input('type');
+        $provider = $this->input('provider', 'twilio');
+
+        // Feature 014 — WhatsApp não oficial (Evolution) não usa credenciais por
+        // tenant (servidor é nosso); a "conexão" é o pareamento por QR (US2).
+        $isEvolution = $type === 'whatsapp' && $provider === 'evolution';
 
         $rules = [
             'type' => ['required', 'string', 'in:whatsapp,instagram,web'],
+            'provider' => ['sometimes', 'string', 'in:twilio,evolution'],
             'name' => ['required', 'string', 'min:2', 'max:100'],
-            // Web channel does not require external credentials — public_key is generated internally
-            'credentials' => $type === 'web' ? ['sometimes', 'nullable', 'array'] : ['required', 'array'],
+            // Web e Evolution não exigem credenciais externas no payload.
+            'credentials' => ($type === 'web' || $isEvolution) ? ['sometimes', 'nullable', 'array'] : ['required', 'array'],
         ];
 
-        if ($type === 'whatsapp') {
+        if ($type === 'whatsapp' && ! $isEvolution) {
             $rules['credentials.account_sid'] = ['required', 'string', 'regex:/^AC[a-f0-9]{32}$/i'];
             $rules['credentials.auth_token'] = ['required', 'string'];
             $rules['credentials.messaging_service_sid'] = ['required', 'string', 'regex:/^MG[a-f0-9]{32}$/i'];

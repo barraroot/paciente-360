@@ -162,6 +162,42 @@ final class MessagingMetrics implements MessagingMetricsContract
         );
     }
 
+    /**
+     * Feature 014 — counter de conexões de canal por tenant/provider/status.
+     */
+    public function channelConnected(int $tenantId, string $provider, string $status): void
+    {
+        $this->recordCounterOrLog(
+            name: 'paciente360_channel_connections_total',
+            labels: ['tenant' => (string) $tenantId, 'provider' => $provider, 'status' => $status],
+            help: 'Total de conexões de canal por tenant, provider e status.',
+        );
+    }
+
+    /**
+     * Feature 014 — counter de desconexões de canal por tenant/provider/motivo.
+     */
+    public function channelDisconnected(int $tenantId, string $provider, string $reason): void
+    {
+        $this->recordCounterOrLog(
+            name: 'paciente360_channel_disconnections_total',
+            labels: ['tenant' => (string) $tenantId, 'provider' => $provider, 'reason' => $reason],
+            help: 'Total de desconexões de canal por tenant, provider e motivo.',
+        );
+    }
+
+    /**
+     * Feature 014 — counter de reconexões de canal por tenant/provider.
+     */
+    public function channelReconnected(int $tenantId, string $provider): void
+    {
+        $this->recordCounterOrLog(
+            name: 'paciente360_channel_reconnects_total',
+            labels: ['tenant' => (string) $tenantId, 'provider' => $provider],
+            help: 'Total de reconexões de canal por tenant e provider.',
+        );
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Internal helpers — delegate to Prometheus or log gracefully
     // ─────────────────────────────────────────────────────────────────────────

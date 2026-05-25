@@ -6,6 +6,7 @@ use App\Domain\Messaging\Channel\Adapters\ChannelAdapter;
 use App\Domain\Messaging\Channel\Adapters\InstagramGraphAdapter;
 use App\Domain\Messaging\Channel\Adapters\WebWidgetAdapter;
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
+use App\Domain\Messaging\Channel\Enums\ChannelProvider;
 use App\Domain\Messaging\Channel\Events\CanalConectado;
 use App\Domain\Messaging\Channel\Events\CanalDesconectado;
 use App\Domain\Messaging\Channel\Exceptions\ChannelAlreadyConnectedException;
@@ -15,6 +16,7 @@ use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Messaging\Widget\Models\WebWidgetConfig;
 use App\Domain\Messaging\Widget\Services\WidgetAuthService;
 use App\Models\AuditLog;
+use App\Support\Metrics\MessagingMetricsContract;
 use Illuminate\Support\Facades\Crypt;
 
 /**
@@ -30,6 +32,8 @@ final class ChannelService
         private readonly InstagramGraphAdapter $instagramAdapter,
         private readonly WebWidgetAdapter $webWidgetAdapter,
         private readonly WidgetAuthService $widgetAuthService,
+        private readonly EvolutionInstanceService $evolutionInstances,
+        private readonly MessagingMetricsContract $metrics,
     ) {}
 
     /**
@@ -46,14 +50,26 @@ final class ChannelService
         string $name,
         array $credentials,
         ?int $executorId = null,
+        string $provider = 'twilio',
     ): Channel {
-        $adapter = $this->resolveAdapter($type);
-
-        if (! $adapter->validateCredentials($credentials)) {
-            throw new InvalidCredentialsException;
+        // Feature 014 — um WhatsApp ativo/conectando por tenant (R7).
+        if ($type === 'whatsapp') {
+            $this->assertNoActiveWhatsapp($tenantId);
         }
 
-        if ($type === 'whatsapp') {
+        // Provedor não oficial (Evolution): sem credenciais por tenant — a
+        // "validação" é o pareamento por QR (feito pelo EvolutionInstanceService).
+        $isEvolution = $type === 'whatsapp' && $provider === 'evolution';
+
+        if (! $isEvolution) {
+            $adapter = $this->resolveAdapter($type);
+
+            if (! $adapter->validateCredentials($credentials)) {
+                throw new InvalidCredentialsException;
+            }
+        }
+
+        if ($type === 'whatsapp' && ! $isEvolution) {
             $existingChannel = Channel::where('tenant_id', $tenantId)
                 ->where('type', 'whatsapp')
                 ->whereJsonContains('provider_metadata->messaging_service_sid', $credentials['messaging_service_sid'] ?? '')
@@ -75,20 +91,25 @@ final class ChannelService
             }
         }
 
-        $providerMetadata = $this->buildProviderMetadata($type, $credentials);
+        $providerMetadata = $isEvolution ? [] : $this->buildProviderMetadata($type, $credentials);
 
         // O cast 'encrypted' do Channel espera uma string já encriptada
         // (o model não usa 'encrypted:array'). Serializa manualmente para
         // corresponder ao padrão das factories: encrypt([...]) antes de fill.
-        $encryptedCredentials = Crypt::encrypt($credentials);
+        $encryptedCredentials = (! $isEvolution && $type !== 'web') ? Crypt::encrypt($credentials) : null;
+
+        // Evolution inicia em 'conectando' (aguardando pareamento por QR);
+        // demais provedores ativam após validação de credenciais.
+        $status = $isEvolution ? 'conectando' : 'ativo';
 
         /** @var Channel $channel */
         $channel = Channel::create([
             'tenant_id' => $tenantId,
             'type' => $type,
+            'provider' => $provider,
             'name' => $name,
-            'status' => 'ativo',
-            'credentials_encrypted' => $type !== 'web' ? $encryptedCredentials : null,
+            'status' => $status,
+            'credentials_encrypted' => $encryptedCredentials,
             'provider_metadata' => $providerMetadata,
         ]);
 
@@ -131,6 +152,7 @@ final class ChannelService
         }
 
         event(new CanalConectado($channel, $executorId));
+        $this->metrics->channelConnected($tenantId, $provider, $status);
 
         return $channel;
     }
@@ -152,6 +174,15 @@ final class ChannelService
             }
         }
 
+        // Feature 014 — encerra a sessão/instância no servidor Evolution antes do soft-delete.
+        $providerValue = $channel->provider instanceof ChannelProvider
+            ? $channel->provider->value
+            : (string) $channel->provider;
+
+        if ($channel->type === 'whatsapp' && $providerValue === 'evolution') {
+            $this->evolutionInstances->terminate($channel);
+        }
+
         $channel->update(['status' => 'desconectado']);
         $channel->delete();
 
@@ -169,6 +200,26 @@ final class ChannelService
         ]);
 
         event(new CanalDesconectado($channel, null, $executorId));
+        $this->metrics->channelDisconnected($channel->tenant_id, $providerValue, $force ? 'forced' : 'manual');
+    }
+
+    /**
+     * Feature 014 — garante um único canal WhatsApp ativo/conectando por tenant.
+     * Trocar de provedor exige desconectar o atual antes (R7). O índice UNIQUE
+     * parcial no banco é o gate final; esta checagem dá erro amigável.
+     *
+     * @throws ChannelAlreadyConnectedException
+     */
+    private function assertNoActiveWhatsapp(int $tenantId): void
+    {
+        $exists = Channel::where('tenant_id', $tenantId)
+            ->where('type', 'whatsapp')
+            ->whereIn('status', ['ativo', 'conectando'])
+            ->exists();
+
+        if ($exists) {
+            throw new ChannelAlreadyConnectedException;
+        }
     }
 
     /**

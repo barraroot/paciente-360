@@ -43,6 +43,10 @@ Schedule::job(new ExpireAiPausesJob)->everyMinute()->withoutOverlapping();
 // Research R7: detecta mismatch de versão ou depreciação da API.
 Schedule::command('messaging:meta-health-check')->monthly();
 
+// Feature 014 US-3 — Reconcilia estado dos canais Evolution (fallback do webhook
+// connection.update). Reflete quedas de sessão em ≤ 1 min (SC-005).
+Schedule::command('channels:reconcile-evolution-state')->everyMinute()->withoutOverlapping();
+
 // T217 US-4.3 — Purga sessões de widget expiradas e não identificadas (LGPD NC-10.c).
 // Executa diariamente às 03:00 BRT (= 06:00 UTC).
 Schedule::job(new PurgeExpiredWidgetSessionsJob)->dailyAt('06:45'); // 03:45 BRT = 06:45 UTC

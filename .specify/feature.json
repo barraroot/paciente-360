@@ -1,6 +1,6 @@
 {
-  "feature_directory": "specs/013-outbound-notifications",
+  "feature_directory": "specs/014-channel-provider-integration",
   "status": "DELIVERED",
   "delivered_at": "2026-05-25",
-  "notes": "Entrega de Notificações Outbound. 41/46 tasks concluídas + 3 DEFERRED (UI Vue T039, seeder T040, E2E/smoke T045) + T044/T046. Motor OutboundNotificationDispatcher (ordem R5) + 2 tabelas + resolvers + 6 listeners religados + reconciliação via MessageObserver. Gates G1–G11 + unit resolvers = 30 testes verdes. Suíte cheia 1615/1610/0 failures. Constitution PASS 7/7 — gate de aprovação Princípio VI implementado via consulta runtime ao ChannelTemplate (decisão D1 do /speckit-analyze); E2E Playwright DEFERRED (D2, padrão das fases anteriores)."
+  "notes": "Integração de Canal WhatsApp — Twilio (oficial) ou Evolution API v2 (não oficial). 44/44 tasks. Coluna `provider` + ChannelAdapterResolver + EvolutionApiAdapter (SupportsQrConnection) + EvolutionInstanceService + EvolutionConnectionController/EvolutionWebhookController + cron de reconciliação + UI (Canais/Index + EvolutionQrModal). Gates G1–G8 verdes; suíte cheia 1641/1636/0 failures. Validado AO VIVO com WhatsApp real: conexão por QR, outbound e inbound (3 bugs de constraint/URL da Fase 3 corrigidos no smoke). Constitution v1.5.0 (amendment MINOR) admite Evolution como canal não oficial opcional; Princípio VI preservado por reuso do gate da Fase 13 (sem template aprovado → proativo fora da janela vira pending_manual). DEFERRED: resolução de URL pública de mídia S3 (herdado Fase 3); smoke visual da tela no /panel."
 }

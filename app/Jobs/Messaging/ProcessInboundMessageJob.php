@@ -2,8 +2,7 @@
 
 namespace App\Jobs\Messaging;
 
-use App\Domain\Messaging\Channel\Adapters\InstagramGraphAdapter;
-use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
+use App\Domain\Messaging\Channel\Adapters\ChannelAdapterResolver;
 use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Messaging\Conversation\Events\ConversaCriada;
 use App\Domain\Messaging\Conversation\Models\Conversation;
@@ -68,8 +67,7 @@ class ProcessInboundMessageJob implements ShouldQueue
      */
     public function handle(
         PatientResolverService $resolver,
-        WhatsAppCloudAdapter $whatsAppAdapter,
-        InstagramGraphAdapter $instagramAdapter,
+        ChannelAdapterResolver $adapterResolver,
     ): void {
         /** @var WebhookEvent|null $webhookEvent */
         $webhookEvent = WebhookEvent::find($this->webhookEventId);
@@ -115,8 +113,23 @@ class ProcessInboundMessageJob implements ShouldQueue
 
                 return;
             }
+        } elseif ($provider === 'evolution') {
+            // Feature 014 — Evolution (não oficial): resolve canal pela instância.
+            $instanceName = $payload['instance'] ?? null;
 
-            $adapter = $instagramAdapter;
+            if (is_string($instanceName) && $instanceName !== '') {
+                $channel = Channel::withoutGlobalScopes()
+                    ->where('provider', 'evolution')
+                    ->whereJsonContains('provider_metadata->instance_name', $instanceName)
+                    ->first();
+                $resolutionPath = $channel ? 'instance_name' : null;
+            }
+
+            if ($channel === null) {
+                $this->markFailed($webhookEvent, "Canal Evolution não encontrado para instância: {$instanceName}");
+
+                return;
+            }
         } else {
             // Twilio WhatsApp: resolve Channel com fallback chain:
             //  1. MessagingServiceSid (Twilio production)
@@ -161,9 +174,10 @@ class ProcessInboundMessageJob implements ShouldQueue
 
                 return;
             }
-
-            $adapter = $whatsAppAdapter;
         }
+
+        // Feature 014 — adapter resolvido por (type, provider) num ponto único.
+        $adapter = $adapterResolver->for($channel);
 
         Log::info('ProcessInboundMessageJob: channel resolved', [
             'channel_id' => $channel->id,

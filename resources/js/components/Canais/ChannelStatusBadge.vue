@@ -14,7 +14,7 @@ const props = defineProps({
         type: String,
         required: true,
         validator: (v) =>
-            ['ativo', 'desconectado', 'invalido', 'expirado', 'degradado', 'suspenso'].includes(v),
+            ['ativo', 'conectando', 'desconectado', 'invalido', 'expirado', 'degradado', 'suspenso'].includes(v),
     },
     showIcon: {
         type: Boolean,
@@ -28,6 +28,10 @@ const CONFIG = {
     ativo: {
         classes: 'bg-success-50 text-success-700 border-success-200',
         icon: 'check-circle',
+    },
+    conectando: {
+        classes: 'bg-primary-50 text-primary-700 border-primary-200',
+        icon: 'clock',
     },
     desconectado: {
         classes: 'bg-surface text-foreground-muted border-border',

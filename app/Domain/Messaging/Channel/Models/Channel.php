@@ -3,6 +3,7 @@
 namespace App\Domain\Messaging\Channel\Models;
 
 use App\Casts\AsJsonArray;
+use App\Domain\Messaging\Channel\Enums\ChannelProvider;
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Widget\Models\WebWidgetConfig;
 use App\Models\Concerns\BelongsToTenant;
@@ -56,6 +57,7 @@ class Channel extends Model
     protected $fillable = [
         'tenant_id',
         'type',
+        'provider',
         'name',
         'status',
         'credentials_encrypted',
@@ -72,12 +74,27 @@ class Channel extends Model
     protected function casts(): array
     {
         return [
+            'provider' => ChannelProvider::class,
             'credentials_encrypted' => 'encrypted',
             'provider_metadata' => AsJsonArray::class,
             'quality_rating_updated_at' => 'datetime',
             'last_health_check_at' => 'datetime',
             'auto_send_disabled' => 'boolean',
         ];
+    }
+
+    /**
+     * Mapeia o estado de conexão do Evolution (open|connecting|close) para o
+     * `status` interno do canal (feature 014).
+     */
+    public static function mapEvolutionState(string $state): string
+    {
+        return match ($state) {
+            'open' => 'ativo',
+            'connecting' => 'conectando',
+            'close' => 'desconectado',
+            default => 'degradado',
+        };
     }
 
     // -------------------------------------------------------------------------
@@ -115,5 +132,18 @@ class Channel extends Model
     public function scopeOfType(Builder $query, string $type): Builder
     {
         return $query->where('type', $type);
+    }
+
+    public function scopeByProvider(Builder $query, string $provider): Builder
+    {
+        return $query->where('provider', $provider);
+    }
+
+    /**
+     * Canal WhatsApp ativo do tenant (qualquer provedor) — feature 014.
+     */
+    public function scopeActiveWhatsapp(Builder $query): Builder
+    {
+        return $query->where('type', 'whatsapp')->where('status', 'ativo');
     }
 }

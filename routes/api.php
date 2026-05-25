@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\Inbox\AssignmentsController;
 use App\Http\Controllers\Api\V1\Inbox\ChannelsController;
 use App\Http\Controllers\Api\V1\Inbox\ChannelTemplatesController;
 use App\Http\Controllers\Api\V1\Inbox\ConversationsController;
+use App\Http\Controllers\Api\V1\Inbox\EvolutionConnectionController;
 use App\Http\Controllers\Api\V1\Inbox\InboxPollController;
 use App\Http\Controllers\Api\V1\Inbox\MediaController;
 use App\Http\Controllers\Api\V1\Inbox\MessagesController;
@@ -66,6 +67,7 @@ use App\Http\Controllers\Api\V1\Tenant\CurrentTenantController;
 use App\Http\Controllers\Api\V1\Tenant\RegisterController as TenantRegisterController;
 use App\Http\Controllers\Api\V1\Users\InvitationsController;
 use App\Http\Controllers\Api\V1\Users\UsersController;
+use App\Http\Controllers\Webhooks\EvolutionWebhookController;
 use App\Http\Controllers\Webhooks\MetaInstagramWebhookController;
 use App\Http\Controllers\Webhooks\TwilioStatusCallbackController;
 use App\Http\Controllers\Webhooks\TwilioWhatsAppWebhookController;
@@ -328,6 +330,16 @@ Route::middleware(['auth:sanctum', 'throttle:inbox'])->group(function (): void {
     Route::post('inbox/channels/{channel}/reconnect', [ChannelsController::class, 'reconnect'])
         ->name('inbox.channels.reconnect')
         ->whereNumber('channel');
+
+    // Feature 014 — conexão WhatsApp NÃO oficial (Evolution) por QR Code (US2).
+    Route::post('inbox/channels/evolution/connect', [EvolutionConnectionController::class, 'connect'])
+        ->name('inbox.channels.evolution.connect');
+    Route::post('inbox/channels/{channel}/qr', [EvolutionConnectionController::class, 'qr'])
+        ->name('inbox.channels.evolution.qr')
+        ->whereNumber('channel');
+    Route::get('inbox/channels/{channel}/connection-state', [EvolutionConnectionController::class, 'connectionState'])
+        ->name('inbox.channels.evolution.connection-state')
+        ->whereNumber('channel');
     Route::get('inbox/channels/{channel}/templates', [ChannelTemplatesController::class, 'index'])
         ->name('inbox.channels.templates.index')
         ->whereNumber('channel');
@@ -439,6 +451,13 @@ Route::middleware(['throttle:webhook-meta'])->group(function (): void {
     Route::post('webhooks/twilio/status', TwilioStatusCallbackController::class)
         ->middleware('twilio.signature')
         ->name('webhooks.twilio.status');
+});
+
+// Feature 014 — Webhook do Evolution (não oficial). Público; validado por
+// header `apikey` no controller; tenant resolvido pela instância.
+Route::middleware(['throttle:webhook-meta'])->group(function (): void {
+    Route::post('webhooks/evolution/{instance?}', EvolutionWebhookController::class)
+        ->name('webhooks.evolution');
 });
 
 // Fase 3 — Webhooks Meta Instagram (T194)

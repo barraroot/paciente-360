@@ -435,7 +435,7 @@ livewire(ListUsers::class)
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
 
-- **Active feature**: `013-outbound-notifications` — [plan](specs/013-outbound-notifications/plan.md) — Entrega de Notificações Outbound. Spec (5 US, 20 FRs, 7 SC, checklist 16/16 PASS) + 3 clarifications (Session 2026-05-24: pendência manual = conversa+system message; proativo fora da janela = WhatsApp-only; rastreio entregue/falhou via webhook, sem "lido") + plan + research (R1–R12) + data-model (2 tabelas: `notification_templates`, `outbound_notifications`) + contracts (11 gates G1–G11) + quickstart (7 lotes A–G). **Constitution Check PASS 7/7 sem amendment** (Princípio VI tratado com defesa em profundidade — research §6). Religar 6 listeners-stub (Fase 5/7) ao envio REAL via `MessageDispatchService` com `OutboundNotificationDispatcher`; resolução paciente→canal WhatsApp (telefone normalizado), catálogo de templates HSM por tenant, janela 24h, opt-out/debounce/idempotência/LGPD reusados, fallback `pending_manual` como mensagem de sistema na inbox. Próximo: `/speckit-tasks`.
+- **Active feature**: `014-channel-provider-integration` — [plan](specs/014-channel-provider-integration/plan.md) — Integração de Canal WhatsApp: Twilio (oficial) ou Evolution API v2 (não oficial). Spec (4 US, 21 FRs, 7 SC, checklist 16/16 PASS) + 3 clarifications (Session 2026-05-25: via não oficial bloqueia proativos fora da janela 24h → pendente manual; um provedor ativo por clínica por vez; paridade completa inbound+outbound) + plan + research (R1–R10) + data-model (coluna `provider` em `messaging_channels` + UNIQUE parcial "um WhatsApp ativo por tenant") + contracts (8 gates G1–G8) + quickstart (8 lotes A–H). **Constitution Check PASS 7/7 sem amendment** (Princípio VI: via oficial inalterada; não oficial reusa o gate da Fase 13 — sem `ChannelTemplate` aprovado, proativo fora da janela cai em `pending_manual`). Evolution **auto-hospedado** (Docker, env-config), uma instância por canal de tenant, conexão por QR Code; novo `EvolutionApiAdapter` + `ChannelAdapterResolver` provider-aware + `EvolutionWebhookController`; tela Vue de config. Próximo: `/speckit-tasks`.
 - **Previous features delivered (12)** — sumário enxuto; detalhe técnico de cada fase vive nos blocos "Key Patterns" abaixo e em `specs/<feature>/`:
   - `012-professionals-management` — Gestão de Profissionais + Unlock Onboarding Step 2. DELIVERED 2026-05-24 (smoke browser + a11y 0 violations). Pós-merge: fixes de navegação (drift de abilities nav/router vs catálogo), `/me` voltou a enviar permissions (AuthenticatedUserResource), Horizon staging, baseline de testes (phpunit.xml env).
   - `011-dashboard-executivo` — Dashboard Executivo (US-10.1), merge main 2026-05-23. Backend Fase 8 reusado (1 linha). Sparkline/CSV DEFERRED.
@@ -1048,3 +1048,48 @@ When working on outbound notification delivery post-Fase 13, remember:
     - Seeder de templates default (T040).
     - E2E Playwright da confirmação (D2 — desvio consciente do Princípio IV, padrão das fases anteriores) + smoke staging (T045).
     - Instagram-within-window free-text: resolver foca WhatsApp; Instagram dentro da janela é caminho futuro (nenhum AC depende dele).
+
+## Integração de Canal — Twilio | Evolution (Fase 14) — Key Patterns
+
+When working on channel/provider features post-Fase 14, remember:
+
+1. **Dimensão `provider` no `Channel` (não no `type`)**
+   - `messaging_channels.provider` (`twilio`|`evolution`, default `twilio`); `type` continua `whatsapp` para ambos. Enum `App\Domain\Messaging\Channel\Enums\ChannelProvider`.
+   - WhatsApp oficial = Twilio; não oficial = Evolution API v2 (Baileys, QR Code). Migração aditiva/retrocompatível.
+
+2. **`ChannelAdapterResolver::for(Channel)` é o ponto ÚNICO de seleção de adapter**
+   - Resolve por `(type, provider)`: whatsapp+twilio→`WhatsAppCloudAdapter`, whatsapp+evolution→`EvolutionApiAdapter`, instagram→`InstagramGraphAdapter`, web→`WebWidgetAdapter`.
+   - `SendOutboundMessageJob` e `ProcessInboundMessageJob` usam o resolver (substituiu o `match($type)` hardcoded). Adicionar provedor = adicionar caso no resolver, nada mais.
+
+3. **`EvolutionApiAdapter implements ChannelAdapter, SupportsQrConnection`**
+   - `SupportsQrConnection` (createInstance/getQrCode/connectionState/disconnect) é o contrato extra para provedores com pareamento por sessão. Twilio NÃO implementa.
+   - HTTP via Laravel `Http` (fakeável com `Http::fake()`). `send` suporta texto + mídia (`/message/sendText` e `/message/sendMedia`). `parseInboundWebhook` mapeia `messages.upsert`.
+
+4. **Evolution é AUTO-HOSPEDADO (config, nunca input do tenant)**
+   - `config('messaging.providers.evolution')`: `api_url`, `api_key` (global), `webhook_secret`, `webhook_base_url`. Uma instância por canal de tenant (`instance_name = tenant_{id}_ch_{id}`).
+   - `EvolutionInstanceService` orquestra create/qr/state/terminate e persiste `instance_token` **cifrado** em `provider_metadata` (nunca exposto por `ChannelResource` — `array_diff_key` remove `instance_token`/`auth_token`/`page_access_token`).
+   - Serviço Docker `evolution-api` no `compose.yaml` (profile `evolution`, porta host 8085→8080, reusa pgsql schema `evolution` + redis DB 2).
+
+5. **Um WhatsApp ativo por tenant por vez (R7)**
+   - UNIQUE parcial `one_active_whatsapp_per_tenant` em `(tenant_id) WHERE type='whatsapp' AND status IN ('ativo','conectando')` + checagem `ChannelService::assertNoActiveWhatsapp` (erro amigável 409). Trocar provedor = desconectar antes.
+
+6. **Webhook do Evolution resolve tenant pela INSTÂNCIA (Princípio II)**
+   - `EvolutionWebhookController` (`POST /api/v1/webhooks/evolution/{instance}`): valida header `apikey` (hash_equals contra `webhook_secret`), resolve `Channel` por `provider_metadata->instance_name`. `connection.update`→status; `messages.upsert`→`WebhookEventRecorder`+`ProcessInboundMessageJob` (ignora `fromMe`).
+   - Fallback de estado: cron `channels:reconcile-evolution-state` (everyMinute) consulta `connectionState` (cobre webhook perdido — SC-005).
+
+7. **Conformidade Princípio VI no não oficial = REUSO do gate da Fase 13**
+   - Evolution não tem `ChannelTemplate` HSM aprovado → o `OutboundNotificationDispatcher` bloqueia proativos fora da janela 24h → `pending_manual/no_template`. Dentro da janela, texto livre é permitido. NÃO criar bypass.
+   - `OutboundChannelResolver` (Fase 13) é provider-agnóstico (filtra `type=whatsapp, status=ativo`), já reconhece o canal Evolution ativo.
+
+8. **Constituição v1.5.0 (amendment) admite Evolution como canal não oficial OPCIONAL**
+   - A stack fixa enumerava só Twilio/Instagram/widget; adicionar Evolution exigiu amendment MINOR (precedente: v1.4.0 do Bearer). Via oficial permanece padrão; aviso de risco obrigatório na UI (FR-003).
+
+9. **CHECKs do schema da Fase 3 precisaram de ALTER** (lição de integração real)
+   - `messaging_channels.status` ganhou `conectando`; `messaging_webhook_events.provider` ganhou `evolution`. Webhook URL do Evolution DEVE incluir `/api/v1` (rota nomeada). Esses 3 bugs só apareceram no smoke real com WhatsApp.
+
+10. **Frontend: estende a tela Canais existente (Fase 3), não cria nova**
+    - `pages/Canais/Index.vue` ganhou item de dropdown "WhatsApp (Não Oficial)" → `components/Canais/EvolutionQrModal.vue` (nome + aviso de risco → QR base64 + polling de `connection-state` até `ativo`). Store `canais.js` ganhou `connectEvolution`/`regenerateQr`/`fetchConnectionState`.
+
+11. **DEFERRED / não feito ao final da Fase 14**
+    - Mídia outbound real no Evolution usa `MediaPayload.storagePath` (resolução de URL pública S3 ainda é o placeholder herdado da Fase 3).
+    - Smoke browser da TELA (clicar no painel) — validação foi via QR real + API; a navegação visual no `/panel` fica como verificação manual.

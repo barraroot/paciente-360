@@ -60,4 +60,19 @@ interface MessagingMetricsContract
      * @param int $count Número de conversas abertas ou pendentes
      */
     public function conversationsActive(int $tenantId, string $channel, int $count): void;
+
+    /**
+     * Feature 014 — counter de conexões de canal por tenant/provider/status.
+     */
+    public function channelConnected(int $tenantId, string $provider, string $status): void;
+
+    /**
+     * Feature 014 — counter de desconexões de canal por tenant/provider/motivo.
+     */
+    public function channelDisconnected(int $tenantId, string $provider, string $reason): void;
+
+    /**
+     * Feature 014 — counter de reconexões de canal por tenant/provider.
+     */
+    public function channelReconnected(int $tenantId, string $provider): void;
 }

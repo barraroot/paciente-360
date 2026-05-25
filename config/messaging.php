@@ -29,6 +29,23 @@ return [
             'webhook_verify_token' => env('META_WEBHOOK_VERIFY_TOKEN'),
         ],
 
+        /*
+         | Evolution API v2 — WhatsApp NÃO oficial (Baileys), feature 014.
+         | Servidor AUTO-HOSPEDADO pela plataforma (nunca input do tenant).
+         | api_url / api_key são globais; cada canal de tenant vira uma instância.
+         | webhook_secret valida os webhooks recebidos do Evolution (apikey header).
+         */
+        'evolution' => [
+            'api_url' => env('EVOLUTION_API_URL'),
+            'api_key' => env('EVOLUTION_API_KEY'),
+            'webhook_secret' => env('EVOLUTION_WEBHOOK_SECRET'),
+            'http_timeout_seconds' => (int) env('EVOLUTION_HTTP_TIMEOUT_SECONDS', 15),
+            // Base pública que o servidor Evolution usa para entregar webhooks à app.
+            // Em Docker local, aponte para o host interno (ex.: http://laravel.test);
+            // em produção, a URL pública HTTPS. Se vazio, usa a rota nomeada (APP_URL).
+            'webhook_base_url' => env('EVOLUTION_WEBHOOK_BASE_URL'),
+        ],
+
     ],
 
     /*

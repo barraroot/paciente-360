@@ -2,8 +2,8 @@
 
 namespace App\Jobs\Messaging;
 
+use App\Domain\Messaging\Channel\Adapters\ChannelAdapterResolver;
 use App\Domain\Messaging\Channel\Adapters\OutboundMessage;
-use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Jobs\TenantAwareJob;
 use App\Support\Metrics\MessagingMetricsContract;
@@ -81,7 +81,7 @@ final class SendOutboundMessageJob extends TenantAwareJob
         $metrics = app(MessagingMetricsContract::class);
 
         try {
-            $adapter = $this->resolveAdapter($channel->type);
+            $adapter = app(ChannelAdapterResolver::class)->for($channel);
             $result = $adapter->send($channel, $outbound);
 
             $message->update([
@@ -113,13 +113,5 @@ final class SendOutboundMessageJob extends TenantAwareJob
 
             throw $e;
         }
-    }
-
-    private function resolveAdapter(string $channelType): WhatsAppCloudAdapter
-    {
-        return match ($channelType) {
-            'whatsapp' => app(WhatsAppCloudAdapter::class),
-            default => throw new \RuntimeException("Adapter não disponível para canal: {$channelType}"),
-        };
     }
 }

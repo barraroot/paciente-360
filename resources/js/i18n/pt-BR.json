@@ -273,6 +273,7 @@
     "common": {
         "save": "Salvar",
         "cancel": "Cancelar",
+        "close": "Fechar",
         "delete": "Excluir",
         "confirm": "Confirmar",
         "back": "Voltar",
@@ -485,17 +486,35 @@
     "canais": {
         "titulo": "Canais",
         "conectar": "Conectar canal",
-        "conectar_whatsapp": "Conectar WhatsApp",
+        "conectar_whatsapp": "Conectar WhatsApp (Oficial)",
+        "conectar_whatsapp_nao_oficial": "Conectar WhatsApp (Não Oficial)",
         "conectar_instagram": "Conectar Instagram",
         "conectar_widget": "Criar Widget Web",
         "em_breve": "Disponível em breve",
         "status": {
             "ativo": "Ativo",
+            "conectando": "Conectando…",
             "desconectado": "Desconectado",
             "invalido": "Inválido",
             "expirado": "Expirado",
             "degradado": "Atenção",
             "suspenso": "Suspenso"
+        },
+        "evolution": {
+            "titulo": "Conectar WhatsApp (Não Oficial)",
+            "subtitulo": "Conexão via Evolution API, pareando pelo QR Code no seu WhatsApp.",
+            "label_curto": "WhatsApp (não oficial)",
+            "aviso_titulo": "Integração não oficial.",
+            "aviso_texto": "Não usa a API oficial da Meta — sujeita a bloqueio do número pelo WhatsApp e sem garantias de estabilidade. Use por sua conta e risco.",
+            "nome_label": "Nome do canal",
+            "nome_placeholder": "Ex: WhatsApp da Recepção",
+            "name_required": "Informe um nome com pelo menos 2 caracteres.",
+            "gerar_qr": "Gerar QR Code",
+            "qr_alt": "QR Code para parear o WhatsApp",
+            "instrucao": "No WhatsApp: Aparelhos conectados → Conectar um aparelho → escaneie o código.",
+            "regenerar": "Gerar novo QR Code",
+            "conectado": "Conectado com sucesso!",
+            "already_active": "Já existe um canal WhatsApp ativo. Desconecte-o antes de conectar outro provedor."
         },
         "tipo": {
             "whatsapp": "WhatsApp Business",

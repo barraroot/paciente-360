@@ -6,6 +6,7 @@ import { useCanaisStore } from '@/stores/canais.js';
 import { useAuthStore } from '@/stores/auth.js';
 import ChannelStatusBadge from '@/components/Canais/ChannelStatusBadge.vue';
 import ConfirmModal from '@/components/ui/ConfirmModal.vue';
+import EvolutionQrModal from '@/components/Canais/EvolutionQrModal.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -62,6 +63,19 @@ let refreshInterval = null;
 onBeforeUnmount(() => {
     if (refreshInterval) { clearInterval(refreshInterval); }
 });
+
+// ─── Modal Evolution (WhatsApp não oficial — feature 014) ─────────────────────
+
+const evolutionModalOpen = ref(false);
+
+function openEvolutionModal() {
+    closeConectarDropdown();
+    evolutionModalOpen.value = true;
+}
+
+function onEvolutionConnected() {
+    load();
+}
 
 // ─── Modal desconectar ────────────────────────────────────────────────────────
 
@@ -172,7 +186,11 @@ function qualityRatingLabel(rating) {
 
 function channelSubtitle(channel) {
     if (channel.type === 'whatsapp') {
-        const sender = channel.provider_metadata?.whatsapp_sender ?? '';
+        if (channel.provider === 'evolution') {
+            const num = channel.connected_number ?? channel.provider_metadata?.connected_number ?? '';
+            return `${t('canais.evolution.label_curto')}${num ? ' · ' + num : ''}`;
+        }
+        const sender = channel.connected_number ?? channel.provider_metadata?.whatsapp_sender ?? '';
         return `${t('canais.tipo.whatsapp')} · ${sender}`;
     }
     if (channel.type === 'instagram') {
@@ -248,6 +266,17 @@ function canReconnect(channel) {
                             <!-- Ícone WhatsApp -->
                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#25D366] text-white text-xs font-bold shrink-0">W</span>
                             {{ t('canais.conectar_whatsapp') }}
+                        </button>
+
+                        <!-- WhatsApp Não Oficial (Evolution) — feature 014 -->
+                        <button
+                            type="button"
+                            role="menuitem"
+                            class="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-foreground transition hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
+                            @click="openEvolutionModal"
+                        >
+                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#075E54] text-white text-xs font-bold shrink-0">W</span>
+                            {{ t('canais.conectar_whatsapp_nao_oficial') }}
                         </button>
 
                         <!-- Instagram — habilitado (Lote K) -->
@@ -508,5 +537,12 @@ function canReconnect(channel) {
                 </button>
             </template>
         </ConfirmModal>
+
+        <!-- ── Modal Evolution (WhatsApp não oficial) ─────────────────────────── -->
+        <EvolutionQrModal
+            :open="evolutionModalOpen"
+            @close="evolutionModalOpen = false"
+            @connected="onEvolutionConnected"
+        />
     </main>
 </template>

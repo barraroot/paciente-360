@@ -1,8 +1,63 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.3.0 → 1.4.0
-Bump rationale (escolha do owner): MINOR — expansão material do
+Version change: 1.4.0 → 1.5.0
+Bump rationale (escolha do owner): MINOR — expansão material das
+Restrições Técnicas (Canais Externos). Adiciona a Evolution API v2
+(WhatsApp NÃO oficial via Baileys) como transporte de canal OPCIONAL,
+escolhível pela clínica, sem remover nem reduzir nenhum gate existente.
+A via oficial (WhatsApp Business Cloud via Twilio) permanece inalterada
+e segue como padrão.
+
+Justificativa do trade-off de produto:
+  - Clínicas sem conta WhatsApp Business aprovada ou com restrição de
+    custo podem operar o canal imediatamente pela via não oficial
+    (conexão por QR Code, auto-hospedada pela plataforma em Docker).
+  - É uma escolha explícita e informada da clínica: a UI MUST exibir o
+    aviso de "integração não oficial e risco de suspensão pelo WhatsApp"
+    antes de conectar (feature 014, FR-003).
+  - O Princípio VI (Conformidade Meta) é preservado por DEFESA EM
+    PROFUNDIDADE: como o canal não oficial não possui templates HSM
+    aprovados pela Meta, o dispatcher de outbound (Fase 13) bloqueia
+    automaticamente envios proativos fora da janela de 24h → "pendente
+    de contato manual". Dentro da janela, texto livre é permitido.
+    Não há disparo de marketing em massa por esta via.
+  - Sem nova superfície de segurança: o servidor Evolution é nossa
+    infraestrutura (URL/api-key via env, nunca input do tenant) e o
+    webhook é validado por apikey. Sem novo pacote Composer/npm
+    (HTTP via Guzzle já presente).
+  - Risco residual (estabilidade/ban da via não oficial) é do número da
+    própria clínica, assumido por ela; SLA não é garantido (out of scope).
+
+Modified principles: nenhum princípio alterado.
+
+Added/Modified sections:
+  - "Restrições Técnicas e Arquiteturais" > bullet "Canais externos" —
+    EXPANDIDO para incluir "Evolution API v2 (WhatsApp não oficial via
+    Baileys) como transporte OPCIONAL de canal, auto-hospedado, com
+    aviso de risco obrigatório". WhatsApp Business Cloud (Twilio),
+    Instagram Graph API e widget JS permanecem.
+
+Removed sections: nenhuma.
+
+Templates requiring updates:
+  - .specify/templates/plan-template.md             ✅ aligned
+  - .specify/templates/spec-template.md             ✅ aligned
+  - .specify/templates/tasks-template.md            ✅ aligned
+  - .specify/templates/checklist-template.md        ✅ aligned
+
+Artefatos da feature 014 (referenciam este amendment como pré-requisito):
+  ✓ specs/014-channel-provider-integration/spec.md   (escolha de provedor + aviso de risco FR-003)
+  ✓ specs/014-channel-provider-integration/plan.md   (Constitution Check — Princípio VI por reuso da Fase 13)
+  ✓ specs/014-channel-provider-integration/research.md (R2/R6/R8 — auto-hospedado, conformidade, docker)
+
+Follow-up TODOs: nenhum bloqueante. /speckit-implement da feature 014
+pode prosseguir após este amendment (etapa 0 cumprida).
+
+----------------------------------------------------------------------
+PRIOR REPORTS
+----------------------------------------------------------------------
+v1.4.0 (2026-05-12) — MINOR: expansão material do
 Princípio VII (Segurança Operacional). Aceita formato de
 autenticação adicional (Bearer Sanctum Personal Access Tokens) para
 a API tenant, sem reduzir nenhum gate existente. Filament super
@@ -441,8 +496,15 @@ A stack é fixa para o MVP e mudanças exigem amendment desta constituição:
   cache, filas e presence.
 - **IA**: Camada de orquestração matricial sobre LLM (provider
   configurável) com pseudonimização obrigatória (princípio I).
-- **Canais externos**: WhatsApp Business Cloud API (Meta), Instagram
-  Graph API, widget JS embutível.
+- **Canais externos**: WhatsApp Business Cloud API (Meta, **via oficial
+  padrão** — Twilio), Instagram Graph API, widget JS embutível. Como
+  transporte **opcional não oficial** de WhatsApp, é admitida a
+  **Evolution API v2** (Baileys, conexão por QR Code), **auto-hospedada
+  pela plataforma** (URL/api-key via env, nunca input do tenant). Sua
+  oferta MUST exibir aviso de risco de suspensão pelo WhatsApp antes de
+  conectar e MUST preservar o Princípio VI por defesa em profundidade
+  (sem template HSM aprovado, envios proativos fora da janela de 24h são
+  bloqueados → contato manual). A via oficial permanece o padrão.
 - **Comandos de desenvolvimento**: SEMPRE prefixados com
   `vendor/bin/sail` (artisan, composer, npm, php). Comandos rodados fora
   do Sail são considerados fora de convenção e não devem ser usados em
@@ -599,4 +661,4 @@ delegadas a CLAUDE.md/AGENTS.md).
   vive em `CLAUDE.md` e `AGENTS.md`; estes arquivos MUST ser mantidos
   consistentes com esta constituição.
 
-**Version**: 1.4.0 | **Ratified**: 2026-05-10 | **Last Amended**: 2026-05-12
+**Version**: 1.5.0 | **Ratified**: 2026-05-10 | **Last Amended**: 2026-05-25

@@ -64,6 +64,7 @@ class ChannelsController extends Controller
                 name: $request->input('name'),
                 credentials: $request->input('credentials', []),
                 executorId: $request->user()?->id,
+                provider: $request->input('provider', 'twilio'),
             );
 
             Log::info('channel.connected', [

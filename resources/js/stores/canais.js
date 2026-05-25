@@ -187,5 +187,41 @@ export const useCanaisStore = defineStore('canais', {
             delete this.templatesByChannel[String(channelId)];
             return data;
         },
+
+        // ─── Feature 014 — WhatsApp NÃO oficial (Evolution) ─────────────────────
+
+        /**
+         * Conecta um canal WhatsApp não oficial (Evolution) — cria a instância e
+         * retorna o QR Code para pareamento.
+         * @param {string} name
+         * @returns {Promise<{ channel: object, qr: { base64: string|null, code: string|null, pairing_code: string|null }|null }>}
+         */
+        async connectEvolution(name) {
+            const { data } = await api.post('/inbox/channels/evolution/connect', { name });
+            const channel = data.data ?? data;
+            this.channels.unshift(channel);
+            return { channel, qr: data.qr ?? null };
+        },
+
+        /**
+         * Regenera o QR Code de um canal Evolution (retoma o pareamento).
+         * @param {number|string} id
+         */
+        async regenerateQr(id) {
+            const { data } = await api.post(`/inbox/channels/${id}/qr`);
+            return data.qr ?? null;
+        },
+
+        /**
+         * Consulta o estado de conexão de um canal Evolution (para polling).
+         * @param {number|string} id
+         * @returns {Promise<{ channel_id: number, status: string }>}
+         */
+        async fetchConnectionState(id) {
+            const { data } = await api.get(`/inbox/channels/${id}/connection-state`);
+            const idx = this.channels.findIndex((c) => String(c.id) === String(id));
+            if (idx !== -1) { this.channels[idx] = { ...this.channels[idx], status: data.status }; }
+            return data;
+        },
     },
 });

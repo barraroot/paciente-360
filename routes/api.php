@@ -6,6 +6,14 @@ use App\Http\Controllers\Api\V1\Agenda\ProfessionalScheduleController;
 use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
 use App\Http\Controllers\Api\V1\Agenda\SlotController;
 use App\Http\Controllers\Api\V1\Agenda\WaitlistController;
+use App\Http\Controllers\Api\V1\Ai\AiConversationController;
+use App\Http\Controllers\Api\V1\Ai\AiExecutionLogController;
+use App\Http\Controllers\Api\V1\Ai\AiGuardrailController;
+use App\Http\Controllers\Api\V1\Ai\AiKnowledgeBaseController;
+use App\Http\Controllers\Api\V1\Ai\AiMarkdownController;
+use App\Http\Controllers\Api\V1\Ai\AiModelController;
+use App\Http\Controllers\Api\V1\Ai\AiPersonaChannelController;
+use App\Http\Controllers\Api\V1\Ai\AiPersonaController;
 use App\Http\Controllers\Api\V1\Audit\AuditLogsController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutAllController;
@@ -880,4 +888,89 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
         Route::delete('/{tokenId}', [ApiTokensController::class, 'destroy'])
             ->whereNumber('tokenId')
             ->name('destroy');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| IA Matricial (Fase 15)
+|--------------------------------------------------------------------------
+|
+| Camada de configuração/orquestração de IA. Todas as rotas escopadas por
+| tenant e gated por abilities `ai.*`.
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('ai')
+    ->name('ai.')
+    ->group(function (): void {
+        // US1 — catálogo de modelos (somente leitura) + personas.
+        Route::get('models', [AiModelController::class, 'index'])->name('models.index');
+
+        Route::post('personas/{persona}/activate', [AiPersonaController::class, 'activate'])
+            ->whereNumber('persona')
+            ->name('personas.activate');
+        Route::post('personas/{persona}/deactivate', [AiPersonaController::class, 'deactivate'])
+            ->whereNumber('persona')
+            ->name('personas.deactivate');
+
+        Route::apiResource('personas', AiPersonaController::class)
+            ->parameters(['personas' => 'persona']);
+
+        // US2 — matriz Persona × Canal + consulta de config por canal.
+        Route::get('persona-channels', [AiPersonaChannelController::class, 'index'])->name('persona-channels.index');
+        Route::put('persona-channels', [AiPersonaChannelController::class, 'update'])->name('persona-channels.update');
+        Route::get('channels/{channelType}/config', [AiPersonaChannelController::class, 'channelConfig'])
+            ->whereIn('channelType', ['whatsapp', 'instagram', 'web'])
+            ->name('channels.config');
+
+        // US4 — bases de conhecimento (RAG) + associação a personas.
+        Route::post('knowledge-bases/{knowledgeBase}/activate', [AiKnowledgeBaseController::class, 'activate'])
+            ->whereNumber('knowledgeBase')
+            ->name('knowledge-bases.activate');
+        Route::post('knowledge-bases/{knowledgeBase}/deactivate', [AiKnowledgeBaseController::class, 'deactivate'])
+            ->whereNumber('knowledgeBase')
+            ->name('knowledge-bases.deactivate');
+
+        Route::apiResource('knowledge-bases', AiKnowledgeBaseController::class)
+            ->parameters(['knowledge-bases' => 'knowledgeBase']);
+
+        Route::put('personas/{persona}/knowledge-bases', [AiKnowledgeBaseController::class, 'syncPersona'])
+            ->whereNumber('persona')
+            ->name('personas.knowledge-bases.sync');
+
+        // US5 — guardrails da clínica + associação a personas.
+        Route::post('guardrails/{guardrail}/activate', [AiGuardrailController::class, 'activate'])
+            ->whereNumber('guardrail')
+            ->name('guardrails.activate');
+        Route::post('guardrails/{guardrail}/deactivate', [AiGuardrailController::class, 'deactivate'])
+            ->whereNumber('guardrail')
+            ->name('guardrails.deactivate');
+
+        Route::apiResource('guardrails', AiGuardrailController::class)
+            ->parameters(['guardrails' => 'guardrail']);
+
+        Route::put('personas/{persona}/guardrails', [AiGuardrailController::class, 'syncPersona'])
+            ->whereNumber('persona')
+            ->name('personas.guardrails.sync');
+
+        // US6 — controle humano da IA na conversa (estado/pausa/reativação).
+        Route::get('conversations/{conversation}/state', [AiConversationController::class, 'state'])
+            ->whereNumber('conversation')
+            ->name('conversations.state');
+        Route::post('conversations/{conversation}/pause', [AiConversationController::class, 'pause'])
+            ->whereNumber('conversation')
+            ->name('conversations.pause');
+        Route::post('conversations/{conversation}/resume', [AiConversationController::class, 'resume'])
+            ->whereNumber('conversation')
+            ->name('conversations.resume');
+
+        // US7 — logs de execução da IA (somente leitura, escopados por tenant).
+        Route::get('execution-logs', [AiExecutionLogController::class, 'index'])->name('execution-logs.index');
+        Route::get('execution-logs/{executionLog}', [AiExecutionLogController::class, 'show'])
+            ->whereNumber('executionLog')
+            ->name('execution-logs.show');
+
+        // US8 — validação/sanitização de Markdown no back-end (rate-limited).
+        Route::post('markdown/validate', [AiMarkdownController::class, 'validate'])
+            ->middleware('throttle:60,1')
+            ->name('markdown.validate');
     });

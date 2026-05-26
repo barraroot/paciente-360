@@ -62,6 +62,43 @@ export const NAVIGATION = [
         ],
     },
     {
+        key: 'ia',
+        labelKey: 'layout.sidebar.ia.title',
+        icon: 'cog',
+        children: [
+            {
+                key: 'ia.personas',
+                labelKey: 'layout.sidebar.ia.personas',
+                routeName: 'ia.personas.index',
+                ability: 'ai.persona.view',
+            },
+            {
+                key: 'ia.matriz',
+                labelKey: 'layout.sidebar.ia.matriz',
+                routeName: 'ia.matriz.index',
+                ability: 'ai.matrix.manage',
+            },
+            {
+                key: 'ia.bases',
+                labelKey: 'layout.sidebar.ia.bases',
+                routeName: 'ia.bases.index',
+                ability: 'ai.knowledge.view',
+            },
+            {
+                key: 'ia.guardrails',
+                labelKey: 'layout.sidebar.ia.guardrails',
+                routeName: 'ia.guardrails.index',
+                ability: 'ai.guardrail.view',
+            },
+            {
+                key: 'ia.logs',
+                labelKey: 'layout.sidebar.ia.logs',
+                routeName: 'ia.logs.index',
+                ability: 'ai.log.view',
+            },
+        ],
+    },
+    {
         key: 'pacientes',
         labelKey: 'layout.sidebar.pacientes.title',
         icon: 'users',

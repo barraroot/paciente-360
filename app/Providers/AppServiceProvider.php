@@ -66,6 +66,8 @@ use App\Policies\WebhookPolicy;
 use App\Services\Billing\StripeClientWrapper;
 use App\Support\Metrics\AgendaMetrics;
 use App\Support\Metrics\AgendaMetricsContract;
+use App\Support\Metrics\AiMetrics;
+use App\Support\Metrics\AiMetricsContract;
 use App\Support\Metrics\AuthMetrics;
 use App\Support\Metrics\AuthMetricsContract;
 use App\Support\Metrics\MessagingMetrics;
@@ -138,6 +140,10 @@ class AppServiceProvider extends ServiceProvider
         // T024 (Fase 5) — AgendaMetrics: 7 métricas Prometheus do domínio Agenda.
         // Mesma estratégia graceful — degrada para Log::debug sem o pacote Prometheus.
         $this->app->singleton(AgendaMetricsContract::class, AgendaMetrics::class);
+
+        // Fase 15 — AiMetrics: latência/mensagens/escalonamentos da IA Matricial.
+        // Mesma estratégia graceful — degrada para Log::debug sem o pacote Prometheus.
+        $this->app->singleton(AiMetricsContract::class, AiMetrics::class);
 
         // Fase 7 — PrescriptionMetrics: 4 métricas Prometheus do domínio de receituários.
         // Segue a mesma estratégia graceful dos domínios anteriores.
@@ -267,6 +273,17 @@ class AppServiceProvider extends ServiceProvider
         // ao Gate e, como o before do Spatie retorna null em negação, a ability
         // recursaria infinitamente (stack overflow → SIGSEGV) em todo path negado.
         Gate::define('professional.manage', static fn ($user): bool => $user instanceof User && $user->hasPermissionTo('professional.manage'));
+
+        // Fase 15 — IA Matricial. Ability-based; mesmo cuidado anti-recursão
+        // (hasPermissionTo, NUNCA can() dentro da closure).
+        foreach ([
+            'ai.persona.view', 'ai.persona.manage',
+            'ai.knowledge.view', 'ai.knowledge.manage',
+            'ai.guardrail.view', 'ai.guardrail.manage',
+            'ai.matrix.manage', 'ai.log.view',
+        ] as $aiAbility) {
+            Gate::define($aiAbility, static fn ($user): bool => $user instanceof User && $user->hasPermissionTo($aiAbility));
+        }
 
         // Fase 8 Lote D — Webhooks (T201).
         Gate::policy(WebhookEndpoint::class, WebhookPolicy::class);

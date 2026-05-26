@@ -100,6 +100,73 @@ const panelChildren = [
         component: () => import('@/pages/agenda/CalendarSyncPage.vue'),
         meta: { title: 'layout.sidebar.agenda.sync', ability: 'calendar_sync.configure' },
     },
+    // ─── IA Matricial ──────────────────────────────────────────────────────
+    {
+        path: 'ia/personas',
+        name: 'ia.personas.index',
+        component: () => import('@/pages/Ia/PersonasIndex.vue'),
+        meta: { title: 'layout.sidebar.ia.personas', ability: 'ai.persona.view' },
+    },
+    {
+        path: 'ia/personas/nova',
+        name: 'ia.personas.new',
+        component: () => import('@/pages/Ia/PersonaForm.vue'),
+        meta: { title: 'layout.sidebar.ia.personas', ability: 'ai.persona.manage' },
+    },
+    {
+        path: 'ia/personas/:id/editar',
+        name: 'ia.personas.edit',
+        component: () => import('@/pages/Ia/PersonaForm.vue'),
+        meta: { title: 'layout.sidebar.ia.personas', ability: 'ai.persona.manage' },
+    },
+    {
+        path: 'ia/matriz',
+        name: 'ia.matriz.index',
+        component: () => import('@/pages/Ia/MatrizCanais.vue'),
+        meta: { title: 'layout.sidebar.ia.matriz', ability: 'ai.matrix.manage' },
+    },
+    {
+        path: 'ia/bases',
+        name: 'ia.bases.index',
+        component: () => import('@/pages/Ia/BasesIndex.vue'),
+        meta: { title: 'layout.sidebar.ia.bases', ability: 'ai.knowledge.view' },
+    },
+    {
+        path: 'ia/bases/nova',
+        name: 'ia.bases.new',
+        component: () => import('@/pages/Ia/BaseForm.vue'),
+        meta: { title: 'layout.sidebar.ia.bases', ability: 'ai.knowledge.manage' },
+    },
+    {
+        path: 'ia/bases/:id/editar',
+        name: 'ia.bases.edit',
+        component: () => import('@/pages/Ia/BaseForm.vue'),
+        meta: { title: 'layout.sidebar.ia.bases', ability: 'ai.knowledge.manage' },
+    },
+    {
+        path: 'ia/guardrails',
+        name: 'ia.guardrails.index',
+        component: () => import('@/pages/Ia/GuardrailsIndex.vue'),
+        meta: { title: 'layout.sidebar.ia.guardrails', ability: 'ai.guardrail.view' },
+    },
+    {
+        path: 'ia/guardrails/novo',
+        name: 'ia.guardrails.new',
+        component: () => import('@/pages/Ia/GuardrailForm.vue'),
+        meta: { title: 'layout.sidebar.ia.guardrails', ability: 'ai.guardrail.manage' },
+    },
+    {
+        path: 'ia/guardrails/:id/editar',
+        name: 'ia.guardrails.edit',
+        component: () => import('@/pages/Ia/GuardrailForm.vue'),
+        meta: { title: 'layout.sidebar.ia.guardrails', ability: 'ai.guardrail.manage' },
+    },
+    {
+        path: 'ia/logs',
+        name: 'ia.logs.index',
+        component: () => import('@/pages/Ia/LogsIndex.vue'),
+        meta: { title: 'layout.sidebar.ia.logs', ability: 'ai.log.view' },
+    },
     // ─── Pacientes ─────────────────────────────────────────────────────────
     {
         path: 'pacientes',

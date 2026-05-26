@@ -792,6 +792,14 @@
                 "schedule": "Horários",
                 "sync": "Sincronização Google"
             },
+            "ia": {
+                "title": "IA Matricial",
+                "personas": "Personas",
+                "matriz": "Matriz de Canais",
+                "bases": "Bases de Conhecimento",
+                "guardrails": "Guardrails",
+                "logs": "Logs da IA"
+            },
             "pacientes": {
                 "title": "Pacientes",
                 "list": "Lista",

@@ -12,6 +12,7 @@ import ReleaseAiButton from '@/components/Inbox/ReleaseAiButton.vue';
 import AssignDialog from '@/components/Inbox/AssignDialog.vue';
 import TransferDialog from '@/components/Inbox/TransferDialog.vue';
 import AssignmentHistoryDrawer from '@/components/Inbox/AssignmentHistoryDrawer.vue';
+import ConversationAiPanel from '@/components/Ia/ConversationAiPanel.vue';
 
 const { t } = useI18n();
 const auth = useAuthStore();
@@ -272,6 +273,9 @@ const conversationStatus = computed(() => props.conversation.status ?? 'aberta')
                 </button>
             </div>
         </div>
+
+        <!-- US6 — status/controle da IA Matricial nesta conversa -->
+        <ConversationAiPanel :conversation-id="conversation.id" />
 
         <!-- Área de mensagens -->
         <div

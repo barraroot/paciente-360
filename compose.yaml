@@ -29,7 +29,7 @@ services:
             mailpit:
                 condition: service_started
     pgsql:
-        image: 'postgres:18-alpine'
+        image: 'pgvector/pgvector:pg18'
         ports:
             - '${FORWARD_DB_PORT:-5432}:5432'
         environment:

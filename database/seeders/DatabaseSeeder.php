@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesSeeder::class,
             AgendaPermissionsSeeder::class,
+            AiPermissionsSeeder::class,
             PlansSeeder::class,
             SuperAdminSeeder::class,
         ]);

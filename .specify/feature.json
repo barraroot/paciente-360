@@ -1,6 +1,3 @@
 {
-  "feature_directory": "specs/014-channel-provider-integration",
-  "status": "DELIVERED",
-  "delivered_at": "2026-05-25",
-  "notes": "Integração de Canal WhatsApp — Twilio (oficial) ou Evolution API v2 (não oficial). 44/44 tasks. Coluna `provider` + ChannelAdapterResolver + EvolutionApiAdapter (SupportsQrConnection) + EvolutionInstanceService + EvolutionConnectionController/EvolutionWebhookController + cron de reconciliação + UI (Canais/Index + EvolutionQrModal). Gates G1–G8 verdes; suíte cheia 1641/1636/0 failures. Validado AO VIVO com WhatsApp real: conexão por QR, outbound e inbound (3 bugs de constraint/URL da Fase 3 corrigidos no smoke). Constitution v1.5.0 (amendment MINOR) admite Evolution como canal não oficial opcional; Princípio VI preservado por reuso do gate da Fase 13 (sem template aprovado → proativo fora da janela vira pending_manual). DEFERRED: resolução de URL pública de mídia S3 (herdado Fase 3); smoke visual da tela no /panel."
+  "feature_directory": "specs/015-ai-matricial"
 }

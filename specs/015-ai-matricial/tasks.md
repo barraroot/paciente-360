@@ -243,16 +243,16 @@ description: "Task list — IA Matricial (feature 015)"
 
 ### Tests (US8)
 
-- [ ] T087 [P] [US8] Feature `POST /ai/markdown/validate` sanitiza e back-end remove script/HTML/eventos (G12, SC-009/010) em `tests/Feature/Ai/MarkdownValidateTest.php`
-- [ ] T088 [P] [US8] Teste de componente: preview sanitizado (DOMPurify) e toolbar insere Markdown em `resources/js/components/Ia/__tests__/MarkdownEditor.spec.js`
+- [x] T087 [P] [US8] Feature `POST /ai/markdown/validate` sanitiza e back-end remove script/HTML/eventos (G12, SC-009/010) em `tests/Feature/Ai/MarkdownValidateTest.php`
+- [ ] T088 [P] [US8] Teste de componente: preview sanitizado (DOMPurify) e toolbar insere Markdown em `resources/js/components/Ia/__tests__/MarkdownEditor.spec.js` — **DEFERRED**: projeto não possui runner de testes JS (vitest/jest); adicionar exigiria mudança de dependência (CLAUDE.md). Gate de segurança coberto pelo back-end (T087).
 
 ### Implementação (US8)
 
-- [ ] T089 [P] [US8] `app/Http/Controllers/Api/V1/Ai/AiMarkdownController.php` (`validate` → sanitiza via T026 e retorna avisos) + request + rota (gate por `type`, rate-limited)
-- [ ] T090 [P] [US8] `resources/js/components/Ia/MarkdownEditor.vue` (edição + preview sanitizado com DOMPurify + templates + validação de obrigatório + copiar/colar)
-- [ ] T091 [P] [US8] `resources/js/components/Ia/MarkdownToolbar.vue` (auxiliar determinístico: título/subtítulo/ênfase/parágrafo/citação/lista/checklist/link/tabela → emite Markdown, sem IA)
-- [ ] T092 [US8] Trocar o textarea simples pelo `MarkdownEditor` nas forms de Persona/Base/Guardrail (`PersonaForm.vue`, `BaseForm.vue`, `GuardrailForm.vue`)
-- [ ] T093 [P] [US8] Templates Markdown pré-carregados (persona/base/guardrail) conforme spec, em `resources/js/components/Ia/markdownTemplates.js`
+- [x] T089 [P] [US8] `app/Http/Controllers/Api/V1/Ai/AiMarkdownController.php` (`validate` → sanitiza via T026 e retorna avisos) + request + rota (gate por `type`, rate-limited)
+- [x] T090 [P] [US8] `resources/js/components/Ia/MarkdownEditor.vue` (edição + preview sanitizado com DOMPurify + templates + validação de obrigatório + copiar/colar)
+- [x] T091 [P] [US8] `resources/js/components/Ia/MarkdownToolbar.vue` (auxiliar determinístico: título/subtítulo/ênfase/parágrafo/citação/lista/checklist/link/tabela → emite Markdown, sem IA)
+- [x] T092 [US8] Trocar o textarea simples pelo `MarkdownEditor` nas forms de Persona/Base/Guardrail (`PersonaForm.vue`, `BaseForm.vue`, `GuardrailForm.vue`)
+- [x] T093 [P] [US8] Templates Markdown pré-carregados (persona/base/guardrail) conforme spec, em `resources/js/components/Ia/markdownTemplates.js`
 
 **Checkpoint**: experiência de criação de conteúdo completa.
 
@@ -262,11 +262,11 @@ description: "Task list — IA Matricial (feature 015)"
 
 **Purpose**: itens "13. testes multi-tenant", "14. testes de segurança", "15. testes de fluxo de IA" consolidados + hardening.
 
-- [ ] T094 [P] Suíte de **isolamento multi-tenant** sobre TODAS as entidades `ai_*` (personas/bases/guardrails/matriz/assignments/logs/chunks): clínica A nunca lê/associa/usa dados da B; conversa de A nunca recebe persona de B (G1 consolidado, Princípio II) em `tests/Feature/Ai/AiTenantIsolationTest.php`
-- [ ] T095 [P] Testes de **segurança**: cada endpoint exige a ability correta (403 sem permissão); rate limiting nos endpoints IA + `markdown/validate`; sanitização no back-end mesmo via chamada direta à API (G2/G12, Princípio VII) em `tests/Feature/Ai/AiSecurityTest.php`
-- [ ] T096 [P] Teste de **fluxo de IA** completo (integração): inbound → round-robin → contexto (RAG+guardrails) → resposta enviada → log; + reatribuição + escala por urgência/baixa confiança (Princípio III) em `tests/Feature/Ai/AiEndToEndFlowTest.php`
-- [ ] T097 E2E Playwright (jornada IA no chat): IA responde → atendente pausa → assume → reativa, em `tests/e2e/ai-matricial.spec.js` (Princípio IV)
-- [ ] T098 [P] Auditoria a11y das páginas/modais/editor da IA (axe; 0 violations) e navegação por permissões
+- [x] T094 [P] Suíte de **isolamento multi-tenant** sobre TODAS as entidades `ai_*` (personas/bases/guardrails/matriz/assignments/logs/chunks): clínica A nunca lê/associa/usa dados da B; conversa de A nunca recebe persona de B (G1 consolidado, Princípio II) em `tests/Feature/Ai/AiTenantIsolationTest.php`
+- [x] T095 [P] Testes de **segurança**: cada endpoint exige a ability correta (403 sem permissão); rate limiting nos endpoints IA + `markdown/validate`; sanitização no back-end mesmo via chamada direta à API (G2/G12, Princípio VII) em `tests/Feature/Ai/AiSecurityTest.php`
+- [x] T096 [P] Teste de **fluxo de IA** completo (integração): inbound → round-robin → contexto (RAG+guardrails) → resposta enviada → log; + reatribuição + escala por urgência/baixa confiança (Princípio III) em `tests/Feature/Ai/AiEndToEndFlowTest.php`
+- [ ] T097 E2E Playwright (jornada IA no chat): IA responde → atendente pausa → assume → reativa, em `tests/e2e/ai-matricial.spec.js` (Princípio IV) — **DEFERRED**: E2E Playwright (desvio consciente do Princípio IV, padrão das fases anteriores); jornada coberta por testes de feature (US3/US6).
+- [ ] T098 [P] Auditoria a11y das páginas/modais/editor da IA (axe; 0 violations) e navegação por permissões — **DEFERRED**: auditoria a11y manual (axe/browser); padrões a11y (modais role=alertdialog, focus trap) reusados das fases 6/12.
 - [ ] T099 Rodar `vendor/bin/sail bin pint --dirty --format agent` + `vendor/bin/sail artisan test --compact` (cobertura ≥70%, sem regressão) + validar `quickstart.md` (Lotes A–I) + Constitution Re-Check 7/7
 
 ---

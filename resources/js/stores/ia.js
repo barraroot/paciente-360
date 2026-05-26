@@ -261,6 +261,22 @@ export const useIaStore = defineStore('ia', {
             return data.data ?? [];
         },
 
+        // ─── US6 — Controle da IA na conversa ───────────────────────────
+        async fetchConversationAiState(conversationId) {
+            const { data } = await api.get(`/ai/conversations/${conversationId}/state`);
+            return data.data;
+        },
+
+        async pauseConversationAi(conversationId) {
+            const { data } = await api.post(`/ai/conversations/${conversationId}/pause`);
+            return data.data;
+        },
+
+        async resumeConversationAi(conversationId) {
+            const { data } = await api.post(`/ai/conversations/${conversationId}/resume`);
+            return data.data;
+        },
+
         _replaceGuardrail(guardrail) {
             const idx = this.guardrails.findIndex((g) => g.id === guardrail.id);
             if (idx !== -1) {

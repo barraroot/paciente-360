@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Agenda\ProfessionalScheduleController;
 use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
 use App\Http\Controllers\Api\V1\Agenda\SlotController;
 use App\Http\Controllers\Api\V1\Agenda\WaitlistController;
+use App\Http\Controllers\Api\V1\Ai\AiConversationController;
 use App\Http\Controllers\Api\V1\Ai\AiGuardrailController;
 use App\Http\Controllers\Api\V1\Ai\AiKnowledgeBaseController;
 use App\Http\Controllers\Api\V1\Ai\AiModelController;
@@ -948,4 +949,15 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
         Route::put('personas/{persona}/guardrails', [AiGuardrailController::class, 'syncPersona'])
             ->whereNumber('persona')
             ->name('personas.guardrails.sync');
+
+        // US6 — controle humano da IA na conversa (estado/pausa/reativação).
+        Route::get('conversations/{conversation}/state', [AiConversationController::class, 'state'])
+            ->whereNumber('conversation')
+            ->name('conversations.state');
+        Route::post('conversations/{conversation}/pause', [AiConversationController::class, 'pause'])
+            ->whereNumber('conversation')
+            ->name('conversations.pause');
+        Route::post('conversations/{conversation}/resume', [AiConversationController::class, 'resume'])
+            ->whereNumber('conversation')
+            ->name('conversations.resume');
     });

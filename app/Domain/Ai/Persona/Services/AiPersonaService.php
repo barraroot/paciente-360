@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Ai\Persona\Services;
 
+use App\Domain\Ai\Assignment\Services\AiConversationAssignmentService;
 use App\Domain\Ai\Persona\Models\AiPersona;
 
 /**
@@ -12,6 +13,8 @@ use App\Domain\Ai\Persona\Models\AiPersona;
  */
 final class AiPersonaService
 {
+    public function __construct(private readonly AiConversationAssignmentService $assignments) {}
+
     /**
      * @param array<string, mixed> $data
      */
@@ -53,8 +56,27 @@ final class AiPersonaService
     {
         if ($persona->is_active) {
             $persona->update(['is_active' => false, 'updated_by' => $userId]);
+
+            // FR-016a/G10b — conversas ativas desta persona são reatribuídas
+            // (a persona já está inativa, então não é reescolhida pelo round-robin).
+            $this->assignments->reassignAwayFromPersona($persona);
         }
 
         return $persona;
+    }
+
+    /**
+     * Remove a persona (soft delete) reatribuindo antes as conversas ativas,
+     * para que nenhuma atribuição fique apontando a uma persona inexistente.
+     */
+    public function delete(AiPersona $persona): void
+    {
+        if ($persona->is_active) {
+            $persona->update(['is_active' => false]);
+        }
+
+        $this->assignments->reassignAwayFromPersona($persona);
+
+        $persona->delete();
     }
 }

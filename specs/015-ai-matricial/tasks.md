@@ -202,16 +202,16 @@ description: "Task list — IA Matricial (feature 015)"
 
 ### Tests (US6)
 
-- [ ] T076 [P] [US6] Feature pausar/reativar manual e indefinido; pausada não responde (G10, SC-007) em `tests/Feature/Ai/AiPauseResumeTest.php`
-- [ ] T077 [P] [US6] Integração auto-pause no `ConversaAssumidaPorHumano` em `tests/Feature/Ai/HumanTakeoverPauseTest.php`
-- [ ] T078 [P] [US6] Feature reatribuição ao desativar/remover persona (com e sem outra persona ativa → humano) (G10b, FR-016a) em `tests/Feature/Ai/PersonaReassignmentTest.php`
+- [x] T076 [P] [US6] Feature pausar/reativar manual e indefinido; pausada não responde (G10, SC-007) em `tests/Feature/Ai/AiPauseResumeTest.php`
+- [x] T077 [P] [US6] Integração auto-pause no `ConversaAssumidaPorHumano` em `tests/Feature/Ai/HumanTakeoverPauseTest.php`
+- [x] T078 [P] [US6] Feature reatribuição ao desativar/remover persona (com e sem outra persona ativa → humano) (G10b, FR-016a) em `tests/Feature/Ai/PersonaReassignmentTest.php`
 
 ### Implementação (US6)
 
-- [ ] T079 [P] [US6] `app/Http/Controllers/Api/V1/Ai/AiConversationController.php` (`GET state`, `POST pause`, `POST resume`) + requests + policy (`inbox.respond`) + rotas
-- [ ] T080 [US6] `app/Listeners/Ai/PauseAiOnHumanTakeover.php` (ouve `ConversaAssumidaPorHumano`; marca assignment `paused` + `ai_paused_until` indefinido) — auto-discovery
-- [ ] T081 [US6] Fluxo de reatribuição no `AiPersonaService::deactivate`/remoção de canal → `AiPersonaSelectorService` reaponta assignments ativos; sem persona ativa → `paused` + handoff humano
-- [ ] T082 [P] [US6] Frontend `resources/js/components/Ia/ConversationAiPanel.vue` embutido na tela de conversa existente (indicador IA ativa, persona, canal, status, botões Pausar/Reativar) — sem recriar a tela
+- [x] T079 [P] [US6] `app/Http/Controllers/Api/V1/Ai/AiConversationController.php` (`GET state`, `POST pause`, `POST resume`) + requests + policy (`inbox.respond`) + rotas
+- [x] T080 [US6] `app/Listeners/Ai/PauseAiOnHumanTakeover.php` (ouve `ConversaAssumidaPorHumano`; marca assignment `paused` + `ai_paused_until` indefinido) — auto-discovery
+- [x] T081 [US6] Fluxo de reatribuição no `AiPersonaService::deactivate`/remoção de canal → `AiPersonaSelectorService` reaponta assignments ativos; sem persona ativa → `paused` + handoff humano
+- [x] T082 [P] [US6] Frontend `resources/js/components/Ia/ConversationAiPanel.vue` embutido na tela de conversa existente (indicador IA ativa, persona, canal, status, botões Pausar/Reativar) — sem recriar a tela
 
 **Checkpoint**: supervisão humana completa.
 

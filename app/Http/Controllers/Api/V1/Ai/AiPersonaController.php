@@ -77,7 +77,7 @@ class AiPersonaController extends Controller
     {
         Gate::authorize('ai.persona.manage');
 
-        $persona->delete();
+        $this->service->delete($persona);
 
         return response()->json(['message' => __('ai.persona.deleted')]);
     }

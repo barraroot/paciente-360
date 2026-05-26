@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             AgendaPermissionsSeeder::class,
             AiPermissionsSeeder::class,
+            AiModelsSeeder::class,
             PlansSeeder::class,
             SuperAdminSeeder::class,
         ]);

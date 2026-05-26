@@ -268,6 +268,17 @@ class AppServiceProvider extends ServiceProvider
         // recursaria infinitamente (stack overflow → SIGSEGV) em todo path negado.
         Gate::define('professional.manage', static fn ($user): bool => $user instanceof User && $user->hasPermissionTo('professional.manage'));
 
+        // Fase 15 — IA Matricial. Ability-based; mesmo cuidado anti-recursão
+        // (hasPermissionTo, NUNCA can() dentro da closure).
+        foreach ([
+            'ai.persona.view', 'ai.persona.manage',
+            'ai.knowledge.view', 'ai.knowledge.manage',
+            'ai.guardrail.view', 'ai.guardrail.manage',
+            'ai.matrix.manage', 'ai.log.view',
+        ] as $aiAbility) {
+            Gate::define($aiAbility, static fn ($user): bool => $user instanceof User && $user->hasPermissionTo($aiAbility));
+        }
+
         // Fase 8 Lote D — Webhooks (T201).
         Gate::policy(WebhookEndpoint::class, WebhookPolicy::class);
 

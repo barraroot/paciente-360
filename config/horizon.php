@@ -261,6 +261,15 @@ return [
                 'tries' => 3,
                 'timeout' => 600,
             ],
+            // Fase 15 (IA Matricial) — fila dedicada do ProcessAiResponseJob.
+            'ai' => [
+                'connection' => 'redis',
+                'queue' => ['ai'],
+                'balance' => 'simple',
+                'processes' => 5,
+                'tries' => 1,
+                'timeout' => 120,
+            ],
         ],
 
         'local' => [
@@ -307,6 +316,14 @@ return [
                 'processes' => 1,
                 'tries' => 3,
                 'timeout' => 600,
+            ],
+            'ai' => [
+                'connection' => 'redis',
+                'queue' => ['ai'],
+                'balance' => 'simple',
+                'processes' => 2,
+                'tries' => 1,
+                'timeout' => 120,
             ],
         ],
 
@@ -355,6 +372,14 @@ return [
                 'processes' => 1,
                 'tries' => 3,
                 'timeout' => 600,
+            ],
+            'ai' => [
+                'connection' => 'redis',
+                'queue' => ['ai'],
+                'balance' => 'simple',
+                'processes' => 2,
+                'tries' => 1,
+                'timeout' => 120,
             ],
         ],
     ],

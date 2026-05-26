@@ -25,11 +25,11 @@ description: "Task list — IA Matricial (feature 015)"
 
 **Purpose**: dependências aprovadas (laravel/ai + pgvector) e configuração base.
 
-- [ ] T001 Instalar Laravel AI SDK: `vendor/bin/sail composer require laravel/ai` (fixar v0.x no `composer.json`) e publicar config (`config/ai.php`)
-- [ ] T002 [P] Migration de extensão `CREATE EXTENSION IF NOT EXISTS vector` em `database/migrations/`; (opcional) `vendor/bin/sail composer require pgvector/pgvector`
-- [ ] T003 [P] Criar `config/ai.php` (sobre a config publicada): provider (Anthropic default) + credenciais via env globais, `embedding_dimension`, `confidence_threshold`, `debounce_seconds`, `retry.attempts`/`backoff`, `rag.top_k`/`min_similarity`, referência aos guardrails médicos mínimos
-- [ ] T004 [P] Criar `lang/pt_BR/ai.php` (rótulos/erros das telas e validações da IA Matricial)
-- [ ] T005 Adicionar supervisor/fila `ai` em `config/horizon.php` (worker dedicado para `ProcessAiResponseJob`)
+- [x] T001 Instalar Laravel AI SDK: `vendor/bin/sail composer require laravel/ai` (fixar v0.x no `composer.json`) e publicar config (`config/ai.php`)
+- [x] T002 [P] Migration de extensão `CREATE EXTENSION IF NOT EXISTS vector` em `database/migrations/`; (opcional) `vendor/bin/sail composer require pgvector/pgvector`
+- [x] T003 [P] Criar `config/ai.php` (sobre a config publicada): provider (Anthropic default) + credenciais via env globais, `embedding_dimension`, `confidence_threshold`, `debounce_seconds`, `retry.attempts`/`backoff`, `rag.top_k`/`min_similarity`, referência aos guardrails médicos mínimos
+- [x] T004 [P] Criar `lang/pt_BR/ai.php` (rótulos/erros das telas e validações da IA Matricial)
+- [x] T005 Adicionar supervisor/fila `ai` em `config/horizon.php` (worker dedicado para `ProcessAiResponseJob`)
 
 ---
 
@@ -39,34 +39,34 @@ description: "Task list — IA Matricial (feature 015)"
 
 ### Migrations (tabelas `ai_*` — data-model.md)
 
-- [ ] T006 [P] Migration `ai_models` (catálogo global, SEM tenant; UNIQUE `internal_identifier`; `config_schema` jsonb; `supports_embedding`/`embedding_dimension`) em `database/migrations/`
-- [ ] T007 [P] Migration `ai_personas` (tenant, FK `ai_model_id`, markdown/tone/objective/limitations/initial/fallback/handoff, `model_settings` jsonb, `is_active`, created_by/updated_by, soft delete)
-- [ ] T008 [P] Migration `ai_knowledge_bases` (tenant, markdown, tags/metadata jsonb, `is_active`, `indexed_at`, soft delete)
-- [ ] T009 [P] Migration `ai_guardrails` (tenant, `category`, markdown, `is_active`, soft delete)
-- [ ] T010 [P] Migration `ai_persona_channels` (tenant, persona, `channel_type` whatsapp/instagram/web, `is_active`, UNIQUE `(tenant_id,ai_persona_id,channel_type)`)
-- [ ] T011 [P] Migration `ai_persona_knowledge_base` (pivot, tenant, UNIQUE `(ai_persona_id,ai_knowledge_base_id)`)
-- [ ] T012 [P] Migration `ai_persona_guardrail` (pivot, tenant, UNIQUE `(ai_persona_id,ai_guardrail_id)`)
-- [ ] T013 [P] Migration `ai_channel_distribution_states` (tenant, `channel_type`, `last_ai_persona_id`, `last_position`, UNIQUE `(tenant_id,channel_type)`)
-- [ ] T014 [P] Migration `ai_conversation_assignments` (tenant, FK `conversation_id`, `channel_type`, `ai_persona_id`, `status`, assigned/unassigned/paused fields, `metadata`, UNIQUE parcial `(conversation_id) WHERE status<>'closed'`)
-- [ ] T015 [P] Migration `ai_knowledge_chunks` (tenant, FK base cascade, `chunk_index`, `content`, `token_count`, `embedding vector(N)`, índice HNSW cosine + btree `(tenant_id,ai_knowledge_base_id)`) — depende de T002
-- [ ] T016 [P] Migration `ai_execution_logs` (tenant, conversation/message/response_message/persona/model, `correlation_id`, prompt/context/intent/confidence/response/action/status/error/latency/tokens/cost; retenção ≥6m)
+- [x] T006 [P] Migration `ai_models` (catálogo global, SEM tenant; UNIQUE `internal_identifier`; `config_schema` jsonb; `supports_embedding`/`embedding_dimension`) em `database/migrations/`
+- [x] T007 [P] Migration `ai_personas` (tenant, FK `ai_model_id`, markdown/tone/objective/limitations/initial/fallback/handoff, `model_settings` jsonb, `is_active`, created_by/updated_by, soft delete)
+- [x] T008 [P] Migration `ai_knowledge_bases` (tenant, markdown, tags/metadata jsonb, `is_active`, `indexed_at`, soft delete)
+- [x] T009 [P] Migration `ai_guardrails` (tenant, `category`, markdown, `is_active`, soft delete)
+- [x] T010 [P] Migration `ai_persona_channels` (tenant, persona, `channel_type` whatsapp/instagram/web, `is_active`, UNIQUE `(tenant_id,ai_persona_id,channel_type)`)
+- [x] T011 [P] Migration `ai_persona_knowledge_base` (pivot, tenant, UNIQUE `(ai_persona_id,ai_knowledge_base_id)`)
+- [x] T012 [P] Migration `ai_persona_guardrail` (pivot, tenant, UNIQUE `(ai_persona_id,ai_guardrail_id)`)
+- [x] T013 [P] Migration `ai_channel_distribution_states` (tenant, `channel_type`, `last_ai_persona_id`, `last_position`, UNIQUE `(tenant_id,channel_type)`)
+- [x] T014 [P] Migration `ai_conversation_assignments` (tenant, FK `conversation_id`, `channel_type`, `ai_persona_id`, `status`, assigned/unassigned/paused fields, `metadata`, UNIQUE parcial `(conversation_id) WHERE status<>'closed'`)
+- [x] T015 [P] Migration `ai_knowledge_chunks` (tenant, FK base cascade, `chunk_index`, `content`, `token_count`, `embedding vector(N)`, índice HNSW cosine + btree `(tenant_id,ai_knowledge_base_id)`) — depende de T002
+- [x] T016 [P] Migration `ai_execution_logs` (tenant, conversation/message/response_message/persona/model, `correlation_id`, prompt/context/intent/confidence/response/action/status/error/latency/tokens/cost; retenção ≥6m)
 
 ### Models + Factories
 
-- [ ] T017 [P] Model `app/Domain/Ai/Model/Models/AiModel.php` (global, SEM `BelongsToTenant`) + factory
-- [ ] T018 [P] Model `app/Domain/Ai/Persona/Models/AiPersona.php` (`BelongsToTenant`, soft delete, relações model/channels/bases/guardrails/assignments) + factory + states (active/inactive)
-- [ ] T019 [P] Model `app/Domain/Ai/KnowledgeBase/Models/AiKnowledgeBase.php` + `AiKnowledgeChunk.php` (cast vector ou raw) + factories
-- [ ] T020 [P] Model `app/Domain/Ai/Guardrail/Models/AiGuardrail.php` + factory
-- [ ] T021 [P] Models pivot `app/Domain/Ai/Matrix/Models/{AiPersonaChannel,AiPersonaKnowledgeBase,AiPersonaGuardrail}.php`
-- [ ] T022 [P] Model `app/Domain/Ai/Distribution/Models/AiChannelDistributionState.php`
-- [ ] T023 [P] Model `app/Domain/Ai/Assignment/Models/AiConversationAssignment.php` + factory + states
-- [ ] T024 [P] Model `app/Domain/Ai/Execution/Models/AiExecutionLog.php` + factory
+- [x] T017 [P] Model `app/Domain/Ai/Model/Models/AiModel.php` (global, SEM `BelongsToTenant`) + factory
+- [x] T018 [P] Model `app/Domain/Ai/Persona/Models/AiPersona.php` (`BelongsToTenant`, soft delete, relações model/channels/bases/guardrails/assignments) + factory + states (active/inactive)
+- [x] T019 [P] Model `app/Domain/Ai/KnowledgeBase/Models/AiKnowledgeBase.php` + `AiKnowledgeChunk.php` (cast vector ou raw) + factories
+- [x] T020 [P] Model `app/Domain/Ai/Guardrail/Models/AiGuardrail.php` + factory
+- [x] T021 [P] Models pivot `app/Domain/Ai/Matrix/Models/{AiPersonaChannel,AiPersonaKnowledgeBase,AiPersonaGuardrail}.php`
+- [x] T022 [P] Model `app/Domain/Ai/Distribution/Models/AiChannelDistributionState.php`
+- [x] T023 [P] Model `app/Domain/Ai/Assignment/Models/AiConversationAssignment.php` + factory + states
+- [x] T024 [P] Model `app/Domain/Ai/Execution/Models/AiExecutionLog.php` + factory
 
 ### Compartilhado (blocking)
 
-- [ ] T025 Registrar abilities IA (`ai.persona.view/manage`, `ai.knowledge.view/manage`, `ai.guardrail.view/manage`, `ai.matrix.manage`, `ai.log.view`) em seeder de permissões + definir gates ability-based em `AppServiceProvider` usando `$user->hasPermissionTo(...)` (NUNCA `can()` — evitar recursão, lição Fase 12)
-- [ ] T026 [P] `app/Domain/Ai/Services/MarkdownSanitizerService.php` (remove HTML/script/eventos/`javascript:`; mantém Markdown puro) + unit test em `tests/Unit/Ai/MarkdownSanitizerServiceTest.php`
-- [ ] T027 [P] `AiModelResource` Filament (super-admin) em `app/Filament/Resources/` (CRUD catálogo global) + policy super-admin + seeder de ≥1 modelo ativo (texto + embedding)
+- [x] T025 Registrar abilities IA (`ai.persona.view/manage`, `ai.knowledge.view/manage`, `ai.guardrail.view/manage`, `ai.matrix.manage`, `ai.log.view`) em seeder de permissões + definir gates ability-based em `AppServiceProvider` usando `$user->hasPermissionTo(...)` (NUNCA `can()` — evitar recursão, lição Fase 12)
+- [x] T026 [P] `app/Domain/Ai/Services/MarkdownSanitizerService.php` (remove HTML/script/eventos/`javascript:`; mantém Markdown puro) + unit test em `tests/Unit/Ai/MarkdownSanitizerServiceTest.php`
+- [x] T027 [P] `AiModelResource` Filament (super-admin) em `app/Filament/Resources/` (CRUD catálogo global) + policy super-admin + seeder de ≥1 modelo ativo (texto + embedding)
 - [ ] T028 Grupo de rotas `/api/v1/ai` em `routes/api.php` com middleware `['auth:sanctum','tenant.slug','tenant.not-suspended']` + entradas em `resources/js/config/navigation.js` (gated por abilities IA)
 
 **Checkpoint**: schema + models + abilities + sanitizer prontos — user stories podem começar.

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Ai\AiConversationController;
 use App\Http\Controllers\Api\V1\Ai\AiExecutionLogController;
 use App\Http\Controllers\Api\V1\Ai\AiGuardrailController;
 use App\Http\Controllers\Api\V1\Ai\AiKnowledgeBaseController;
+use App\Http\Controllers\Api\V1\Ai\AiMarkdownController;
 use App\Http\Controllers\Api\V1\Ai\AiModelController;
 use App\Http\Controllers\Api\V1\Ai\AiPersonaChannelController;
 use App\Http\Controllers\Api\V1\Ai\AiPersonaController;
@@ -967,4 +968,9 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
         Route::get('execution-logs/{executionLog}', [AiExecutionLogController::class, 'show'])
             ->whereNumber('executionLog')
             ->name('execution-logs.show');
+
+        // US8 — validação/sanitização de Markdown no back-end (rate-limited).
+        Route::post('markdown/validate', [AiMarkdownController::class, 'validate'])
+            ->middleware('throttle:60,1')
+            ->name('markdown.validate');
     });

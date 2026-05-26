@@ -2,6 +2,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useIaStore } from '@/stores/ia.js';
+import MarkdownEditor from '@/components/Ia/MarkdownEditor.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -105,16 +106,14 @@ function fieldError(key) {
                 <input v-model="form.description" type="text" class="mt-1 w-full rounded-lg border-gray-300 text-sm" />
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Conteúdo (Markdown)</label>
-                <textarea
-                    v-model="form.markdown_content"
-                    rows="12"
-                    class="mt-1 w-full rounded-lg border-gray-300 font-mono text-sm"
-                    placeholder="# Restrições&#10;&#10;- Não prometer prazos de resultado.&#10;- Encaminhar reclamações graves a um atendente."
-                ></textarea>
-                <p v-if="fieldError('markdown_content')" class="mt-1 text-xs text-red-600">{{ fieldError('markdown_content') }}</p>
-            </div>
+            <MarkdownEditor
+                v-model="form.markdown_content"
+                label="Conteúdo (Markdown)"
+                required
+                template-key="guardrail"
+                :rows="12"
+                :error="fieldError('markdown_content')"
+            />
 
             <div class="flex justify-end gap-3 pt-2">
                 <router-link :to="{ name: 'ia.guardrails.index' }" class="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">

@@ -100,6 +100,25 @@ const panelChildren = [
         component: () => import('@/pages/agenda/CalendarSyncPage.vue'),
         meta: { title: 'layout.sidebar.agenda.sync', ability: 'calendar_sync.configure' },
     },
+    // ─── IA Matricial ──────────────────────────────────────────────────────
+    {
+        path: 'ia/personas',
+        name: 'ia.personas.index',
+        component: () => import('@/pages/Ia/PersonasIndex.vue'),
+        meta: { title: 'layout.sidebar.ia.personas', ability: 'ai.persona.view' },
+    },
+    {
+        path: 'ia/personas/nova',
+        name: 'ia.personas.new',
+        component: () => import('@/pages/Ia/PersonaForm.vue'),
+        meta: { title: 'layout.sidebar.ia.personas', ability: 'ai.persona.manage' },
+    },
+    {
+        path: 'ia/personas/:id/editar',
+        name: 'ia.personas.edit',
+        component: () => import('@/pages/Ia/PersonaForm.vue'),
+        meta: { title: 'layout.sidebar.ia.personas', ability: 'ai.persona.manage' },
+    },
     // ─── Pacientes ─────────────────────────────────────────────────────────
     {
         path: 'pacientes',

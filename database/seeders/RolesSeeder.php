@@ -114,6 +114,16 @@ class RolesSeeder extends Seeder
         'portability.execute',
         // Spec 012 — Gestão de profissionais
         'professional.manage',
+
+        // Fase 15 — IA Matricial
+        'ai.persona.view',
+        'ai.persona.manage',
+        'ai.knowledge.view',
+        'ai.knowledge.manage',
+        'ai.guardrail.view',
+        'ai.guardrail.manage',
+        'ai.matrix.manage',
+        'ai.log.view',
     ];
 
     /**
@@ -172,6 +182,15 @@ class RolesSeeder extends Seeder
             'portability.execute',
             // Spec 012 — admin clínica gerencia profissionais clínicos.
             'professional.manage',
+            // Fase 15 — admin clínica gerencia toda a IA Matricial.
+            'ai.persona.view',
+            'ai.persona.manage',
+            'ai.knowledge.view',
+            'ai.knowledge.manage',
+            'ai.guardrail.view',
+            'ai.guardrail.manage',
+            'ai.matrix.manage',
+            'ai.log.view',
         ],
         'medico' => [
             'paciente.view',
@@ -198,6 +217,11 @@ class RolesSeeder extends Seeder
             // Fase 8 — Médico vê relatórios próprios (escopo aplicado via policy/service, Q13).
             'report.view',
             'report.export',
+            // Fase 15 — médico visualiza configuração de IA e logs.
+            'ai.persona.view',
+            'ai.knowledge.view',
+            'ai.guardrail.view',
+            'ai.log.view',
         ],
         'atendente' => [
             'paciente.view',
@@ -215,6 +239,9 @@ class RolesSeeder extends Seeder
             'quick_reply.manage',
             // Fase 7 — sem acesso ao conteúdo clínico controlado.
             'prescription.view',
+            // Fase 15 — atendente vê personas e logs da IA.
+            'ai.persona.view',
+            'ai.log.view',
         ],
         'recepcionista' => [
             'paciente.view',
@@ -232,6 +259,8 @@ class RolesSeeder extends Seeder
             'quick_reply.manage',
             // Fase 7 — sem acesso ao conteúdo clínico controlado.
             'prescription.view',
+            // Fase 15 — recepcionista vê personas da IA.
+            'ai.persona.view',
         ],
         'financeiro' => [
             // Fase 0

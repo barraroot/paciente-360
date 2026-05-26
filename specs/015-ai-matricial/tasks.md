@@ -67,7 +67,7 @@ description: "Task list — IA Matricial (feature 015)"
 - [x] T025 Registrar abilities IA (`ai.persona.view/manage`, `ai.knowledge.view/manage`, `ai.guardrail.view/manage`, `ai.matrix.manage`, `ai.log.view`) em seeder de permissões + definir gates ability-based em `AppServiceProvider` usando `$user->hasPermissionTo(...)` (NUNCA `can()` — evitar recursão, lição Fase 12)
 - [x] T026 [P] `app/Domain/Ai/Services/MarkdownSanitizerService.php` (remove HTML/script/eventos/`javascript:`; mantém Markdown puro) + unit test em `tests/Unit/Ai/MarkdownSanitizerServiceTest.php`
 - [x] T027 [P] `AiModelResource` Filament (super-admin) em `app/Filament/Resources/` (CRUD catálogo global) + policy super-admin + seeder de ≥1 modelo ativo (texto + embedding)
-- [ ] T028 Grupo de rotas `/api/v1/ai` em `routes/api.php` com middleware `['auth:sanctum','tenant.slug','tenant.not-suspended']` + entradas em `resources/js/config/navigation.js` (gated por abilities IA)
+- [x] T028 Grupo de rotas `/api/v1/ai` em `routes/api.php` com middleware `['auth:sanctum','tenant.slug','tenant.not-suspended']` + entradas em `resources/js/config/navigation.js` (gated por abilities IA)
 
 **Checkpoint**: schema + models + abilities + sanitizer prontos — user stories podem começar.
 
@@ -80,18 +80,18 @@ description: "Task list — IA Matricial (feature 015)"
 
 ### Tests (US1)
 
-- [ ] T029 [P] [US1] Feature test CRUD de personas + cross-tenant 404 (G1) em `tests/Feature/Ai/PersonaCrudTest.php`
-- [ ] T030 [P] [US1] Unit test validação de `model_settings` vs `config_schema` e bloqueio de modelo inativo (FR-002/003/008) em `tests/Unit/Ai/PersonaModelSettingsTest.php`
+- [x] T029 [P] [US1] Feature test CRUD de personas + cross-tenant 404 (G1) em `tests/Feature/Ai/PersonaCrudTest.php`
+- [x] T030 [P] [US1] Unit test validação de `model_settings` vs `config_schema` e bloqueio de modelo inativo (FR-002/003/008) em `tests/Unit/Ai/PersonaModelSettingsTest.php`
 
 ### Implementação (US1)
 
-- [ ] T031 [P] [US1] `app/Http/Requests/Ai/StorePersonaRequest.php` e `UpdatePersonaRequest.php` (valida campos, sanitiza markdown via T026, exige modelo ativo na criação, valida settings vs schema)
-- [ ] T032 [P] [US1] `app/Policies/Ai/AiPersonaPolicy.php` (abilities `ai.persona.*`, escopo tenant)
-- [ ] T033 [P] [US1] `app/Http/Resources/Ai/AiPersonaResource.php` (sem PII; inclui contagem/associações via whenLoaded) + `AiModelResource` (API, somente ativos + os referenciados)
-- [ ] T034 [US1] `app/Domain/Ai/Persona/Services/AiPersonaService.php` (create/update/activate/deactivate; ativar/desativar via endpoints dedicados, `is_active` prohibited no update)
-- [ ] T035 [US1] `app/Http/Controllers/Api/V1/Ai/AiPersonaController.php` (index/store/show/update/destroy/activate/deactivate) + `AiModelController@index`
-- [ ] T036 [US1] Registrar rotas de personas e `GET /ai/models` em `routes/api.php`
-- [ ] T037 [P] [US1] Frontend: `resources/js/pages/Ia/PersonasIndex.vue` + `PersonaForm.vue` (selação de modelo; markdown via textarea simples — editor rico vem na US8) + store `resources/js/stores/ia.js` (personas)
+- [x] T031 [P] [US1] `app/Http/Requests/Ai/StorePersonaRequest.php` e `UpdatePersonaRequest.php` (valida campos, sanitiza markdown via T026, exige modelo ativo na criação, valida settings vs schema)
+- [x] T032 [P] [US1] `app/Policies/Ai/AiPersonaPolicy.php` (abilities `ai.persona.*`, escopo tenant)
+- [x] T033 [P] [US1] `app/Http/Resources/Ai/AiPersonaResource.php` (sem PII; inclui contagem/associações via whenLoaded) + `AiModelResource` (API, somente ativos + os referenciados)
+- [x] T034 [US1] `app/Domain/Ai/Persona/Services/AiPersonaService.php` (create/update/activate/deactivate; ativar/desativar via endpoints dedicados, `is_active` prohibited no update)
+- [x] T035 [US1] `app/Http/Controllers/Api/V1/Ai/AiPersonaController.php` (index/store/show/update/destroy/activate/deactivate) + `AiModelController@index`
+- [x] T036 [US1] Registrar rotas de personas e `GET /ai/models` em `routes/api.php`
+- [x] T037 [P] [US1] Frontend: `resources/js/pages/Ia/PersonasIndex.vue` + `PersonaForm.vue` (selação de modelo; markdown via textarea simples — editor rico vem na US8) + store `resources/js/stores/ia.js` (personas)
 
 **Checkpoint**: personas CRUD funcional e isolado por clínica.
 

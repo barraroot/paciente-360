@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\V1\Agenda\ProfessionalScheduleController;
 use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
 use App\Http\Controllers\Api\V1\Agenda\SlotController;
 use App\Http\Controllers\Api\V1\Agenda\WaitlistController;
+use App\Http\Controllers\Api\V1\Ai\AiModelController;
+use App\Http\Controllers\Api\V1\Ai\AiPersonaController;
 use App\Http\Controllers\Api\V1\Audit\AuditLogsController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutAllController;
@@ -880,4 +882,30 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
         Route::delete('/{tokenId}', [ApiTokensController::class, 'destroy'])
             ->whereNumber('tokenId')
             ->name('destroy');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| IA Matricial (Fase 15)
+|--------------------------------------------------------------------------
+|
+| Camada de configuração/orquestração de IA. Todas as rotas escopadas por
+| tenant e gated por abilities `ai.*`.
+*/
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('ai')
+    ->name('ai.')
+    ->group(function (): void {
+        // US1 — catálogo de modelos (somente leitura) + personas.
+        Route::get('models', [AiModelController::class, 'index'])->name('models.index');
+
+        Route::post('personas/{persona}/activate', [AiPersonaController::class, 'activate'])
+            ->whereNumber('persona')
+            ->name('personas.activate');
+        Route::post('personas/{persona}/deactivate', [AiPersonaController::class, 'deactivate'])
+            ->whereNumber('persona')
+            ->name('personas.deactivate');
+
+        Route::apiResource('personas', AiPersonaController::class)
+            ->parameters(['personas' => 'persona']);
     });

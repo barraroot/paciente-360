@@ -792,6 +792,10 @@
                 "schedule": "Horários",
                 "sync": "Sincronização Google"
             },
+            "ia": {
+                "title": "IA Matricial",
+                "personas": "Personas"
+            },
             "pacientes": {
                 "title": "Pacientes",
                 "list": "Lista",

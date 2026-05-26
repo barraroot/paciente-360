@@ -62,6 +62,19 @@ export const NAVIGATION = [
         ],
     },
     {
+        key: 'ia',
+        labelKey: 'layout.sidebar.ia.title',
+        icon: 'cog',
+        children: [
+            {
+                key: 'ia.personas',
+                labelKey: 'layout.sidebar.ia.personas',
+                routeName: 'ia.personas.index',
+                ability: 'ai.persona.view',
+            },
+        ],
+    },
+    {
         key: 'pacientes',
         labelKey: 'layout.sidebar.pacientes.title',
         icon: 'users',

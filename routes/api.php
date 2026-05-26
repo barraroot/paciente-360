@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
 use App\Http\Controllers\Api\V1\Agenda\SlotController;
 use App\Http\Controllers\Api\V1\Agenda\WaitlistController;
 use App\Http\Controllers\Api\V1\Ai\AiModelController;
+use App\Http\Controllers\Api\V1\Ai\AiPersonaChannelController;
 use App\Http\Controllers\Api\V1\Ai\AiPersonaController;
 use App\Http\Controllers\Api\V1\Audit\AuditLogsController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
@@ -908,4 +909,11 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
 
         Route::apiResource('personas', AiPersonaController::class)
             ->parameters(['personas' => 'persona']);
+
+        // US2 — matriz Persona × Canal + consulta de config por canal.
+        Route::get('persona-channels', [AiPersonaChannelController::class, 'index'])->name('persona-channels.index');
+        Route::put('persona-channels', [AiPersonaChannelController::class, 'update'])->name('persona-channels.update');
+        Route::get('channels/{channelType}/config', [AiPersonaChannelController::class, 'channelConfig'])
+            ->whereIn('channelType', ['whatsapp', 'instagram', 'web'])
+            ->name('channels.config');
     });

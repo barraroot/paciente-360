@@ -19,6 +19,7 @@ export const useIaStore = defineStore('ia', {
         models: [],
         personas: [],
         selectedPersona: null,
+        matrix: [],
         loading: false,
         saving: false,
         error: null,
@@ -91,6 +92,29 @@ export const useIaStore = defineStore('ia', {
             const { data } = await api.post(`/ai/personas/${id}/${action}`);
             this._replacePersona(data.data);
             return data.data;
+        },
+
+        async fetchMatrix() {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await api.get('/ai/persona-channels');
+                this.matrix = data.data ?? [];
+                return this.matrix;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async saveMatrix(cells) {
+            this.saving = true;
+            try {
+                const { data } = await api.put('/ai/persona-channels', { cells });
+                this.matrix = data.data ?? [];
+                return this.matrix;
+            } finally {
+                this.saving = false;
+            }
         },
 
         _replacePersona(persona) {

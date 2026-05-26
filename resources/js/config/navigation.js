@@ -72,6 +72,12 @@ export const NAVIGATION = [
                 routeName: 'ia.personas.index',
                 ability: 'ai.persona.view',
             },
+            {
+                key: 'ia.matriz',
+                labelKey: 'layout.sidebar.ia.matriz',
+                routeName: 'ia.matriz.index',
+                ability: 'ai.matrix.manage',
+            },
         ],
     },
     {

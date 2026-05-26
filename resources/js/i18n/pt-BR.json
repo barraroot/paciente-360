@@ -794,7 +794,8 @@
             },
             "ia": {
                 "title": "IA Matricial",
-                "personas": "Personas"
+                "personas": "Personas",
+                "matriz": "Matriz de Canais"
             },
             "pacientes": {
                 "title": "Pacientes",

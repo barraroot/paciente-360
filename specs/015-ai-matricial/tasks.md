@@ -104,18 +104,18 @@ description: "Task list — IA Matricial (feature 015)"
 
 ### Tests (US2)
 
-- [ ] T038 [P] [US2] Unit round-robin: distribuição ≤1 de diferença, concorrência com lock sem duplicar posição, isolamento tenant+canal (G3, SC-002) em `tests/Unit/Ai/PersonaSelectorTest.php`
-- [ ] T039 [P] [US2] Feature matriz Persona×Canal (PUT/GET) + co-tenancy + `GET channels/{type}/config` e canal sem persona ativa → IA desabilitada (G5, FR-011a) em `tests/Feature/Ai/PersonaChannelMatrixTest.php`
-- [ ] T040 [P] [US2] Feature continuidade: conversa atribuída mantém a mesma persona (G4, SC-003) em `tests/Feature/Ai/AssignmentContinuityTest.php`
+- [x] T038 [P] [US2] Unit round-robin: distribuição ≤1 de diferença, concorrência com lock sem duplicar posição, isolamento tenant+canal (G3, SC-002) em `tests/Unit/Ai/PersonaSelectorTest.php`
+- [x] T039 [P] [US2] Feature matriz Persona×Canal (PUT/GET) + co-tenancy + `GET channels/{type}/config` e canal sem persona ativa → IA desabilitada (G5, FR-011a) em `tests/Feature/Ai/PersonaChannelMatrixTest.php`
+- [x] T040 [P] [US2] Feature continuidade: conversa atribuída mantém a mesma persona (G4, SC-003) em `tests/Feature/Ai/AssignmentContinuityTest.php`
 
 ### Implementação (US2)
 
-- [ ] T041 [P] [US2] `app/Http/Requests/Ai/StorePersonaChannelsRequest.php` (lista de células; valida `channel_type` ∈ whatsapp/instagram/web) + `AiPersonaChannelResource`
-- [ ] T042 [P] [US2] `app/Domain/Ai/Matrix/Services/AiMatrixService.php` (resolve matriz ativa; `isChannelAiEnabled(tenant,channel)` derivado de ≥1 persona ativa — FR-011a; config por canal)
-- [ ] T043 [US2] `app/Domain/Ai/Distribution/Services/AiPersonaSelectorService.php` (round-robin com transação + `lockForUpdate` em `ai_channel_distribution_states`; lista determinística; wrap-around)
-- [ ] T044 [US2] `app/Domain/Ai/Assignment/Services/AiConversationAssignmentService.php` (assign/find ativo/close; UNIQUE parcial por conversa)
-- [ ] T045 [US2] `app/Http/Controllers/Api/V1/Ai/AiPersonaChannelController.php` (GET/PUT matriz; GET config por canal) + policy `ai.matrix.manage` + rotas
-- [ ] T046 [P] [US2] Frontend: `resources/js/pages/Ia/MatrizCanais.vue` + `resources/js/components/Ia/PersonaChannelMatrix.vue` (grid de switches WhatsApp/Widget/Instagram)
+- [x] T041 [P] [US2] `app/Http/Requests/Ai/StorePersonaChannelsRequest.php` (lista de células; valida `channel_type` ∈ whatsapp/instagram/web) + `AiPersonaChannelResource`
+- [x] T042 [P] [US2] `app/Domain/Ai/Matrix/Services/AiMatrixService.php` (resolve matriz ativa; `isChannelAiEnabled(tenant,channel)` derivado de ≥1 persona ativa — FR-011a; config por canal)
+- [x] T043 [US2] `app/Domain/Ai/Distribution/Services/AiPersonaSelectorService.php` (round-robin com transação + `lockForUpdate` em `ai_channel_distribution_states`; lista determinística; wrap-around)
+- [x] T044 [US2] `app/Domain/Ai/Assignment/Services/AiConversationAssignmentService.php` (assign/find ativo/close; UNIQUE parcial por conversa)
+- [x] T045 [US2] `app/Http/Controllers/Api/V1/Ai/AiPersonaChannelController.php` (GET/PUT matriz; GET config por canal) + policy `ai.matrix.manage` + rotas
+- [x] T046 [P] [US2] Frontend: `resources/js/pages/Ia/MatrizCanais.vue` + `resources/js/components/Ia/PersonaChannelMatrix.vue` (grid de switches WhatsApp/Widget/Instagram)
 
 **Checkpoint**: matriz configurável + atribuição round-robin equilibrada e persistente.
 

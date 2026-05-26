@@ -119,6 +119,12 @@ const panelChildren = [
         component: () => import('@/pages/Ia/PersonaForm.vue'),
         meta: { title: 'layout.sidebar.ia.personas', ability: 'ai.persona.manage' },
     },
+    {
+        path: 'ia/matriz',
+        name: 'ia.matriz.index',
+        component: () => import('@/pages/Ia/MatrizCanais.vue'),
+        meta: { title: 'layout.sidebar.ia.matriz', ability: 'ai.matrix.manage' },
+    },
     // ─── Pacientes ─────────────────────────────────────────────────────────
     {
         path: 'pacientes',

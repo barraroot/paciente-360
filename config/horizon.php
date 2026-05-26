@@ -199,7 +199,10 @@ return [
     'defaults' => [
         'supervisor-1' => [
             'connection' => 'redis',
-            'queue' => ['default'],
+            // Worker fallback: além de 'default', consome as filas que não têm supervisor
+            // dedicado. 'outbound-messages' (envio real de mensagens — resposta da IA e do
+            // atendente) primeiro por ser latência-sensível; depois as filas de receituário.
+            'queue' => ['outbound-messages', 'default', 'prescription-alerts', 'prescriptions-pdf', 'prescriptions-maintenance'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
             'maxProcesses' => 1,

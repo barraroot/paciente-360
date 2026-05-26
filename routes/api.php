@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
 use App\Http\Controllers\Api\V1\Agenda\SlotController;
 use App\Http\Controllers\Api\V1\Agenda\WaitlistController;
 use App\Http\Controllers\Api\V1\Ai\AiConversationController;
+use App\Http\Controllers\Api\V1\Ai\AiExecutionLogController;
 use App\Http\Controllers\Api\V1\Ai\AiGuardrailController;
 use App\Http\Controllers\Api\V1\Ai\AiKnowledgeBaseController;
 use App\Http\Controllers\Api\V1\Ai\AiModelController;
@@ -960,4 +961,10 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
         Route::post('conversations/{conversation}/resume', [AiConversationController::class, 'resume'])
             ->whereNumber('conversation')
             ->name('conversations.resume');
+
+        // US7 — logs de execução da IA (somente leitura, escopados por tenant).
+        Route::get('execution-logs', [AiExecutionLogController::class, 'index'])->name('execution-logs.index');
+        Route::get('execution-logs/{executionLog}', [AiExecutionLogController::class, 'show'])
+            ->whereNumber('executionLog')
+            ->name('execution-logs.show');
     });

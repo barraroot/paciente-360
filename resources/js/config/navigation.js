@@ -90,6 +90,12 @@ export const NAVIGATION = [
                 routeName: 'ia.guardrails.index',
                 ability: 'ai.guardrail.view',
             },
+            {
+                key: 'ia.logs',
+                labelKey: 'layout.sidebar.ia.logs',
+                routeName: 'ia.logs.index',
+                ability: 'ai.log.view',
+            },
         ],
     },
     {

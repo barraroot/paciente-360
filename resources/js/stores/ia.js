@@ -24,6 +24,8 @@ export const useIaStore = defineStore('ia', {
         selectedBase: null,
         guardrails: [],
         selectedGuardrail: null,
+        executionLogs: [],
+        executionLogsMeta: null,
         loading: false,
         saving: false,
         error: null,
@@ -275,6 +277,23 @@ export const useIaStore = defineStore('ia', {
         async resumeConversationAi(conversationId) {
             const { data } = await api.post(`/ai/conversations/${conversationId}/resume`);
             return data.data;
+        },
+
+        // ─── US7 — Logs de execução ─────────────────────────────────────
+        async fetchExecutionLogs(params = {}) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await api.get('/ai/execution-logs', { params });
+                this.executionLogs = data.data ?? [];
+                this.executionLogsMeta = data.meta ?? null;
+                return this.executionLogs;
+            } catch (e) {
+                this.error = e?.response?.data?.message ?? 'Erro ao carregar logs.';
+                throw e;
+            } finally {
+                this.loading = false;
+            }
         },
 
         _replaceGuardrail(guardrail) {

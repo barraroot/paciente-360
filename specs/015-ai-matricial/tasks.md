@@ -224,13 +224,13 @@ description: "Task list — IA Matricial (feature 015)"
 
 ### Tests (US7)
 
-- [ ] T083 [P] [US7] Feature logs list/detalhe escopado + cross-tenant 404 (G11/G1) em `tests/Feature/Ai/AiExecutionLogTest.php`
+- [x] T083 [P] [US7] Feature logs list/detalhe escopado + cross-tenant 404 (G11/G1) em `tests/Feature/Ai/AiExecutionLogTest.php`
 
 ### Implementação (US7)
 
-- [ ] T084 [P] [US7] `AiExecutionLogController` (index/show, filtros conversa/persona/status/período) + `AiExecutionLogResource` + policy `ai.log.view` + rotas
-- [ ] T085 [US7] Métricas Prometheus (`ai_response_latency_seconds`, `ai_escalation_total`, `ai_messages_total{tenant}`) no endpoint existente + contexto Sentry por tenant/correlation_id
-- [ ] T086 [P] [US7] Frontend `resources/js/pages/Ia/LogsIndex.vue` (visualização básica de logs) + store
+- [x] T084 [P] [US7] `AiExecutionLogController` (index/show, filtros conversa/persona/status/período) + `AiExecutionLogResource` + policy `ai.log.view` + rotas
+- [x] T085 [US7] Métricas Prometheus (`ai_response_latency_seconds`, `ai_escalation_total`, `ai_messages_total{tenant}`) no endpoint existente + contexto Sentry por tenant/correlation_id
+- [x] T086 [P] [US7] Frontend `resources/js/pages/Ia/LogsIndex.vue` (visualização básica de logs) + store
 
 **Checkpoint**: auditoria e observabilidade.
 

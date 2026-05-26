@@ -797,7 +797,8 @@
                 "personas": "Personas",
                 "matriz": "Matriz de Canais",
                 "bases": "Bases de Conhecimento",
-                "guardrails": "Guardrails"
+                "guardrails": "Guardrails",
+                "logs": "Logs da IA"
             },
             "pacientes": {
                 "title": "Pacientes",

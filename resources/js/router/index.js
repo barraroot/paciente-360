@@ -161,6 +161,12 @@ const panelChildren = [
         component: () => import('@/pages/Ia/GuardrailForm.vue'),
         meta: { title: 'layout.sidebar.ia.guardrails', ability: 'ai.guardrail.manage' },
     },
+    {
+        path: 'ia/logs',
+        name: 'ia.logs.index',
+        component: () => import('@/pages/Ia/LogsIndex.vue'),
+        meta: { title: 'layout.sidebar.ia.logs', ability: 'ai.log.view' },
+    },
     // ─── Pacientes ─────────────────────────────────────────────────────────
     {
         path: 'pacientes',

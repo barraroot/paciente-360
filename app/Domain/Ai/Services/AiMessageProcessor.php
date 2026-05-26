@@ -18,6 +18,7 @@ use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
 use App\Support\Lgpd\PiiScrubber;
+use App\Support\Metrics\AiMetricsContract;
 use Illuminate\Support\Str;
 
 /**
@@ -32,6 +33,7 @@ final class AiMessageProcessor
         private readonly AiContextBuilderService $contextBuilder,
         private readonly AiGuardrailEnforcer $enforcer,
         private readonly MessageDispatchService $dispatch,
+        private readonly AiMetricsContract $metrics,
     ) {}
 
     public function process(Conversation $conversation): void
@@ -70,6 +72,7 @@ final class AiMessageProcessor
         $persona->loadMissing('model', 'guardrails');
         $context = $this->contextBuilder->build($persona, $patientMessage);
         $correlationId = (string) Str::uuid();
+        $this->tagSentry($conversation->tenant_id, $correlationId);
         $startedAt = microtime(true);
 
         // Geração — em falha a exceção PROPAGA para o job (retry/backoff/escala — FR-030c).
@@ -81,6 +84,8 @@ final class AiMessageProcessor
         );
 
         $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
+        $this->metrics->responseLatency($latencyMs / 1000);
+
         $output = $this->decodeStructured($response->text);
         $decision = $this->enforcer->evaluate($output);
         $intent = is_string($output['intencao'] ?? null) ? $output['intencao'] : 'outro';
@@ -100,6 +105,7 @@ final class AiMessageProcessor
             );
 
             $this->log($conversation, $persona, $correlationId, $context, $intent, $confidence, $decision, $message->id, 'success', $latencyMs, $response->usage ?? null);
+            $this->metrics->message($conversation->tenant_id);
 
             event(new RespostaIAEnviada($conversation->tenant_id, $conversation->id, $persona->id, $message->id, $intent));
 
@@ -108,6 +114,7 @@ final class AiMessageProcessor
 
         $this->escalate($conversation, $this->assignments->findActive($conversation->id), $decision);
         $this->log($conversation, $persona, $correlationId, $context, $intent, $confidence, $decision, null, 'escalated', $latencyMs, $response->usage ?? null);
+        $this->metrics->escalation($conversation->tenant_id, $decision->reason);
 
         event(new IAEscalouParaHumano($conversation->tenant_id, $conversation->id, $persona->id, $decision->reason));
     }
@@ -135,6 +142,22 @@ final class AiMessageProcessor
         ]);
 
         event(new ExecucaoIAFalhou($conversation->tenant_id, $conversation->id, $personaId, $errorType));
+    }
+
+    /**
+     * Anexa tenant + correlation_id ao escopo do Sentry (R11) para correlacionar
+     * falhas de provedor/timeout. No-op quando o Sentry não está instalado.
+     */
+    private function tagSentry(int $tenantId, string $correlationId): void
+    {
+        if (! class_exists('\Sentry\State\Scope')) {
+            return;
+        }
+
+        \Sentry\configureScope(function ($scope) use ($tenantId, $correlationId): void {
+            $scope->setTag('ai.tenant', (string) $tenantId);
+            $scope->setTag('ai.correlation_id', $correlationId);
+        });
     }
 
     private function latestInboundText(Conversation $conversation): ?string

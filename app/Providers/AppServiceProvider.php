@@ -66,6 +66,8 @@ use App\Policies\WebhookPolicy;
 use App\Services\Billing\StripeClientWrapper;
 use App\Support\Metrics\AgendaMetrics;
 use App\Support\Metrics\AgendaMetricsContract;
+use App\Support\Metrics\AiMetrics;
+use App\Support\Metrics\AiMetricsContract;
 use App\Support\Metrics\AuthMetrics;
 use App\Support\Metrics\AuthMetricsContract;
 use App\Support\Metrics\MessagingMetrics;
@@ -138,6 +140,10 @@ class AppServiceProvider extends ServiceProvider
         // T024 (Fase 5) — AgendaMetrics: 7 métricas Prometheus do domínio Agenda.
         // Mesma estratégia graceful — degrada para Log::debug sem o pacote Prometheus.
         $this->app->singleton(AgendaMetricsContract::class, AgendaMetrics::class);
+
+        // Fase 15 — AiMetrics: latência/mensagens/escalonamentos da IA Matricial.
+        // Mesma estratégia graceful — degrada para Log::debug sem o pacote Prometheus.
+        $this->app->singleton(AiMetricsContract::class, AiMetrics::class);
 
         // Fase 7 — PrescriptionMetrics: 4 métricas Prometheus do domínio de receituários.
         // Segue a mesma estratégia graceful dos domínios anteriores.

@@ -267,7 +267,7 @@ description: "Task list — IA Matricial (feature 015)"
 - [x] T096 [P] Teste de **fluxo de IA** completo (integração): inbound → round-robin → contexto (RAG+guardrails) → resposta enviada → log; + reatribuição + escala por urgência/baixa confiança (Princípio III) em `tests/Feature/Ai/AiEndToEndFlowTest.php`
 - [ ] T097 E2E Playwright (jornada IA no chat): IA responde → atendente pausa → assume → reativa, em `tests/e2e/ai-matricial.spec.js` (Princípio IV) — **DEFERRED**: E2E Playwright (desvio consciente do Princípio IV, padrão das fases anteriores); jornada coberta por testes de feature (US3/US6).
 - [ ] T098 [P] Auditoria a11y das páginas/modais/editor da IA (axe; 0 violations) e navegação por permissões — **DEFERRED**: auditoria a11y manual (axe/browser); padrões a11y (modais role=alertdialog, focus trap) reusados das fases 6/12.
-- [x] T099 Rodar `vendor/bin/sail bin pint --dirty --format agent` + `vendor/bin/sail artisan test --compact` (cobertura ≥70%, sem regressão) + validar `quickstart.md` (Lotes A–I) + Constitution Re-Check 7/7 — Pint limpo; suíte completa 1753 testes 0 falhas (sem regressão); Constitution Re-Check 7/7 PASS; quickstart smoke manual pendente (browser).
+- [x] T099 Rodar `vendor/bin/sail bin pint --dirty --format agent` + `vendor/bin/sail artisan test --compact` (cobertura ≥70%, sem regressão) + validar `quickstart.md` (Lotes A–I) + Constitution Re-Check 7/7 — Pint limpo; suíte completa 1753 testes 0 falhas (sem regressão); Constitution Re-Check 7/7 PASS; quickstart smoke browser OK (clinica-beta.paciente-360.com): login, nav IA, Personas+form, editor Markdown (template+preview DOMPurify+toolbar), Bases/Guardrails no form, Logs.
 
 ---
 

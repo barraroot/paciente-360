@@ -22,6 +22,10 @@ return [
     'guardrail' => [
         'created' => 'Guardrail criado.',
         'updated' => 'Guardrail atualizado.',
+        'activated' => 'Guardrail ativado.',
+        'deactivated' => 'Guardrail desativado.',
+        'deleted' => 'Guardrail removido.',
+        'invalid_association' => 'Não é possível associar guardrails de outra clínica.',
     ],
     'matrix' => [
         'updated' => 'Matriz Persona × Canal atualizada.',

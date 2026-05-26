@@ -84,6 +84,12 @@ export const NAVIGATION = [
                 routeName: 'ia.bases.index',
                 ability: 'ai.knowledge.view',
             },
+            {
+                key: 'ia.guardrails',
+                labelKey: 'layout.sidebar.ia.guardrails',
+                routeName: 'ia.guardrails.index',
+                ability: 'ai.guardrail.view',
+            },
         ],
     },
     {

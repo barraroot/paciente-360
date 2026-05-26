@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Agenda\ProfessionalScheduleController;
 use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
 use App\Http\Controllers\Api\V1\Agenda\SlotController;
 use App\Http\Controllers\Api\V1\Agenda\WaitlistController;
+use App\Http\Controllers\Api\V1\Ai\AiGuardrailController;
 use App\Http\Controllers\Api\V1\Ai\AiKnowledgeBaseController;
 use App\Http\Controllers\Api\V1\Ai\AiModelController;
 use App\Http\Controllers\Api\V1\Ai\AiPersonaChannelController;
@@ -932,4 +933,19 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
         Route::put('personas/{persona}/knowledge-bases', [AiKnowledgeBaseController::class, 'syncPersona'])
             ->whereNumber('persona')
             ->name('personas.knowledge-bases.sync');
+
+        // US5 — guardrails da clínica + associação a personas.
+        Route::post('guardrails/{guardrail}/activate', [AiGuardrailController::class, 'activate'])
+            ->whereNumber('guardrail')
+            ->name('guardrails.activate');
+        Route::post('guardrails/{guardrail}/deactivate', [AiGuardrailController::class, 'deactivate'])
+            ->whereNumber('guardrail')
+            ->name('guardrails.deactivate');
+
+        Route::apiResource('guardrails', AiGuardrailController::class)
+            ->parameters(['guardrails' => 'guardrail']);
+
+        Route::put('personas/{persona}/guardrails', [AiGuardrailController::class, 'syncPersona'])
+            ->whereNumber('persona')
+            ->name('personas.guardrails.sync');
     });

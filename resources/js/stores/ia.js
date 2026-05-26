@@ -22,6 +22,8 @@ export const useIaStore = defineStore('ia', {
         matrix: [],
         knowledgeBases: [],
         selectedBase: null,
+        guardrails: [],
+        selectedGuardrail: null,
         loading: false,
         saving: false,
         error: null,
@@ -191,6 +193,81 @@ export const useIaStore = defineStore('ia', {
             }
             if (this.selectedBase?.id === base.id) {
                 this.selectedBase = base;
+            }
+        },
+
+        // ─── US5 — Guardrails da clínica ────────────────────────────────
+        async fetchGuardrails(params = {}) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await api.get('/ai/guardrails', { params });
+                this.guardrails = data.data ?? [];
+                return this.guardrails;
+            } catch (e) {
+                this.error = e?.response?.data?.message ?? 'Erro ao carregar guardrails.';
+                throw e;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async fetchGuardrail(id) {
+            const { data } = await api.get(`/ai/guardrails/${id}`);
+            this.selectedGuardrail = data.data;
+            return this.selectedGuardrail;
+        },
+
+        async createGuardrail(payload) {
+            this.saving = true;
+            this.error = null;
+            try {
+                const { data } = await api.post('/ai/guardrails', payload);
+                this.guardrails.unshift(data.data);
+                return data.data;
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async updateGuardrail(id, payload) {
+            this.saving = true;
+            this.error = null;
+            try {
+                const { data } = await api.put(`/ai/guardrails/${id}`, payload);
+                this._replaceGuardrail(data.data);
+                return data.data;
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async deleteGuardrail(id) {
+            await api.delete(`/ai/guardrails/${id}`);
+            this.guardrails = this.guardrails.filter((g) => g.id !== id);
+        },
+
+        async setGuardrailActive(id, active) {
+            const action = active ? 'activate' : 'deactivate';
+            const { data } = await api.post(`/ai/guardrails/${id}/${action}`);
+            this._replaceGuardrail(data.data);
+            return data.data;
+        },
+
+        async syncPersonaGuardrails(personaId, guardrailIds) {
+            const { data } = await api.put(`/ai/personas/${personaId}/guardrails`, {
+                guardrail_ids: guardrailIds,
+            });
+            return data.data ?? [];
+        },
+
+        _replaceGuardrail(guardrail) {
+            const idx = this.guardrails.findIndex((g) => g.id === guardrail.id);
+            if (idx !== -1) {
+                this.guardrails.splice(idx, 1, guardrail);
+            }
+            if (this.selectedGuardrail?.id === guardrail.id) {
+                this.selectedGuardrail = guardrail;
             }
         },
 

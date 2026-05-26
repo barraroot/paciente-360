@@ -143,6 +143,24 @@ const panelChildren = [
         component: () => import('@/pages/Ia/BaseForm.vue'),
         meta: { title: 'layout.sidebar.ia.bases', ability: 'ai.knowledge.manage' },
     },
+    {
+        path: 'ia/guardrails',
+        name: 'ia.guardrails.index',
+        component: () => import('@/pages/Ia/GuardrailsIndex.vue'),
+        meta: { title: 'layout.sidebar.ia.guardrails', ability: 'ai.guardrail.view' },
+    },
+    {
+        path: 'ia/guardrails/novo',
+        name: 'ia.guardrails.new',
+        component: () => import('@/pages/Ia/GuardrailForm.vue'),
+        meta: { title: 'layout.sidebar.ia.guardrails', ability: 'ai.guardrail.manage' },
+    },
+    {
+        path: 'ia/guardrails/:id/editar',
+        name: 'ia.guardrails.edit',
+        component: () => import('@/pages/Ia/GuardrailForm.vue'),
+        meta: { title: 'layout.sidebar.ia.guardrails', ability: 'ai.guardrail.manage' },
+    },
     // ─── Pacientes ─────────────────────────────────────────────────────────
     {
         path: 'pacientes',

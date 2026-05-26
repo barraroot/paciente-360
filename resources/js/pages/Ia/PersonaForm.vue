@@ -27,11 +27,12 @@ const form = reactive({
 const errors = ref({});
 const loading = ref(false);
 const selectedBaseIds = ref([]);
+const selectedGuardrailIds = ref([]);
 
 onMounted(async () => {
     loading.value = true;
     try {
-        await Promise.all([store.fetchModels(), store.fetchKnowledgeBases()]);
+        await Promise.all([store.fetchModels(), store.fetchKnowledgeBases(), store.fetchGuardrails()]);
         if (isEdit.value) {
             const persona = await store.fetchPersona(personaId.value);
             Object.assign(form, {
@@ -48,6 +49,7 @@ onMounted(async () => {
                 model_settings: persona.model_settings ?? { temperature: 0.5, max_tokens: 1024 },
             });
             selectedBaseIds.value = persona.knowledge_base_ids ?? [];
+            selectedGuardrailIds.value = persona.guardrail_ids ?? [];
         } else if (store.activeModels.length > 0) {
             form.ai_model_id = store.activeModels[0].id;
         }
@@ -64,7 +66,10 @@ async function submit() {
             ? await store.updatePersona(personaId.value, payload)
             : await store.createPersona(payload);
 
-        await store.syncPersonaKnowledgeBases(persona.id, selectedBaseIds.value);
+        await Promise.all([
+            store.syncPersonaKnowledgeBases(persona.id, selectedBaseIds.value),
+            store.syncPersonaGuardrails(persona.id, selectedGuardrailIds.value),
+        ]);
 
         router.push({ name: 'ia.personas.index' });
     } catch (e) {
@@ -149,6 +154,32 @@ function fieldError(key) {
                         />
                         <span>{{ base.name }}</span>
                         <span v-if="!base.is_active" class="text-xs text-gray-400">(inativa)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Guardrails da clínica</label>
+                <p class="text-xs text-gray-500 mb-2">
+                    Restrições somadas ao piso de segurança obrigatório. Guardrails inativos não são aplicados.
+                </p>
+                <p v-if="store.guardrails.length === 0" class="text-sm text-gray-400">
+                    Nenhum guardrail cadastrado ainda.
+                </p>
+                <div v-else class="space-y-1 rounded-lg border border-gray-200 p-3 max-h-48 overflow-y-auto">
+                    <label
+                        v-for="guardrail in store.guardrails"
+                        :key="guardrail.id"
+                        class="flex items-center gap-2 text-sm text-gray-700"
+                    >
+                        <input
+                            v-model="selectedGuardrailIds"
+                            type="checkbox"
+                            :value="guardrail.id"
+                            class="rounded border-gray-300 text-indigo-600"
+                        />
+                        <span>{{ guardrail.name }}</span>
+                        <span v-if="!guardrail.is_active" class="text-xs text-gray-400">(inativo)</span>
                     </label>
                 </div>
             </div>

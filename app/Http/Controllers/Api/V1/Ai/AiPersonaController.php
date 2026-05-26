@@ -57,7 +57,7 @@ class AiPersonaController extends Controller
     {
         Gate::authorize('ai.persona.view');
 
-        $persona->load(['model', 'knowledgeBases:id'])->loadCount(['channels', 'knowledgeBases', 'guardrails']);
+        $persona->load(['model', 'knowledgeBases:id', 'guardrails:id'])->loadCount(['channels', 'knowledgeBases', 'guardrails']);
 
         return new AiPersonaResource($persona);
     }

@@ -796,7 +796,8 @@
                 "title": "IA Matricial",
                 "personas": "Personas",
                 "matriz": "Matriz de Canais",
-                "bases": "Bases de Conhecimento"
+                "bases": "Bases de Conhecimento",
+                "guardrails": "Guardrails"
             },
             "pacientes": {
                 "title": "Pacientes",

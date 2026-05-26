@@ -180,16 +180,16 @@ description: "Task list — IA Matricial (feature 015)"
 
 ### Tests (US5)
 
-- [ ] T069 [P] [US5] Feature CRUD de guardrails + cross-tenant 404 (G1) em `tests/Feature/Ai/GuardrailCrudTest.php`
-- [ ] T070 [P] [US5] Feature: guardrail inativo não aplicado; mínimos aplicados sem guardrails da clínica (G7/G8, SC-004) em `tests/Feature/Ai/GuardrailApplicationTest.php`
+- [x] T069 [P] [US5] Feature CRUD de guardrails + cross-tenant 404 (G1) em `tests/Feature/Ai/GuardrailCrudTest.php`
+- [x] T070 [P] [US5] Feature: guardrail inativo não aplicado; mínimos aplicados sem guardrails da clínica (G7/G8, SC-004) em `tests/Feature/Ai/GuardrailApplicationTest.php`
 
 ### Implementação (US5)
 
-- [ ] T071 [P] [US5] `StoreGuardrailRequest`/`UpdateGuardrailRequest` (sanitiza markdown; `category`) + `AiGuardrailPolicy` + `AiGuardrailResource`
-- [ ] T072 [US5] `app/Domain/Ai/Guardrail/Services/AiGuardrailService.php` (CRUD + activate/deactivate)
-- [ ] T073 [US5] `AiGuardrailController` (CRUD + activate/deactivate) + `PUT /ai/personas/{p}/guardrails` (associação, co-tenancy G2) + rotas
-- [ ] T074 [US5] Conectar guardrails ativos da clínica associados à persona ao `AiContextBuilderService`/`AiGuardrailEnforcer` (somados aos mínimos)
-- [ ] T075 [P] [US5] Frontend `resources/js/pages/Ia/GuardrailsIndex.vue` + `GuardrailForm.vue` + associação na `PersonaForm.vue` + store
+- [x] T071 [P] [US5] `StoreGuardrailRequest`/`UpdateGuardrailRequest` (sanitiza markdown; `category`) + `AiGuardrailPolicy` + `AiGuardrailResource`
+- [x] T072 [US5] `app/Domain/Ai/Guardrail/Services/AiGuardrailService.php` (CRUD + activate/deactivate)
+- [x] T073 [US5] `AiGuardrailController` (CRUD + activate/deactivate) + `PUT /ai/personas/{p}/guardrails` (associação, co-tenancy G2) + rotas
+- [x] T074 [US5] Conectar guardrails ativos da clínica associados à persona ao `AiContextBuilderService`/`AiGuardrailEnforcer` (somados aos mínimos)
+- [x] T075 [P] [US5] Frontend `resources/js/pages/Ia/GuardrailsIndex.vue` + `GuardrailForm.vue` + associação na `PersonaForm.vue` + store
 
 **Checkpoint**: guardrails configuráveis sobre o piso obrigatório.
 

@@ -57,32 +57,31 @@ export function useReverbConnection(tenantId, onInboxEvent, onConversationEvent)
         if (!echo || !tenantId) { return; }
 
         try {
-            const channelName = `private-tenant.${tenantId}.inbox`;
+            const channelName = `tenant.${tenantId}.inbox`;
 
             inboxChannel = echo.private(channelName);
 
+            // Nomes alinhados ao broadcastAs() do backend (dot-notation). O evento de
+            // inbox serve só como sinal; o conteúdo é buscado via API (refetch).
             inboxChannel
-                .listen('.MensagemRecebidaParaInbox', (event) => {
-                    connected.value = true;
-                    backoffIndex = 0;
-                    lastError.value = null;
+                .listen('.mensagem.recebida', (event) => {
                     if (typeof onInboxEvent === 'function') {
-                        onInboxEvent({ type: 'MensagemRecebidaParaInbox', payload: event });
+                        onInboxEvent({ type: 'mensagem.recebida', payload: event });
                     }
                 })
-                .listen('.MensagemEnviadaParaInbox', (event) => {
+                .listen('.mensagem.enviada', (event) => {
                     if (typeof onInboxEvent === 'function') {
-                        onInboxEvent({ type: 'MensagemEnviadaParaInbox', payload: event });
+                        onInboxEvent({ type: 'mensagem.enviada', payload: event });
                     }
                 })
-                .listen('.ConversaCriadaParaInbox', (event) => {
+                .listen('.conversa.criada', (event) => {
                     if (typeof onInboxEvent === 'function') {
-                        onInboxEvent({ type: 'ConversaCriadaParaInbox', payload: event });
+                        onInboxEvent({ type: 'conversa.criada', payload: event });
                     }
                 })
-                .listen('.ConversaAtribuidaParaInbox', (event) => {
+                .listen('.conversa.atribuida', (event) => {
                     if (typeof onInboxEvent === 'function') {
-                        onInboxEvent({ type: 'ConversaAtribuidaParaInbox', payload: event });
+                        onInboxEvent({ type: 'conversa.atribuida', payload: event });
                     }
                 })
                 .error((error) => {
@@ -136,14 +135,19 @@ export function useReverbConnection(tenantId, onInboxEvent, onConversationEvent)
         if (conversationChannels[key]) { return; } // Já subscrito
 
         try {
-            const channelName = `private-tenant.${tenantId}.conversa.${cid}`;
+            const channelName = `tenant.${tenantId}.conversa.${cid}`;
             const ch = echo.private(channelName);
 
-            ch.listen('.MensagemRecebida', (event) => {
+            ch.listen('.mensagem.recebida', (event) => {
                 if (typeof onConversationEvent === 'function') {
-                    onConversationEvent(cid, { type: 'MensagemRecebida', payload: event });
+                    onConversationEvent(cid, { type: 'mensagem.recebida', payload: event });
                 }
             })
+                .listen('.mensagem.enviada', (event) => {
+                    if (typeof onConversationEvent === 'function') {
+                        onConversationEvent(cid, { type: 'mensagem.enviada', payload: event });
+                    }
+                })
                 .listen('.MensagemLida', (event) => {
                     if (typeof onConversationEvent === 'function') {
                         onConversationEvent(cid, { type: 'MensagemLida', payload: event });
@@ -180,7 +184,7 @@ export function useReverbConnection(tenantId, onInboxEvent, onConversationEvent)
         if (!echo || !conversationChannels[key]) { return; }
 
         try {
-            echo.leave(`private-tenant.${tenantId}.conversa.${cid}`);
+            echo.leave(`tenant.${tenantId}.conversa.${cid}`);
         } catch {
             // Silencioso
         }
@@ -201,7 +205,7 @@ export function useReverbConnection(tenantId, onInboxEvent, onConversationEvent)
             // Desinscreve conversas individuais
             Object.keys(conversationChannels).forEach((cid) => {
                 try {
-                    echo.leave(`private-tenant.${tenantId}.conversa.${cid}`);
+                    echo.leave(`tenant.${tenantId}.conversa.${cid}`);
                 } catch {
                     // Silencioso
                 }
@@ -209,7 +213,7 @@ export function useReverbConnection(tenantId, onInboxEvent, onConversationEvent)
 
             // Desinscreve canal de inbox
             try {
-                echo.leave(`private-tenant.${tenantId}.inbox`);
+                echo.leave(`tenant.${tenantId}.inbox`);
             } catch {
                 // Silencioso
             }

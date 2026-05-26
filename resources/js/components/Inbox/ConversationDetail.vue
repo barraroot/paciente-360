@@ -130,11 +130,12 @@ watch(
     { immediate: true },
 );
 
-// Scroll ao receber nova mensagem
+// Scroll quando a mensagem MAIS RECENTE muda (nova msg ou refetch via WS).
+// Observa o id da última msg (não o length) para NÃO rolar ao carregar histórico antigo (prepend).
 watch(
-    () => messages.value.length,
-    (newLen, oldLen) => {
-        if (newLen > oldLen) { scrollToBottom(); }
+    () => messages.value[messages.value.length - 1]?.id,
+    (newId, oldId) => {
+        if (newId && newId !== oldId) { scrollToBottom(); }
     },
 );
 
@@ -167,7 +168,7 @@ const conversationStatus = computed(() => props.conversation.status ?? 'aberta')
 </script>
 
 <template>
-    <div class="flex h-full flex-col bg-surface">
+    <div class="flex h-full w-full min-w-0 flex-col bg-surface">
         <!-- Header da conversa -->
         <div class="flex items-center justify-between border-b border-border px-4 py-3 shrink-0">
             <div class="flex items-center gap-3 min-w-0">

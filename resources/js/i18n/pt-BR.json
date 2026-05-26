@@ -655,6 +655,18 @@
             "preview_lgpd": "Esta mídia pode conter dados sensíveis. Visualização registrada para auditoria.",
             "lgpd_aceito": "Entendi, visualizar"
         },
+        "ai_pause": {
+            "badge_label": "IA pausada · {countdown}",
+            "badge_title": "IA pausada até {until}",
+            "release": "Reativar IA",
+            "releasing": "Reativando…",
+            "takeover": "Assumir conversa",
+            "taking_over": "Assumindo…",
+            "takeover_for": "Assumir por {duration}",
+            "takeover_custom": "Tempo personalizado",
+            "custom_duration": "Tempo personalizado",
+            "hours_label": "Duração (horas)"
+        },
         "janela_24h": {
             "aberta_horas": "Janela aberta · {hours}h restantes",
             "atencao_minutos": "Atenção · {minutes}min restantes",

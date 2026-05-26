@@ -128,21 +128,21 @@ description: "Task list — IA Matricial (feature 015)"
 
 ### Tests (US3)
 
-- [ ] T047 [P] [US3] Integração inbound→job→envio (G6): `MensagemRecebida` dispara `ProcessAiResponseJob` e resposta sai pelo `MessageDispatchService` (fake) em `tests/Feature/Ai/AiResponseFlowTest.php`
-- [ ] T048 [P] [US3] Bypass de guardrail (Princípio III): prompt injection, role-play, tradução, tentativa de PII → redireciona/escala; usa fakes do `laravel/ai` em `tests/Feature/Ai/GuardrailBypassTest.php`
-- [ ] T049 [P] [US3] Pseudonimização do contexto antes do LLM (G9, SC-011) em `tests/Feature/Ai/AiPseudonymizationTest.php`
-- [ ] T050 [P] [US3] Falha do provedor: retry/backoff, sem mensagem ao paciente, escala ao esgotar (G10c, FR-030c) em `tests/Feature/Ai/AiProviderFailureTest.php`
+- [x] T047 [P] [US3] Integração inbound→job→envio (G6): `MensagemRecebida` dispara `ProcessAiResponseJob` e resposta sai pelo `MessageDispatchService` (fake) em `tests/Feature/Ai/AiResponseFlowTest.php`
+- [x] T048 [P] [US3] Bypass de guardrail (Princípio III): prompt injection, role-play, tradução, tentativa de PII → redireciona/escala; usa fakes do `laravel/ai` em `tests/Feature/Ai/GuardrailBypassTest.php`
+- [x] T049 [P] [US3] Pseudonimização do contexto antes do LLM (G9, SC-011) em `tests/Feature/Ai/AiPseudonymizationTest.php`
+- [x] T050 [P] [US3] Falha do provedor: retry/backoff, sem mensagem ao paciente, escala ao esgotar (G10c, FR-030c) em `tests/Feature/Ai/AiProviderFailureTest.php`
 
 ### Implementação (US3)
 
-- [ ] T051 [P] [US3] `app/Domain/Ai/Agents/PersonaAgent.php` (`implements Agent, HasStructuredOutput` + `Promptable`; provider/model dinâmicos de `ai_models`; `schema` → `{resposta, intencao, confidence, needs_human}`; temperature/max_tokens de `model_settings`)
-- [ ] T052 [P] [US3] `app/Domain/Ai/Services/AiGuardrailEnforcer.php` (guardrails médicos mínimos em código/config — FR-026/027; pós-processamento determinístico: intenção clínica→redirect/flag, `confidence<threshold`/`needs_human`→escala, urgência→`priority=alta`)
-- [ ] T053 [US3] `app/Domain/Ai/Services/AiContextBuilderService.php` (compõe `instructions`: mínimos + guardrails da clínica + persona + (hook RAG, vazio até US4); pseudonimiza via `PiiScrubber`)
-- [ ] T054 [US3] `app/Domain/Ai/Services/AiMessageProcessor.php` (orquestra: build → PersonaAgent->prompt → Enforcer → enviar via `MessageDispatchService` ou escalar → gravar log)
-- [ ] T055 [US3] `app/Jobs/Ai/ProcessAiResponseJob.php` (fila `ai`; retries/backoff de `config/ai.php`; relê mensagens não respondidas; aborta se pausada/assumida)
-- [ ] T056 [US3] `app/Listeners/Ai/TriggerAiResponseOnInboundMessage.php` (ouve `MensagemRecebida`; checa `AiMatrixService::isChannelAiEnabled`; debounce Redis `ai:debounce:{conversation}`; resolve/atribui persona via US2; despacha job) — auto-discovery
-- [ ] T057 [P] [US3] Eventos de domínio `app/Domain/Ai/Assignment/Events/{RespostaIAEnviada,IAEscalouParaHumano,ExecucaoIAFalhou}.php` e `app/Domain/Ai/Persona/Events/PersonaAtribuidaAConversa.php` (`Auditable` + `ContainsNoClinicalData`)
-- [ ] T058 [US3] Gravar `ai_execution_logs` no processor (prompt/contexto pseudonimizado/intenção/confiança/resposta/ação/latência/tokens/correlation_id)
+- [x] T051 [P] [US3] `app/Domain/Ai/Agents/PersonaAgent.php` (`implements Agent, HasStructuredOutput` + `Promptable`; provider/model dinâmicos de `ai_models`; `schema` → `{resposta, intencao, confidence, needs_human}`; temperature/max_tokens de `model_settings`)
+- [x] T052 [P] [US3] `app/Domain/Ai/Services/AiGuardrailEnforcer.php` (guardrails médicos mínimos em código/config — FR-026/027; pós-processamento determinístico: intenção clínica→redirect/flag, `confidence<threshold`/`needs_human`→escala, urgência→`priority=alta`)
+- [x] T053 [US3] `app/Domain/Ai/Services/AiContextBuilderService.php` (compõe `instructions`: mínimos + guardrails da clínica + persona + (hook RAG, vazio até US4); pseudonimiza via `PiiScrubber`)
+- [x] T054 [US3] `app/Domain/Ai/Services/AiMessageProcessor.php` (orquestra: build → PersonaAgent->prompt → Enforcer → enviar via `MessageDispatchService` ou escalar → gravar log)
+- [x] T055 [US3] `app/Jobs/Ai/ProcessAiResponseJob.php` (fila `ai`; retries/backoff de `config/ai.php`; relê mensagens não respondidas; aborta se pausada/assumida)
+- [x] T056 [US3] `app/Listeners/Ai/TriggerAiResponseOnInboundMessage.php` (ouve `MensagemRecebida`; checa `AiMatrixService::isChannelAiEnabled`; debounce Redis `ai:debounce:{conversation}`; resolve/atribui persona via US2; despacha job) — auto-discovery
+- [x] T057 [P] [US3] Eventos de domínio `app/Domain/Ai/Assignment/Events/{RespostaIAEnviada,IAEscalouParaHumano,ExecucaoIAFalhou}.php` e `app/Domain/Ai/Persona/Events/PersonaAtribuidaAConversa.php` (`Auditable` + `ContainsNoClinicalData`)
+- [x] T058 [US3] Gravar `ai_execution_logs` no processor (prompt/contexto pseudonimizado/intenção/confiança/resposta/ação/latência/tokens/correlation_id)
 
 **Checkpoint**: a IA atende de ponta a ponta com segurança clínica mínima — MVP funcional.
 

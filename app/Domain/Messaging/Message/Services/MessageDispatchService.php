@@ -37,6 +37,7 @@ final class MessageDispatchService
         Conversation $conv,
         OutboundMessage $msg,
         ?int $senderUserId = null,
+        string $senderType = 'user',
     ): Message {
         $conv->loadMissing('channel');
 
@@ -68,7 +69,7 @@ final class MessageDispatchService
             'tenant_id' => $conv->tenant_id,
             'conversation_id' => $conv->id,
             'direction' => 'out',
-            'sender_type' => 'user',
+            'sender_type' => $senderType,
             'sender_id' => $senderUserId,
             'body' => $body,
             'body_searchable' => $body !== null ? mb_strtolower($body) : null,

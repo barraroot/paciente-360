@@ -36,6 +36,7 @@ final class AiPersonaResource extends JsonResource
             'handoff_rules' => $this->handoff_rules,
             'model_settings' => $this->model_settings ?? [],
             'is_active' => $this->is_active,
+            'knowledge_base_ids' => $this->whenLoaded('knowledgeBases', fn (): array => $this->knowledgeBases->pluck('id')->all()),
             'channels_count' => $this->whenCounted('channels'),
             'knowledge_bases_count' => $this->whenCounted('knowledgeBases'),
             'guardrails_count' => $this->whenCounted('guardrails'),

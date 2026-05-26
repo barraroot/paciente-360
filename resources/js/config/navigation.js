@@ -78,6 +78,12 @@ export const NAVIGATION = [
                 routeName: 'ia.matriz.index',
                 ability: 'ai.matrix.manage',
             },
+            {
+                key: 'ia.bases',
+                labelKey: 'layout.sidebar.ia.bases',
+                routeName: 'ia.bases.index',
+                ability: 'ai.knowledge.view',
+            },
         ],
     },
     {

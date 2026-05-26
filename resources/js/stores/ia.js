@@ -20,6 +20,8 @@ export const useIaStore = defineStore('ia', {
         personas: [],
         selectedPersona: null,
         matrix: [],
+        knowledgeBases: [],
+        selectedBase: null,
         loading: false,
         saving: false,
         error: null,
@@ -114,6 +116,81 @@ export const useIaStore = defineStore('ia', {
                 return this.matrix;
             } finally {
                 this.saving = false;
+            }
+        },
+
+        // ─── US4 — Bases de conhecimento (RAG) ──────────────────────────
+        async fetchKnowledgeBases(params = {}) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await api.get('/ai/knowledge-bases', { params });
+                this.knowledgeBases = data.data ?? [];
+                return this.knowledgeBases;
+            } catch (e) {
+                this.error = e?.response?.data?.message ?? 'Erro ao carregar bases de conhecimento.';
+                throw e;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async fetchKnowledgeBase(id) {
+            const { data } = await api.get(`/ai/knowledge-bases/${id}`);
+            this.selectedBase = data.data;
+            return this.selectedBase;
+        },
+
+        async createKnowledgeBase(payload) {
+            this.saving = true;
+            this.error = null;
+            try {
+                const { data } = await api.post('/ai/knowledge-bases', payload);
+                this.knowledgeBases.unshift(data.data);
+                return data.data;
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async updateKnowledgeBase(id, payload) {
+            this.saving = true;
+            this.error = null;
+            try {
+                const { data } = await api.put(`/ai/knowledge-bases/${id}`, payload);
+                this._replaceBase(data.data);
+                return data.data;
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async deleteKnowledgeBase(id) {
+            await api.delete(`/ai/knowledge-bases/${id}`);
+            this.knowledgeBases = this.knowledgeBases.filter((b) => b.id !== id);
+        },
+
+        async setKnowledgeBaseActive(id, active) {
+            const action = active ? 'activate' : 'deactivate';
+            const { data } = await api.post(`/ai/knowledge-bases/${id}/${action}`);
+            this._replaceBase(data.data);
+            return data.data;
+        },
+
+        async syncPersonaKnowledgeBases(personaId, knowledgeBaseIds) {
+            const { data } = await api.put(`/ai/personas/${personaId}/knowledge-bases`, {
+                knowledge_base_ids: knowledgeBaseIds,
+            });
+            return data.data ?? [];
+        },
+
+        _replaceBase(base) {
+            const idx = this.knowledgeBases.findIndex((b) => b.id === base.id);
+            if (idx !== -1) {
+                this.knowledgeBases.splice(idx, 1, base);
+            }
+            if (this.selectedBase?.id === base.id) {
+                this.selectedBase = base;
             }
         },
 

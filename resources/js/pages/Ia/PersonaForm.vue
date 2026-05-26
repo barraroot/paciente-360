@@ -26,11 +26,12 @@ const form = reactive({
 
 const errors = ref({});
 const loading = ref(false);
+const selectedBaseIds = ref([]);
 
 onMounted(async () => {
     loading.value = true;
     try {
-        await store.fetchModels();
+        await Promise.all([store.fetchModels(), store.fetchKnowledgeBases()]);
         if (isEdit.value) {
             const persona = await store.fetchPersona(personaId.value);
             Object.assign(form, {
@@ -46,6 +47,7 @@ onMounted(async () => {
                 handoff_rules: persona.handoff_rules ?? '',
                 model_settings: persona.model_settings ?? { temperature: 0.5, max_tokens: 1024 },
             });
+            selectedBaseIds.value = persona.knowledge_base_ids ?? [];
         } else if (store.activeModels.length > 0) {
             form.ai_model_id = store.activeModels[0].id;
         }
@@ -58,11 +60,12 @@ async function submit() {
     errors.value = {};
     try {
         const payload = { ...form };
-        if (isEdit.value) {
-            await store.updatePersona(personaId.value, payload);
-        } else {
-            await store.createPersona(payload);
-        }
+        const persona = isEdit.value
+            ? await store.updatePersona(personaId.value, payload)
+            : await store.createPersona(payload);
+
+        await store.syncPersonaKnowledgeBases(persona.id, selectedBaseIds.value);
+
         router.push({ name: 'ia.personas.index' });
     } catch (e) {
         errors.value = e?.response?.data?.errors ?? {};
@@ -124,6 +127,30 @@ function fieldError(key) {
             <div>
                 <label class="block text-sm font-medium text-gray-700">Regras de encaminhamento humano</label>
                 <textarea v-model="form.handoff_rules" rows="3" class="mt-1 w-full rounded-lg border-gray-300 text-sm"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Bases de conhecimento (RAG)</label>
+                <p class="text-xs text-gray-500 mb-2">A persona só consulta as bases ativas selecionadas aqui.</p>
+                <p v-if="store.knowledgeBases.length === 0" class="text-sm text-gray-400">
+                    Nenhuma base cadastrada ainda.
+                </p>
+                <div v-else class="space-y-1 rounded-lg border border-gray-200 p-3 max-h-48 overflow-y-auto">
+                    <label
+                        v-for="base in store.knowledgeBases"
+                        :key="base.id"
+                        class="flex items-center gap-2 text-sm text-gray-700"
+                    >
+                        <input
+                            v-model="selectedBaseIds"
+                            type="checkbox"
+                            :value="base.id"
+                            class="rounded border-gray-300 text-indigo-600"
+                        />
+                        <span>{{ base.name }}</span>
+                        <span v-if="!base.is_active" class="text-xs text-gray-400">(inativa)</span>
+                    </label>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">

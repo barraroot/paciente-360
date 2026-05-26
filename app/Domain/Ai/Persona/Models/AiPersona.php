@@ -75,13 +75,28 @@ class AiPersona extends Model
     public function knowledgeBases(): BelongsToMany
     {
         return $this->belongsToMany(AiKnowledgeBase::class, 'ai_persona_knowledge_base')
+            ->withPivot('tenant_id')
             ->withTimestamps();
     }
 
     public function guardrails(): BelongsToMany
     {
         return $this->belongsToMany(AiGuardrail::class, 'ai_persona_guardrail')
+            ->withPivot('tenant_id')
             ->withTimestamps();
+    }
+
+    /**
+     * Mapa para `sync()` que preenche o `tenant_id` do pivot (NOT NULL).
+     *
+     * @param list<int> $ids
+     * @return array<int, array{tenant_id: int|null}>
+     */
+    public function pivotTenantMap(array $ids): array
+    {
+        return collect($ids)
+            ->mapWithKeys(fn (int $id): array => [$id => ['tenant_id' => $this->tenant_id]])
+            ->all();
     }
 
     public function scopeActive(Builder $query): Builder

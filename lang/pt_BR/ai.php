@@ -13,7 +13,11 @@ return [
     'knowledge_base' => [
         'created' => 'Base de conhecimento criada.',
         'updated' => 'Base de conhecimento atualizada.',
+        'activated' => 'Base de conhecimento ativada.',
+        'deactivated' => 'Base de conhecimento desativada.',
+        'deleted' => 'Base de conhecimento removida.',
         'indexing' => 'A base está sendo indexada para uso pela IA.',
+        'invalid_association' => 'Não é possível associar bases de conhecimento de outra clínica.',
     ],
     'guardrail' => [
         'created' => 'Guardrail criado.',

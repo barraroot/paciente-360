@@ -155,19 +155,19 @@ description: "Task list — IA Matricial (feature 015)"
 
 ### Tests (US4)
 
-- [ ] T059 [P] [US4] Feature CRUD de bases + cross-tenant 404 (G1) em `tests/Feature/Ai/KnowledgeBaseCrudTest.php`
-- [ ] T060 [P] [US4] Unit chunking determinístico em `tests/Unit/Ai/ChunkingTest.php`
-- [ ] T061 [P] [US4] Integração recuperação só de bases ativas + isolamento tenant na similaridade (G8, SC-012) em `tests/Feature/Ai/RagRetrievalTest.php` (usa `Embeddings::fake()`)
+- [x] T059 [P] [US4] Feature CRUD de bases + cross-tenant 404 (G1) em `tests/Feature/Ai/KnowledgeBaseCrudTest.php`
+- [x] T060 [P] [US4] Unit chunking determinístico em `tests/Unit/Ai/ChunkingTest.php`
+- [x] T061 [P] [US4] Integração recuperação só de bases ativas + isolamento tenant na similaridade (G8, SC-012) em `tests/Feature/Ai/RagRetrievalTest.php` (usa `Embeddings::fake()`)
 
 ### Implementação (US4)
 
-- [ ] T062 [P] [US4] `StoreKnowledgeBaseRequest`/`UpdateKnowledgeBaseRequest` (sanitiza markdown; tags/metadata) + `AiKnowledgeBasePolicy` + `AiKnowledgeBaseResource`
-- [ ] T063 [US4] `app/Domain/Ai/KnowledgeBase/Services/AiKnowledgeBaseService.php` (CRUD + activate/deactivate; dispara reindex no save de conteúdo)
-- [ ] T064 [US4] `app/Domain/Ai/Services/AiEmbeddingService.php` (`Laravel\Ai\Embeddings::for()->dimensions()`) + chunking por seções/tamanho com overlap
-- [ ] T065 [US4] `app/Jobs/Ai/EmbedKnowledgeBaseJob.php` (chunk + embed + substituição transacional dos `ai_knowledge_chunks`; set `indexed_at`)
-- [ ] T066 [US4] `AiKnowledgeBaseController` (CRUD + activate/deactivate) + `PUT /ai/personas/{p}/knowledge-bases` (associação, co-tenancy G2) + rotas
-- [ ] T067 [US4] Integrar recuperação top-K (tenant + bases ativas associadas + `min_similarity`) ao `AiContextBuilderService` (ativa o hook RAG do T053)
-- [ ] T068 [P] [US4] Frontend `resources/js/pages/Ia/BasesIndex.vue` + `BaseForm.vue` + associação de bases na `PersonaForm.vue` + store
+- [x] T062 [P] [US4] `StoreKnowledgeBaseRequest`/`UpdateKnowledgeBaseRequest` (sanitiza markdown; tags/metadata) + `AiKnowledgeBasePolicy` + `AiKnowledgeBaseResource`
+- [x] T063 [US4] `app/Domain/Ai/KnowledgeBase/Services/AiKnowledgeBaseService.php` (CRUD + activate/deactivate; dispara reindex no save de conteúdo)
+- [x] T064 [US4] `app/Domain/Ai/Services/AiEmbeddingService.php` (`Laravel\Ai\Embeddings::for()->dimensions()`) + chunking por seções/tamanho com overlap
+- [x] T065 [US4] `app/Jobs/Ai/EmbedKnowledgeBaseJob.php` (chunk + embed + substituição transacional dos `ai_knowledge_chunks`; set `indexed_at`)
+- [x] T066 [US4] `AiKnowledgeBaseController` (CRUD + activate/deactivate) + `PUT /ai/personas/{p}/knowledge-bases` (associação, co-tenancy G2) + rotas
+- [x] T067 [US4] Integrar recuperação top-K (tenant + bases ativas associadas + `min_similarity`) ao `AiContextBuilderService` (ativa o hook RAG do T053)
+- [x] T068 [P] [US4] Frontend `resources/js/pages/Ia/BasesIndex.vue` + `BaseForm.vue` + associação de bases na `PersonaForm.vue` + store
 
 **Checkpoint**: respostas enriquecidas por RAG, isoladas por clínica.
 

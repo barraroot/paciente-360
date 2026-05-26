@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Agenda\ProfessionalScheduleController;
 use App\Http\Controllers\Api\V1\Agenda\ScheduleExceptionController;
 use App\Http\Controllers\Api\V1\Agenda\SlotController;
 use App\Http\Controllers\Api\V1\Agenda\WaitlistController;
+use App\Http\Controllers\Api\V1\Ai\AiKnowledgeBaseController;
 use App\Http\Controllers\Api\V1\Ai\AiModelController;
 use App\Http\Controllers\Api\V1\Ai\AiPersonaChannelController;
 use App\Http\Controllers\Api\V1\Ai\AiPersonaController;
@@ -916,4 +917,19 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
         Route::get('channels/{channelType}/config', [AiPersonaChannelController::class, 'channelConfig'])
             ->whereIn('channelType', ['whatsapp', 'instagram', 'web'])
             ->name('channels.config');
+
+        // US4 — bases de conhecimento (RAG) + associação a personas.
+        Route::post('knowledge-bases/{knowledgeBase}/activate', [AiKnowledgeBaseController::class, 'activate'])
+            ->whereNumber('knowledgeBase')
+            ->name('knowledge-bases.activate');
+        Route::post('knowledge-bases/{knowledgeBase}/deactivate', [AiKnowledgeBaseController::class, 'deactivate'])
+            ->whereNumber('knowledgeBase')
+            ->name('knowledge-bases.deactivate');
+
+        Route::apiResource('knowledge-bases', AiKnowledgeBaseController::class)
+            ->parameters(['knowledge-bases' => 'knowledgeBase']);
+
+        Route::put('personas/{persona}/knowledge-bases', [AiKnowledgeBaseController::class, 'syncPersona'])
+            ->whereNumber('persona')
+            ->name('personas.knowledge-bases.sync');
     });

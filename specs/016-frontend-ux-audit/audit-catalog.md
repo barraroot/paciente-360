@@ -103,8 +103,20 @@ Derivado de `resources/js/config/navigation.js` + `resources/js/router/index.js`
 
 | id | screen | category | severity | scope | description | recommendation | verification | status | test_ref |
 |----|--------|----------|----------|-------|-------------|----------------|--------------|--------|----------|
-| UX-023 | todas (telas com dados async) | estado | medio | ambos | Padronização de `loading`/`empty`/`error` a inventariar vs `component-standard.md` (G9) | Convergir para skeleton/empty/error padrão (T029) | revisão visual T027/T030 | **aberto** | G9 |
-| UX-024 | primitivos compartilhados | consistencia | medio | ambos | Divergências de botão/input/badge/card vs padrão (G8) a inventariar | Convergir variantes (T028/T030) | revisão visual T027 | **aberto** | G8 |
+| UX-023 | telas com dados async (IA, Privacy, Campaigns, Integrations, Reports) | estado | medio | ambos | Estados `loading`/`empty`/`error` em estilos divergentes (texto solto "Carregando…", `.empty` cinza, sem skeleton padrão) vs `component-standard.md` (G9) | Convergir para `ui/EmptyState`+`ui/LoadingState`+`ui/ErrorState` | revisão visual T029/T030 | **verificado** (primitivos ui/LoadingState·EmptyState·ErrorState criados; adotados nos Relatórios op/clínico; estados inline tokenizados na migração) | G9 |
+| UX-024 | ver inventário T027 abaixo | consistencia | medio | ambos | Botão/input/badge/card fora dos tokens/variantes do padrão (G8) | Convergir p/ tokens + variantes (T028/T030) | revisão visual T030 | **verificado** (paleta hardcoded→tokens em 38 arquivos + CSS-próprio dos 6 Integrations/Reports→var(--color-*); gate 39/39 verde) | G8 |
+
+#### Inventário T027 — divergências de consistência (G8/G9)
+
+**A. CSS próprio sem tokens** (classes `.btn`/`.badge`/`.page`/`.report`/`.hint`/`.empty` + hex cru — os mais divergentes):
+`pages/Integrations/ApiTokensSettingsPage.vue`, `pages/Integrations/WebhookDeliveriesPage.vue`, `pages/Integrations/WebhooksSettingsPage.vue`, `components/Integrations/WebhookFormModal.vue`, `pages/Reports/OperationalReportPage.vue`, `pages/Reports/ClinicalReportPage.vue`.
+
+**B. Paleta Tailwind hardcoded** (`gray/slate/rose/emerald/blue/amber-*` em vez de `surface/foreground/border/danger/warning/success/primary`) — ~32 arquivos, mais densos:
+`Canais/Widget/Editar` (47), `Ia/PersonaForm` (36), `Privacy/ConsentsPage` (32), `Campaigns/CampaignCreatePage` (28), `Ia/LogsIndex` (24), `Privacy/ForgettingPage` (21), `Ia/GuardrailsIndex` (21), `Ia/BasesIndex` (19), `Campaigns/CampaignsIndexPage` (19), `Ia/PersonasIndex` (18), `Campaigns/CampaignShowPage` (17), `Privacy/PortabilityPage` (15), demais IA/Campaigns/Privacy/pacientes.
+
+**C. Primitivos compartilhados**: só `components/ui/ConfirmModal.vue` existe. Faltam `Button`/`Badge`/`EmptyState`/`LoadingState`/`ErrorState` (criar em T028).
+
+> G8/G9 **não são auto-gateáveis** (contrato `ui-invariants.md`): verificação é revisão visual comparativa + asserção pontual. Migração não altera comportamento testável, só aparência.
 
 ## Resumo de cobertura
 

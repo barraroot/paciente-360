@@ -22,12 +22,12 @@ function resetAll() {
 function statusClass(status) {
     return (
         {
-            draft: 'bg-gray-100 text-gray-800 border-gray-300',
-            scheduled: 'bg-blue-100 text-blue-800 border-blue-300',
-            dispatching: 'bg-amber-100 text-amber-900 border-amber-300',
-            completed: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-            canceled: 'bg-rose-100 text-rose-800 border-rose-300',
-        }[status] || 'bg-gray-100 text-gray-800 border-gray-200'
+            draft: 'bg-surface-muted text-foreground border-border-strong',
+            scheduled: 'bg-primary-100 text-primary-800 border-primary-300',
+            dispatching: 'bg-warning-100 text-warning-800 border-warning-300',
+            completed: 'bg-success-100 text-success-800 border-success-300',
+            canceled: 'bg-danger-100 text-danger-800 border-danger-300',
+        }[status] || 'bg-surface-muted text-foreground border-border'
     );
 }
 
@@ -41,13 +41,13 @@ function fmtDate(iso) {
         <header class="flex items-start justify-between">
             <div>
                 <h1 class="text-2xl font-semibold">Campanhas</h1>
-                <p class="mt-1 text-sm text-gray-600">
+                <p class="mt-1 text-sm text-foreground-muted">
                     Disparos em massa com guardrails LGPD + Meta (Princípio VI).
                 </p>
             </div>
             <RouterLink
                 to="/campaigns/new"
-                class="rounded bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+                class="rounded bg-success-700 px-4 py-2 text-sm font-medium text-white hover:bg-success-800"
             >
                 Nova campanha
             </RouterLink>
@@ -56,12 +56,12 @@ function fmtDate(iso) {
         <section class="rounded border bg-white p-4">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
-                    <label class="block text-xs font-medium text-gray-700">Status</label>
+                    <label class="block text-xs font-medium text-foreground">Status</label>
                     <select
                         :value="store.filters.status"
                         @change="applyFilter('status', $event.target.value)"
                         aria-label="Filtrar por status"
-                        class="mt-1 w-full rounded border-gray-300 text-sm"
+                        class="mt-1 w-full rounded border-border-strong text-sm"
                     >
                         <option value="">Todos</option>
                         <option value="draft">Rascunho</option>
@@ -72,12 +72,12 @@ function fmtDate(iso) {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-700">Canal</label>
+                    <label class="block text-xs font-medium text-foreground">Canal</label>
                     <select
                         :value="store.filters.channel"
                         @change="applyFilter('channel', $event.target.value)"
                         aria-label="Filtrar por canal"
-                        class="mt-1 w-full rounded border-gray-300 text-sm"
+                        class="mt-1 w-full rounded border-border-strong text-sm"
                     >
                         <option value="">Todos</option>
                         <option value="whatsapp">WhatsApp</option>
@@ -88,7 +88,7 @@ function fmtDate(iso) {
                     <button
                         type="button"
                         @click="resetAll"
-                        class="rounded border bg-gray-50 px-3 py-1.5 text-sm hover:bg-gray-100"
+                        class="rounded border bg-surface-muted px-3 py-1.5 text-sm hover:bg-surface-muted"
                     >
                         Limpar filtros
                     </button>
@@ -98,7 +98,9 @@ function fmtDate(iso) {
 
         <section class="overflow-hidden rounded border bg-white">
             <table class="min-w-full text-sm">
-                <thead class="bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-500">
+                <thead
+                    class="bg-surface-muted text-left text-xs uppercase tracking-wider text-foreground-muted"
+                >
                     <tr>
                         <th class="px-4 py-2">Nome</th>
                         <th class="px-4 py-2">Canal</th>
@@ -113,16 +115,27 @@ function fmtDate(iso) {
                 </thead>
                 <tbody class="divide-y">
                     <tr v-if="store.loading">
-                        <td colspan="9" class="px-4 py-12 text-center text-sm text-gray-500">
+                        <td
+                            colspan="9"
+                            class="px-4 py-12 text-center text-sm text-foreground-muted"
+                        >
                             Carregando…
                         </td>
                     </tr>
                     <tr v-else-if="store.campaigns.length === 0">
-                        <td colspan="9" class="px-4 py-12 text-center text-sm text-gray-500">
+                        <td
+                            colspan="9"
+                            class="px-4 py-12 text-center text-sm text-foreground-muted"
+                        >
                             Nenhuma campanha.
                         </td>
                     </tr>
-                    <tr v-else v-for="c in store.campaigns" :key="c.id" class="hover:bg-gray-50">
+                    <tr
+                        v-else
+                        v-for="c in store.campaigns"
+                        :key="c.id"
+                        class="hover:bg-surface-muted"
+                    >
                         <td class="px-4 py-2">{{ c.name }}</td>
                         <td class="px-4 py-2 text-xs">{{ c.channel }}</td>
                         <td class="px-4 py-2">
@@ -143,13 +156,13 @@ function fmtDate(iso) {
                         <td class="px-4 py-2 text-right">
                             <RouterLink
                                 :to="`/campaigns/${c.id}`"
-                                class="text-xs text-blue-700 underline"
+                                class="text-xs text-primary-700 underline"
                                 >Ver</RouterLink
                             >
                             <RouterLink
                                 v-if="c.status !== 'draft'"
                                 :to="`/campaigns/${c.id}/report`"
-                                class="ml-2 text-xs text-emerald-700 underline"
+                                class="ml-2 text-xs text-success-700 underline"
                                 >Relatório</RouterLink
                             >
                         </td>

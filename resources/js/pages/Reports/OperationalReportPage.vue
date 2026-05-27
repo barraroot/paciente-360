@@ -1,6 +1,8 @@
 <script setup>
 import { onMounted } from 'vue';
 import { useReportsStore } from '@/stores/reportsStore';
+import LoadingState from '@/components/ui/LoadingState.vue';
+import ErrorState from '@/components/ui/ErrorState.vue';
 
 /**
  * T270 (Fase 8 — Lote E US-10.2) — Relatório Operacional.
@@ -14,8 +16,13 @@ onMounted(() => store.loadOperational());
     <section class="report">
         <h1>Relatório Operacional</h1>
 
-        <p v-if="store.operational.loading" aria-busy="true">Carregando…</p>
-        <p v-else-if="store.operational.error" role="alert">{{ store.operational.error }}</p>
+        <LoadingState v-if="store.operational.loading" :rows="4" />
+        <ErrorState
+            v-else-if="store.operational.error"
+            retryable
+            :message="store.operational.error"
+            @retry="store.loadOperational()"
+        />
 
         <div v-else-if="store.operational.data" class="report__sections">
             <section>
@@ -88,14 +95,14 @@ onMounted(() => store.loadOperational());
     overflow-x: auto;
 }
 .report__sections section {
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     padding: 1rem;
 }
 .report__sections h2 {
     font-size: 1rem;
-    color: #64748b;
+    color: var(--color-foreground-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 0.75rem;
@@ -108,6 +115,6 @@ th,
 td {
     text-align: left;
     padding: 0.5rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-border);
 }
 </style>

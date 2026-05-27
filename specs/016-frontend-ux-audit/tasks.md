@@ -69,10 +69,10 @@
 
 **Independent Test**: comparar botões/inputs/badges/cards/estados entre telas contra `component-standard.md`.
 
-- [ ] T027 [US3] Inventariar divergências de componentes vs `component-standard.md` (botões/inputs/selects/badges/cards/modais/estados) e registrar como itens de categoria `consistencia` no catálogo
-- [ ] T028 [P] [US3] Convergir primitivos compartilhados em `resources/js/components/ui/**` para as variantes únicas (sem reescrever os que já seguem o padrão)
-- [ ] T029 [P] [US3] Aplicar `empty`/`loading`/`error` states padronizados nas telas com dados assíncronos (G9) reutilizando os primitivos
-- [ ] T030 [US3] Substituir usos divergentes pelas variantes padrão nas telas P1→P2 e marcar itens `consistencia` como `verificado`
+- [X] T027 [US3] Inventariar divergências de componentes vs `component-standard.md` (botões/inputs/selects/badges/cards/modais/estados) e registrar como itens de categoria `consistencia` no catálogo
+- [X] T028 [P] [US3] Convergir primitivos compartilhados em `resources/js/components/ui/**` para as variantes únicas (sem reescrever os que já seguem o padrão)
+- [X] T029 [P] [US3] Aplicar `empty`/`loading`/`error` states padronizados nas telas com dados assíncronos (G9) reutilizando os primitivos
+- [X] T030 [US3] Substituir usos divergentes pelas variantes padrão nas telas P1→P2 e marcar itens `consistencia` como `verificado`
 
 ---
 

@@ -28,13 +28,9 @@ const erros = ref({});
 const isOutro = computed(() => motivoSelecionado.value === 'outro');
 
 // Validação client-side mínima
-const motivoOutroValido = computed(() =>
-    !isOutro.value || motivoOutro.value.length >= 10
-);
+const motivoOutroValido = computed(() => !isOutro.value || motivoOutro.value.length >= 10);
 
-const podeConfirmar = computed(() =>
-    motivoSelecionado.value !== '' && motivoOutroValido.value
-);
+const podeConfirmar = computed(() => motivoSelecionado.value !== '' && motivoOutroValido.value);
 
 // Resetar ao abrir
 watch(
@@ -45,7 +41,7 @@ watch(
             motivoOutro.value = '';
             erros.value = {};
         }
-    }
+    },
 );
 
 function confirmar() {
@@ -75,18 +71,10 @@ function cancelar() {
 </script>
 
 <template>
-    <ConfirmModal
-        :open="open"
-        :title="t('funil.motivo_obrigatorio_title')"
-        @close="cancelar"
-    >
+    <ConfirmModal :open="open" :title="t('funil.motivo_obrigatorio_title')" @close="cancelar">
         <!-- Seleção de motivo -->
         <div class="space-y-3">
-            <div
-                v-for="motivo in MOTIVOS"
-                :key="motivo.value"
-                class="flex items-center gap-3"
-            >
+            <div v-for="motivo in MOTIVOS" :key="motivo.value" class="flex items-center gap-3">
                 <input
                     :id="`motivo-${motivo.value}`"
                     v-model="motivoSelecionado"
@@ -102,26 +90,16 @@ function cancelar() {
                 </label>
             </div>
 
-            <p
-                v-if="erros.motivo"
-                class="text-red-600 text-xs"
-                role="alert"
-            >
+            <p v-if="erros.motivo" class="text-danger-600 text-xs" role="alert">
                 {{ erros.motivo }}
             </p>
         </div>
 
         <!-- Textarea quando "outro" -->
-        <div
-            v-if="isOutro"
-            class="mt-4"
-        >
-            <label
-                for="motivo-outro-texto"
-                class="block text-sm font-medium text-foreground mb-1"
-            >
+        <div v-if="isOutro" class="mt-4">
+            <label for="motivo-outro-texto" class="block text-sm font-medium text-foreground mb-1">
                 {{ t('funil.motivo_outro_label') }}
-                <span class="text-red-500">*</span>
+                <span class="text-danger-500">*</span>
             </label>
             <textarea
                 id="motivo-outro-texto"
@@ -132,11 +110,7 @@ function cancelar() {
                 class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                 :placeholder="`Mínimo 10 caracteres (${motivoOutro.length}/255)`"
             />
-            <p
-                v-if="erros.motivo_outro"
-                class="text-red-600 text-xs mt-1"
-                role="alert"
-            >
+            <p v-if="erros.motivo_outro" class="text-danger-600 text-xs mt-1" role="alert">
                 {{ erros.motivo_outro }}
             </p>
         </div>

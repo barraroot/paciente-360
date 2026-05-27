@@ -61,8 +61,8 @@ async function confirmAction() {
     <div class="p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-xl font-semibold text-gray-900">Guardrails da Clínica</h1>
-                <p class="text-sm text-gray-500">
+                <h1 class="text-xl font-semibold text-foreground">Guardrails da Clínica</h1>
+                <p class="text-sm text-foreground-muted">
                     Restrições adicionais sobre o piso de segurança obrigatório da IA.
                 </p>
             </div>
@@ -75,31 +75,37 @@ async function confirmAction() {
             </button>
         </div>
 
-        <div class="mb-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
-            As regras médicas mínimas (sem diagnóstico, sem prescrição, escalar urgências, etc.)
-            são sempre aplicadas, mesmo sem nenhum guardrail cadastrado aqui.
+        <div class="mb-4 rounded-lg bg-warning-50 p-3 text-xs text-warning-800">
+            As regras médicas mínimas (sem diagnóstico, sem prescrição, escalar urgências, etc.) são
+            sempre aplicadas, mesmo sem nenhum guardrail cadastrado aqui.
         </div>
 
-        <div v-if="store.loading" class="py-12 text-center text-gray-500">Carregando…</div>
+        <div v-if="store.loading" class="py-12 text-center text-foreground-muted">Carregando…</div>
 
-        <div v-else-if="store.error" class="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+        <div v-else-if="store.error" class="rounded-lg bg-danger-50 p-4 text-sm text-danger-700">
             {{ store.error }}
         </div>
 
         <div
             v-else-if="store.guardrails.length === 0"
-            class="rounded-lg border border-dashed border-gray-300 py-12 text-center"
+            class="rounded-lg border border-dashed border-border-strong py-12 text-center"
         >
-            <p class="text-gray-500">Nenhum guardrail criado ainda.</p>
-            <button type="button" class="mt-3 text-sm font-medium text-indigo-600 hover:underline" @click="goCreate">
+            <p class="text-foreground-muted">Nenhum guardrail criado ainda.</p>
+            <button
+                type="button"
+                class="mt-3 text-sm font-medium text-indigo-600 hover:underline"
+                @click="goCreate"
+            >
                 Criar o primeiro guardrail
             </button>
         </div>
 
-        <div v-else class="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr class="text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+        <div v-else class="overflow-hidden rounded-lg border border-border bg-white">
+            <table class="min-w-full divide-y divide-border">
+                <thead class="bg-surface-muted">
+                    <tr
+                        class="text-left text-xs font-medium uppercase tracking-wide text-foreground-muted"
+                    >
                         <th class="px-4 py-3">Nome</th>
                         <th class="px-4 py-3">Categoria</th>
                         <th class="px-4 py-3">Personas</th>
@@ -107,30 +113,57 @@ async function confirmAction() {
                         <th class="px-4 py-3 text-right">Ações</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="guardrail in store.guardrails" :key="guardrail.id" class="text-sm text-gray-700">
-                        <td class="px-4 py-3 font-medium text-gray-900">{{ guardrail.name }}</td>
+                <tbody class="divide-y divide-border">
+                    <tr
+                        v-for="guardrail in store.guardrails"
+                        :key="guardrail.id"
+                        class="text-sm text-foreground"
+                    >
+                        <td class="px-4 py-3 font-medium text-foreground">{{ guardrail.name }}</td>
                         <td class="px-4 py-3">
-                            <span v-if="guardrail.category" class="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                            <span
+                                v-if="guardrail.category"
+                                class="inline-flex rounded-full bg-surface-muted px-2 py-0.5 text-xs text-foreground-muted"
+                            >
                                 {{ guardrail.category }}
                             </span>
-                            <span v-else class="text-gray-400">—</span>
+                            <span v-else class="text-foreground-subtle">—</span>
                         </td>
                         <td class="px-4 py-3">{{ guardrail.personas_count ?? 0 }}</td>
                         <td class="px-4 py-3">
                             <span
-                                :class="guardrail.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+                                :class="
+                                    guardrail.is_active
+                                        ? 'bg-success-100 text-success-700'
+                                        : 'bg-surface-muted text-foreground-muted'
+                                "
                                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
                             >
                                 {{ guardrail.is_active ? 'Ativo' : 'Inativo' }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-right space-x-3">
-                            <button type="button" class="text-indigo-600 hover:underline" @click="goEdit(guardrail)">Editar</button>
-                            <button type="button" class="text-gray-600 hover:underline" @click="toggleActive(guardrail)">
+                            <button
+                                type="button"
+                                class="text-indigo-600 hover:underline"
+                                @click="goEdit(guardrail)"
+                            >
+                                Editar
+                            </button>
+                            <button
+                                type="button"
+                                class="text-foreground-muted hover:underline"
+                                @click="toggleActive(guardrail)"
+                            >
                                 {{ guardrail.is_active ? 'Desativar' : 'Ativar' }}
                             </button>
-                            <button type="button" class="text-red-600 hover:underline" @click="askDelete(guardrail)">Excluir</button>
+                            <button
+                                type="button"
+                                class="text-danger-600 hover:underline"
+                                @click="askDelete(guardrail)"
+                            >
+                                Excluir
+                            </button>
                         </td>
                     </tr>
                 </tbody>
@@ -149,25 +182,31 @@ async function confirmAction() {
                 @keydown.esc="closeConfirm"
             >
                 <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                    <h2 id="guardrail-confirm-title" class="text-lg font-semibold text-gray-900">
+                    <h2 id="guardrail-confirm-title" class="text-lg font-semibold text-foreground">
                         {{ confirmMode === 'delete' ? 'Excluir guardrail' : 'Desativar guardrail' }}
                     </h2>
-                    <p class="mt-2 text-sm text-gray-600">
+                    <p class="mt-2 text-sm text-foreground-muted">
                         <template v-if="confirmMode === 'delete'">
-                            Tem certeza que deseja excluir <strong>{{ confirmTarget.name }}</strong>?
+                            Tem certeza que deseja excluir <strong>{{ confirmTarget.name }}</strong
+                            >?
                         </template>
                         <template v-else>
-                            Desativar <strong>{{ confirmTarget.name }}</strong>? A IA deixará de aplicá-lo em novas respostas.
+                            Desativar <strong>{{ confirmTarget.name }}</strong
+                            >? A IA deixará de aplicá-lo em novas respostas.
                         </template>
                     </p>
                     <div class="mt-6 flex justify-end gap-3">
-                        <button type="button" class="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100" @click="closeConfirm">
+                        <button
+                            type="button"
+                            class="rounded-lg px-4 py-2 text-sm text-foreground-muted hover:bg-surface-muted"
+                            @click="closeConfirm"
+                        >
                             Cancelar
                         </button>
                         <button
                             type="button"
                             :disabled="busy"
-                            class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                            class="rounded-lg bg-danger-600 px-4 py-2 text-sm font-medium text-white hover:bg-danger-700 disabled:opacity-50"
                             @click="confirmAction"
                         >
                             {{ confirmMode === 'delete' ? 'Excluir' : 'Desativar' }}

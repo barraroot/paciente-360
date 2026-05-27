@@ -212,9 +212,9 @@ onMounted(() => store.loadEndpoints());
     margin-bottom: 1rem;
 }
 .banner--success {
-    background: #d1fae5;
-    color: #065f46;
-    border-left: 4px solid #10b981;
+    background: var(--color-success-50);
+    color: var(--color-success-800);
+    border-left: 4px solid var(--color-success-500);
 }
 .banner code {
     display: block;
@@ -232,14 +232,14 @@ onMounted(() => store.loadEndpoints());
 .endpoints-table td {
     text-align: left;
     padding: 0.5rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-border);
 }
 .actions {
     display: flex;
     gap: 0.25rem;
 }
 .empty {
-    color: #64748b;
+    color: var(--color-foreground-muted);
     text-align: center;
     padding: 2rem;
 }
@@ -250,12 +250,12 @@ onMounted(() => store.loadEndpoints());
     font-weight: 500;
 }
 .badge--success {
-    background: #d1fae5;
-    color: #065f46;
+    background: var(--color-success-50);
+    color: var(--color-success-800);
 }
 .badge--warning {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--color-warning-50);
+    color: var(--color-warning-800);
 }
 .btn {
     padding: 0.5rem 1rem;
@@ -264,7 +264,7 @@ onMounted(() => store.loadEndpoints());
     cursor: pointer;
 }
 .btn--primary {
-    background: #2563eb;
+    background: var(--color-primary-700);
     color: white;
     border: none;
 }
@@ -273,7 +273,7 @@ onMounted(() => store.loadEndpoints());
     font-size: 0.875rem;
 }
 .btn--danger {
-    color: #dc2626;
+    color: var(--color-danger-600);
 }
 .toast {
     position: fixed;
@@ -284,9 +284,9 @@ onMounted(() => store.loadEndpoints());
     color: white;
 }
 .toast--success {
-    background: #059669;
+    background: var(--color-success-600);
 }
 .toast--error {
-    background: #dc2626;
+    background: var(--color-danger-600);
 }
 </style>

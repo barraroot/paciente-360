@@ -116,7 +116,7 @@ onMounted(() => store.loadDeadLetter());
     padding: 1.5rem;
 }
 .hint {
-    color: #64748b;
+    color: var(--color-foreground-muted);
     font-size: 0.875rem;
     margin-bottom: 1rem;
 }
@@ -128,7 +128,7 @@ onMounted(() => store.loadDeadLetter());
 .dlq-table td {
     text-align: left;
     padding: 0.5rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--color-border);
 }
 .badge {
     padding: 0.125rem 0.5rem;
@@ -136,15 +136,15 @@ onMounted(() => store.loadDeadLetter());
     font-size: 0.75rem;
 }
 .badge--success {
-    background: #d1fae5;
-    color: #065f46;
+    background: var(--color-success-50);
+    color: var(--color-success-800);
 }
 .badge--warning {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--color-warning-50);
+    color: var(--color-warning-800);
 }
 .empty {
-    color: #64748b;
+    color: var(--color-foreground-muted);
     text-align: center;
     padding: 2rem;
 }
@@ -166,9 +166,9 @@ onMounted(() => store.loadDeadLetter());
     color: white;
 }
 .toast--success {
-    background: #059669;
+    background: var(--color-success-600);
 }
 .toast--error {
-    background: #dc2626;
+    background: var(--color-danger-600);
 }
 </style>

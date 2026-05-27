@@ -73,10 +73,10 @@ function formatDate(iso) {
 function stateClass(state) {
     return (
         {
-            granted: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-            refused: 'bg-amber-100 text-amber-800 border-amber-200',
-            revoked: 'bg-rose-100 text-rose-800 border-rose-200',
-        }[state] || 'bg-gray-100 text-gray-800 border-gray-200'
+            granted: 'bg-success-100 text-success-800 border-success-200',
+            refused: 'bg-warning-100 text-warning-800 border-warning-200',
+            revoked: 'bg-danger-100 text-danger-800 border-danger-200',
+        }[state] || 'bg-surface-muted text-foreground border-border'
     );
 }
 </script>
@@ -86,16 +86,16 @@ function stateClass(state) {
         <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div class="min-w-0">
                 <h1 class="text-2xl font-semibold">Privacidade — Consentimentos</h1>
-                <p class="mt-1 text-sm text-gray-600">
+                <p class="mt-1 text-sm text-foreground-muted">
                     Registros LGPD por paciente e finalidade. Q24 — consentimento hierárquico
                     (transacional implícito, marketing/pesquisa opt-in explícito).
                 </p>
             </div>
             <div class="flex flex-wrap gap-3 text-sm">
-                <span class="rounded border border-emerald-200 bg-emerald-50 px-3 py-1">
+                <span class="rounded border border-success-200 bg-success-50 px-3 py-1">
                     <strong>{{ totalActive }}</strong> ativos
                 </span>
-                <span class="rounded border border-rose-200 bg-rose-50 px-3 py-1">
+                <span class="rounded border border-danger-200 bg-danger-50 px-3 py-1">
                     <strong>{{ totalRevoked }}</strong> revogados
                 </span>
             </div>
@@ -104,9 +104,9 @@ function stateClass(state) {
         <section class="rounded border bg-white p-4">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
                 <div>
-                    <label class="block text-xs font-medium text-gray-700">Finalidade</label>
+                    <label class="block text-xs font-medium text-foreground">Finalidade</label>
                     <select
-                        class="mt-1 w-full rounded border-gray-300 text-sm"
+                        class="mt-1 w-full rounded border-border-strong text-sm"
                         aria-label="Filtrar por finalidade"
                         :value="store.filters.finalidade"
                         @change="applyFilter('finalidade', $event.target.value)"
@@ -118,9 +118,9 @@ function stateClass(state) {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-700">Estado</label>
+                    <label class="block text-xs font-medium text-foreground">Estado</label>
                     <select
-                        class="mt-1 w-full rounded border-gray-300 text-sm"
+                        class="mt-1 w-full rounded border-border-strong text-sm"
                         aria-label="Filtrar por estado"
                         :value="store.filters.state"
                         @change="applyFilter('state', $event.target.value)"
@@ -132,9 +132,9 @@ function stateClass(state) {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-700">Canal</label>
+                    <label class="block text-xs font-medium text-foreground">Canal</label>
                     <select
-                        class="mt-1 w-full rounded border-gray-300 text-sm"
+                        class="mt-1 w-full rounded border-border-strong text-sm"
                         aria-label="Filtrar por canal"
                         :value="store.filters.channel"
                         @change="applyFilter('channel', $event.target.value)"
@@ -150,7 +150,7 @@ function stateClass(state) {
                 <div class="flex items-end">
                     <button
                         type="button"
-                        class="rounded border bg-gray-50 px-3 py-1.5 text-sm hover:bg-gray-100"
+                        class="rounded border bg-surface-muted px-3 py-1.5 text-sm hover:bg-surface-muted"
                         @click="resetAllFilters"
                     >
                         Limpar filtros
@@ -162,7 +162,7 @@ function stateClass(state) {
         <section
             v-if="store.error"
             role="alert"
-            class="rounded border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"
+            class="rounded border border-danger-200 bg-danger-50 p-4 text-sm text-danger-800"
         >
             {{ store.error }}
         </section>
@@ -174,7 +174,9 @@ function stateClass(state) {
             aria-label="Tabela de consentimentos"
         >
             <table class="min-w-full text-sm">
-                <thead class="bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-500">
+                <thead
+                    class="bg-surface-muted text-left text-xs uppercase tracking-wider text-foreground-muted"
+                >
                     <tr>
                         <th class="px-4 py-2">Paciente</th>
                         <th class="px-4 py-2">Canal</th>
@@ -188,20 +190,31 @@ function stateClass(state) {
                 </thead>
                 <tbody class="divide-y">
                     <tr v-if="store.loading">
-                        <td colspan="8" class="px-4 py-12 text-center text-sm text-gray-500">
+                        <td
+                            colspan="8"
+                            class="px-4 py-12 text-center text-sm text-foreground-muted"
+                        >
                             Carregando consentimentos…
                         </td>
                     </tr>
                     <tr v-else-if="store.consents.length === 0">
-                        <td colspan="8" class="px-4 py-12 text-center text-sm text-gray-500">
+                        <td
+                            colspan="8"
+                            class="px-4 py-12 text-center text-sm text-foreground-muted"
+                        >
                             Nenhum consentimento encontrado para os filtros aplicados.
                         </td>
                     </tr>
-                    <tr v-else v-for="c in store.consents" :key="c.id" class="hover:bg-gray-50">
+                    <tr
+                        v-else
+                        v-for="c in store.consents"
+                        :key="c.id"
+                        class="hover:bg-surface-muted"
+                    >
                         <td class="px-4 py-2 font-mono text-xs">#{{ c.patient_id }}</td>
                         <td class="px-4 py-2">{{ c.channel }}</td>
                         <td class="px-4 py-2">
-                            <span class="rounded bg-gray-100 px-2 py-0.5 text-xs">{{
+                            <span class="rounded bg-surface-muted px-2 py-0.5 text-xs">{{
                                 c.finalidade_label
                             }}</span>
                         </td>
@@ -215,18 +228,20 @@ function stateClass(state) {
                                 {{ c.state }}
                             </span>
                         </td>
-                        <td class="px-4 py-2 text-xs text-gray-700">
+                        <td class="px-4 py-2 text-xs text-foreground">
                             {{ formatDate(c.granted_at) }}
                         </td>
-                        <td class="px-4 py-2 text-xs text-gray-700">
+                        <td class="px-4 py-2 text-xs text-foreground">
                             {{ formatDate(c.revoked_at) }}
                         </td>
-                        <td class="px-4 py-2 text-xs text-gray-500">v{{ c.terms_version }}</td>
+                        <td class="px-4 py-2 text-xs text-foreground-muted">
+                            v{{ c.terms_version }}
+                        </td>
                         <td class="px-4 py-2 text-right">
                             <button
                                 v-if="c.is_active"
                                 type="button"
-                                class="text-xs text-rose-700 underline hover:text-rose-900"
+                                class="text-xs text-danger-700 underline hover:text-danger-800"
                                 @click="openRevoke(c)"
                             >
                                 Revogar
@@ -238,7 +253,7 @@ function stateClass(state) {
 
             <footer
                 v-if="store.consentsPagination.total > 0"
-                class="border-t bg-gray-50 px-4 py-2 text-xs text-gray-600"
+                class="border-t bg-surface-muted px-4 py-2 text-xs text-foreground-muted"
             >
                 Página {{ store.consentsPagination.current_page }} de
                 {{ store.consentsPagination.last_page }} —
@@ -259,7 +274,7 @@ function stateClass(state) {
             >
                 <div class="w-full max-w-md rounded bg-white p-6 shadow-xl">
                     <h2 id="revoke-title" class="text-lg font-semibold">Revogar consentimento</h2>
-                    <p class="mt-2 text-sm text-gray-700">
+                    <p class="mt-2 text-sm text-foreground">
                         Você está prestes a revogar o consentimento de
                         <strong>{{ revokeTarget?.finalidade_label }}</strong> do paciente
                         <strong>#{{ revokeTarget?.patient_id }}</strong
@@ -267,19 +282,19 @@ function stateClass(state) {
                     </p>
 
                     <div class="mt-4 space-y-3">
-                        <label class="block text-xs font-medium text-gray-700">
+                        <label class="block text-xs font-medium text-foreground">
                             Canal de origem da revogação
                             <input
                                 v-model="revokeChannel"
                                 type="text"
-                                class="mt-1 w-full rounded border-gray-300 text-sm"
+                                class="mt-1 w-full rounded border-border-strong text-sm"
                             />
                         </label>
-                        <label class="block text-xs font-medium text-gray-700">
+                        <label class="block text-xs font-medium text-foreground">
                             Escopo
                             <select
                                 v-model="revokeScope"
-                                class="mt-1 w-full rounded border-gray-300 text-sm"
+                                class="mt-1 w-full rounded border-border-strong text-sm"
                             >
                                 <option value="all">Total — em todos os canais</option>
                                 <option value="channel">Apenas este canal (metadata)</option>
@@ -290,14 +305,14 @@ function stateClass(state) {
                     <div class="mt-6 flex justify-end gap-2">
                         <button
                             type="button"
-                            class="rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
+                            class="rounded border px-3 py-1.5 text-sm hover:bg-surface-muted"
                             @click="showRevokeModal = false"
                         >
                             Cancelar
                         </button>
                         <button
                             type="button"
-                            class="rounded bg-rose-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                            class="rounded bg-danger-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-danger-700 disabled:opacity-50"
                             :disabled="store.saving"
                             @click="confirmRevoke"
                         >

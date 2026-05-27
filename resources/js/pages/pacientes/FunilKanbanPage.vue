@@ -184,7 +184,7 @@ const ORIGEM_OPTIONS = [
         <!-- Erro -->
         <div
             v-else-if="erroCarregamento"
-            class="rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 text-sm"
+            class="rounded-lg bg-danger-50 border border-danger-200 p-4 text-danger-700 text-sm"
             role="alert"
         >
             {{ erroCarregamento }}

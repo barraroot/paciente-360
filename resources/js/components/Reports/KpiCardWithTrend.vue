@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 /**
  * T259 (Fase 8 — Lote E US-10.1) — Card de KPI com tendência.
@@ -14,31 +14,31 @@ const props = defineProps({
     deltaPercent: { type: [Number, null], default: null },
     drillable: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
-})
+});
 
-const emit = defineEmits(['drill'])
+const emit = defineEmits(['drill']);
 
 const deltaColor = computed(() => {
-    if (props.deltaPercent === null) return 'text-slate-500'
-    if (props.deltaPercent > 0) return 'text-emerald-600'
-    if (props.deltaPercent < 0) return 'text-rose-600'
-    return 'text-slate-500'
-})
+    if (props.deltaPercent === null) return 'text-foreground-muted';
+    if (props.deltaPercent > 0) return 'text-success-600';
+    if (props.deltaPercent < 0) return 'text-danger-600';
+    return 'text-foreground-muted';
+});
 
 const deltaIcon = computed(() => {
-    if (props.deltaPercent === null) return ''
-    if (props.deltaPercent > 0) return '▲'
-    if (props.deltaPercent < 0) return '▼'
-    return '■'
-})
+    if (props.deltaPercent === null) return '';
+    if (props.deltaPercent > 0) return '▲';
+    if (props.deltaPercent < 0) return '▼';
+    return '■';
+});
 
 const formattedDelta = computed(() => {
-    if (props.deltaPercent === null) return '—'
-    return `${props.deltaPercent > 0 ? '+' : ''}${props.deltaPercent.toFixed(1)}%`
-})
+    if (props.deltaPercent === null) return '—';
+    return `${props.deltaPercent > 0 ? '+' : ''}${props.deltaPercent.toFixed(1)}%`;
+});
 
 function onClick() {
-    if (props.drillable && !props.loading) emit('drill')
+    if (props.drillable && !props.loading) emit('drill');
 }
 </script>
 
@@ -72,7 +72,9 @@ function onClick() {
     border: 1px solid #e2e8f0;
     border-radius: 0.75rem;
     padding: 1.25rem;
-    transition: box-shadow 0.15s, transform 0.15s;
+    transition:
+        box-shadow 0.15s,
+        transform 0.15s;
 }
 .kpi-card--drillable {
     cursor: pointer;
@@ -120,8 +122,14 @@ function onClick() {
     margin-left: 0.25rem;
 }
 @keyframes shimmer {
-    0% { opacity: 0.5; }
-    50% { opacity: 1; }
-    100% { opacity: 0.5; }
+    0% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.5;
+    }
 }
 </style>

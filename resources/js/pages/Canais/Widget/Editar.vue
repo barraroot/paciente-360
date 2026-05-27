@@ -195,7 +195,9 @@ async function copySnippet() {
     try {
         await navigator.clipboard.writeText(snippet.value);
         snippetCopied.value = true;
-        setTimeout(() => { snippetCopied.value = false; }, 2500);
+        setTimeout(() => {
+            snippetCopied.value = false;
+        }, 2500);
     } catch {
         // Clipboard API indisponível
     }
@@ -205,7 +207,9 @@ async function copySnippet() {
 
 function showToast(msg, type = 'success') {
     toast.value = { msg, type };
-    setTimeout(() => { toast.value = null; }, 5000);
+    setTimeout(() => {
+        toast.value = null;
+    }, 5000);
 }
 </script>
 
@@ -217,52 +221,63 @@ function showToast(msg, type = 'success') {
                 v-if="toast"
                 :class="[
                     'mb-6 rounded-lg px-4 py-3 text-sm font-medium',
-                    toast.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
+                    toast.type === 'success'
+                        ? 'bg-success-100 text-success-800'
+                        : 'bg-danger-100 text-danger-800',
                 ]"
             >
                 {{ toast.msg }}
             </div>
         </Transition>
 
-        <div v-if="loading" class="text-center py-20 text-gray-400">Carregando...</div>
+        <div v-if="loading" class="text-center py-20 text-foreground-subtle">Carregando...</div>
 
         <form v-else @submit.prevent="handleSave" class="space-y-8">
             <!-- ── Aparência ─────────────────────────────────────────────── -->
-            <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Aparência</h2>
+            <section class="bg-white rounded-xl shadow-sm border border-border p-6">
+                <h2 class="text-lg font-semibold text-foreground mb-4">Aparência</h2>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Cor primária -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label class="block text-sm font-medium text-foreground mb-1">
                             Cor primária
                         </label>
                         <div class="flex items-center gap-2">
                             <input
                                 type="color"
                                 v-model="form.appearance.primary_color"
-                                class="h-10 w-16 rounded border border-gray-300 cursor-pointer"
+                                class="h-10 w-16 rounded border border-border-strong cursor-pointer"
                             />
                             <input
                                 type="text"
                                 v-model="form.appearance.primary_color"
                                 placeholder="#0F59A0"
-                                class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                class="flex-1 rounded-lg border border-border-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                             />
                         </div>
-                        <p v-if="errors.appearance.primary_color" class="mt-1 text-xs text-red-600">
+                        <p
+                            v-if="errors.appearance.primary_color"
+                            class="mt-1 text-xs text-danger-600"
+                        >
                             {{ errors.appearance.primary_color }}
                         </p>
                     </div>
 
                     <!-- Posição -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Posição</label>
+                        <label class="block text-sm font-medium text-foreground mb-1"
+                            >Posição</label
+                        >
                         <select
                             v-model="form.appearance.position"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="w-full rounded-lg border border-border-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
-                            <option v-for="opt in positionOptions" :key="opt.value" :value="opt.value">
+                            <option
+                                v-for="opt in positionOptions"
+                                :key="opt.value"
+                                :value="opt.value"
+                            >
                                 {{ opt.label }}
                             </option>
                         </select>
@@ -270,18 +285,20 @@ function showToast(msg, type = 'success') {
 
                     <!-- Logo URL -->
                     <div class="sm:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">URL do logotipo (opcional)</label>
+                        <label class="block text-sm font-medium text-foreground mb-1"
+                            >URL do logotipo (opcional)</label
+                        >
                         <input
                             type="url"
                             v-model="form.appearance.logo_url"
                             placeholder="https://seusite.com.br/logo.png"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="w-full rounded-lg border border-border-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         />
                     </div>
 
                     <!-- Mensagem de boas-vindas -->
                     <div class="sm:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label class="block text-sm font-medium text-foreground mb-1">
                             Mensagem de boas-vindas
                         </label>
                         <input
@@ -289,30 +306,36 @@ function showToast(msg, type = 'success') {
                             v-model="form.appearance.welcome_message"
                             placeholder="Olá! Como posso ajudar?"
                             maxlength="200"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="w-full rounded-lg border border-border-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         />
                     </div>
                 </div>
             </section>
 
             <!-- ── Horários de Atendimento ──────────────────────────────── -->
-            <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-1">Horários de atendimento</h2>
-                <p class="text-xs text-gray-500 mb-4">
-                    Formato: <code class="bg-gray-100 px-1 rounded">08:00-18:00</code> — deixe em branco para o dia fechado.
+            <section class="bg-white rounded-xl shadow-sm border border-border p-6">
+                <h2 class="text-lg font-semibold text-foreground mb-1">Horários de atendimento</h2>
+                <p class="text-xs text-foreground-muted mb-4">
+                    Formato: <code class="bg-surface-muted px-1 rounded">08:00-18:00</code> — deixe
+                    em branco para o dia fechado.
                 </p>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div v-for="day in weekdays" :key="day.key">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ day.label }}</label>
+                        <label class="block text-sm font-medium text-foreground mb-1">{{
+                            day.label
+                        }}</label>
                         <input
                             type="text"
                             v-model="form.business_hours[day.key]"
                             placeholder="08:00-18:00"
                             pattern="^(\d{2}:\d{2}-\d{2}:\d{2})?$"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="w-full rounded-lg border border-border-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         />
-                        <p v-if="errors.business_hours[day.key]" class="mt-1 text-xs text-red-600">
+                        <p
+                            v-if="errors.business_hours[day.key]"
+                            class="mt-1 text-xs text-danger-600"
+                        >
                             {{ errors.business_hours[day.key] }}
                         </p>
                     </div>
@@ -320,88 +343,108 @@ function showToast(msg, type = 'success') {
             </section>
 
             <!-- ── Comportamento fora do horário ───────────────────────── -->
-            <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Fora do horário de atendimento</h2>
+            <section class="bg-white rounded-xl shadow-sm border border-border p-6">
+                <h2 class="text-lg font-semibold text-foreground mb-4">
+                    Fora do horário de atendimento
+                </h2>
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Comportamento</label>
+                        <label class="block text-sm font-medium text-foreground mb-1"
+                            >Comportamento</label
+                        >
                         <select
                             v-model="form.outside_hours_behavior"
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="w-full rounded-lg border border-border-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         >
-                            <option v-for="opt in behaviorOptions" :key="opt.value" :value="opt.value">
+                            <option
+                                v-for="opt in behaviorOptions"
+                                :key="opt.value"
+                                :value="opt.value"
+                            >
                                 {{ opt.label }}
                             </option>
                         </select>
-                        <p v-if="errors.outside_hours_behavior" class="mt-1 text-xs text-red-600">
+                        <p
+                            v-if="errors.outside_hours_behavior"
+                            class="mt-1 text-xs text-danger-600"
+                        >
                             {{ errors.outside_hours_behavior }}
                         </p>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <label class="block text-sm font-medium text-foreground mb-1">
                             Mensagem exibida fora do horário
                         </label>
                         <input
                             type="text"
                             v-model="form.outside_hours_message"
                             placeholder="Estamos fechados no momento. Retornaremos em breve."
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="w-full rounded-lg border border-border-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                         />
                     </div>
                 </div>
             </section>
 
             <!-- ── Formulário pré-chat ──────────────────────────────────── -->
-            <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Formulário pré-chat</h2>
+            <section class="bg-white rounded-xl shadow-sm border border-border p-6">
+                <h2 class="text-lg font-semibold text-foreground mb-4">Formulário pré-chat</h2>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Modo</label>
+                    <label class="block text-sm font-medium text-foreground mb-1">Modo</label>
                     <select
                         v-model="form.pre_chat_form"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full rounded-lg border border-border-strong px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                         <option v-for="opt in preChatOptions" :key="opt.value" :value="opt.value">
                             {{ opt.label }}
                         </option>
                     </select>
-                    <p v-if="errors.pre_chat_form" class="mt-1 text-xs text-red-600">{{ errors.pre_chat_form }}</p>
+                    <p v-if="errors.pre_chat_form" class="mt-1 text-xs text-danger-600">
+                        {{ errors.pre_chat_form }}
+                    </p>
                 </div>
             </section>
 
             <!-- ── Domínios permitidos ─────────────────────────────────── -->
-            <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-1">Domínios permitidos</h2>
-                <p class="text-xs text-gray-500 mb-4">
-                    Um domínio por linha (ex: <code class="bg-gray-100 px-1 rounded">https://seusite.com.br</code>).
+            <section class="bg-white rounded-xl shadow-sm border border-border p-6">
+                <h2 class="text-lg font-semibold text-foreground mb-1">Domínios permitidos</h2>
+                <p class="text-xs text-foreground-muted mb-4">
+                    Um domínio por linha (ex:
+                    <code class="bg-surface-muted px-1 rounded">https://seusite.com.br</code>).
                     Deixe em branco para aceitar qualquer origem.
                 </p>
                 <textarea
                     v-model="form.allowed_origins"
                     rows="4"
                     placeholder="https://seusite.com.br&#10;https://blog.seusite.com.br"
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full rounded-lg border border-border-strong px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
-                <p v-if="errors.allowed_origins" class="mt-1 text-xs text-red-600">{{ errors.allowed_origins }}</p>
+                <p v-if="errors.allowed_origins" class="mt-1 text-xs text-danger-600">
+                    {{ errors.allowed_origins }}
+                </p>
             </section>
 
             <!-- ── Snippet de instalação ───────────────────────────────── -->
-            <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-1">Código de instalação</h2>
-                <p class="text-xs text-gray-500 mb-4">
-                    Cole este snippet no <code class="bg-gray-100 px-1 rounded">&lt;head&gt;</code> ou antes do
-                    <code class="bg-gray-100 px-1 rounded">&lt;/body&gt;</code> do seu site.
+            <section class="bg-white rounded-xl shadow-sm border border-border p-6">
+                <h2 class="text-lg font-semibold text-foreground mb-1">Código de instalação</h2>
+                <p class="text-xs text-foreground-muted mb-4">
+                    Cole este snippet no
+                    <code class="bg-surface-muted px-1 rounded">&lt;head&gt;</code> ou antes do
+                    <code class="bg-surface-muted px-1 rounded">&lt;/body&gt;</code> do seu site.
                 </p>
 
                 <div class="relative">
-                    <pre class="bg-gray-900 text-green-300 rounded-lg p-4 text-xs overflow-x-auto whitespace-pre-wrap break-all">{{ snippet || 'Salve a configuração para gerar o snippet.' }}</pre>
+                    <pre
+                        class="bg-foreground text-success-300 rounded-lg p-4 text-xs overflow-x-auto whitespace-pre-wrap break-all"
+                        >{{ snippet || 'Salve a configuração para gerar o snippet.' }}</pre
+                    >
                     <button
                         v-if="snippet"
                         type="button"
                         @click="copySnippet"
-                        class="absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-white hover:bg-gray-600 transition"
+                        class="absolute top-2 right-2 rounded bg-foreground-muted px-2 py-1 text-xs text-white hover:bg-foreground-subtle transition"
                     >
                         {{ snippetCopied ? 'Copiado!' : 'Copiar' }}
                     </button>
@@ -413,7 +456,7 @@ function showToast(msg, type = 'success') {
                 <button
                     type="submit"
                     :disabled="saving"
-                    class="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    class="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                     {{ saving ? 'Salvando...' : 'Salvar configuração' }}
                 </button>

@@ -65,7 +65,7 @@ watch(() => props.conversationId, load, { immediate: true });
         <div class="flex items-center gap-2 min-w-0">
             <span
                 class="inline-flex h-2 w-2 shrink-0 rounded-full"
-                :class="paused ? 'bg-amber-400' : 'bg-green-500'"
+                :class="paused ? 'bg-warning-400' : 'bg-success-500'"
                 aria-hidden="true"
             ></span>
             <span class="font-medium text-foreground">
@@ -98,5 +98,7 @@ watch(() => props.conversationId, load, { immediate: true });
             </button>
         </div>
     </div>
-    <p v-if="error" class="border-b border-border bg-red-50 px-4 py-1.5 text-xs text-red-700">{{ error }}</p>
+    <p v-if="error" class="border-b border-border bg-danger-50 px-4 py-1.5 text-xs text-danger-700">
+        {{ error }}
+    </p>
 </template>

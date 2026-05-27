@@ -31,7 +31,9 @@ const showToken = ref(false);
 // ─── Submissão ────────────────────────────────────────────────────────────────
 
 function clearErrors() {
-    Object.keys(errors).forEach((k) => { errors[k] = null; });
+    Object.keys(errors).forEach((k) => {
+        errors[k] = null;
+    });
     globalError.value = null;
 }
 
@@ -63,14 +65,29 @@ async function handleSubmit() {
         if (status === 422) {
             const fieldErrors = responseData?.errors ?? {};
 
-            if (fieldErrors.name) { errors.name = Array.isArray(fieldErrors.name) ? fieldErrors.name[0] : fieldErrors.name; }
-            if (fieldErrors['credentials.page_id']) { errors.page_id = fieldErrors['credentials.page_id'][0]; }
-            if (fieldErrors['credentials.page_access_token']) { errors.page_access_token = fieldErrors['credentials.page_access_token'][0]; }
-            if (fieldErrors['credentials.ig_business_account_id']) { errors.ig_business_account_id = fieldErrors['credentials.ig_business_account_id'][0]; }
+            if (fieldErrors.name) {
+                errors.name = Array.isArray(fieldErrors.name)
+                    ? fieldErrors.name[0]
+                    : fieldErrors.name;
+            }
+            if (fieldErrors['credentials.page_id']) {
+                errors.page_id = fieldErrors['credentials.page_id'][0];
+            }
+            if (fieldErrors['credentials.page_access_token']) {
+                errors.page_access_token = fieldErrors['credentials.page_access_token'][0];
+            }
+            if (fieldErrors['credentials.ig_business_account_id']) {
+                errors.ig_business_account_id =
+                    fieldErrors['credentials.ig_business_account_id'][0];
+            }
 
             // Erros semânticos do adapter (conta pessoal, token inválido)
             const errorCode = responseData?.error ?? responseData?.message ?? '';
-            if (errorCode.includes('account_type') || errorCode.includes('PERSONAL') || errorCode === 'account_type_invalid') {
+            if (
+                errorCode.includes('account_type') ||
+                errorCode.includes('PERSONAL') ||
+                errorCode === 'account_type_invalid'
+            ) {
                 globalError.value = t('canais.errors.account_type_invalid');
             } else if (errorCode.includes('invalid_credentials') || errorCode.includes('token')) {
                 globalError.value = t('canais.errors.page_token_invalid');
@@ -93,7 +110,6 @@ async function handleSubmit() {
 <template>
     <main class="min-h-screen bg-surface py-8 px-4">
         <div class="mx-auto max-w-lg">
-
             <!-- ── Breadcrumb ─────────────────────────────────────────────────── -->
             <nav
                 aria-label="Breadcrumb"
@@ -118,8 +134,9 @@ async function handleSubmit() {
             </nav>
 
             <!-- ── Card do formulário ─────────────────────────────────────────── -->
-            <div class="rounded-xl border border-border bg-surface-elevated p-6 shadow-[var(--shadow-card)]">
-
+            <div
+                class="rounded-xl border border-border bg-surface-elevated p-6 shadow-[var(--shadow-card)]"
+            >
                 <!-- Cabeçalho -->
                 <div class="mb-6">
                     <div class="flex items-center gap-3 mb-2">
@@ -141,14 +158,14 @@ async function handleSubmit() {
                             rel="noopener noreferrer"
                             class="text-primary-600 underline hover:text-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 rounded"
                         >
-                            Ver tutorial Meta Business
-                        </a>.
+                            Ver tutorial Meta Business </a
+                        >.
                     </p>
                 </div>
 
                 <!-- Aviso janela 24h -->
                 <div
-                    class="mb-5 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-800"
+                    class="mb-5 rounded-lg border border-warning-300 bg-warning-50 px-4 py-3 text-xs text-warning-800"
                     role="note"
                 >
                     {{ t('canais.instagram_24h_window') }}
@@ -165,10 +182,7 @@ async function handleSubmit() {
                 </div>
 
                 <!-- Formulário -->
-                <form
-                    novalidate
-                    @submit.prevent="handleSubmit"
-                >
+                <form novalidate @submit.prevent="handleSubmit">
                     <!-- Nome do canal -->
                     <div class="mb-4">
                         <label
@@ -188,9 +202,11 @@ async function handleSubmit() {
                             :aria-invalid="!!errors.name"
                             :aria-describedby="errors.name ? 'erro-nome' : undefined"
                             class="w-full rounded-lg border px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle outline-none transition focus:ring-2"
-                            :class="errors.name
-                                ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200'
-                                : 'border-border bg-surface focus:border-primary-500 focus:ring-primary-200'"
+                            :class="
+                                errors.name
+                                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200'
+                                    : 'border-border bg-surface focus:border-primary-500 focus:ring-primary-200'
+                            "
                         />
                         <p
                             v-if="errors.name"
@@ -204,10 +220,7 @@ async function handleSubmit() {
 
                     <!-- Facebook Page ID -->
                     <div class="mb-4">
-                        <label
-                            for="page-id"
-                            class="mb-1 block text-sm font-medium text-foreground"
-                        >
+                        <label for="page-id" class="mb-1 block text-sm font-medium text-foreground">
                             {{ t('canais.instagram_form.page_id') }}
                             <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
@@ -222,14 +235,13 @@ async function handleSubmit() {
                             :aria-invalid="!!errors.page_id"
                             :aria-describedby="`help-page-id${errors.page_id ? ' erro-page-id' : ''}`"
                             class="w-full rounded-lg border px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle outline-none transition focus:ring-2 font-mono"
-                            :class="errors.page_id
-                                ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200'
-                                : 'border-border bg-surface focus:border-primary-500 focus:ring-primary-200'"
+                            :class="
+                                errors.page_id
+                                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200'
+                                    : 'border-border bg-surface focus:border-primary-500 focus:ring-primary-200'
+                            "
                         />
-                        <p
-                            id="help-page-id"
-                            class="mt-1 text-xs text-foreground-muted"
-                        >
+                        <p id="help-page-id" class="mt-1 text-xs text-foreground-muted">
                             {{ t('canais.instagram_form.page_id_help') }}
                         </p>
                         <p
@@ -263,23 +275,30 @@ async function handleSubmit() {
                                 :aria-invalid="!!errors.page_access_token"
                                 :aria-describedby="`help-token${errors.page_access_token ? ' erro-token' : ''}`"
                                 class="w-full rounded-lg border px-3 py-2 pr-20 text-sm text-foreground placeholder:text-foreground-subtle outline-none transition focus:ring-2 font-mono"
-                                :class="errors.page_access_token
-                                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200'
-                                    : 'border-border bg-surface focus:border-primary-500 focus:ring-primary-200'"
+                                :class="
+                                    errors.page_access_token
+                                        ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200'
+                                        : 'border-border bg-surface focus:border-primary-500 focus:ring-primary-200'
+                                "
                             />
                             <button
                                 type="button"
                                 class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-primary-600 hover:text-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 rounded"
-                                :aria-label="showToken ? t('canais.form.hide_token') : t('canais.form.show_token')"
+                                :aria-label="
+                                    showToken
+                                        ? t('canais.form.hide_token')
+                                        : t('canais.form.show_token')
+                                "
                                 @click="showToken = !showToken"
                             >
-                                {{ showToken ? t('canais.form.hide_token') : t('canais.form.show_token') }}
+                                {{
+                                    showToken
+                                        ? t('canais.form.hide_token')
+                                        : t('canais.form.show_token')
+                                }}
                             </button>
                         </div>
-                        <p
-                            id="help-token"
-                            class="mt-1 text-xs text-foreground-muted"
-                        >
+                        <p id="help-token" class="mt-1 text-xs text-foreground-muted">
                             {{ t('canais.instagram_form.page_access_token_help') }}
                         </p>
                         <p
@@ -312,14 +331,13 @@ async function handleSubmit() {
                             :aria-invalid="!!errors.ig_business_account_id"
                             :aria-describedby="`help-ig-id${errors.ig_business_account_id ? ' erro-ig-id' : ''}`"
                             class="w-full rounded-lg border px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle outline-none transition focus:ring-2 font-mono"
-                            :class="errors.ig_business_account_id
-                                ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200'
-                                : 'border-border bg-surface focus:border-primary-500 focus:ring-primary-200'"
+                            :class="
+                                errors.ig_business_account_id
+                                    ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-200'
+                                    : 'border-border bg-surface focus:border-primary-500 focus:ring-primary-200'
+                            "
                         />
-                        <p
-                            id="help-ig-id"
-                            class="mt-1 text-xs text-foreground-muted"
-                        >
+                        <p id="help-ig-id" class="mt-1 text-xs text-foreground-muted">
                             {{ t('canais.instagram_form.ig_business_account_id_help') }}
                         </p>
                         <p
@@ -353,10 +371,25 @@ async function handleSubmit() {
                                 fill="none"
                                 aria-hidden="true"
                             >
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z" />
+                                <circle
+                                    class="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="4"
+                                />
+                                <path
+                                    class="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z"
+                                />
                             </svg>
-                            {{ submitting ? t('common.loading') : t('canais.conectar_instagram_titulo') }}
+                            {{
+                                submitting
+                                    ? t('common.loading')
+                                    : t('canais.conectar_instagram_titulo')
+                            }}
                         </button>
                     </div>
                 </form>

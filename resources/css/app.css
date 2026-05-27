@@ -19,7 +19,8 @@
  */
 @theme {
     /* Tipografia (carregada via bunny no vite.config.js). */
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    --font-sans:
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
 
@@ -29,7 +30,7 @@
     --color-primary-200: oklch(0.85 0.12 180);
     --color-primary-300: oklch(0.75 0.13 180);
     --color-primary-400: oklch(0.65 0.12 180);
-    --color-primary-500: oklch(0.55 0.10 180);
+    --color-primary-500: oklch(0.55 0.1 180);
     --color-primary-600: oklch(0.45 0.11 200);
     --color-primary-700: oklch(0.32 0.06 180);
     --color-primary-800: oklch(0.27 0.05 195);
@@ -43,23 +44,44 @@
     --color-surface-elevated: oklch(1 0 0);
 
     --color-foreground: oklch(0.22 0.012 250);
-    --color-foreground-muted: oklch(0.45 0.012 250);
-    --color-foreground-subtle: oklch(0.6 0.012 250);
+    /* UX-018: escurecido para contraste AA (axe color-contrast). muted/subtle
+       renderizavam ~#95989a/#aeb1b4 sobre fundos claros (< 4.5:1). */
+    --color-foreground-muted: oklch(0.4 0.012 250);
+    --color-foreground-subtle: oklch(0.48 0.012 250);
 
     --color-border: oklch(0.92 0.005 95);
     --color-border-strong: oklch(0.86 0.006 95);
 
     /* === Estados semânticos (mapeados para tokens oklch do mockup) === */
     --color-success-50: oklch(0.96 0.04 150);
+    --color-success-100: oklch(0.92 0.07 150);
+    --color-success-200: oklch(0.85 0.11 150);
     --color-success-300: oklch(0.75 0.15 150);
+    --color-success-400: oklch(0.68 0.14 148);
     --color-success-500: oklch(0.62 0.12 150);
     --color-success-600: oklch(0.55 0.18 145);
+    --color-success-700: oklch(0.48 0.15 145);
+    --color-success-800: oklch(0.4 0.12 145);
 
     --color-warning-50: oklch(0.97 0.05 80);
+    --color-warning-100: oklch(0.94 0.08 80);
+    --color-warning-200: oklch(0.9 0.11 78);
+    --color-warning-300: oklch(0.85 0.13 75);
+    --color-warning-400: oklch(0.78 0.14 72);
     --color-warning-500: oklch(0.72 0.13 70);
+    --color-warning-600: oklch(0.62 0.13 65);
+    --color-warning-700: oklch(0.52 0.12 60);
+    --color-warning-800: oklch(0.43 0.1 55);
 
     --color-danger-50: oklch(0.97 0.04 25);
+    --color-danger-100: oklch(0.93 0.07 25);
+    --color-danger-200: oklch(0.88 0.1 25);
+    --color-danger-300: oklch(0.8 0.13 25);
+    --color-danger-400: oklch(0.7 0.16 25);
     --color-danger-500: oklch(0.6 0.17 25);
+    --color-danger-600: oklch(0.53 0.18 25);
+    --color-danger-700: oklch(0.46 0.17 25);
+    --color-danger-800: oklch(0.39 0.15 25);
 
     --color-info-50: oklch(0.96 0.03 245);
     --color-info-500: oklch(0.6 0.12 245);
@@ -68,8 +90,8 @@
     --color-accent-500: oklch(0.6 0.13 295);
 
     /* === Sombras suaves coerentes com o creme === */
-    --shadow-card: 0 1px 2px 0 oklch(0.4 0.01 240 / 0.04), 0 1px 3px 0 oklch(0.4 0.01 240 / 0.10);
-    --shadow-popover: 0 4px 12px -2px oklch(0.4 0.01 240 / 0.10);
+    --shadow-card: 0 1px 2px 0 oklch(0.4 0.01 240 / 0.04), 0 1px 3px 0 oklch(0.4 0.01 240 / 0.1);
+    --shadow-popover: 0 4px 12px -2px oklch(0.4 0.01 240 / 0.1);
 
     /* === Border radius padrão === */
     --radius-sm: 0.25rem;

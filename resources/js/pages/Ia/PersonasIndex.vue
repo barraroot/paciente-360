@@ -61,8 +61,10 @@ async function confirmAction() {
     <div class="p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-xl font-semibold text-gray-900">Personas de IA</h1>
-                <p class="text-sm text-gray-500">Bots que atendem seus canais conforme a matriz.</p>
+                <h1 class="text-xl font-semibold text-foreground">Personas de IA</h1>
+                <p class="text-sm text-foreground-muted">
+                    Bots que atendem seus canais conforme a matriz.
+                </p>
             </div>
             <button
                 type="button"
@@ -73,23 +75,32 @@ async function confirmAction() {
             </button>
         </div>
 
-        <div v-if="store.loading" class="py-12 text-center text-gray-500">Carregando…</div>
+        <div v-if="store.loading" class="py-12 text-center text-foreground-muted">Carregando…</div>
 
-        <div v-else-if="store.error" class="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+        <div v-else-if="store.error" class="rounded-lg bg-danger-50 p-4 text-sm text-danger-700">
             {{ store.error }}
         </div>
 
-        <div v-else-if="store.personas.length === 0" class="rounded-lg border border-dashed border-gray-300 py-12 text-center">
-            <p class="text-gray-500">Nenhuma persona criada ainda.</p>
-            <button type="button" class="mt-3 text-sm font-medium text-indigo-600 hover:underline" @click="goCreate">
+        <div
+            v-else-if="store.personas.length === 0"
+            class="rounded-lg border border-dashed border-border-strong py-12 text-center"
+        >
+            <p class="text-foreground-muted">Nenhuma persona criada ainda.</p>
+            <button
+                type="button"
+                class="mt-3 text-sm font-medium text-indigo-600 hover:underline"
+                @click="goCreate"
+            >
                 Criar a primeira persona
             </button>
         </div>
 
-        <div v-else class="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr class="text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+        <div v-else class="overflow-hidden rounded-lg border border-border bg-white">
+            <table class="min-w-full divide-y divide-border">
+                <thead class="bg-surface-muted">
+                    <tr
+                        class="text-left text-xs font-medium uppercase tracking-wide text-foreground-muted"
+                    >
                         <th class="px-4 py-3">Nome</th>
                         <th class="px-4 py-3">Modelo</th>
                         <th class="px-4 py-3">Canais</th>
@@ -97,25 +108,49 @@ async function confirmAction() {
                         <th class="px-4 py-3 text-right">Ações</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr v-for="persona in store.personas" :key="persona.id" class="text-sm text-gray-700">
-                        <td class="px-4 py-3 font-medium text-gray-900">{{ persona.name }}</td>
+                <tbody class="divide-y divide-border">
+                    <tr
+                        v-for="persona in store.personas"
+                        :key="persona.id"
+                        class="text-sm text-foreground"
+                    >
+                        <td class="px-4 py-3 font-medium text-foreground">{{ persona.name }}</td>
                         <td class="px-4 py-3">{{ persona.model?.name ?? '—' }}</td>
                         <td class="px-4 py-3">{{ persona.channels_count ?? 0 }}</td>
                         <td class="px-4 py-3">
                             <span
-                                :class="persona.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
+                                :class="
+                                    persona.is_active
+                                        ? 'bg-success-100 text-success-700'
+                                        : 'bg-surface-muted text-foreground-muted'
+                                "
                                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
                             >
                                 {{ persona.is_active ? 'Ativa' : 'Inativa' }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-right space-x-3">
-                            <button type="button" class="text-indigo-600 hover:underline" @click="goEdit(persona)">Editar</button>
-                            <button type="button" class="text-gray-600 hover:underline" @click="toggleActive(persona)">
+                            <button
+                                type="button"
+                                class="text-indigo-600 hover:underline"
+                                @click="goEdit(persona)"
+                            >
+                                Editar
+                            </button>
+                            <button
+                                type="button"
+                                class="text-foreground-muted hover:underline"
+                                @click="toggleActive(persona)"
+                            >
                                 {{ persona.is_active ? 'Desativar' : 'Ativar' }}
                             </button>
-                            <button type="button" class="text-red-600 hover:underline" @click="askDelete(persona)">Excluir</button>
+                            <button
+                                type="button"
+                                class="text-danger-600 hover:underline"
+                                @click="askDelete(persona)"
+                            >
+                                Excluir
+                            </button>
                         </td>
                     </tr>
                 </tbody>
@@ -134,25 +169,31 @@ async function confirmAction() {
                 @keydown.esc="closeConfirm"
             >
                 <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                    <h2 id="ia-confirm-title" class="text-lg font-semibold text-gray-900">
+                    <h2 id="ia-confirm-title" class="text-lg font-semibold text-foreground">
                         {{ confirmMode === 'delete' ? 'Excluir persona' : 'Desativar persona' }}
                     </h2>
-                    <p class="mt-2 text-sm text-gray-600">
+                    <p class="mt-2 text-sm text-foreground-muted">
                         <template v-if="confirmMode === 'delete'">
-                            Tem certeza que deseja excluir <strong>{{ confirmTarget.name }}</strong>? Esta ação remove a persona da matriz.
+                            Tem certeza que deseja excluir <strong>{{ confirmTarget.name }}</strong
+                            >? Esta ação remove a persona da matriz.
                         </template>
                         <template v-else>
-                            Desativar <strong>{{ confirmTarget.name }}</strong>? Ela deixará de receber novas conversas.
+                            Desativar <strong>{{ confirmTarget.name }}</strong
+                            >? Ela deixará de receber novas conversas.
                         </template>
                     </p>
                     <div class="mt-6 flex justify-end gap-3">
-                        <button type="button" class="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100" @click="closeConfirm">
+                        <button
+                            type="button"
+                            class="rounded-lg px-4 py-2 text-sm text-foreground-muted hover:bg-surface-muted"
+                            @click="closeConfirm"
+                        >
                             Cancelar
                         </button>
                         <button
                             type="button"
                             :disabled="busy"
-                            class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                            class="rounded-lg bg-danger-600 px-4 py-2 text-sm font-medium text-white hover:bg-danger-700 disabled:opacity-50"
                             @click="confirmAction"
                         >
                             {{ confirmMode === 'delete' ? 'Excluir' : 'Desativar' }}

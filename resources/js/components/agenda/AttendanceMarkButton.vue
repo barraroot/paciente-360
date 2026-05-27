@@ -208,7 +208,7 @@ async function confirmRevert() {
           :disabled="markingRealizada"
           :aria-expanded="showNoShowPanel"
           :aria-controls="`noshow-panel-${appointment.id}`"
-          class="inline-flex items-center gap-1.5 rounded-md border border-danger-500/60 bg-danger-50 px-3 py-1.5 text-xs font-semibold text-danger-500 hover:bg-danger-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 disabled:opacity-50 disabled:cursor-not-allowed transition min-h-[36px]"
+          class="inline-flex items-center gap-1.5 rounded-md border border-danger-500/60 bg-danger-50 px-3 py-1.5 text-xs font-semibold text-danger-600 hover:bg-danger-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 disabled:opacity-50 disabled:cursor-not-allowed transition min-h-[36px]"
           @click="openNoShowPanel"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -219,7 +219,7 @@ async function confirmRevert() {
       </div>
 
       <!-- Erro ao marcar como realizada -->
-      <p v-if="markRealizadaError" role="alert" class="text-xs text-danger-500">
+      <p v-if="markRealizadaError" role="alert" class="text-xs text-danger-600">
         {{ markRealizadaError }}
       </p>
 
@@ -244,7 +244,7 @@ async function confirmRevert() {
           class="w-full rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground placeholder:text-foreground-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 resize-none transition"
           @keydown.enter.ctrl="confirmNoShow"
         />
-        <p v-if="noShowError" role="alert" class="text-xs text-danger-500">
+        <p v-if="noShowError" role="alert" class="text-xs text-danger-600">
           {{ noShowError }}
         </p>
         <div class="flex items-center gap-2 justify-end">
@@ -280,7 +280,7 @@ async function confirmRevert() {
           class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
           :class="{
             'bg-success-50 text-success-600': appointment.status === 'realizada',
-            'bg-danger-50 text-danger-500': appointment.status === 'nao_realizada',
+            'bg-danger-50 text-danger-600': appointment.status === 'nao_realizada',
             'bg-surface-muted text-foreground-muted': appointment.status === 'concluida_sem_registro',
           }"
         >
@@ -312,7 +312,7 @@ async function confirmRevert() {
             <p class="text-xs text-foreground-muted">
               A consulta voltará para o status anterior. Ação disponível apenas dentro de 48h.
             </p>
-            <p v-if="revertError" role="alert" class="text-xs text-danger-500">
+            <p v-if="revertError" role="alert" class="text-xs text-danger-600">
               {{ revertError }}
             </p>
             <div class="flex items-center gap-2 justify-end">

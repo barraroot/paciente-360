@@ -70,25 +70,35 @@ function fieldError(key) {
 
 <template>
     <div class="p-6 max-w-3xl">
-        <h1 class="text-xl font-semibold text-gray-900 mb-1">
+        <h1 class="text-xl font-semibold text-foreground mb-1">
             {{ isEdit ? 'Editar base de conhecimento' : 'Nova base de conhecimento' }}
         </h1>
-        <p class="text-sm text-gray-500 mb-6">
+        <p class="text-sm text-foreground-muted mb-6">
             Ao salvar, o conteúdo é reindexado automaticamente para uso pela IA (RAG).
         </p>
 
-        <div v-if="loading" class="py-12 text-center text-gray-500">Carregando…</div>
+        <div v-if="loading" class="py-12 text-center text-foreground-muted">Carregando…</div>
 
         <form v-else class="space-y-5" @submit.prevent="submit">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Nome</label>
-                <input v-model="form.name" type="text" class="mt-1 w-full rounded-lg border-gray-300 text-sm" />
-                <p v-if="fieldError('name')" class="mt-1 text-xs text-red-600">{{ fieldError('name') }}</p>
+                <label class="block text-sm font-medium text-foreground">Nome</label>
+                <input
+                    v-model="form.name"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                />
+                <p v-if="fieldError('name')" class="mt-1 text-xs text-danger-600">
+                    {{ fieldError('name') }}
+                </p>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Descrição</label>
-                <input v-model="form.description" type="text" class="mt-1 w-full rounded-lg border-gray-300 text-sm" />
+                <label class="block text-sm font-medium text-foreground">Descrição</label>
+                <input
+                    v-model="form.description"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                />
             </div>
 
             <MarkdownEditor
@@ -101,12 +111,22 @@ function fieldError(key) {
             />
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Tags (separadas por vírgula)</label>
-                <input v-model="tagsInput" type="text" class="mt-1 w-full rounded-lg border-gray-300 text-sm" placeholder="faq, horarios" />
+                <label class="block text-sm font-medium text-foreground"
+                    >Tags (separadas por vírgula)</label
+                >
+                <input
+                    v-model="tagsInput"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                    placeholder="faq, horarios"
+                />
             </div>
 
             <div class="flex justify-end gap-3 pt-2">
-                <router-link :to="{ name: 'ia.bases.index' }" class="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                <router-link
+                    :to="{ name: 'ia.bases.index' }"
+                    class="rounded-lg px-4 py-2 text-sm text-foreground-muted hover:bg-surface-muted"
+                >
                     Cancelar
                 </router-link>
                 <button

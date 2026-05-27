@@ -202,7 +202,7 @@ async function submit() {
           <!-- Categoria -->
           <div>
             <label for="cancel-category" class="block text-sm font-medium text-foreground mb-1">
-              Motivo <span class="text-danger-500" aria-hidden="true">*</span>
+              Motivo <span class="text-danger-600" aria-hidden="true">*</span>
             </label>
             <select
               id="cancel-category"
@@ -223,7 +223,7 @@ async function submit() {
             <p
               v-if="fieldErrors.category"
               role="alert"
-              class="mt-1 text-xs text-danger-500"
+              class="mt-1 text-xs text-danger-600"
             >
               {{ fieldErrors.category[0] }}
             </p>
@@ -232,7 +232,7 @@ async function submit() {
           <!-- Motivo livre -->
           <div>
             <label for="cancel-reason" class="block text-sm font-medium text-foreground mb-1">
-              Descrição <span class="text-danger-500" aria-hidden="true">*</span>
+              Descrição <span class="text-danger-600" aria-hidden="true">*</span>
             </label>
             <textarea
               id="cancel-reason"
@@ -249,7 +249,7 @@ async function submit() {
               <p
                 v-if="fieldErrors.reason"
                 role="alert"
-                class="text-xs text-danger-500"
+                class="text-xs text-danger-600"
               >
                 {{ fieldErrors.reason[0] }}
               </p>

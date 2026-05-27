@@ -409,8 +409,12 @@
         "motivo_obrigatorio_title": "Por que este lead foi perdido?",
         "motivo_outro_label": "Descreva o motivo"
     },
+    "prescription": {
+        "restricted_access": "Acesso restrito"
+    },
     "import": {
         "title": "Importar Pacientes",
+        "export_cta": "Exportar CSV",
         "template_title": "Baixar template de importação",
         "template_help": "Preencha o template com os dados dos pacientes e envie abaixo.",
         "download_csv": "Baixar CSV",
@@ -654,6 +658,18 @@
             "char_excedido": "Mensagem excede o limite de 4096 caracteres.",
             "preview_lgpd": "Esta mídia pode conter dados sensíveis. Visualização registrada para auditoria.",
             "lgpd_aceito": "Entendi, visualizar"
+        },
+        "ai_pause": {
+            "badge_label": "IA pausada · {countdown}",
+            "badge_title": "IA pausada até {until}",
+            "release": "Reativar IA",
+            "releasing": "Reativando…",
+            "takeover": "Assumir conversa",
+            "taking_over": "Assumindo…",
+            "takeover_for": "Assumir por {duration}",
+            "takeover_custom": "Tempo personalizado",
+            "custom_duration": "Tempo personalizado",
+            "hours_label": "Duração (horas)"
         },
         "janela_24h": {
             "aberta_horas": "Janela aberta · {hours}h restantes",
@@ -1033,7 +1049,8 @@
             "status": "Status",
             "actions": "Ações",
             "status_active": "Ativo",
-            "status_inactive": "Inativo"
+            "status_inactive": "Inativo",
+            "region_label": "Tabela de profissionais"
         },
         "toolbar": {
             "new": "Novo profissional",

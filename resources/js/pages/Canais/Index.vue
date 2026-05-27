@@ -61,7 +61,9 @@ onMounted(() => {
 
 let refreshInterval = null;
 onBeforeUnmount(() => {
-    if (refreshInterval) { clearInterval(refreshInterval); }
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
 });
 
 // ─── Modal Evolution (WhatsApp não oficial — feature 014) ─────────────────────
@@ -180,14 +182,17 @@ function qualityRatingClass(rating) {
 }
 
 function qualityRatingLabel(rating) {
-    if (!rating) { return null; }
+    if (!rating) {
+        return null;
+    }
     return t(`canais.quality_rating.${rating}`);
 }
 
 function channelSubtitle(channel) {
     if (channel.type === 'whatsapp') {
         if (channel.provider === 'evolution') {
-            const num = channel.connected_number ?? channel.provider_metadata?.connected_number ?? '';
+            const num =
+                channel.connected_number ?? channel.provider_metadata?.connected_number ?? '';
             return `${t('canais.evolution.label_curto')}${num ? ' · ' + num : ''}`;
         }
         const sender = channel.connected_number ?? channel.provider_metadata?.whatsapp_sender ?? '';
@@ -205,12 +210,8 @@ function canReconnect(channel) {
 </script>
 
 <template>
-    <main
-        class="min-h-screen bg-surface py-8 px-4"
-        @click="closeAllDropdowns"
-    >
+    <main class="min-h-screen bg-surface py-8 px-4" @click="closeAllDropdowns">
         <div class="mx-auto max-w-7xl">
-
             <!-- ── Cabeçalho ──────────────────────────────────────────────────── -->
             <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -233,11 +234,7 @@ function canReconnect(channel) {
                 </div>
 
                 <!-- Botão + dropdown "Conectar canal" -->
-                <div
-                    v-if="canConnect"
-                    class="relative"
-                    @click.stop
-                >
+                <div v-if="canConnect" class="relative" @click.stop>
                     <button
                         type="button"
                         :aria-expanded="conectarDropdownOpen"
@@ -246,8 +243,17 @@ function canReconnect(channel) {
                         @click="toggleConectarDropdown"
                     >
                         + {{ t('canais.conectar') }}
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                        <svg
+                            class="h-4 w-4"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                                clip-rule="evenodd"
+                            />
                         </svg>
                     </button>
 
@@ -261,10 +267,18 @@ function canReconnect(channel) {
                             type="button"
                             role="menuitem"
                             class="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-foreground transition hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 rounded-t-lg"
-                            @click="() => { closeConectarDropdown(); router.push({ name: 'canais.conectar_whatsapp' }); }"
+                            @click="
+                                () => {
+                                    closeConectarDropdown();
+                                    router.push({ name: 'canais.conectar_whatsapp' });
+                                }
+                            "
                         >
                             <!-- Ícone WhatsApp -->
-                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#25D366] text-white text-xs font-bold shrink-0">W</span>
+                            <span
+                                class="flex h-6 w-6 items-center justify-center rounded-full bg-[#25D366] text-white text-xs font-bold shrink-0"
+                                >W</span
+                            >
                             {{ t('canais.conectar_whatsapp') }}
                         </button>
 
@@ -275,7 +289,10 @@ function canReconnect(channel) {
                             class="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-foreground transition hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
                             @click="openEvolutionModal"
                         >
-                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#075E54] text-white text-xs font-bold shrink-0">W</span>
+                            <span
+                                class="flex h-6 w-6 items-center justify-center rounded-full bg-[#075E54] text-white text-xs font-bold shrink-0"
+                                >W</span
+                            >
                             {{ t('canais.conectar_whatsapp_nao_oficial') }}
                         </button>
 
@@ -284,9 +301,17 @@ function canReconnect(channel) {
                             type="button"
                             role="menuitem"
                             class="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-foreground transition hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
-                            @click="() => { closeConectarDropdown(); router.push({ name: 'canais.conectar_instagram' }); }"
+                            @click="
+                                () => {
+                                    closeConectarDropdown();
+                                    router.push({ name: 'canais.conectar_instagram' });
+                                }
+                            "
                         >
-                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white text-xs font-bold shrink-0">IG</span>
+                            <span
+                                class="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white text-xs font-bold shrink-0"
+                                >IG</span
+                            >
                             {{ t('canais.conectar_instagram_titulo') }}
                         </button>
 
@@ -297,9 +322,14 @@ function canReconnect(channel) {
                             class="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm text-foreground-muted cursor-not-allowed rounded-b-lg"
                             :title="t('canais.em_breve')"
                         >
-                            <span class="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-surface text-foreground-muted text-xs font-bold shrink-0">W</span>
+                            <span
+                                class="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-surface text-foreground-muted text-xs font-bold shrink-0"
+                                >W</span
+                            >
                             {{ t('canais.conectar_widget') }}
-                            <span class="ml-auto rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-medium text-foreground-subtle border border-border">
+                            <span
+                                class="ml-auto rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-medium text-foreground-subtle border border-border"
+                            >
                                 {{ t('canais.em_breve') }}
                             </span>
                         </div>
@@ -310,7 +340,7 @@ function canReconnect(channel) {
             <!-- ── Loading — Skeleton de 3 cards ─────────────────────────────── -->
             <div
                 v-if="canaisStore.loading && canaisStore.channels.length === 0"
-                class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
                 aria-busy="true"
                 aria-live="polite"
             >
@@ -354,14 +384,31 @@ function canReconnect(channel) {
                 class="flex flex-col items-center justify-center gap-5 py-24 text-center"
             >
                 <!-- Ilustração placeholder -->
-                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-surface-elevated border border-border">
-                    <svg class="h-10 w-10 text-foreground-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                <div
+                    class="flex h-20 w-20 items-center justify-center rounded-full bg-surface-elevated border border-border"
+                >
+                    <svg
+                        class="h-10 w-10 text-foreground-muted"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        aria-hidden="true"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
+                        />
                     </svg>
                 </div>
                 <div>
-                    <p class="text-base font-semibold text-foreground">{{ t('canais.empty_state.titulo') }}</p>
-                    <p class="mt-1 text-sm text-foreground-muted">{{ t('canais.empty_state.descricao') }}</p>
+                    <p class="text-base font-semibold text-foreground">
+                        {{ t('canais.empty_state.titulo') }}
+                    </p>
+                    <p class="mt-1 text-sm text-foreground-muted">
+                        {{ t('canais.empty_state.descricao') }}
+                    </p>
                 </div>
                 <button
                     v-if="canConnect"
@@ -376,7 +423,7 @@ function canReconnect(channel) {
             <!-- ── Lista de cards ──────────────────────────────────────────────── -->
             <div
                 v-else
-                class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
                 aria-label="t('canais.titulo')"
             >
                 <article
@@ -384,18 +431,26 @@ function canReconnect(channel) {
                     :key="channel.id"
                     class="relative rounded-xl border border-border bg-surface-elevated p-5 shadow-[var(--shadow-card)] transition hover:border-primary-300"
                 >
-                    <div class="flex items-start gap-4">
+                    <!-- pr-8 reserva espaço para o botão de ações (absolute top-right), evitando sobreposição ao badge de status -->
+                    <div class="flex items-start gap-4 pr-8">
                         <!-- Avatar / Ícone do tipo -->
                         <div
                             class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold"
-                            :class="[channelIconBgClass(channel.type), channelIconTextClass(channel.type)]"
+                            :class="[
+                                channelIconBgClass(channel.type),
+                                channelIconTextClass(channel.type),
+                            ]"
                             aria-hidden="true"
                         >
                             <template v-if="channel.type === 'whatsapp'">W</template>
                             <template v-else-if="channel.type === 'instagram'">I</template>
                             <template v-else>
                                 <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd" />
+                                    <path
+                                        fill-rule="evenodd"
+                                        d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z"
+                                        clip-rule="evenodd"
+                                    />
                                 </svg>
                             </template>
                         </div>
@@ -415,24 +470,20 @@ function canReconnect(channel) {
                     </div>
 
                     <!-- Quality Rating (apenas WhatsApp) -->
-                    <div
-                        v-if="channel.type === 'whatsapp' && channel.quality_rating"
-                        class="mt-3"
-                    >
+                    <div v-if="channel.type === 'whatsapp' && channel.quality_rating" class="mt-3">
                         <span
                             class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
                             :class="qualityRatingClass(channel.quality_rating)"
                         >
-                            <span class="font-semibold">{{ t('canais.quality_rating.label') }}:</span>
+                            <span class="font-semibold"
+                                >{{ t('canais.quality_rating.label') }}:</span
+                            >
                             {{ qualityRatingLabel(channel.quality_rating) }}
                         </span>
                     </div>
 
                     <!-- Dropdown de ações (3 pontos) -->
-                    <div
-                        class="absolute right-3 top-3"
-                        @click.stop
-                    >
+                    <div class="absolute right-3 top-3" @click.stop>
                         <button
                             type="button"
                             :aria-label="`Ações para ${channel.name}`"
@@ -441,8 +492,15 @@ function canReconnect(channel) {
                             class="rounded-lg p-1.5 text-foreground-muted transition hover:bg-surface hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
                             @click="toggleActionDropdown(channel.id)"
                         >
-                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path d="M10 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM10 8.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM11.5 15.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z" />
+                            <svg
+                                class="h-4 w-4"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M10 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM10 8.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM11.5 15.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z"
+                                />
                             </svg>
                         </button>
 
@@ -456,7 +514,15 @@ function canReconnect(channel) {
                                 type="button"
                                 role="menuitem"
                                 class="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 rounded-t-lg"
-                                @click="() => { closeAllDropdowns(); router.push({ name: 'canais.show', params: { id: channel.id } }); }"
+                                @click="
+                                    () => {
+                                        closeAllDropdowns();
+                                        router.push({
+                                            name: 'canais.show',
+                                            params: { id: channel.id },
+                                        });
+                                    }
+                                "
                             >
                                 {{ t('canais.actions.ver_detalhes') }}
                             </button>
@@ -489,7 +555,12 @@ function canReconnect(channel) {
                                 type="button"
                                 role="menuitem"
                                 class="flex w-full items-center gap-2 px-3 py-2 text-sm text-danger-600 transition hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 rounded-b-lg"
-                                @click="() => { closeAllDropdowns(); openDisconnectModal(channel); }"
+                                @click="
+                                    () => {
+                                        closeAllDropdowns();
+                                        openDisconnectModal(channel);
+                                    }
+                                "
                             >
                                 {{ t('canais.actions.desconectar') }}
                             </button>
@@ -509,10 +580,7 @@ function canReconnect(channel) {
             <p class="text-sm text-foreground-muted">
                 {{ t('canais.disconnect_confirm.descricao') }}
             </p>
-            <p
-                v-if="disconnectModal.channelName"
-                class="mt-1 text-sm font-medium text-foreground"
-            >
+            <p v-if="disconnectModal.channelName" class="mt-1 text-sm font-medium text-foreground">
                 {{ disconnectModal.channelName }}
             </p>
             <div
@@ -530,9 +598,12 @@ function canReconnect(channel) {
                     class="rounded-lg bg-danger-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-danger-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
                     @click="confirmDisconnect"
                 >
-                    {{ disconnectModal.loading
-                        ? t('common.loading')
-                        : (disconnectModal.force ? 'Forçar desconexão' : t('canais.actions.desconectar'))
+                    {{
+                        disconnectModal.loading
+                            ? t('common.loading')
+                            : disconnectModal.force
+                              ? 'Forçar desconexão'
+                              : t('canais.actions.desconectar')
                     }}
                 </button>
             </template>

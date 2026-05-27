@@ -489,13 +489,13 @@ onUnmounted(() => {
 
     <!-- Error state -->
     <div v-else-if="error" class="rounded-lg border border-danger-500/30 bg-danger-50 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-danger-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-danger-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <p class="text-sm text-danger-500 flex-1">{{ error }}</p>
+      <p class="text-sm text-danger-600 flex-1">{{ error }}</p>
       <button
         type="button"
-        class="shrink-0 rounded-lg border border-danger-500 px-3 py-1.5 text-sm font-medium text-danger-500 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition"
+        class="shrink-0 rounded-lg border border-danger-500 px-3 py-1.5 text-sm font-medium text-danger-600 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition"
         @click="loadSchedule(professionalId)"
       >
         Tentar novamente
@@ -525,7 +525,7 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <p v-if="hasBlockErrors" role="alert" class="mb-3 text-sm text-danger-500 flex items-center gap-1.5">
+        <p v-if="hasBlockErrors" role="alert" class="mb-3 text-sm text-danger-600 flex items-center gap-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -562,7 +562,7 @@ onUnmounted(() => {
               <div class="flex items-center gap-2">
                 <span
                   v-if="blockErrors[`day_${day.id}`]"
-                  class="text-xs text-danger-500 font-medium"
+                  class="text-xs text-danger-600 font-medium"
                   aria-hidden="true"
                 >Erro</span>
                 <svg
@@ -589,7 +589,7 @@ onUnmounted(() => {
               <p
                 v-if="blockErrors[`day_${day.id}`]"
                 role="alert"
-                class="text-xs text-danger-500 flex items-center gap-1.5"
+                class="text-xs text-danger-600 flex items-center gap-1.5"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -629,7 +629,7 @@ onUnmounted(() => {
                   </div>
                   <button
                     type="button"
-                    class="shrink-0 rounded-lg p-2 text-danger-500 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    class="shrink-0 rounded-lg p-2 text-danger-600 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition min-h-[44px] min-w-[44px] flex items-center justify-center"
                     :aria-label="`Remover bloco ${idx + 1} de ${day.label}`"
                     @click="removeBlock(day.id, idx)"
                   >
@@ -722,7 +722,7 @@ onUnmounted(() => {
 
             <button
               type="button"
-              class="shrink-0 rounded-lg p-1.5 text-danger-500 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition min-h-[36px] min-w-[36px] flex items-center justify-center"
+              class="shrink-0 rounded-lg p-1.5 text-danger-600 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition min-h-[36px] min-w-[36px] flex items-center justify-center"
               :aria-label="`Remover bloqueio: ${formatExceptionLabel(ex)}`"
               @click="openDeleteException(ex)"
             >

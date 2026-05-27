@@ -20,7 +20,7 @@ const isOther = computed(() => props.modelValue === 'OUTRO');
 <template>
     <div class="space-y-2">
         <label for="prof-council-type" class="block text-sm font-medium text-foreground">
-            {{ t('professionals.form.council_type_label') }} <span class="text-danger-500">*</span>
+            {{ t('professionals.form.council_type_label') }} <span class="text-danger-600">*</span>
         </label>
         <select
             id="prof-council-type"
@@ -34,11 +34,11 @@ const isOther = computed(() => props.modelValue === 'OUTRO');
                 {{ t(`professionals.council_types.${type}`) }}
             </option>
         </select>
-        <p v-if="error" class="text-xs text-danger-500">{{ error }}</p>
+        <p v-if="error" class="text-xs text-danger-600">{{ error }}</p>
 
         <div v-if="isOther" class="space-y-1">
             <label for="prof-council-type-other" class="block text-xs font-medium text-foreground-muted">
-                {{ t('professionals.form.council_type_other_label') }} <span class="text-danger-500">*</span>
+                {{ t('professionals.form.council_type_other_label') }} <span class="text-danger-600">*</span>
             </label>
             <input
                 id="prof-council-type-other"
@@ -50,7 +50,7 @@ const isOther = computed(() => props.modelValue === 'OUTRO');
                 :class="{ 'border-danger-500': errorOther }"
                 maxlength="50"
             />
-            <p v-if="errorOther" class="text-xs text-danger-500">{{ errorOther }}</p>
+            <p v-if="errorOther" class="text-xs text-danger-600">{{ errorOther }}</p>
         </div>
     </div>
 </template>

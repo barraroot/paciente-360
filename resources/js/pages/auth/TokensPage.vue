@@ -149,7 +149,7 @@ function expiresAt(isoDate) {
             </h1>
             <button
                 type="button"
-                class="rounded-lg border border-danger-500 px-4 py-2 text-sm font-medium text-danger-500 transition hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 disabled:opacity-50"
+                class="rounded-lg border border-danger-500 px-4 py-2 text-sm font-medium text-danger-600 transition hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 disabled:opacity-50"
                 :disabled="loading"
                 @click="requestLogoutAll"
             >
@@ -162,7 +162,7 @@ function expiresAt(isoDate) {
             v-if="loadError"
             role="alert"
             aria-live="assertive"
-            class="mb-4 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500"
+            class="mb-4 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-600"
         >
             {{ loadError }}
         </div>

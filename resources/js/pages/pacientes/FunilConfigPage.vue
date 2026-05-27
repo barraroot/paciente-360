@@ -41,8 +41,7 @@ async function salvarColuna(coluna) {
             mensagemSucesso.value = '';
         }, 3000);
     } catch (e) {
-        erros.value[coluna.id] =
-            e?.response?.data?.message ?? 'Erro ao salvar. Tente novamente.';
+        erros.value[coluna.id] = e?.response?.data?.message ?? 'Erro ao salvar. Tente novamente.';
     } finally {
         salvando.value[coluna.id] = false;
     }
@@ -63,8 +62,8 @@ async function onReorder() {
     // Salva as novas posições em paralelo
     await Promise.allSettled(
         atualizacoes.map((col) =>
-            api.patch(`/funil/colunas/${col.id}`, { posicao: col.posicao }).catch(() => null)
-        )
+            api.patch(`/funil/colunas/${col.id}`, { posicao: col.posicao }).catch(() => null),
+        ),
     );
 }
 </script>
@@ -75,28 +74,20 @@ async function onReorder() {
             <h1 class="text-2xl font-bold text-foreground">
                 {{ t('funil.config_title') }}
             </h1>
-            <a
-                href="/panel/pacientes/funil"
-                class="text-sm text-primary-600 hover:underline"
-            >
+            <a href="/panel/pacientes/funil" class="text-sm text-primary-600 hover:underline">
                 ← Voltar ao Kanban
             </a>
         </div>
 
         <p
             v-if="mensagemSucesso"
-            class="mb-4 rounded-lg bg-green-50 border border-green-200 px-4 py-2 text-green-700 text-sm"
+            class="mb-4 rounded-lg bg-success-50 border border-success-200 px-4 py-2 text-success-700 text-sm"
             role="status"
         >
             {{ mensagemSucesso }}
         </p>
 
-        <div
-            v-if="loading"
-            class="py-10 text-center text-foreground-muted"
-        >
-            Carregando…
-        </div>
+        <div v-if="loading" class="py-10 text-center text-foreground-muted">Carregando…</div>
 
         <div v-else>
             <p class="text-sm text-foreground-muted mb-4">
@@ -143,12 +134,16 @@ async function onReorder() {
                         />
 
                         <!-- Slug (read-only) -->
-                        <span class="text-xs text-foreground-muted font-mono px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded">
+                        <span
+                            class="text-xs text-foreground-muted font-mono px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded"
+                        >
                             {{ coluna.slug }}
                         </span>
 
                         <!-- Motivo obrigatório -->
-                        <label class="flex items-center gap-2 text-sm text-foreground whitespace-nowrap">
+                        <label
+                            class="flex items-center gap-2 text-sm text-foreground whitespace-nowrap"
+                        >
                             <input
                                 v-model="coluna.motivo_obrigatorio"
                                 type="checkbox"
@@ -170,7 +165,7 @@ async function onReorder() {
 
                     <p
                         v-if="erros[coluna.id]"
-                        class="text-red-600 text-xs mt-1 ml-16"
+                        class="text-danger-600 text-xs mt-1 ml-16"
                         role="alert"
                     >
                         {{ erros[coluna.id] }}

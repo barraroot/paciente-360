@@ -132,6 +132,16 @@ Broadcast::channel('tenant.{tenantId}.conversa.{conversationId}', function (User
         return false;
     }
 
+    // Spatie team mode: garante o team_id setado. O /broadcasting/auth roda só com
+    // auth:sanctum + tenant.slug (sem ResolveTenant), então can()/hasRole() ficariam
+    // sem contexto de team e negariam tudo. Mesmo fallback do canal .inbox acima.
+    $teamId = app(PermissionRegistrar::class)->getPermissionsTeamId();
+
+    if ($teamId !== $user->tenant_id) {
+        app(PermissionRegistrar::class)->setPermissionsTeamId($user->tenant_id);
+        $user->unsetRelation('roles')->unsetRelation('permissions');
+    }
+
     // (b) Ability inbox.view
     if (! $user->can('inbox.view')) {
         return false;

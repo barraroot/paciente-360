@@ -254,7 +254,7 @@ const STATUS_CONFIG = {
     },
     canceled: {
         label: 'Cancelado',
-        classes: 'bg-danger-50 text-danger-500 border-danger-500',
+        classes: 'bg-danger-50 text-danger-600 border-danger-500',
         icon: 'ban',
     },
 }
@@ -395,14 +395,14 @@ function fmtDate(iso) {
             >
                 <div class="flex items-start gap-3">
                     <!-- Heroicon: exclamation-circle -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-danger-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-danger-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p class="text-sm text-danger-500">{{ error }}</p>
+                    <p class="text-sm text-danger-600">{{ error }}</p>
                 </div>
                 <button
                     type="button"
-                    class="shrink-0 rounded-lg border border-danger-500 px-3 py-1.5 text-xs font-medium text-danger-500 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition"
+                    class="shrink-0 rounded-lg border border-danger-500 px-3 py-1.5 text-xs font-medium text-danger-600 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition"
                     @click="load"
                 >
                     Tentar novamente
@@ -506,7 +506,7 @@ function fmtDate(iso) {
                                 <button
                                     v-if="['waiting', 'notified'].includes(e.status)"
                                     type="button"
-                                    class="rounded-md px-2 py-1 text-xs font-medium text-danger-500 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition min-h-[2rem]"
+                                    class="rounded-md px-2 py-1 text-xs font-medium text-danger-600 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition min-h-[2rem]"
                                     :aria-label="`Remover ${e.paciente_nome ?? 'paciente'} da lista de espera`"
                                     @click="openCancelModal(e)"
                                 >
@@ -571,7 +571,7 @@ function fmtDate(iso) {
                     <div v-if="['waiting', 'notified'].includes(e.status)" class="mt-3 flex justify-end">
                         <button
                             type="button"
-                            class="rounded-lg border border-danger-500 px-3 py-2 text-xs font-medium text-danger-500 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition min-h-[2.75rem]"
+                            class="rounded-lg border border-danger-500 px-3 py-2 text-xs font-medium text-danger-600 hover:bg-danger-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500 transition min-h-[2.75rem]"
                             :aria-label="`Remover ${e.paciente_nome ?? 'paciente'} da lista de espera`"
                             @click="openCancelModal(e)"
                         >
@@ -618,13 +618,13 @@ function fmtDate(iso) {
                         <!-- Paciente -->
                         <div>
                             <label class="block text-sm font-medium text-foreground mb-1" for="enroll-paciente">
-                                Paciente <span class="text-danger-500" aria-hidden="true">*</span>
+                                Paciente <span class="text-danger-600" aria-hidden="true">*</span>
                             </label>
                             <p v-if="enrollForm.paciente_label" class="mb-1 text-sm font-semibold text-primary-700">
                                 {{ enrollForm.paciente_label }}
                             </p>
                             <PatientAutocomplete id="enroll-paciente" @select="selectEnrollPatient" />
-                            <p v-if="enrollErrors.paciente_id" role="alert" class="mt-1 text-xs text-danger-500">
+                            <p v-if="enrollErrors.paciente_id" role="alert" class="mt-1 text-xs text-danger-600">
                                 {{ enrollErrors.paciente_id[0] }}
                             </p>
                         </div>
@@ -632,7 +632,7 @@ function fmtDate(iso) {
                         <!-- Profissional -->
                         <div>
                             <label for="enroll-professional" class="block text-sm font-medium text-foreground mb-1">
-                                Profissional <span class="text-danger-500" aria-hidden="true">*</span>
+                                Profissional <span class="text-danger-600" aria-hidden="true">*</span>
                             </label>
                             <select
                                 id="enroll-professional"
@@ -643,7 +643,7 @@ function fmtDate(iso) {
                                 <option :value="null" disabled>Selecione um profissional</option>
                                 <option v-for="p in professionals" :key="p.id" :value="p.id">{{ p.name }}</option>
                             </select>
-                            <p v-if="enrollErrors.professional_id" role="alert" class="mt-1 text-xs text-danger-500">
+                            <p v-if="enrollErrors.professional_id" role="alert" class="mt-1 text-xs text-danger-600">
                                 {{ enrollErrors.professional_id[0] }}
                             </p>
                         </div>
@@ -651,7 +651,7 @@ function fmtDate(iso) {
                         <!-- Tipo de atendimento -->
                         <div>
                             <label for="enroll-type" class="block text-sm font-medium text-foreground mb-1">
-                                Tipo de atendimento <span class="text-danger-500" aria-hidden="true">*</span>
+                                Tipo de atendimento <span class="text-danger-600" aria-hidden="true">*</span>
                             </label>
                             <select
                                 id="enroll-type"
@@ -662,7 +662,7 @@ function fmtDate(iso) {
                                 <option :value="null" disabled>Selecione o tipo</option>
                                 <option v-for="t in appointmentTypes" :key="t.id" :value="t.id">{{ t.nome }}</option>
                             </select>
-                            <p v-if="enrollErrors.appointment_type_id" role="alert" class="mt-1 text-xs text-danger-500">
+                            <p v-if="enrollErrors.appointment_type_id" role="alert" class="mt-1 text-xs text-danger-600">
                                 {{ enrollErrors.appointment_type_id[0] }}
                             </p>
                         </div>

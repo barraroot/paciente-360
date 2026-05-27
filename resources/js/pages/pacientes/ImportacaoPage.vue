@@ -78,13 +78,14 @@ async function submit() {
 <template>
     <main class="min-h-screen bg-surface py-8 px-4">
         <div class="mx-auto max-w-2xl">
-
             <h1 class="mb-6 text-2xl font-bold text-foreground">
                 {{ t('import.title') }}
             </h1>
 
             <!-- ── Baixar template ─────────────────────────────────────────── -->
-            <section class="mb-8 rounded-xl border border-border bg-surface-elevated p-6 shadow-[var(--shadow-card)]">
+            <section
+                class="mb-8 rounded-xl border border-border bg-surface-elevated p-6 shadow-[var(--shadow-card)]"
+            >
                 <h2 class="mb-2 text-base font-semibold text-foreground">
                     {{ t('import.template_title') }}
                 </h2>
@@ -110,13 +111,14 @@ async function submit() {
             </section>
 
             <!-- ── Formulário de upload ────────────────────────────────────── -->
-            <section class="rounded-xl border border-border bg-surface-elevated p-6 shadow-[var(--shadow-card)]">
+            <section
+                class="rounded-xl border border-border bg-surface-elevated p-6 shadow-[var(--shadow-card)]"
+            >
                 <h2 class="mb-4 text-base font-semibold text-foreground">
                     {{ t('import.upload_title') }}
                 </h2>
 
                 <form @submit.prevent="submit" novalidate>
-
                     <!-- Arquivo -->
                     <div class="mb-4">
                         <label class="mb-1 block text-sm font-medium text-foreground">
@@ -126,6 +128,7 @@ async function submit() {
                             ref="fileInput"
                             type="file"
                             accept=".csv,.xlsx,.xls"
+                            :aria-label="t('import.field_arquivo')"
                             class="block w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground file:mr-4 file:rounded file:border-0 file:bg-primary-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
                             :class="{ 'border-danger-500': errors.arquivo }"
                             @change="onFileChange"
@@ -145,7 +148,9 @@ async function submit() {
                                 {{ t('import.field_status_inicial') }}
                             </legend>
                             <div class="flex gap-6">
-                                <label class="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                                <label
+                                    class="flex items-center gap-2 text-sm text-foreground cursor-pointer"
+                                >
                                     <input
                                         type="radio"
                                         name="status_inicial"
@@ -155,7 +160,9 @@ async function submit() {
                                     />
                                     {{ t('paciente.status.lead') }}
                                 </label>
-                                <label class="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                                <label
+                                    class="flex items-center gap-2 text-sm text-foreground cursor-pointer"
+                                >
                                     <input
                                         type="radio"
                                         name="status_inicial"
@@ -166,7 +173,11 @@ async function submit() {
                                     {{ t('paciente.status.ativo') }}
                                 </label>
                             </div>
-                            <p v-if="errors.status_inicial" role="alert" class="mt-1 text-xs text-danger-600">
+                            <p
+                                v-if="errors.status_inicial"
+                                role="alert"
+                                class="mt-1 text-xs text-danger-600"
+                            >
                                 {{ errors.status_inicial }}
                             </p>
                         </fieldset>

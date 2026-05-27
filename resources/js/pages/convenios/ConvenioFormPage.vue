@@ -104,7 +104,7 @@ onMounted(() => carregarConvenio());
                 <!-- Nome -->
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-foreground">
-                        Nome <span class="text-danger-500">*</span>
+                        Nome <span class="text-danger-600">*</span>
                     </label>
                     <input
                         v-model="form.nome"

@@ -333,7 +333,7 @@ function showToast(message, type = 'success') {
                 v-else-if="error"
                 role="alert"
                 aria-live="assertive"
-                class="rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500"
+                class="rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-600"
             >
                 {{ error }}
             </div>

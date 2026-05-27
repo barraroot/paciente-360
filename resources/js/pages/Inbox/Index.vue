@@ -98,26 +98,28 @@ async function loadConversations() {
 
 const tenantId = computed(() => auth.currentTenantId);
 
-function handleInboxEvent(event) {
-    const { type, payload } = event;
+const INBOX_REFRESH_EVENTS = [
+    'mensagem.recebida',
+    'mensagem.enviada',
+    'conversa.criada',
+    'conversa.atribuida',
+];
 
-    if (type === 'MensagemRecebidaParaInbox' || type === 'MensagemEnviadaParaInbox') {
-        if (payload?.message) {
-            store.applyIncomingMessage(payload.message);
-        }
-    } else if (type === 'ConversaCriadaParaInbox' || type === 'ConversaAtribuidaParaInbox') {
-        if (payload?.conversation) {
-            store.applyConversationUpdate(payload.conversation);
-        }
+function handleInboxEvent(event) {
+    // Sinal apenas: qualquer evento de inbox recarrega a lista (debounced) para
+    // refletir preview, não-lidas e ordem. O corpo cifrado nunca trafega pelo WS.
+    if (INBOX_REFRESH_EVENTS.includes(event.type)) {
+        loadConversations();
     }
 }
 
 function handleConversationEvent(cid, event) {
     const { type, payload } = event;
 
-    if (type === 'MensagemRecebida') {
-        if (payload?.message) {
-            store.applyIncomingMessage(payload.message);
+    if (type === 'mensagem.recebida' || type === 'mensagem.enviada') {
+        // Sinal: refetch das mensagens da conversa aberta (traz o corpo via API autenticada).
+        if (String(cid) === String(selectedId.value)) {
+            store.loadMessages(cid);
         }
     } else if (type === 'StatusMensagemAtualizado' && payload?.message_id) {
         // Atualiza status da mensagem na lista local
@@ -209,7 +211,7 @@ const isEmpty = computed(() => !isLoading.value && conversations.value.length ==
 </script>
 
 <template>
-    <div class="flex h-screen flex-col bg-surface text-foreground">
+    <div class="flex h-full flex-col bg-surface text-foreground">
         <!-- ── Banner long-polling ─────────────────────────────────────────── -->
         <div
             v-if="polling && banner"
@@ -276,8 +278,9 @@ const isEmpty = computed(() => !isLoading.value && conversations.value.length ==
         <div class="flex flex-1 overflow-hidden">
 
             <!-- ── Pane 1: Filtros (apenas desktop) ───────────────────────── -->
+            <!-- Sem v-if: a visibilidade é só responsiva (hidden md:flex). No desktop
+                 permanece sempre visível; no mobile nunca aparece. -->
             <InboxFilters
-                v-if="!showDetailOnMobile"
                 :filters="filters"
                 :aggregations="aggregations"
                 :filters-active="filtersActive"
@@ -288,11 +291,12 @@ const isEmpty = computed(() => !isLoading.value && conversations.value.length ==
             />
 
             <!-- ── Pane 2: Lista de conversas ──────────────────────────────── -->
+            <!-- Sem v-if: no desktop (md+) a lista fica SEMPRE visível mesmo com uma
+                 conversa aberta; só no mobile ela é ocultada quando o detalhe assume. -->
             <div
-                v-if="!showDetailOnMobile || selectedId === null"
                 class="flex flex-col border-r border-border"
                 :class="[
-                    showDetailOnMobile ? 'hidden' : 'flex',
+                    showDetailOnMobile ? 'hidden md:flex' : 'flex',
                     'md:flex w-full md:w-80 lg:w-96 shrink-0',
                 ]"
             >
@@ -381,7 +385,7 @@ const isEmpty = computed(() => !isLoading.value && conversations.value.length ==
 
             <!-- ── Pane 3: Detalhe da conversa ────────────────────────────── -->
             <div
-                class="flex-1 overflow-hidden"
+                class="flex-1 overflow-hidden min-w-0"
                 :class="[
                     showDetailOnMobile && selectedConversation ? 'flex' : 'hidden md:flex',
                 ]"

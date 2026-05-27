@@ -453,7 +453,7 @@ const timelineEvents = computed(() => {
               aria-label="Observações da receita"
               autofocus
             />
-            <p v-if="notesError" role="alert" class="text-xs text-danger-500">{{ notesError }}</p>
+            <p v-if="notesError" role="alert" class="text-xs text-danger-600">{{ notesError }}</p>
             <div class="flex justify-end gap-2">
               <button
                 type="button"

@@ -252,7 +252,7 @@ const DURATION_PRESETS = [30, 60, 90, 180]
         <!-- Paciente -->
         <div class="rounded-xl border border-border bg-surface p-4 space-y-2">
           <label for="form-patient" class="block text-sm font-medium text-foreground">
-            Paciente <span class="text-danger-500" aria-hidden="true">*</span>
+            Paciente <span class="text-danger-600" aria-hidden="true">*</span>
           </label>
           <div class="relative">
             <input
@@ -286,7 +286,7 @@ const DURATION_PRESETS = [30, 60, 90, 180]
             </ul>
           </div>
           <p v-if="form.patient_id" class="text-xs text-success-700">Paciente selecionado: <strong>{{ form.patient_label }}</strong></p>
-          <p v-if="fieldErrors.patient_id" role="alert" class="text-xs text-danger-500">
+          <p v-if="fieldErrors.patient_id" role="alert" class="text-xs text-danger-600">
             {{ fieldErrors.patient_id[0] }}
           </p>
         </div>
@@ -294,9 +294,9 @@ const DURATION_PRESETS = [30, 60, 90, 180]
         <!-- Tipo de receita -->
         <div class="rounded-xl border border-border bg-surface p-4 space-y-3">
           <p class="text-sm font-medium text-foreground">
-            Tipo de receita <span class="text-danger-500" aria-hidden="true">*</span>
+            Tipo de receita <span class="text-danger-600" aria-hidden="true">*</span>
           </p>
-          <p v-if="fieldErrors.type" role="alert" class="text-xs text-danger-500">
+          <p v-if="fieldErrors.type" role="alert" class="text-xs text-danger-600">
             {{ fieldErrors.type[0] }}
           </p>
           <div class="space-y-2" role="radiogroup" aria-label="Tipo de receita">
@@ -328,7 +328,7 @@ const DURATION_PRESETS = [30, 60, 90, 180]
         <!-- Data de emissão -->
         <div class="rounded-xl border border-border bg-surface p-4 space-y-2">
           <label for="form-issued-at" class="block text-sm font-medium text-foreground">
-            Data de emissão <span class="text-danger-500" aria-hidden="true">*</span>
+            Data de emissão <span class="text-danger-600" aria-hidden="true">*</span>
           </label>
           <input
             id="form-issued-at"
@@ -339,7 +339,7 @@ const DURATION_PRESETS = [30, 60, 90, 180]
             class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
             :class="{ 'border-danger-500': fieldErrors.issued_at }"
           />
-          <p v-if="fieldErrors.issued_at" role="alert" class="text-xs text-danger-500">
+          <p v-if="fieldErrors.issued_at" role="alert" class="text-xs text-danger-600">
             {{ fieldErrors.issued_at[0] }}
           </p>
         </div>
@@ -415,7 +415,7 @@ const DURATION_PRESETS = [30, 60, 90, 180]
             :type="form.type"
             :errors="fieldErrors"
           />
-          <p v-if="fieldErrors.items" role="alert" class="mt-2 text-xs text-danger-500">
+          <p v-if="fieldErrors.items" role="alert" class="mt-2 text-xs text-danger-600">
             {{ fieldErrors.items[0] }}
           </p>
         </div>

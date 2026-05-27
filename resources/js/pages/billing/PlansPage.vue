@@ -121,7 +121,7 @@ async function submitCheckout(plan) {
                 v-else-if="error"
                 role="alert"
                 aria-live="assertive"
-                class="rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500"
+                class="rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-600"
             >
                 {{ error }}
             </div>
@@ -192,7 +192,7 @@ async function submitCheckout(plan) {
                                 v-if="checkoutPanels[plan.id].error"
                                 role="alert"
                                 aria-live="assertive"
-                                class="mb-3 rounded-lg border border-danger-500 bg-danger-50 px-3 py-2 text-sm text-danger-500"
+                                class="mb-3 rounded-lg border border-danger-500 bg-danger-50 px-3 py-2 text-sm text-danger-600"
                             >
                                 {{ checkoutPanels[plan.id].error }}
                                 <span v-if="checkoutPanels[plan.id].error === t('billing.checkout.already_subscribed')">

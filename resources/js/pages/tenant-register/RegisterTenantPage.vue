@@ -215,7 +215,7 @@ async function onSubmit() {
                     v-if="error"
                     role="alert"
                     aria-live="assertive"
-                    class="mb-4 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500"
+                    class="mb-4 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-600"
                 >
                     {{ error }}
                 </div>
@@ -228,7 +228,7 @@ async function onSubmit() {
                             class="mb-1.5 block text-sm font-medium text-foreground"
                         >
                             {{ t('tenant.register.name') }}
-                            <span class="text-danger-500" aria-hidden="true">*</span>
+                            <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
                         <input
                             id="clinic_name"
@@ -247,7 +247,7 @@ async function onSubmit() {
                             v-if="fieldError('clinic_name')"
                             id="clinic_name-error"
                             role="alert"
-                            class="mt-1 text-xs text-danger-500"
+                            class="mt-1 text-xs text-danger-600"
                         >
                             {{ fieldError('clinic_name') }}
                         </p>
@@ -260,7 +260,7 @@ async function onSubmit() {
                             class="mb-1.5 block text-sm font-medium text-foreground"
                         >
                             {{ t('tenant.register.cnpj') }}
-                            <span class="text-danger-500" aria-hidden="true">*</span>
+                            <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
                         <input
                             id="cnpj"
@@ -281,7 +281,7 @@ async function onSubmit() {
                             v-if="fieldError('cnpj')"
                             id="cnpj-error"
                             role="alert"
-                            class="mt-1 text-xs text-danger-500"
+                            class="mt-1 text-xs text-danger-600"
                         >
                             {{ fieldError('cnpj') }}
                         </p>
@@ -318,13 +318,13 @@ async function onSubmit() {
                             v-if="fieldError('slug')"
                             id="slug-error"
                             role="alert"
-                            class="mt-1 text-xs text-danger-500"
+                            class="mt-1 text-xs text-danger-600"
                         >
                             {{ fieldError('slug') }}
                         </p>
                         <p v-else id="slug-help" class="mt-1 text-xs text-foreground-muted">
                             <template v-if="form.slug && !slugValid">
-                                <span class="text-danger-500">Use apenas letras minúsculas, números e hífens. Deve começar com letra.</span>
+                                <span class="text-danger-600">Use apenas letras minúsculas, números e hífens. Deve começar com letra.</span>
                             </template>
                             <template v-else-if="previewSlug">
                                 {{ t('tenant.register.slug_help', { slug: previewSlug }) }}
@@ -342,7 +342,7 @@ async function onSubmit() {
                             class="mb-1.5 block text-sm font-medium text-foreground"
                         >
                             {{ t('tenant.register.responsible_name') }}
-                            <span class="text-danger-500" aria-hidden="true">*</span>
+                            <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
                         <input
                             id="responsible_name"
@@ -361,7 +361,7 @@ async function onSubmit() {
                             v-if="fieldError('responsible_name')"
                             id="responsible_name-error"
                             role="alert"
-                            class="mt-1 text-xs text-danger-500"
+                            class="mt-1 text-xs text-danger-600"
                         >
                             {{ fieldError('responsible_name') }}
                         </p>
@@ -374,7 +374,7 @@ async function onSubmit() {
                             class="mb-1.5 block text-sm font-medium text-foreground"
                         >
                             {{ t('tenant.register.responsible_email') }}
-                            <span class="text-danger-500" aria-hidden="true">*</span>
+                            <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
                         <input
                             id="responsible_email"
@@ -393,7 +393,7 @@ async function onSubmit() {
                             v-if="fieldError('responsible_email')"
                             id="responsible_email-error"
                             role="alert"
-                            class="mt-1 text-xs text-danger-500"
+                            class="mt-1 text-xs text-danger-600"
                         >
                             {{ fieldError('responsible_email') }}
                         </p>
@@ -406,7 +406,7 @@ async function onSubmit() {
                             class="mb-1.5 block text-sm font-medium text-foreground"
                         >
                             {{ t('tenant.register.responsible_phone') }}
-                            <span class="text-danger-500" aria-hidden="true">*</span>
+                            <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
                         <input
                             id="responsible_phone"
@@ -427,7 +427,7 @@ async function onSubmit() {
                             v-if="fieldError('responsible_phone')"
                             id="responsible_phone-error"
                             role="alert"
-                            class="mt-1 text-xs text-danger-500"
+                            class="mt-1 text-xs text-danger-600"
                         >
                             {{ fieldError('responsible_phone') }}
                         </p>
@@ -440,7 +440,7 @@ async function onSubmit() {
                             class="mb-1.5 block text-sm font-medium text-foreground"
                         >
                             {{ t('tenant.register.password_label') }}
-                            <span class="text-danger-500" aria-hidden="true">*</span>
+                            <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
                         <input
                             id="password"
@@ -467,7 +467,7 @@ async function onSubmit() {
                             ></span>
                             <span
                                 class="text-xs font-medium"
-                                :class="passwordStrong ? 'text-success-600' : 'text-danger-500'"
+                                :class="passwordStrong ? 'text-success-600' : 'text-danger-600'"
                             >
                                 {{
                                     passwordStrong
@@ -480,7 +480,7 @@ async function onSubmit() {
                             v-if="fieldError('password')"
                             id="password-error"
                             role="alert"
-                            class="mt-1 text-xs text-danger-500"
+                            class="mt-1 text-xs text-danger-600"
                         >
                             {{ fieldError('password') }}
                         </p>
@@ -528,7 +528,7 @@ async function onSubmit() {
                             v-if="!form.terms_accepted && validationErrors.terms_accepted"
                             id="terms-error"
                             role="alert"
-                            class="mt-1 text-xs text-danger-500"
+                            class="mt-1 text-xs text-danger-600"
                         >
                             {{ fieldError('terms_accepted') }}
                         </p>

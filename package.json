@@ -8,7 +8,9 @@
         "widget:build": "vite build --config resources/widget/vite.config.widget.js",
         "lint": "prettier --check \"resources/{js,css}/**/*.{js,ts,vue,css}\"",
         "format": "prettier --write \"resources/{js,css}/**/*.{js,ts,vue,css}\"",
-        "test:e2e": "playwright test --pass-with-no-tests"
+        "test:e2e": "playwright test --pass-with-no-tests",
+        "ux:gate": "bash tests/ux/gate.sh",
+        "ux:sweep": "UX_SWEEP=1 playwright test --config=playwright.ux.config.ts audit-sweep"
     },
     "dependencies": {
         "@fullcalendar/core": "^6.1.20",
@@ -27,6 +29,7 @@
         "vuedraggable": "^4.1.0"
     },
     "devDependencies": {
+        "@axe-core/playwright": "^4.11.3",
         "@playwright/test": "^1.49.1",
         "@tailwindcss/vite": "^4.0.0",
         "@vitejs/plugin-vue": "^6.0.0",

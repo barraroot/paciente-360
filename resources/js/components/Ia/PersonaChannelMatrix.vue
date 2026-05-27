@@ -21,27 +21,32 @@ function onToggle(row, channelKey, event) {
 </script>
 
 <template>
-    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr class="text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+    <div class="overflow-hidden rounded-lg border border-border bg-white">
+        <table class="min-w-full divide-y divide-border">
+            <thead class="bg-surface-muted">
+                <tr
+                    class="text-left text-xs font-medium uppercase tracking-wide text-foreground-muted"
+                >
                     <th class="px-4 py-3">Persona</th>
-                    <th v-for="c in channels" :key="c.key" class="px-4 py-3 text-center">{{ c.label }}</th>
+                    <th v-for="c in channels" :key="c.key" class="px-4 py-3 text-center">
+                        {{ c.label }}
+                    </th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
-                <tr v-for="row in rows" :key="row.ai_persona_id" class="text-sm text-gray-700">
+            <tbody class="divide-y divide-border">
+                <tr v-for="row in rows" :key="row.ai_persona_id" class="text-sm text-foreground">
                     <td class="px-4 py-3">
-                        <span class="font-medium text-gray-900">{{ row.name }}</span>
+                        <span class="font-medium text-foreground">{{ row.name }}</span>
                         <span
                             v-if="!row.is_active"
-                            class="ml-2 inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500"
-                        >inativa</span>
+                            class="ml-2 inline-flex rounded-full bg-surface-muted px-2 py-0.5 text-xs text-foreground-muted"
+                            >inativa</span
+                        >
                     </td>
                     <td v-for="c in channels" :key="c.key" class="px-4 py-3 text-center">
                         <input
                             type="checkbox"
-                            class="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                            class="h-4 w-4 rounded border-border-strong text-indigo-600"
                             :checked="row.channels[c.key]"
                             :aria-label="`${row.name} no canal ${c.label}`"
                             @change="onToggle(row, c.key, $event)"

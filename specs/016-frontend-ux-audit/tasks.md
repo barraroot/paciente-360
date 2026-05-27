@@ -12,7 +12,7 @@
 - [X] T001 [P] Criar `specs/016-frontend-ux-audit/audit-catalog.md` (schema de `data-model.md`: itens + inventário de telas) e `specs/016-frontend-ux-audit/component-standard.md` (esqueleto a preencher na T006)
 - [X] T002 [P] Criar varredor de chaves i18n cruas em `tests/ux/scan-i18n-keys.mjs` (compara chaves `t('...')` no código com `resources/js/i18n/pt-BR.json` e detecta render de chave crua) — cobre G14
 - [X] T003 Criar helpers de invariantes de geometria em `tests/ux/support/uiInvariants.js` (overflow horizontal G1, preenchimento `fillsRight/fillsBottom` G2, integridade de campo/botão G3, não-sobreposição G4, alvos de toque G6, modal cabe G7) reutilizáveis por tela/largura
-- [ ] T004 [P] Integrar axe-core ao harness em `tests/ux/support/a11y.js` (contraste G11, rótulos G12, roles) com runner por rota
+- [X] T004 [P] Integrar axe-core ao harness em `tests/ux/support/a11y.js` (contraste G11, rótulos G12, roles) com runner por rota
 - [X] T005 [P] Criar `tests/ux/scan-native-dialogs.mjs` (grep `confirm(`/`prompt(`/`alert(` — G13) e confirmar ESLint `no-unsanitized` ativo no CI (G16)
 
 ## Phase 2: Foundational — auditoria + referência (BLOCKING)

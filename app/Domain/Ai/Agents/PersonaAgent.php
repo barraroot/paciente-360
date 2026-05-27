@@ -8,7 +8,9 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
+use Laravel\Ai\Contracts\HasProviderOptions;
 use Laravel\Ai\Contracts\HasStructuredOutput;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Stringable;
@@ -21,7 +23,7 @@ use Stringable;
  * chamada `prompt()` a partir do AiModel da persona. A saída é ESTRUTURADA
  * para permitir o pós-processamento determinístico de segurança (Princípio III).
  */
-final class PersonaAgent implements Agent, Conversational, HasStructuredOutput
+final class PersonaAgent implements Agent, Conversational, HasProviderOptions, HasStructuredOutput
 {
     use Promptable;
 
@@ -46,6 +48,23 @@ final class PersonaAgent implements Agent, Conversational, HasStructuredOutput
     public function messages(): iterable
     {
         return $this->historyMessages;
+    }
+
+    /**
+     * Prompt caching do bloco estático no Anthropic (feature 017, US3) — corta
+     * tokens de entrada repetidos turno a turno.
+     *
+     * @return array<string, mixed>
+     */
+    public function providerOptions(Lab|string $provider): array
+    {
+        $name = $provider instanceof Lab ? $provider->value : (string) $provider;
+
+        if ((bool) config('ai.matricial.prompt_caching', true) && str_contains(strtolower($name), 'anthropic')) {
+            return ['cache_control' => ['type' => 'ephemeral']];
+        }
+
+        return [];
     }
 
     /**

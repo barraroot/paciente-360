@@ -10,6 +10,7 @@ use App\Domain\Ai\Assignment\Events\IAEscalouParaHumano;
 use App\Domain\Ai\Assignment\Events\RespostaIAEnviada;
 use App\Domain\Ai\Assignment\Models\AiConversationAssignment;
 use App\Domain\Ai\Assignment\Services\AiConversationAssignmentService;
+use App\Domain\Ai\Context\Services\ConversationSummarizerService;
 use App\Domain\Ai\Execution\Models\AiExecutionLog;
 use App\Domain\Ai\Persona\Events\PersonaAtribuidaAConversa;
 use App\Domain\Ai\Persona\Models\AiPersona;
@@ -35,6 +36,7 @@ final class AiMessageProcessor
         private readonly MessageDispatchService $dispatch,
         private readonly AiMetricsContract $metrics,
         private readonly OutboundNameInjector $nameInjector,
+        private readonly ConversationSummarizerService $summarizer,
     ) {}
 
     public function process(Conversation $conversation): void
@@ -72,6 +74,11 @@ final class AiMessageProcessor
         $patientMessage = (string) $inbound->body;
 
         $persona->loadMissing('model', 'guardrails');
+
+        // US3 — mantém o resumo rolante atualizado (só roda quando há turnos
+        // além da janela; reusa caso contrário). Nunca quebra a resposta.
+        $this->summarizer->maybeSummarize($conversation, $persona, $inbound->id);
+
         $context = $this->contextBuilder->build($persona, $patientMessage, $conversation, $inbound->id);
         $correlationId = (string) Str::uuid();
         $this->tagSentry($conversation->tenant_id, $correlationId);

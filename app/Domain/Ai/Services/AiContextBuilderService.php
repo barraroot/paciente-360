@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Ai\Services;
 
 use App\Domain\Ai\Context\Models\ConversationSummary;
+use App\Domain\Ai\Context\Services\AiContextBudget;
 use App\Domain\Ai\Context\Services\ConversationHistoryAssembler;
 use App\Domain\Ai\Persona\Models\AiPersona;
 use App\Domain\Ai\WorkContext\Services\AiWorkContextService;
@@ -27,6 +28,7 @@ final class AiContextBuilderService
         private readonly AiKnowledgeRetrievalService $retrieval,
         private readonly ConversationHistoryAssembler $history,
         private readonly AiWorkContextService $workContext,
+        private readonly AiContextBudget $budget,
     ) {}
 
     public function build(AiPersona $persona, string $patientMessage, ?Conversation $conversation = null, ?int $currentMessageId = null): AiContext
@@ -37,33 +39,43 @@ final class AiContextBuilderService
         $renderedWorkContext = $this->workContext->renderForPrompt($workContext);
         $workContextVersion = $workContext?->version;
 
-        $instructions = $this->enforcer->composeInstructions(
+        // Bloco FIXO (inegociável): guardrails + persona + work context + personalização.
+        $fixedInstructions = $this->enforcer->composeInstructions(
             $persona,
-            $ragSnippets,
+            [],
             $renderedWorkContext !== '' ? $renderedWorkContext : null,
         );
 
-        $historyMessages = [];
-        $summaryVersion = null;
+        $historyMessages = $conversation !== null
+            ? $this->history->assemble($conversation, $currentMessageId)
+            : [];
 
-        if ($conversation !== null) {
-            $historyMessages = $this->history->assemble($conversation, $currentMessageId);
+        $summaryModel = $conversation !== null ? $this->loadSummary($conversation) : null;
+        $summaryText = ($summaryModel !== null && filled($summaryModel->summary_text)) ? $summaryModel->summary_text : null;
 
-            $summary = $this->loadSummary($conversation);
-            if ($summary !== null && filled($summary->summary_text)) {
-                $instructions .= "\n\n# Resumo da conversa até aqui (use para manter o contexto, não repita perguntas já respondidas)\n\n".$summary->summary_text;
-                $summaryVersion = $summary->version;
-            }
+        $scrubbedPrompt = (string) PiiScrubber::scrub($patientMessage);
+
+        // Orçamento de tokens (FR-021/023): descarta RAG → resumo → janela antiga,
+        // nunca os guardrails nem a mensagem atual.
+        $ceiling = (int) config('ai.matricial.history.input_token_ceiling', 6000);
+        $fit = $this->budget->fit($ceiling, $fixedInstructions, $scrubbedPrompt, $ragSnippets, $summaryText, $historyMessages);
+
+        $instructions = $fixedInstructions;
+        if ($fit['ragSnippets'] !== []) {
+            $instructions .= "\n\n# Base de Conhecimento (use apenas o que for relevante)\n\n".implode("\n\n---\n\n", $fit['ragSnippets']);
         }
 
-        // Pseudonimiza PII do paciente antes de enviar ao LLM (CPF, telefone, etc.).
-        $scrubbedPrompt = (string) PiiScrubber::scrub($patientMessage);
+        $summaryVersion = null;
+        if ($fit['summary'] !== null) {
+            $instructions .= "\n\n# Resumo da conversa até aqui (use para manter o contexto, não repita perguntas já respondidas)\n\n".$fit['summary'];
+            $summaryVersion = $summaryModel?->version;
+        }
 
         return new AiContext(
             instructions: $instructions,
             prompt: $scrubbedPrompt,
-            ragSnippetIds: $ragSnippetIds,
-            historyMessages: $historyMessages,
+            ragSnippetIds: array_slice($ragSnippetIds, 0, count($fit['ragSnippets'])),
+            historyMessages: $fit['historyMessages'],
             summaryVersion: $summaryVersion,
             workContextVersion: $workContextVersion,
         );

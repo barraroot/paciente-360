@@ -113,17 +113,17 @@ description: "Task list — Humanização da Conversa da IA"
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T033 [P] [US3] Feature test `ConversationSummarizerTest` (gera resumo só quando há turnos além da janela; reusa quando não muda; lock evita corrida — FR-002b/022) em `tests/Feature/Ai/ConversationSummarizerTest.php`
-- [ ] T034 [P] [US3] Unit test `AiContextBudgetTest` (teto respeitado; ordem de shedding RAG→resumo; nunca remove guardrails nem mensagem atual — FR-021/023) em `tests/Unit/Ai/AiContextBudgetTest.php`
-- [ ] T035 [P] [US3] Feature test `HistoryPayloadBoundedTest` (40 msgs → payload de histórico limitado; tokens sub-lineares — SC-004/SC-010) em `tests/Feature/Ai/HistoryPayloadBoundedTest.php`
+- [X] T033 [P] [US3] Feature test `ConversationSummarizerTest` (gera resumo só quando há turnos além da janela; reusa quando não muda; lock evita corrida — FR-002b/022) em `tests/Feature/Ai/ConversationSummarizerTest.php`
+- [X] T034 [P] [US3] Unit test `AiContextBudgetTest` (teto respeitado; ordem de shedding RAG→resumo; nunca remove guardrails nem mensagem atual — FR-021/023) em `tests/Unit/Ai/AiContextBudgetTest.php`
+- [X] T035 [P] [US3] Feature test `HistoryPayloadBoundedTest` (40 msgs → payload de histórico limitado; tokens sub-lineares — SC-004/SC-010) em `tests/Feature/Ai/HistoryPayloadBoundedTest.php`
 
 ### Implementation for User Story 3
 
-- [ ] T036 [US3] `ConversationSummarizerService`: atualização incremental do resumo + `key_facts` + `funnel_stage`, modelo mais barato, lock Redis por conversa, atualiza `covered_up_to_message_id` em `app/Domain/Ai/Context/Services/ConversationSummarizerService.php`
-- [ ] T037 [US3] `AiContextBudget`: estima tokens (~4 chars/token) e faz shedding por prioridade preservando guardrails+mensagem atual em `app/Domain/Ai/Context/Services/AiContextBudget.php`
-- [ ] T038 [US3] Integrar budget no `AiContextBuilderService::build()` (aplica teto ao contexto montado) em `app/Domain/Ai/Services/AiContextBuilderService.php` (depende T037)
-- [ ] T039 [US3] Disparar o summarizer no `AiMessageProcessor` quando houver turnos além da janela (antes de montar o contexto) em `app/Domain/Ai/Services/AiMessageProcessor.php` (depende T036)
-- [ ] T040 [US3] `PersonaAgent implements HasProviderOptions`: `cache_control: ephemeral` (Anthropic) no bloco estático + aplicar `model_settings` (temperature/max_tokens) da persona em `app/Domain/Ai/Agents/PersonaAgent.php`
+- [X] T036 [US3] `ConversationSummarizerService`: atualização incremental do resumo + `key_facts` + `funnel_stage`, modelo mais barato, lock Redis por conversa, atualiza `covered_up_to_message_id` em `app/Domain/Ai/Context/Services/ConversationSummarizerService.php`
+- [X] T037 [US3] `AiContextBudget`: estima tokens (~4 chars/token) e faz shedding por prioridade preservando guardrails+mensagem atual em `app/Domain/Ai/Context/Services/AiContextBudget.php`
+- [X] T038 [US3] Integrar budget no `AiContextBuilderService::build()` (aplica teto ao contexto montado) em `app/Domain/Ai/Services/AiContextBuilderService.php` (depende T037)
+- [X] T039 [US3] Disparar o summarizer no `AiMessageProcessor` quando houver turnos além da janela (antes de montar o contexto) em `app/Domain/Ai/Services/AiMessageProcessor.php` (depende T036)
+- [X] T040 [US3] `PersonaAgent implements HasProviderOptions`: `cache_control: ephemeral` (Anthropic) no bloco estático + aplicar `model_settings` (temperature/max_tokens) da persona em `app/Domain/Ai/Agents/PersonaAgent.php`
 
 **Checkpoint**: qualidade de US1/US2 mantida sob orçamento de tokens e latência controlados.
 

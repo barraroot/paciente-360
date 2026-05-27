@@ -280,8 +280,9 @@ function onKeydown(event) {
 // ─── Attach placeholder ───────────────────────────────────────────────────────
 
 function handleAttach() {
-    // T247 implementará o upload real
-    alert(t('inbox.mensagem.anexar_em_breve'));
+    // T247 implementará o upload real — feedback inline (sem alert nativo)
+    sendError.value = t('inbox.mensagem.anexar_em_breve');
+    sendErrorCode.value = null;
 }
 </script>
 

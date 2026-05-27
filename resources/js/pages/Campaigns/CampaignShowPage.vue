@@ -5,6 +5,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCampaignsStore } from '@/stores/campaignsStore'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,6 +13,7 @@ const store = useCampaignsStore()
 
 const previewData = ref(null)
 const previewing = ref(false)
+const dispatchModalOpen = ref(false)
 const showCancelModal = ref(false)
 const cancelReason = ref('')
 
@@ -32,7 +34,7 @@ async function doPreview() {
 }
 
 async function doDispatch() {
-  if (!confirm('Confirma o disparo da campanha? Esta ação irá processar o público elegível.')) return
+  dispatchModalOpen.value = false
   try {
     await store.dispatch(id.value)
     router.push(`/campaigns/${id.value}/report`)
@@ -92,7 +94,7 @@ const canCancel = computed(() => c.value && !['completed', 'canceled'].includes(
         {{ previewing ? 'Calculando…' : 'Pré-visualizar' }}
       </button>
 
-      <button v-if="canDispatch" type="button" @click="doDispatch" :disabled="store.saving"
+      <button v-if="canDispatch" type="button" @click="dispatchModalOpen = true" :disabled="store.saving"
               class="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">
         Disparar agora
       </button>
@@ -115,6 +117,11 @@ const canCancel = computed(() => c.value && !['completed', 'canceled'].includes(
         <li v-for="(w, i) in previewData.warnings" :key="i" class="text-amber-900">{{ w }}</li>
       </ul>
     </section>
+
+    <ConfirmModal :open="dispatchModalOpen" title="Disparar campanha"
+                  @close="dispatchModalOpen = false" @confirm="doDispatch">
+      <p>Confirma o disparo da campanha? Esta ação irá processar o público elegível.</p>
+    </ConfirmModal>
 
     <Teleport to="body">
       <div v-if="showCancelModal" role="dialog" aria-modal="true"

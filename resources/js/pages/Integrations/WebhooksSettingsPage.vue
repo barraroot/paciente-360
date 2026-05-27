@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useWebhooksStore } from '@/stores/webhooks'
 import WebhookFormModal from '@/components/Integrations/WebhookFormModal.vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 /**
  * T203 (Fase 8 — Lote D US-11.1) — Configurações de webhooks.
@@ -10,6 +11,7 @@ const store = useWebhooksStore()
 const modalOpen = ref(false)
 const editing = ref(null)
 const toast = ref(null)
+const deleteTarget = ref(null)
 
 function showToast(message, type = 'success') {
     toast.value = { message, type }
@@ -50,8 +52,10 @@ async function togglePause(endpoint) {
     }
 }
 
-async function confirmDelete(endpoint) {
-    if (!window.confirm(`Remover webhook "${endpoint.name}"? Entregas pendentes serão canceladas.`)) return
+async function doDelete() {
+    const endpoint = deleteTarget.value
+    deleteTarget.value = null
+    if (!endpoint) { return }
     try {
         await store.deleteEndpoint(endpoint.id)
         showToast('Webhook removido.')
@@ -112,7 +116,7 @@ onMounted(() => store.loadEndpoints())
                         <button type="button" class="btn btn--small" @click="togglePause(ep)">
                             {{ ep.is_active ? 'Pausar' : 'Reativar' }}
                         </button>
-                        <button type="button" class="btn btn--small btn--danger" @click="confirmDelete(ep)">Remover</button>
+                        <button type="button" class="btn btn--small btn--danger" @click="deleteTarget = ep">Remover</button>
                     </td>
                 </tr>
                 <tr v-if="store.endpoints.length === 0">
@@ -127,6 +131,18 @@ onMounted(() => store.loadEndpoints())
             @close="modalOpen = false"
             @save="onSave"
         />
+
+        <ConfirmModal :open="!!deleteTarget" title="Remover webhook"
+                      @close="deleteTarget = null" @confirm="doDelete">
+            <p>Remover o webhook "<strong>{{ deleteTarget?.name }}</strong>"? Entregas pendentes serão canceladas.</p>
+            <template #actions>
+                <button type="button"
+                        class="rounded-lg bg-danger-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-danger-700"
+                        @click="doDelete">
+                    Remover
+                </button>
+            </template>
+        </ConfirmModal>
 
         <div v-if="toast" class="toast" :class="`toast--${toast.type}`" role="alert" aria-live="assertive">
             {{ toast.message }}

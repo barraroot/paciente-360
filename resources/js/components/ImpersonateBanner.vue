@@ -18,6 +18,7 @@ import api from '@/lib/api'
 const isActive = ref(false)
 const sessionId = ref(null)
 const ending = ref(false)
+const endError = ref('')
 
 /**
  * Lê o status de impersonate via header da última response.
@@ -38,6 +39,7 @@ async function checkStatus() {
 async function endSession() {
   if (!sessionId.value || ending.value) return
   ending.value = true
+  endError.value = ''
   try {
     await api.post(`/super-admin/impersonate/${sessionId.value}/end`)
     isActive.value = false
@@ -45,7 +47,7 @@ async function endSession() {
     // Redireciona Super Admin de volta ao Filament panel.
     window.location.href = '/admin'
   } catch (e) {
-    alert('Falha ao encerrar sessão de impersonate. Tente novamente.')
+    endError.value = 'Falha ao encerrar sessão de impersonate. Tente novamente.'
   } finally {
     ending.value = false
   }
@@ -72,14 +74,17 @@ onMounted(() => {
         <strong>MODO IMPERSONATE</strong>
         <span>— você está visualizando como suporte. Todas as telas visitadas são auditadas.</span>
       </div>
-      <button
-        type="button"
-        :disabled="ending"
-        class="rounded border border-amber-900 bg-amber-300 px-3 py-1 text-xs font-medium hover:bg-amber-200 disabled:opacity-50"
-        @click="endSession"
-      >
-        {{ ending ? 'Encerrando…' : 'Sair do impersonate' }}
-      </button>
+      <div class="flex items-center gap-3">
+        <span v-if="endError" class="text-xs font-medium text-rose-800">{{ endError }}</span>
+        <button
+          type="button"
+          :disabled="ending"
+          class="rounded border border-amber-900 bg-amber-300 px-3 py-1 text-xs font-medium hover:bg-amber-200 disabled:opacity-50"
+          @click="endSession"
+        >
+          {{ ending ? 'Encerrando…' : 'Sair do impersonate' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>

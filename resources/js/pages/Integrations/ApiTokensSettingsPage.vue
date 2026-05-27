@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import axios from 'axios'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 /**
  * T232 (Fase 8 — Lote D US-11.2) — Gestão interna de tokens API públicos.
@@ -14,6 +15,7 @@ const lastToken = ref(null)
 const form = ref({ name: '', abilities: ['*'] })
 const error = ref(null)
 const toast = ref(null)
+const revokeTarget = ref(null)
 
 function showToast(msg, type = 'success') {
     toast.value = { message: msg, type }
@@ -49,8 +51,10 @@ async function onSubmit() {
     }
 }
 
-async function revoke(token) {
-    if (!window.confirm(`Revogar token "${token.name}"? Integrações que o utilizam falharão.`)) return
+async function confirmRevoke() {
+    const token = revokeTarget.value
+    revokeTarget.value = null
+    if (!token) { return }
     try {
         await axios.delete(`/api/v1/integrations/api-tokens/${token.id}`)
         showToast('Token revogado.')
@@ -90,7 +94,7 @@ onMounted(load)
                     <td>{{ t.last_used_at ?? '—' }}</td>
                     <td>{{ t.created_at }}</td>
                     <td>
-                        <button type="button" class="btn btn--small btn--danger" @click="revoke(t)">Revogar</button>
+                        <button type="button" class="btn btn--small btn--danger" @click="revokeTarget = t">Revogar</button>
                     </td>
                 </tr>
                 <tr v-if="tokens.length === 0">
@@ -98,6 +102,18 @@ onMounted(load)
                 </tr>
             </tbody>
         </table>
+
+        <ConfirmModal :open="!!revokeTarget" title="Revogar token"
+                      @close="revokeTarget = null" @confirm="confirmRevoke">
+            <p>Revogar o token "<strong>{{ revokeTarget?.name }}</strong>"? Integrações que o utilizam falharão.</p>
+            <template #actions>
+                <button type="button"
+                        class="rounded-lg bg-danger-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-danger-700"
+                        @click="confirmRevoke">
+                    Revogar
+                </button>
+            </template>
+        </ConfirmModal>
 
         <Teleport to="body">
             <div

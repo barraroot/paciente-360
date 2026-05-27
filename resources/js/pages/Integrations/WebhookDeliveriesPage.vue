@@ -1,20 +1,24 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useWebhooksStore } from '@/stores/webhooks'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 /**
  * T203 (Fase 8 — Lote D US-11.1) — Histórico + DLQ.
  */
 const store = useWebhooksStore()
 const toast = ref(null)
+const resendTarget = ref(null)
 
 function showToast(msg, type = 'success') {
     toast.value = { message: msg, type }
     setTimeout(() => { toast.value = null }, 5000)
 }
 
-async function resend(dlq) {
-    if (!window.confirm(`Reenviar evento ${dlq.event_type} (ID ${dlq.event_id})?`)) return
+async function confirmResend() {
+    const dlq = resendTarget.value
+    resendTarget.value = null
+    if (!dlq) { return }
     try {
         await store.resendDlq(dlq.id)
         showToast('Reenfileirado.')
@@ -54,7 +58,7 @@ onMounted(() => store.loadDeadLetter())
                         <span v-else class="badge badge--warning">Não</span>
                     </td>
                     <td>
-                        <button type="button" class="btn btn--small" @click="resend(row)">Reenviar</button>
+                        <button type="button" class="btn btn--small" @click="resendTarget = row">Reenviar</button>
                     </td>
                 </tr>
                 <tr v-if="store.deadLetter.length === 0">
@@ -62,6 +66,11 @@ onMounted(() => store.loadDeadLetter())
                 </tr>
             </tbody>
         </table>
+
+        <ConfirmModal :open="!!resendTarget" title="Reenviar evento"
+                      @close="resendTarget = null" @confirm="confirmResend">
+            <p>Reenviar o evento <strong>{{ resendTarget?.event_type }}</strong> (ID {{ resendTarget?.event_id }})?</p>
+        </ConfirmModal>
 
         <div v-if="toast" class="toast" :class="`toast--${toast.type}`" role="alert" aria-live="assertive">
             {{ toast.message }}

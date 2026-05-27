@@ -84,7 +84,7 @@
 
 - [ ] T031 [P] [US4] Corrigir foco visível e ordem de tabulação (G10) nas telas com gaps catalogados em `resources/js/pages/**` e `resources/js/components/**`
 - [ ] T032 [P] [US4] Corrigir contraste AA (G11) e rótulos acessíveis (G12) conforme itens do catálogo/axe
-- [ ] T033 [P] [US4] Substituir quaisquer `confirm()`/`prompt()`/`alert()` nativos remanescentes por modal a11y (`role=alertdialog` + focus-trap + Esc/overlay) reusando o padrão das Fases 6/12 (G13)
+- [X] T033 [P] [US4] Substituir quaisquer `confirm()`/`prompt()`/`alert()` nativos remanescentes por modal a11y (`role=alertdialog` + focus-trap + Esc/overlay) reusando o padrão das Fases 6/12 (G13)
 - [ ] T034 [US4] Rodar axe + navegação por teclado em todas as telas; marcar itens `a11y` como `verificado`
 
 ---

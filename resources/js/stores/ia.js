@@ -26,6 +26,7 @@ export const useIaStore = defineStore('ia', {
         selectedGuardrail: null,
         executionLogs: [],
         executionLogsMeta: null,
+        workContext: null,
         loading: false,
         saving: false,
         error: null,
@@ -41,6 +42,35 @@ export const useIaStore = defineStore('ia', {
             const { data } = await api.get('/ai/models');
             this.models = data.data ?? [];
             return this.models;
+        },
+
+        // Feature 017 (US2) — Contexto de Trabalho da clínica (singleton).
+        async fetchWorkContext() {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await api.get('/ai/work-context');
+                this.workContext = data.data ?? null;
+                return this.workContext;
+            } catch (e) {
+                this.error =
+                    e?.response?.data?.message ?? 'Erro ao carregar o contexto de trabalho.';
+                throw e;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async saveWorkContext(payload) {
+            this.saving = true;
+            this.error = null;
+            try {
+                const { data } = await api.put('/ai/work-context', payload);
+                this.workContext = data.data ?? null;
+                return this.workContext;
+            } finally {
+                this.saving = false;
+            }
         },
 
         async fetchPersonas(params = {}) {
@@ -132,7 +162,8 @@ export const useIaStore = defineStore('ia', {
                 this.knowledgeBases = data.data ?? [];
                 return this.knowledgeBases;
             } catch (e) {
-                this.error = e?.response?.data?.message ?? 'Erro ao carregar bases de conhecimento.';
+                this.error =
+                    e?.response?.data?.message ?? 'Erro ao carregar bases de conhecimento.';
                 throw e;
             } finally {
                 this.loading = false;

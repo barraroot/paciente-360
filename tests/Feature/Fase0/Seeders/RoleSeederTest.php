@@ -55,11 +55,11 @@ class RoleSeederTest extends TestCase
 
         // Total global de permissions cresceu com as fases seguintes (Agenda,
         // Receituário, Fase 8 Privacy/SuperAdmin/Campaigns/Integrations/Reports,
-        // Spec 012 professional.manage e Fase 15 IA Matricial — ai.persona/knowledge/
-        // guardrail/matrix/log). O foco do teste é idempotência (reseed não duplica),
-        // não o valor absoluto.
+        // Spec 012 professional.manage, Fase 15 IA Matricial e Fase 17 —
+        // ai.work-context.view/manage). O foco do teste é idempotência (reseed
+        // não duplica), não o valor absoluto.
         $this->assertSame(6, $rolesCount, 'Reseed não deve duplicar roles.');
-        $this->assertSame(59, $permissionsCount, 'Reseed não deve duplicar permissions.');
+        $this->assertSame(61, $permissionsCount, 'Reseed não deve duplicar permissions.');
     }
 
     public function test_admin_clinica_has_all_permissions(): void
@@ -76,10 +76,10 @@ class RoleSeederTest extends TestCase
             ->firstOrFail();
 
         // admin-clinica recebe o conjunto operacional (cresce a cada fase;
-        // hoje 53 incluindo report.view/export, professional.manage da Spec 012 e
-        // as abilities da Fase 15 IA Matricial — ai.persona/knowledge/guardrail/matrix/log).
+        // hoje 55 incluindo report.view/export, professional.manage da Spec 012,
+        // as abilities da Fase 15 IA Matricial e a Fase 17 — ai.work-context.view/manage).
         $this->assertCount(
-            53,
+            55,
             $admin->permissions,
             'admin-clinica deve ter o conjunto default de permissions operacionais.'
         );

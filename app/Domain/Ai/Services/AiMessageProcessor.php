@@ -10,9 +10,13 @@ use App\Domain\Ai\Assignment\Events\IAEscalouParaHumano;
 use App\Domain\Ai\Assignment\Events\RespostaIAEnviada;
 use App\Domain\Ai\Assignment\Models\AiConversationAssignment;
 use App\Domain\Ai\Assignment\Services\AiConversationAssignmentService;
+use App\Domain\Ai\Context\Services\ConversationSummarizerService;
 use App\Domain\Ai\Execution\Models\AiExecutionLog;
+use App\Domain\Ai\Execution\Models\AiToolInvocation;
 use App\Domain\Ai\Persona\Events\PersonaAtribuidaAConversa;
 use App\Domain\Ai\Persona\Models\AiPersona;
+use App\Domain\Ai\Tools\Support\ConversationToolFactory;
+use App\Domain\Ai\Tools\Support\ToolContext;
 use App\Domain\Messaging\Channel\Adapters\OutboundMessage;
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Message\Models\Message;
@@ -34,6 +38,9 @@ final class AiMessageProcessor
         private readonly AiGuardrailEnforcer $enforcer,
         private readonly MessageDispatchService $dispatch,
         private readonly AiMetricsContract $metrics,
+        private readonly OutboundNameInjector $nameInjector,
+        private readonly ConversationSummarizerService $summarizer,
+        private readonly ConversationToolFactory $toolFactory,
     ) {}
 
     public function process(Conversation $conversation): void
@@ -64,19 +71,41 @@ final class AiMessageProcessor
             ));
         }
 
-        $patientMessage = $this->latestInboundText($conversation);
-        if ($patientMessage === null || trim($patientMessage) === '') {
+        $inbound = $this->latestInbound($conversation);
+        if ($inbound === null || trim((string) $inbound->body) === '') {
             return;
         }
+        $patientMessage = (string) $inbound->body;
 
         $persona->loadMissing('model', 'guardrails');
-        $context = $this->contextBuilder->build($persona, $patientMessage);
+
+        // US3 — mantém o resumo rolante atualizado (só roda quando há turnos
+        // além da janela; reusa caso contrário). Nunca quebra a resposta.
+        $this->summarizer->maybeSummarize($conversation, $persona, $inbound->id);
+
+        $context = $this->contextBuilder->build($persona, $patientMessage, $conversation, $inbound->id);
         $correlationId = (string) Str::uuid();
         $this->tagSentry($conversation->tenant_id, $correlationId);
         $startedAt = microtime(true);
 
+        // Eco/loop (FR-005): paciente colou a mensagem anterior da própria IA.
+        $instructions = $context->instructions;
+        if ($this->isEchoOfLastAiMessage($conversation, $patientMessage, $inbound->id)) {
+            $instructions .= "\n\n# Observação\n\nO paciente reenviou/colou a sua mensagem anterior. NÃO repita a mesma pergunta — avance a conversa de forma natural.";
+        }
+
+        // Ferramentas de dados ao vivo escopadas à conversa (US5) — isolamento de
+        // tenant/contato no data layer; vazio quando desabilitadas.
+        $tools = $this->toolFactory->make(new ToolContext(
+            tenantId: $conversation->tenant_id,
+            conversationId: $conversation->id,
+            patientId: $conversation->patient_id,
+            contactPhone: $conversation->external_thread_id,
+            correlationId: $correlationId,
+        ));
+
         // Geração — em falha a exceção PROPAGA para o job (retry/backoff/escala — FR-030c).
-        $agent = new PersonaAgent($context->instructions);
+        $agent = new PersonaAgent($instructions, $context->historyMessages, $tools);
         $response = $agent->prompt(
             $context->prompt,
             provider: $persona->model->provider,
@@ -85,6 +114,7 @@ final class AiMessageProcessor
 
         $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
         $this->metrics->responseLatency($latencyMs / 1000);
+        $this->metrics->toolRoundTrips($conversation->tenant_id, $this->toolRoundTrips($correlationId) ?? 0);
 
         $output = $this->decodeStructured($response->text);
         $decision = $this->enforcer->evaluate($output);
@@ -92,12 +122,17 @@ final class AiMessageProcessor
         $confidence = isset($output['confidence']) ? (float) $output['confidence'] : null;
 
         if ($decision->shouldSend) {
+            // Substitui {{primeiro_nome}} pelo nome real só na saída (FR-017) —
+            // o nome nunca foi ao provedor; o log mantém a versão com marcador.
+            $conversation->loadMissing('patient');
+            $outboundBody = $this->nameInjector->inject((string) $decision->text, $conversation->patient?->nome);
+
             $message = $this->dispatch->send(
                 $conversation,
                 new OutboundMessage(
                     conversationExternalThreadId: (string) $conversation->external_thread_id,
                     contentType: 'text',
-                    body: $decision->text,
+                    body: $outboundBody,
                     idempotencyKey: "ai:{$conversation->tenant_id}:{$conversation->id}:{$correlationId}",
                 ),
                 senderUserId: null,
@@ -160,7 +195,31 @@ final class AiMessageProcessor
         });
     }
 
-    private function latestInboundText(Conversation $conversation): ?string
+    /**
+     * @return list<string>|null
+     */
+    private function toolNames(string $correlationId): ?array
+    {
+        $names = AiToolInvocation::query()
+            ->where('correlation_id', $correlationId)
+            ->pluck('tool_name')
+            ->unique()
+            ->values()
+            ->all();
+
+        return $names !== [] ? $names : null;
+    }
+
+    private function toolRoundTrips(string $correlationId): ?int
+    {
+        $count = AiToolInvocation::query()
+            ->where('correlation_id', $correlationId)
+            ->count();
+
+        return $count > 0 ? $count : null;
+    }
+
+    private function latestInbound(Conversation $conversation): ?Message
     {
         /** @var Message|null $message */
         $message = Message::query()
@@ -169,7 +228,31 @@ final class AiMessageProcessor
             ->latest('id')
             ->first();
 
-        return $message?->body;
+        return $message;
+    }
+
+    /**
+     * Detecta se a mensagem do paciente é (quase) idêntica à última resposta da
+     * própria IA — o eco visto em conversas reais (FR-005). Comparação
+     * determinística e barata (sem custo de modelo).
+     */
+    private function isEchoOfLastAiMessage(Conversation $conversation, string $patientMessage, int $currentMessageId): bool
+    {
+        /** @var Message|null $lastAi */
+        $lastAi = Message::query()
+            ->where('conversation_id', $conversation->id)
+            ->where('id', '<', $currentMessageId)
+            ->where('sender_type', 'ai')
+            ->latest('id')
+            ->first();
+
+        if ($lastAi === null || $lastAi->body === null) {
+            return false;
+        }
+
+        $normalize = static fn (string $value): string => preg_replace('/\s+/', ' ', mb_strtolower(trim($value))) ?? '';
+
+        return $normalize($patientMessage) === $normalize((string) $lastAi->body);
     }
 
     /**
@@ -228,6 +311,10 @@ final class AiMessageProcessor
             'correlation_id' => $correlationId,
             'prompt_summary' => Str::limit($context->prompt, 2000),
             'context_summary' => ['rag_snippet_ids' => $context->ragSnippetIds],
+            'summary_version' => $context->summaryVersion,
+            'work_context_version' => $context->workContextVersion,
+            'tools_used' => $this->toolNames($correlationId),
+            'tool_round_trips' => $this->toolRoundTrips($correlationId),
             'classified_intent' => $intent,
             'confidence_score' => $confidence,
             'response_summary' => $decision->text !== null

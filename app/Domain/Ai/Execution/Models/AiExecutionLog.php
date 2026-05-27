@@ -40,6 +40,10 @@ class AiExecutionLog extends Model
         'correlation_id',
         'prompt_summary',
         'context_summary',
+        'work_context_version',
+        'summary_version',
+        'tools_used',
+        'tool_round_trips',
         'classified_intent',
         'confidence_score',
         'response_summary',
@@ -59,6 +63,10 @@ class AiExecutionLog extends Model
     {
         return [
             'context_summary' => AsJsonArray::class,
+            'tools_used' => AsJsonArray::class,
+            'work_context_version' => 'integer',
+            'summary_version' => 'integer',
+            'tool_round_trips' => 'integer',
             'confidence_score' => 'float',
             'latency_ms' => 'integer',
             'input_tokens' => 'integer',

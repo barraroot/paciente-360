@@ -56,8 +56,9 @@ final class AiGuardrailEnforcer
      * Monta o system prompt completo em camadas.
      *
      * @param list<string> $ragSnippets trechos recuperados das bases (US4)
+     * @param string|null $workContext bloco renderizado do Contexto de Trabalho da clínica (feature 017, US2)
      */
-    public function composeInstructions(AiPersona $persona, array $ragSnippets = []): string
+    public function composeInstructions(AiPersona $persona, array $ragSnippets = [], ?string $workContext = null): string
     {
         $parts = [$this->minimalGuardrails()];
 
@@ -88,12 +89,35 @@ final class AiGuardrailEnforcer
         }
         $parts[] = $personaBlock;
 
+        // Contexto de Trabalho da clínica (feature 017, US2) — voz/política/qualificação.
+        if (filled($workContext)) {
+            $parts[] = $workContext;
+        }
+
         // Bases de conhecimento (RAG — US4).
         if ($ragSnippets !== []) {
             $parts[] = "# Base de Conhecimento (use apenas o que for relevante)\n\n".implode("\n\n---\n\n", $ragSnippets);
         }
 
+        // Personalização + precedência de fontes (feature 017, FR-011/FR-017).
+        $parts[] = $this->personalizationAndPrecedence();
+
         return implode("\n\n", $parts);
+    }
+
+    /**
+     * Bloco de personalização (placeholder de nome — o nome real NUNCA é enviado
+     * ao provedor, é substituído na saída) + precedência determinística de fontes
+     * (feature 017, FR-011/FR-017).
+     */
+    private function personalizationAndPrecedence(): string
+    {
+        return <<<'MD'
+        # Personalização e Fontes de Verdade
+
+        - Quando for natural chamar o paciente pelo nome, use EXATAMENTE o marcador `{{primeiro_nome}}` (não invente nomes). Ele será substituído pelo primeiro nome real antes do envio.
+        - Precedência das informações: dados consultados em tempo real (ferramentas) > Contexto de Trabalho da clínica > base de conhecimento. NÃO invente preços, horários, locais ou políticas que não venham dessas fontes — se faltar, pergunte ou encaminhe a um atendente.
+        MD;
     }
 
     /**

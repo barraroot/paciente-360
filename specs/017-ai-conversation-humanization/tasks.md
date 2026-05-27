@@ -137,27 +137,27 @@ description: "Task list — Humanização da Conversa da IA"
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T041 [P] [US5] Feature test `GetClinicInfoToolTest` + `GetAvailabilityToolTest` (dados vivos; precedência sobre work context — FR-028/SC-009) em `tests/Feature/Ai/Tools/`
-- [ ] T042 [P] [US5] Feature test `GetCurrentPatientToolTest` (só o contato da conversa; respeita consent; **nunca** busca por nome nem outro paciente — FR-029) em `tests/Feature/Ai/Tools/GetCurrentPatientToolTest.php`
-- [ ] T043 [P] [US5] Feature test `CreateOrFindLeadToolTest` (lookup por telefone; cria `status='lead'`; idempotente) em `tests/Feature/Ai/Tools/CreateOrFindLeadToolTest.php`
-- [ ] T044 [P] [US5] Feature test `HoldSlotToolTest` (cria `SlotReservation holder_type='ia'`; TTL; conflito por `sr_active_unique`; **não confirma** — FR-018/030) em `tests/Feature/Ai/Tools/HoldSlotToolTest.php`
-- [ ] T045 [P] [US5] Feature test `ToolTenantIsolationTest` (tool sob tenant A jamais retorna dado de tenant B nem de outro paciente — FR-034/SC-007) em `tests/Feature/Ai/Tools/ToolTenantIsolationTest.php`
-- [ ] T046 [P] [US5] Feature test `ToolRoundTripCapTest` + degradação em falha/timeout (≤3 round-trips; sem fabricar — FR-032/033) em `tests/Feature/Ai/Tools/ToolRoundTripCapTest.php`
+- [X] T041 [P] [US5] Feature test `GetClinicInfoToolTest` + `GetAvailabilityToolTest` (dados vivos; precedência sobre work context — FR-028/SC-009) em `tests/Feature/Ai/Tools/`
+- [X] T042 [P] [US5] Feature test `GetCurrentPatientToolTest` (só o contato da conversa; respeita consent; **nunca** busca por nome nem outro paciente — FR-029) em `tests/Feature/Ai/Tools/GetCurrentPatientToolTest.php`
+- [X] T043 [P] [US5] Feature test `CreateOrFindLeadToolTest` (lookup por telefone; cria `status='lead'`; idempotente) em `tests/Feature/Ai/Tools/CreateOrFindLeadToolTest.php`
+- [X] T044 [P] [US5] Feature test `HoldSlotToolTest` (cria `SlotReservation holder_type='ia'`; TTL; conflito por `sr_active_unique`; **não confirma** — FR-018/030) em `tests/Feature/Ai/Tools/HoldSlotToolTest.php`
+- [X] T045 [P] [US5] Feature test `ToolTenantIsolationTest` (tool sob tenant A jamais retorna dado de tenant B nem de outro paciente — FR-034/SC-007) em `tests/Feature/Ai/Tools/ToolTenantIsolationTest.php`
+- [X] T046 [P] [US5] Feature test `ToolRoundTripCapTest` + degradação em falha/timeout (≤3 round-trips; sem fabricar — FR-032/033) em `tests/Feature/Ai/Tools/ToolRoundTripCapTest.php`
 
 ### Implementation for User Story 5
 
-- [ ] T047 [P] [US5] Migration aditiva: tabela `ai_tool_invocations` (tenant_id, conversation_id, correlation_id, tool_name, input_summary jsonb, outcome, result_summary jsonb, latency_ms) em `database/migrations/`
-- [ ] T048 [US5] `AiToolInvocation` model (global scope tenant) em `app/Domain/Ai/Execution/Models/AiToolInvocation.php` (depende T047)
-- [ ] T049 [P] [US5] `ToolContext` value object `{tenant_id, conversation_id, patient_id?, contact_phone}` em `app/Domain/Ai/Tools/Support/ToolContext.php`
-- [ ] T050 [US5] `ToolInvocationLogger` (grava `ai_tool_invocations`, minimiza/pseudonimiza I/O) em `app/Domain/Ai/Tools/Support/ToolInvocationLogger.php` (depende T048)
-- [ ] T051 [P] [US5] `GetClinicInfoTool`: serviços/preços de `appointment_types` (model/service da Fase 5: `nome`/`descricao`/`valor_particular`/`valor_convenio_default`/`duration_minutes`, só `is_active`); horário/endereço do work context quando não houver fonte no DB (precedência FR-011) em `app/Domain/Ai/Tools/GetClinicInfoTool.php`
-- [ ] T052 [P] [US5] `ListProfessionalsTool` (Fase 12) em `app/Domain/Ai/Tools/ListProfessionalsTool.php`
-- [ ] T053 [P] [US5] `GetAvailabilityTool` (slots reais — Fase 5) em `app/Domain/Ai/Tools/GetAvailabilityTool.php`
-- [ ] T054 [P] [US5] `GetCurrentPatientTool` (só contato da conversa; consent-gated) em `app/Domain/Ai/Tools/GetCurrentPatientTool.php`
-- [ ] T055 [P] [US5] `CreateOrFindLeadTool` (reusa `PacienteService`; `status='lead'`, origem do canal) em `app/Domain/Ai/Tools/CreateOrFindLeadTool.php`
-- [ ] T056 [P] [US5] `HoldSlotTool` (reusa serviço de `SlotReservation` da Fase 5; `holder_type='ia'`, idempotência/TTL) em `app/Domain/Ai/Tools/HoldSlotTool.php`
-- [ ] T057 [US5] `PersonaAgent implements HasTools` + `#[MaxSteps]` do config; `tools()` recebe instâncias com `ToolContext` em `app/Domain/Ai/Agents/PersonaAgent.php` (depende T049, T051–T056)
-- [ ] T058 [US5] `AiMessageProcessor`: montar `ToolContext` da conversa, injetar tools no agente, registrar `tools_used`/`tool_round_trips` em `AiExecutionLog` em `app/Domain/Ai/Services/AiMessageProcessor.php` (depende T057, T050)
+- [X] T047 [P] [US5] Migration aditiva: tabela `ai_tool_invocations` (tenant_id, conversation_id, correlation_id, tool_name, input_summary jsonb, outcome, result_summary jsonb, latency_ms) em `database/migrations/`
+- [X] T048 [US5] `AiToolInvocation` model (global scope tenant) em `app/Domain/Ai/Execution/Models/AiToolInvocation.php` (depende T047)
+- [X] T049 [P] [US5] `ToolContext` value object `{tenant_id, conversation_id, patient_id?, contact_phone}` em `app/Domain/Ai/Tools/Support/ToolContext.php`
+- [X] T050 [US5] `ToolInvocationLogger` (grava `ai_tool_invocations`, minimiza/pseudonimiza I/O) em `app/Domain/Ai/Tools/Support/ToolInvocationLogger.php` (depende T048)
+- [X] T051 [P] [US5] `GetClinicInfoTool`: serviços/preços de `appointment_types` (model/service da Fase 5: `nome`/`descricao`/`valor_particular`/`valor_convenio_default`/`duration_minutes`, só `is_active`); horário/endereço do work context quando não houver fonte no DB (precedência FR-011) em `app/Domain/Ai/Tools/GetClinicInfoTool.php`
+- [X] T052 [P] [US5] `ListProfessionalsTool` (Fase 12) em `app/Domain/Ai/Tools/ListProfessionalsTool.php`
+- [X] T053 [P] [US5] `GetAvailabilityTool` (slots reais — Fase 5) em `app/Domain/Ai/Tools/GetAvailabilityTool.php`
+- [X] T054 [P] [US5] `GetCurrentPatientTool` (só contato da conversa; consent-gated) em `app/Domain/Ai/Tools/GetCurrentPatientTool.php`
+- [X] T055 [P] [US5] `CreateOrFindLeadTool` (reusa `PacienteService`; `status='lead'`, origem do canal) em `app/Domain/Ai/Tools/CreateOrFindLeadTool.php`
+- [X] T056 [P] [US5] `HoldSlotTool` (reusa serviço de `SlotReservation` da Fase 5; `holder_type='ia'`, idempotência/TTL) em `app/Domain/Ai/Tools/HoldSlotTool.php`
+- [X] T057 [US5] `PersonaAgent implements HasTools` + `#[MaxSteps]` do config; `tools()` recebe instâncias com `ToolContext` em `app/Domain/Ai/Agents/PersonaAgent.php` (depende T049, T051–T056)
+- [X] T058 [US5] `AiMessageProcessor`: montar `ToolContext` da conversa, injetar tools no agente, registrar `tools_used`/`tool_round_trips` em `AiExecutionLog` em `app/Domain/Ai/Services/AiMessageProcessor.php` (depende T057, T050)
 
 **Checkpoint**: respostas ancoradas em dados reais com ações reversíveis auditadas; isolamento garantido.
 

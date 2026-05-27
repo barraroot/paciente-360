@@ -12,8 +12,11 @@ use App\Domain\Ai\Assignment\Models\AiConversationAssignment;
 use App\Domain\Ai\Assignment\Services\AiConversationAssignmentService;
 use App\Domain\Ai\Context\Services\ConversationSummarizerService;
 use App\Domain\Ai\Execution\Models\AiExecutionLog;
+use App\Domain\Ai\Execution\Models\AiToolInvocation;
 use App\Domain\Ai\Persona\Events\PersonaAtribuidaAConversa;
 use App\Domain\Ai\Persona\Models\AiPersona;
+use App\Domain\Ai\Tools\Support\ConversationToolFactory;
+use App\Domain\Ai\Tools\Support\ToolContext;
 use App\Domain\Messaging\Channel\Adapters\OutboundMessage;
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Message\Models\Message;
@@ -37,6 +40,7 @@ final class AiMessageProcessor
         private readonly AiMetricsContract $metrics,
         private readonly OutboundNameInjector $nameInjector,
         private readonly ConversationSummarizerService $summarizer,
+        private readonly ConversationToolFactory $toolFactory,
     ) {}
 
     public function process(Conversation $conversation): void
@@ -90,8 +94,18 @@ final class AiMessageProcessor
             $instructions .= "\n\n# Observação\n\nO paciente reenviou/colou a sua mensagem anterior. NÃO repita a mesma pergunta — avance a conversa de forma natural.";
         }
 
+        // Ferramentas de dados ao vivo escopadas à conversa (US5) — isolamento de
+        // tenant/contato no data layer; vazio quando desabilitadas.
+        $tools = $this->toolFactory->make(new ToolContext(
+            tenantId: $conversation->tenant_id,
+            conversationId: $conversation->id,
+            patientId: $conversation->patient_id,
+            contactPhone: $conversation->external_thread_id,
+            correlationId: $correlationId,
+        ));
+
         // Geração — em falha a exceção PROPAGA para o job (retry/backoff/escala — FR-030c).
-        $agent = new PersonaAgent($instructions, $context->historyMessages);
+        $agent = new PersonaAgent($instructions, $context->historyMessages, $tools);
         $response = $agent->prompt(
             $context->prompt,
             provider: $persona->model->provider,
@@ -178,6 +192,30 @@ final class AiMessageProcessor
             $scope->setTag('ai.tenant', (string) $tenantId);
             $scope->setTag('ai.correlation_id', $correlationId);
         });
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    private function toolNames(string $correlationId): ?array
+    {
+        $names = AiToolInvocation::query()
+            ->where('correlation_id', $correlationId)
+            ->pluck('tool_name')
+            ->unique()
+            ->values()
+            ->all();
+
+        return $names !== [] ? $names : null;
+    }
+
+    private function toolRoundTrips(string $correlationId): ?int
+    {
+        $count = AiToolInvocation::query()
+            ->where('correlation_id', $correlationId)
+            ->count();
+
+        return $count > 0 ? $count : null;
     }
 
     private function latestInbound(Conversation $conversation): ?Message
@@ -274,6 +312,8 @@ final class AiMessageProcessor
             'context_summary' => ['rag_snippet_ids' => $context->ragSnippetIds],
             'summary_version' => $context->summaryVersion,
             'work_context_version' => $context->workContextVersion,
+            'tools_used' => $this->toolNames($correlationId),
+            'tool_round_trips' => $this->toolRoundTrips($correlationId),
             'classified_intent' => $intent,
             'confidence_score' => $confidence,
             'response_summary' => $decision->text !== null

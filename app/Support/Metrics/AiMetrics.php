@@ -39,4 +39,14 @@ final class AiMetrics extends AbstractModuleMetrics implements AiMetricsContract
             'Total de escalonamentos da IA para humano por tenant/motivo.',
         );
     }
+
+    public function toolRoundTrips(int $tenantId, int $count): void
+    {
+        $this->recordHistogramOrLog(
+            'ai_tool_round_trips',
+            ['tenant' => (string) $tenantId],
+            (float) $count,
+            'Round-trips de ferramenta por resposta da IA (feature 017, alvo ≤ 3).',
+        );
+    }
 }

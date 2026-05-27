@@ -171,12 +171,12 @@ description: "Task list — Humanização da Conversa da IA"
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T059 [P] [US4] Feature test `FunnelStageBehaviorTest` (qualifica antes de preço; após "quero agendar" vai a local/horário, não re-qualifica — FR-018) em `tests/Feature/Ai/FunnelStageBehaviorTest.php`
+- [X] T059 [P] [US4] Feature test `FunnelStageBehaviorTest` (qualifica antes de preço; após "quero agendar" vai a local/horário, não re-qualifica — FR-018) em `tests/Feature/Ai/FunnelStageBehaviorTest.php`
 
 ### Implementation for User Story 4
 
-- [ ] T060 [US4] Garantir que o summarizer mantém `funnel_stage` atualizado a cada turno em `app/Domain/Ai/Context/Services/ConversationSummarizerService.php` (depende T036)
-- [ ] T061 [US4] Injetar a etapa atual do funil como dica no system prompt (sem relaxar guardrails) em `app/Domain/Ai/Services/AiGuardrailEnforcer.php` / `AiContextBuilderService.php`
+- [X] T060 [US4] Garantir que o summarizer mantém `funnel_stage` atualizado a cada turno em `app/Domain/Ai/Context/Services/ConversationSummarizerService.php` (depende T036)
+- [X] T061 [US4] Injetar a etapa atual do funil como dica no system prompt (sem relaxar guardrails) em `app/Domain/Ai/Services/AiGuardrailEnforcer.php` / `AiContextBuilderService.php`
 
 **Checkpoint**: fluxo comercial coerente ponta a ponta.
 
@@ -184,12 +184,12 @@ description: "Task list — Humanização da Conversa da IA"
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T062 [P] E2E Playwright "agendamento via IA no chat" (greeting→qualificação→valor→preço→horário→lead+hold+handoff) em `tests/e2e/ai-scheduling-conversation.spec.ts` (jornada crítica — Constituição IV)
-- [ ] T063 Atualizar documentação OpenAPI/Scribe dos endpoints `GET/PUT /api/v1/ai/work-context` (Constituição IV — contrato de API na mesma PR)
-- [ ] T064 [P] Métricas Prometheus: round-trips de tool e latência IA (single-pass ≤5s / tools p95 ≤8s — SC-008) em `app/Support/Metrics/`
-- [ ] T065 Rodar `vendor/bin/sail bin pint --dirty --format agent` e a suíte `vendor/bin/sail artisan test --compact --filter=Ai` (SC-006 sem regressão de segurança)
-- [ ] T066 Validar o `quickstart.md` ponta a ponta em ambiente local
-- [ ] T067 [P] Adicionar bloco "Fase 17 — Key Patterns" em `CLAUDE.md` (resumo dos gotchas: janela mínima, precedência de fontes, tools com ToolContext, name placeholder)
+- [ ] T062 (DEFERRED — staging) [P] E2E Playwright "agendamento via IA no chat" (greeting→qualificação→valor→preço→horário→lead+hold+handoff) em `tests/e2e/ai-scheduling-conversation.spec.ts` (jornada crítica — Constituição IV)
+- [X] T063 Atualizar documentação OpenAPI/Scribe dos endpoints `GET/PUT /api/v1/ai/work-context` (Constituição IV — contrato de API na mesma PR)
+- [X] T064 [P] Métricas Prometheus: round-trips de tool e latência IA (single-pass ≤5s / tools p95 ≤8s — SC-008) em `app/Support/Metrics/`
+- [X] T065 Rodar `vendor/bin/sail bin pint --dirty --format agent` e a suíte `vendor/bin/sail artisan test --compact --filter=Ai` (SC-006 sem regressão de segurança)
+- [ ] T066 (DEFERRED — staging) Validar o `quickstart.md` ponta a ponta em ambiente local
+- [X] T067 [P] Adicionar bloco "Fase 17 — Key Patterns" em `CLAUDE.md` (resumo dos gotchas: janela mínima, precedência de fontes, tools com ToolContext, name placeholder)
 
 ---
 

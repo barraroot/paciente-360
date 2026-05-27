@@ -114,6 +114,7 @@ final class AiMessageProcessor
 
         $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
         $this->metrics->responseLatency($latencyMs / 1000);
+        $this->metrics->toolRoundTrips($conversation->tenant_id, $this->toolRoundTrips($correlationId) ?? 0);
 
         $output = $this->decodeStructured($response->text);
         $decision = $this->enforcer->evaluate($output);

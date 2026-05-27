@@ -71,6 +71,14 @@ final class AiContextBuilderService
             $summaryVersion = $summaryModel?->version;
         }
 
+        // US4 — consciência de etapa do funil: orienta a coerência do fluxo
+        // comercial (não cotar preço antes de qualificar; após intenção de
+        // agendar, avançar sem reabrir a qualificação).
+        if ($summaryModel !== null && filled($summaryModel->funnel_stage)) {
+            $instructions .= "\n\n# Etapa atual do funil: {$summaryModel->funnel_stage}\n\n"
+                .'Aja conforme a etapa: não cote preço antes de qualificar; após o paciente demonstrar intenção de agendar, avance para local/horário sem reabrir a qualificação.';
+        }
+
         return new AiContext(
             instructions: $instructions,
             prompt: $scrubbedPrompt,

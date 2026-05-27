@@ -14,11 +14,22 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * Feature 017 (US2) — Contexto de Trabalho da clínica (singleton por tenant).
+ *
+ * @group IA — Contexto de Trabalho
  */
 class AiWorkContextController extends Controller
 {
     public function __construct(private readonly AiWorkContextService $service) {}
 
+    /**
+     * Exibe o contexto de trabalho da clínica.
+     *
+     * Retorna o perfil comercial/operacional usado pela IA (serviços, valores,
+     * locais, política de sinal, tom, perguntas de qualificação + texto livre).
+     * Quando ainda não configurado, retorna a estrutura vazia com `version` nula.
+     *
+     * @authenticated
+     */
     public function show(): AiWorkContextResource
     {
         Gate::authorize('ai.work-context.view');
@@ -29,6 +40,14 @@ class AiWorkContextController extends Controller
         return new AiWorkContextResource($context);
     }
 
+    /**
+     * Cria ou atualiza (upsert) o contexto de trabalho da clínica.
+     *
+     * Idempotente — incrementa `version` a cada salvamento. Campos clínicos são
+     * rejeitados (allow-list não-clínica). Requer a permissão `ai.work-context.manage`.
+     *
+     * @authenticated
+     */
     public function update(UpsertWorkContextRequest $request): JsonResponse
     {
         $context = $this->service->upsert(

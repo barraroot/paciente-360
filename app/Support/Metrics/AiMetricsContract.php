@@ -25,4 +25,9 @@ interface AiMetricsContract
      * Incrementa o total de escalonamentos para humano por tenant/motivo.
      */
     public function escalation(int $tenantId, string $reason): void;
+
+    /**
+     * Observa o nº de round-trips de ferramenta por resposta (feature 017, alvo ≤ 3).
+     */
+    public function toolRoundTrips(int $tenantId, int $count): void;
 }

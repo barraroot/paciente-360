@@ -628,3 +628,35 @@ When working on channel/provider features post-Fase 14, remember:
 11. **DEFERRED / não feito ao final da Fase 14**
     - Mídia outbound real no Evolution usa `MediaPayload.storagePath` (resolução de URL pública S3 ainda é o placeholder herdado da Fase 3).
     - Smoke browser da TELA (clicar no painel) — validação foi via QR real + API; a navegação visual no `/panel` fica como verificação manual.
+
+
+## Humanização da Conversa da IA (Fase 17) — Key Patterns
+
+When working on AI conversation/context/tools post-Fase 17, remember:
+
+1. **A IA NUNCA mais recebe "janela vazia"** — antes o `AiMessageProcessor` só lia a última inbound. Agora `PersonaAgent implements Conversational` e `messages()` devolve a **janela verbatim mínima** (`ConversationHistoryAssembler`, default `ai.matricial.history.window_messages=6`, **pseudonimizada por mensagem** via `PiiScrubber`). A mensagem atual vai em `prompt()`, NUNCA no histórico (excluída por `beforeMessageId`).
+
+2. **Resumo rolante incremental** (`ai_conversation_summaries`, 1/conversa, `ConversationSummarizerService`): só roda quando há turnos **além** da janela ainda não cobertos (`covered_up_to_message_id`); caso contrário **reusa sem chamar o modelo** (FR-022). Lock Redis `ai:summary:{conversation}`. Guarda `funnel_stage` (US4). Disparado pelo `AiMessageProcessor` ANTES de montar o contexto.
+
+3. **Orçamento de tokens** (`AiContextBudget`): teto `ai.matricial.history.input_token_ceiling`; shedding por prioridade **RAG → resumo → mensagens mais antigas**; NUNCA descarta guardrails mínimos nem a mensagem atual (FR-021/023). Estimativa ~4 chars/token. O builder agora compõe o bloco FIXO sem RAG e re-anexa RAG/resumo já orçados.
+
+4. **Contexto de Trabalho por clínica** (`ai_work_contexts`, 1/tenant, `AiWorkContextService`): híbrido (campos estruturados + texto livre). `renderForPrompt` injeta o bloco via `AiGuardrailEnforcer::composeInstructions($persona, $rag, $workContext)`. **Precedência FR-011 declarada no prompt**: ferramentas (dado vivo) > work context > persona/RAG. CRUD `GET/PUT /api/v1/ai/work-context` (singleton, gated `ai.work-context.view|manage`). UI `pages/Ia/WorkContextPage.vue` + store `ia.js`.
+
+5. **Nome via placeholder `{{primeiro_nome}}`** — o modelo recebe o marcador; `OutboundNameInjector` substitui pelo 1º nome real **só na mensagem de saída** (FR-017). Nome real NUNCA vai ao provedor; nome desconhecido → placeholder neutralizado (nunca o token literal ao paciente).
+
+6. **Ferramentas de dados ao vivo = laravel/ai `HasTools`** (NÃO laravel/mcp — este fica opcional p/ exposição externa). `PersonaAgent` tem `#[MaxSteps(3)]` (cap de round-trips, FR-032). Tools em `app/Domain/Ai/Tools/` estendem `ConversationTool` (base: `ToolContext` + auditoria `ai_tool_invocations` + degradação graciosa FR-033 — em falha NUNCA inventa). Montadas por `ConversationToolFactory` (gate `AI_TOOLS_ENABLED`).
+   - `get-clinic-info` → serviços/preços de `appointment_types` (DB vivo); horário/endereço caem no work context (não há tabela). `list-professionals`, `get-availability` (slots reais Fase 5). `get-current-patient`: **só o contato da conversa** (patient_id/telefone), **NÃO devolve nome** ao modelo, consent-aware (FR-029). `create-or-find-lead`: `Paciente status='lead'` por `telefone_primario_normalizado` (FR-030). `hold-slot`: `SlotReservation holder_type='ia'` (TTL); **NÃO confirma nem cobra** — handoff (FR-018).
+   - **Isolamento no data layer (FR-034)**: toda tool filtra `tenant_id` explicitamente, além do global scope.
+
+7. **Caching Anthropic** — `PersonaAgent implements HasProviderOptions` → `cache_control: ephemeral` no bloco estático quando `AI_PROMPT_CACHING=true` (corta tokens repetidos turno a turno).
+
+8. **Auditoria estendida** — `ai_execution_logs` ganhou `work_context_version`/`summary_version`/`tools_used`/`tool_round_trips`. `ai_tool_invocations` registra cada chamada (input/result pseudonimizados, FR-031). Métrica `ai_tool_round_trips` no Prometheus.
+
+9. **Guardrails/escala/auto-pause da Fase 15 INTACTOS** — todo o contexto novo é ADITIVO ao system prompt; a saída continua estruturada e passa pelo mesmo `evaluate()` determinístico. 148 testes de IA verdes (sem regressão de segurança — SC-006).
+
+10. **Constituição: desvio de TARGET de métrica documentado** (sem amendment) — §V cita "resposta IA ≤5s"; com tool-calling o alvo é p95 ≤8s (decisão Q5, canal assíncrono). O MUST de §V é *expor* a métrica (cumprido); o ≤5s é target não-vinculante. Single-pass mantém ≤5s.
+
+11. **DEFERRED ao final da Fase 17** (desvio consciente D2, padrão das fases anteriores)
+    - E2E Playwright `ai-scheduling-conversation.spec.ts` (T062): a jornada via IA exige provedor real/mockado no browser — fica para staging.
+    - Validação manual do `quickstart.md` (T066) em ambiente com provedor real.
+    - Adoção de `model_settings` (temperature/max_tokens) por persona: `providerOptions` cobre caching; aplicação de temperatura por persona não é injetável de forma limpa no SDK atual (atributos são estáticos) — deferred.

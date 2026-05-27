@@ -1,3 +1,6 @@
 {
-  "feature_directory": "specs/016-frontend-ux-audit"
+  "feature_directory": "specs/016-frontend-ux-audit",
+  "status": "delivered",
+  "delivered_at": "2026-05-27",
+  "constitution_check": "9/9 PASS (re-check sem amendment)"
 }

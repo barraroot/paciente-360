@@ -82,7 +82,7 @@
 
 **Independent Test**: axe sem violações + navegação por teclado em todas as telas auditadas; nenhuma `confirm()`/`prompt()`/`alert()`.
 
-- [ ] T031 [P] [US4] Corrigir foco visível e ordem de tabulação (G10) nas telas com gaps catalogados em `resources/js/pages/**` e `resources/js/components/**`
+- [X] T031 [P] [US4] Corrigir foco visível e ordem de tabulação (G10) nas telas com gaps catalogados em `resources/js/pages/**` e `resources/js/components/**`
 - [X] T032 [P] [US4] Corrigir contraste AA (G11) e rótulos acessíveis (G12) conforme itens do catálogo/axe
 - [X] T033 [P] [US4] Substituir quaisquer `confirm()`/`prompt()`/`alert()` nativos remanescentes por modal a11y (`role=alertdialog` + focus-trap + Esc/overlay) reusando o padrão das Fases 6/12 (G13)
 - [X] T034 [US4] Rodar axe + navegação por teclado em todas as telas; marcar itens `a11y` como `verificado`
@@ -95,19 +95,19 @@
 
 **Independent Test**: `scan-i18n-keys` limpo; catálogo sem item em aberto; relatório gerado.
 
-- [ ] T035 [P] [US5] Corrigir chaves i18n cruas e textos longos que quebram (G14, G15) em todas as telas; adicionar traduções faltantes em `resources/js/i18n/pt-BR.json`; rodar `tests/ux/scan-i18n-keys.mjs`
-- [ ] T036 [US5] Remediar itens remanescentes de severidade média/baixa nas telas P2 (fechar o DoD de 100%) em `resources/js/pages/**`
-- [ ] T037 [US5] Atualizar o status de **todos** os itens do catálogo para `verificado` e gerar `specs/016-frontend-ux-audit/audit-report.md` (resumo por tela/severidade/escopo + cobertura)
+- [X] T035 [P] [US5] Corrigir chaves i18n cruas e textos longos que quebram (G14, G15) em todas as telas; adicionar traduções faltantes em `resources/js/i18n/pt-BR.json`; rodar `tests/ux/scan-i18n-keys.mjs`
+- [X] T036 [US5] Remediar itens remanescentes de severidade média/baixa nas telas P2 (fechar o DoD de 100%) em `resources/js/pages/**`
+- [X] T037 [US5] Atualizar o status de **todos** os itens do catálogo para `verificado` e gerar `specs/016-frontend-ux-audit/audit-report.md` (resumo por tela/severidade/escopo + cobertura)
 
 ---
 
 ## Phase 8: Polish & Cross-Cutting
 
 - [X] T038 Conectar as asserções de invariante (G1–G16) como **gate permanente de CI** (script único que roda `tests/ux/**` + scanners i18n/diálogos) — FR-015/Q5
-- [ ] T039 [P] Rodar a suíte completa `tests/ux/**` + `vendor/bin/sail npm run build`; zero violação de gate em todas as telas/larguras amostradas
+- [X] T039 [P] Rodar a suíte completa `tests/ux/**` + `vendor/bin/sail npm run build`; zero violação de gate em todas as telas/larguras amostradas
 - [X] T040 [P] `vendor/bin/sail bin pint --dirty --format agent` se alguma string de UI server-side (PHP) foi tocada
-- [ ] T041 Smoke final das jornadas-chave (responder conversa, agendar, cadastrar paciente, emitir receita) em desktop e mobile (SC-003)
-- [ ] T042 Constitution Re-Check (9/9) + atualizar `.specify/feature.json`/CLAUDE.md para DELIVERED
+- [X] T041 Smoke final das jornadas-chave (responder conversa, agendar, cadastrar paciente, emitir receita) em desktop e mobile (SC-003)
+- [X] T042 Constitution Re-Check (9/9) + atualizar `.specify/feature.json`/CLAUDE.md para DELIVERED
 
 ---
 

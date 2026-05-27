@@ -384,7 +384,8 @@ function canReconnect(channel) {
                     :key="channel.id"
                     class="relative rounded-xl border border-border bg-surface-elevated p-5 shadow-[var(--shadow-card)] transition hover:border-primary-300"
                 >
-                    <div class="flex items-start gap-4">
+                    <!-- pr-8 reserva espaço para o botão de ações (absolute top-right), evitando sobreposição ao badge de status -->
+                    <div class="flex items-start gap-4 pr-8">
                         <!-- Avatar / Ícone do tipo -->
                         <div
                             class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold"

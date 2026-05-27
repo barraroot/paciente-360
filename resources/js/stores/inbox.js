@@ -291,13 +291,15 @@ export const useInboxStore = defineStore('inbox', {
 
                 const key = String(conversationId);
 
+                // A API retorna DESC (mais nova primeiro); exibimos ASC — mais antiga no
+                // topo, mais nova embaixo, com auto-scroll para a última (estilo WhatsApp).
                 if (!cursor) {
                     // Primeira carga: substitui
-                    this.messagesByConversationId[key] = messages;
+                    this.messagesByConversationId[key] = messages.slice().reverse();
                 } else {
-                    // Scroll-back: prepend
+                    // Scroll-back: página mais antiga (DESC) revertida p/ ASC e prepended
                     const existing = this.messagesByConversationId[key] ?? [];
-                    this.messagesByConversationId[key] = [...messages, ...existing];
+                    this.messagesByConversationId[key] = [...messages.slice().reverse(), ...existing];
                 }
 
                 this.cursorByConversationId[key] = nextCursor;
@@ -314,7 +316,7 @@ export const useInboxStore = defineStore('inbox', {
         /**
          * Envia mensagem para uma conversa.
          * @param {string|number} conversationId
-         * @param {{ body: string, type?: string, template_id?: string|null }} payload
+         * @param {{ body: string, content_type?: string, template_id?: string|null }} payload
          * @param {string} idempotencyKey — UUID gerado no componente
          * @returns {Promise<Object>} mensagem criada
          */

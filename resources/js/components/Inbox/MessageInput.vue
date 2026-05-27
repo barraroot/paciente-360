@@ -236,7 +236,7 @@ async function submit() {
     try {
         const message = await store.sendMessage(
             props.conversation.id,
-            { body: text, type: 'text' },
+            { body: text, content_type: 'text' },
             idempotencyKey,
         );
 

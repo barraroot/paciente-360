@@ -108,7 +108,7 @@ async function submit() {
     <!-- Nome -->
     <div>
       <label for="atf-nome" class="block text-sm font-medium text-foreground mb-1">
-        Nome <span class="text-danger-500" aria-hidden="true">*</span>
+        Nome <span class="text-danger-600" aria-hidden="true">*</span>
       </label>
       <input
         id="atf-nome"
@@ -120,7 +120,7 @@ async function submit() {
         :class="fieldErrors.nome ? 'border-danger-500' : 'border-border'"
         @input="clearError('nome')"
       />
-      <p v-if="fieldErrors.nome" role="alert" class="mt-1 text-xs text-danger-500">
+      <p v-if="fieldErrors.nome" role="alert" class="mt-1 text-xs text-danger-600">
         {{ Array.isArray(fieldErrors.nome) ? fieldErrors.nome[0] : fieldErrors.nome }}
       </p>
     </div>
@@ -129,7 +129,7 @@ async function submit() {
     <div class="grid grid-cols-2 gap-3">
       <div>
         <label for="atf-duration" class="block text-sm font-medium text-foreground mb-1">
-          Duração (min) <span class="text-danger-500" aria-hidden="true">*</span>
+          Duração (min) <span class="text-danger-600" aria-hidden="true">*</span>
         </label>
         <input
           id="atf-duration"
@@ -141,7 +141,7 @@ async function submit() {
           :class="fieldErrors.duration_minutes ? 'border-danger-500' : 'border-border'"
           @input="clearError('duration_minutes')"
         />
-        <p v-if="fieldErrors.duration_minutes" role="alert" class="mt-1 text-xs text-danger-500">
+        <p v-if="fieldErrors.duration_minutes" role="alert" class="mt-1 text-xs text-danger-600">
           {{ Array.isArray(fieldErrors.duration_minutes) ? fieldErrors.duration_minutes[0] : fieldErrors.duration_minutes }}
         </p>
       </div>
@@ -177,7 +177,7 @@ async function submit() {
           :class="fieldErrors.valor_particular ? 'border-danger-500' : 'border-border'"
           @input="clearError('valor_particular')"
         />
-        <p v-if="fieldErrors.valor_particular" role="alert" class="mt-1 text-xs text-danger-500">
+        <p v-if="fieldErrors.valor_particular" role="alert" class="mt-1 text-xs text-danger-600">
           {{ Array.isArray(fieldErrors.valor_particular) ? fieldErrors.valor_particular[0] : fieldErrors.valor_particular }}
         </p>
       </div>
@@ -268,7 +268,7 @@ async function submit() {
     </div>
 
     <!-- Erro geral -->
-    <p v-if="fieldErrors._general" role="alert" class="text-sm text-danger-500">
+    <p v-if="fieldErrors._general" role="alert" class="text-sm text-danger-600">
       {{ fieldErrors._general }}
     </p>
 

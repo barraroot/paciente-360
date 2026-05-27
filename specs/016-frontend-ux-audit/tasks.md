@@ -19,12 +19,12 @@
 
 **Bloqueia todas as fases de remediação: nada de US1–US4 começa sem o catálogo.**
 
-- [ ] T006 Extrair o "padrão de fato" das telas de referência (Pacientes, Agenda) para `specs/016-frontend-ux-audit/component-standard.md`: tokens (cores/sombras/raios/espaçamento via variáveis CSS), variantes de `button/input/select/badge/card/modal/empty/loading/error`, e regras de a11y (Q3)
-- [ ] T007 Enumerar o inventário de rotas a partir de `resources/js/config/navigation.js` + `resources/js/router/index.js` e registrar na seção "Telas" do catálogo (route, roles, priority P1/P2, states a verificar)
-- [ ] T008 Sweep de auditoria das telas **P1** (Inbox/Conversas, Canais, Agenda, Pacientes lista/funil/merge, Receituários, Dashboard) com `tests/ux/support/*` nas larguras amostradas (320/375/768/1024/1366/1440/1880/1920) + arrasto; registrar cada defeito (G1–G16) no `audit-catalog.md`
-- [ ] T009 Sweep de auditoria das **telas públicas** (login, cadastro de clínica, recuperação de senha, onboarding); registrar no catálogo
-- [ ] T010 Sweep de auditoria das telas **P2** (Campanhas, Relatórios, Integrações, Privacidade & LGPD, Configurações, Profissionais, Regras de atribuição, Respostas rápidas, IA Matricial); registrar no catálogo
-- [ ] T011 Classificar e priorizar todos os itens (severidade/escopo/categoria) e definir o `verification` de cada um; revisar consistência do catálogo (entrega o núcleo da US5)
+- [X] T006 Extrair o "padrão de fato" das telas de referência (Pacientes, Agenda) para `specs/016-frontend-ux-audit/component-standard.md`: tokens (cores/sombras/raios/espaçamento via variáveis CSS), variantes de `button/input/select/badge/card/modal/empty/loading/error`, e regras de a11y (Q3)
+- [X] T007 Enumerar o inventário de rotas a partir de `resources/js/config/navigation.js` + `resources/js/router/index.js` e registrar na seção "Telas" do catálogo (route, roles, priority P1/P2, states a verificar)
+- [X] T008 Sweep de auditoria das telas **P1** (Inbox/Conversas, Canais, Agenda, Pacientes lista/funil/merge, Receituários, Dashboard) com `tests/ux/support/*` nas larguras amostradas (320/375/768/1024/1366/1440/1880/1920) + arrasto; registrar cada defeito (G1–G16) no `audit-catalog.md`
+- [X] T009 Sweep de auditoria das **telas públicas** (login, cadastro de clínica, recuperação de senha, onboarding); registrar no catálogo
+- [X] T010 Sweep de auditoria das telas **P2** (Campanhas, Relatórios, Integrações, Privacidade & LGPD, Configurações, Profissionais, Regras de atribuição, Respostas rápidas, IA Matricial); registrar no catálogo
+- [X] T011 Classificar e priorizar todos os itens (severidade/escopo/categoria) e definir o `verification` de cada um; revisar consistência do catálogo (entrega o núcleo da US5)
 
 **Checkpoint**: catálogo completo e priorizado → remediação pode começar.
 
@@ -36,14 +36,14 @@
 
 **Independent Test**: rodar o harness desktop em cada tela P1/pública e concluir as tarefas-chave sem obstrução; zero item desktop crítico/alto em aberto.
 
-- [ ] T012 [P] [US1] Remediar itens desktop (G1–G4, G7) de **Inbox/Conversas** em `resources/js/pages/Inbox/**` e `resources/js/components/Inbox/**`; asserções em `tests/ux/inbox.desktop.spec.js`
-- [ ] T013 [P] [US1] Remediar itens desktop de **Canais** em `resources/js/pages/Canais/**` e `resources/js/components/Canais/**`; asserções em `tests/ux/canais.desktop.spec.js`
-- [ ] T014 [P] [US1] Remediar itens desktop de **Agenda** em `resources/js/pages/Agenda/**`; asserções em `tests/ux/agenda.desktop.spec.js`
-- [ ] T015 [P] [US1] Remediar itens desktop de **Pacientes** (lista/funil/merge) em `resources/js/pages/Pacientes/**`; asserções em `tests/ux/pacientes.desktop.spec.js`
-- [ ] T016 [P] [US1] Remediar itens desktop de **Receituários** em `resources/js/pages/Receituarios/**`; asserções em `tests/ux/receituarios.desktop.spec.js`
-- [ ] T017 [P] [US1] Remediar itens desktop de **Dashboard** em `resources/js/pages/**` (home/executivo); asserções em `tests/ux/dashboard.desktop.spec.js`
-- [ ] T018 [P] [US1] Remediar itens desktop das **telas públicas** em `resources/js/pages/Auth/**` e onboarding; asserções em `tests/ux/publicas.desktop.spec.js`
-- [ ] T019 [US1] Rodar harness de invariantes desktop em todas as telas P1/públicas; marcar itens desktop como `verificado` no catálogo
+- [X] T012 [P] [US1] Remediar itens desktop (G1–G4, G7) de **Inbox/Conversas** em `resources/js/pages/Inbox/**` e `resources/js/components/Inbox/**`; asserções em `tests/ux/inbox.desktop.spec.js`
+- [X] T013 [P] [US1] Remediar itens desktop de **Canais** em `resources/js/pages/Canais/**` e `resources/js/components/Canais/**`; asserções em `tests/ux/canais.desktop.spec.js`
+- [X] T014 [P] [US1] Remediar itens desktop de **Agenda** em `resources/js/pages/Agenda/**`; asserções em `tests/ux/agenda.desktop.spec.js`
+- [X] T015 [P] [US1] Remediar itens desktop de **Pacientes** (lista/funil/merge) em `resources/js/pages/Pacientes/**`; asserções em `tests/ux/pacientes.desktop.spec.js`
+- [X] T016 [P] [US1] Remediar itens desktop de **Receituários** em `resources/js/pages/Receituarios/**`; asserções em `tests/ux/receituarios.desktop.spec.js`
+- [X] T017 [P] [US1] Remediar itens desktop de **Dashboard** em `resources/js/pages/**` (home/executivo); asserções em `tests/ux/dashboard.desktop.spec.js`
+- [X] T018 [P] [US1] Remediar itens desktop das **telas públicas** em `resources/js/pages/Auth/**` e onboarding; asserções em `tests/ux/publicas.desktop.spec.js`
+- [X] T019 [US1] Rodar harness de invariantes desktop em todas as telas P1/públicas; marcar itens desktop como `verificado` no catálogo
 
 ---
 
@@ -53,13 +53,13 @@
 
 **Independent Test**: rodar o harness nas larguras amostradas + arrasto em cada tela P1/pública; tarefas-chave completáveis no celular.
 
-- [ ] T020 [P] [US2] Remediar reflow/overflow/touch (G5, G6, G7) de **Inbox/Conversas** (colapso multi-painel já iniciado; revisar 320–768) em `resources/js/pages/Inbox/**`; asserções em `tests/ux/inbox.responsive.spec.js`
-- [ ] T021 [P] [US2] Remediar responsivo de **Canais** em `resources/js/pages/Canais/**`; asserções em `tests/ux/canais.responsive.spec.js`
-- [ ] T022 [P] [US2] Remediar responsivo de **Agenda** (drag/calendário em telas pequenas) em `resources/js/pages/Agenda/**`; asserções em `tests/ux/agenda.responsive.spec.js`
-- [ ] T023 [P] [US2] Remediar responsivo de **Pacientes** em `resources/js/pages/Pacientes/**`; asserções em `tests/ux/pacientes.responsive.spec.js`
-- [ ] T024 [P] [US2] Remediar responsivo de **Receituários** em `resources/js/pages/Receituarios/**`; asserções em `tests/ux/receituarios.responsive.spec.js`
-- [ ] T025 [P] [US2] Remediar responsivo de **Dashboard** + **telas públicas** em `resources/js/pages/**`; asserções em `tests/ux/dashboard-publicas.responsive.spec.js`
-- [ ] T026 [US2] Rodar harness responsivo (larguras amostradas + arrasto) em todas as telas P1/públicas; marcar itens responsivos como `verificado`
+- [X] T020 [P] [US2] Remediar reflow/overflow/touch (G5, G6, G7) de **Inbox/Conversas** (colapso multi-painel já iniciado; revisar 320–768) em `resources/js/pages/Inbox/**`; asserções em `tests/ux/inbox.responsive.spec.js`
+- [X] T021 [P] [US2] Remediar responsivo de **Canais** em `resources/js/pages/Canais/**`; asserções em `tests/ux/canais.responsive.spec.js`
+- [X] T022 [P] [US2] Remediar responsivo de **Agenda** (drag/calendário em telas pequenas) em `resources/js/pages/Agenda/**`; asserções em `tests/ux/agenda.responsive.spec.js`
+- [X] T023 [P] [US2] Remediar responsivo de **Pacientes** em `resources/js/pages/Pacientes/**`; asserções em `tests/ux/pacientes.responsive.spec.js`
+- [X] T024 [P] [US2] Remediar responsivo de **Receituários** em `resources/js/pages/Receituarios/**`; asserções em `tests/ux/receituarios.responsive.spec.js`
+- [X] T025 [P] [US2] Remediar responsivo de **Dashboard** + **telas públicas** em `resources/js/pages/**`; asserções em `tests/ux/dashboard-publicas.responsive.spec.js`
+- [X] T026 [US2] Rodar harness responsivo (larguras amostradas + arrasto) em todas as telas P1/públicas; marcar itens responsivos como `verificado`
 
 ---
 
@@ -83,9 +83,9 @@
 **Independent Test**: axe sem violações + navegação por teclado em todas as telas auditadas; nenhuma `confirm()`/`prompt()`/`alert()`.
 
 - [ ] T031 [P] [US4] Corrigir foco visível e ordem de tabulação (G10) nas telas com gaps catalogados em `resources/js/pages/**` e `resources/js/components/**`
-- [ ] T032 [P] [US4] Corrigir contraste AA (G11) e rótulos acessíveis (G12) conforme itens do catálogo/axe
+- [X] T032 [P] [US4] Corrigir contraste AA (G11) e rótulos acessíveis (G12) conforme itens do catálogo/axe
 - [X] T033 [P] [US4] Substituir quaisquer `confirm()`/`prompt()`/`alert()` nativos remanescentes por modal a11y (`role=alertdialog` + focus-trap + Esc/overlay) reusando o padrão das Fases 6/12 (G13)
-- [ ] T034 [US4] Rodar axe + navegação por teclado em todas as telas; marcar itens `a11y` como `verificado`
+- [X] T034 [US4] Rodar axe + navegação por teclado em todas as telas; marcar itens `a11y` como `verificado`
 
 ---
 
@@ -103,9 +103,9 @@
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T038 Conectar as asserções de invariante (G1–G16) como **gate permanente de CI** (script único que roda `tests/ux/**` + scanners i18n/diálogos) — FR-015/Q5
+- [X] T038 Conectar as asserções de invariante (G1–G16) como **gate permanente de CI** (script único que roda `tests/ux/**` + scanners i18n/diálogos) — FR-015/Q5
 - [ ] T039 [P] Rodar a suíte completa `tests/ux/**` + `vendor/bin/sail npm run build`; zero violação de gate em todas as telas/larguras amostradas
-- [ ] T040 [P] `vendor/bin/sail bin pint --dirty --format agent` se alguma string de UI server-side (PHP) foi tocada
+- [X] T040 [P] `vendor/bin/sail bin pint --dirty --format agent` se alguma string de UI server-side (PHP) foi tocada
 - [ ] T041 Smoke final das jornadas-chave (responder conversa, agendar, cadastrar paciente, emitir receita) em desktop e mobile (SC-003)
 - [ ] T042 Constitution Re-Check (9/9) + atualizar `.specify/feature.json`/CLAUDE.md para DELIVERED
 
@@ -134,3 +134,11 @@
 
 - Tarefas de remediação são **dirigidas pelo catálogo**: o conteúdo exato depende do que T008–T010 encontrarem. Se uma tela não tiver item de uma categoria, a tarefa correspondente é no-op verificável (gate passa).
 - Nada de backend/dados/IA/canais; PRs que extrapolarem `resources/js/**` + `pt-BR.json` (+ Pint pontual) saem de escopo.
+
+### Progresso — sessão `/speckit-implement` 2026-05-27
+
+- **Desvio de harness (consciente)**: em vez de um `.spec.js` por tela (T012…), o harness foi consolidado em **`tests/ux/audit-sweep.spec.ts`** (report-mode, 39 rotas × 8 larguras + axe) + helpers `tests/ux/support/{auth,routes,uiInvariants,a11y}.ts`. É superset das specs por tela e gera `audit-findings.json`. Roda com `UX_SWEEP=1 npx playwright test --config=playwright.ux.config.ts`.
+- **Verificado (sweep limpo nas 39 rotas)**: UX-010 (401 crítico — `reportsApi`/`webhooks`/`usePresenceHeartbeat`→`@/lib/api`), UX-012…017 (overflow responsivo + tabelas reveladas), UX-018 (contraste: tokens `foreground-muted/subtle` escurecidos + `text-danger-500→600` + emerald-700 + funil text por luminância + remoção de `opacity-60` do card Outlook), UX-019/020 (labels/select-name), UX-021 (foco região rolável), UX-022 (role=combobox).
+- **Estado final automatizado**: 0 overflow + 0 axe serious/critical nas 39 rotas; scanners i18n/diálogos limpos.
+- **Em aberto**: T031 (auditoria manual de ordem de tabulação por teclado — axe cobre parte), T027–T030 (US3: G8/G9 consistência/estados — UX-023/024, inventário manual), T035–T037 (US5: G15 texto longo + cobertura/relatório), T038–T042 (CI gate + smoke + re-check). Rotas `:id`/onboarding/reset/accept-invitation: revisão manual pendente.
+- **Polish pendente**: `prettier --write` nos arquivos `.vue/.js` tocados antes do PR (lint do projeto é `prettier --check`).

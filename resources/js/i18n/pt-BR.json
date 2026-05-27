@@ -1049,7 +1049,8 @@
             "status": "Status",
             "actions": "Ações",
             "status_active": "Ativo",
-            "status_inactive": "Inativo"
+            "status_inactive": "Inativo",
+            "region_label": "Tabela de profissionais"
         },
         "toolbar": {
             "new": "Novo profissional",

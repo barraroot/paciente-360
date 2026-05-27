@@ -108,7 +108,7 @@ function fieldError(field) {
                     v-if="error"
                     role="alert"
                     aria-live="assertive"
-                    class="mb-4 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500"
+                    class="mb-4 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-600"
                 >
                     {{ error }}
                 </div>
@@ -140,7 +140,7 @@ function fieldError(field) {
                             v-if="fieldError('email')"
                             id="invite-email-error"
                             role="alert"
-                            class="mt-1 text-xs text-danger-500"
+                            class="mt-1 text-xs text-danger-600"
                         >
                             {{ fieldError('email') }}
                         </p>
@@ -157,7 +157,7 @@ function fieldError(field) {
                                 v-if="fieldError('intended_role')"
                                 id="invite-role-error"
                                 role="alert"
-                                class="mb-2 text-xs text-danger-500"
+                                class="mb-2 text-xs text-danger-600"
                             >
                                 {{ fieldError('intended_role') }}
                             </div>

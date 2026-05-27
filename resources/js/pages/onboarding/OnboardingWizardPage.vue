@@ -251,7 +251,7 @@ onMounted(() => {
                 v-if="globalError"
                 role="alert"
                 aria-live="assertive"
-                class="mb-6 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500"
+                class="mb-6 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-600"
             >
                 {{ globalError }}
             </div>
@@ -389,7 +389,7 @@ onMounted(() => {
                                     v-if="fieldError('address')"
                                     id="address-error"
                                     role="alert"
-                                    class="mt-1 text-xs text-danger-500"
+                                    class="mt-1 text-xs text-danger-600"
                                 >
                                     {{ fieldError('address') }}
                                 </p>
@@ -421,7 +421,7 @@ onMounted(() => {
                                     v-if="fieldError('phone')"
                                     id="phone-error"
                                     role="alert"
-                                    class="mt-1 text-xs text-danger-500"
+                                    class="mt-1 text-xs text-danger-600"
                                 >
                                     {{ fieldError('phone') }}
                                 </p>
@@ -450,7 +450,7 @@ onMounted(() => {
                                     v-if="fieldError('opening_hours')"
                                     id="opening_hours-error"
                                     role="alert"
-                                    class="mt-1 text-xs text-danger-500"
+                                    class="mt-1 text-xs text-danger-600"
                                 >
                                     {{ fieldError('opening_hours') }}
                                 </p>

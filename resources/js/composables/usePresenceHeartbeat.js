@@ -1,5 +1,5 @@
-import { onBeforeUnmount, onMounted } from 'vue'
-import axios from 'axios'
+import { onBeforeUnmount, onMounted } from 'vue';
+import api from '@/lib/api.js';
 
 /**
  * T264 — Composable de heartbeat de presença (NC-6.b).
@@ -11,32 +11,32 @@ import axios from 'axios'
  * O intervalo é limpo automaticamente em onBeforeUnmount.
  */
 export function usePresenceHeartbeat(intervalSeconds = 60) {
-    let intervalId = null
+    let intervalId = null;
 
     const sendHeartbeat = async () => {
         try {
-            await axios.post('/api/v1/inbox/presence/heartbeat')
+            await api.post('/inbox/presence/heartbeat');
         } catch (error) {
             // Falha silenciosa — não interrompe UX; servidor marcará offline após idle threshold
             if (import.meta.env.DEV) {
-                console.warn('[usePresenceHeartbeat] heartbeat failed:', error?.message)
+                console.warn('[usePresenceHeartbeat] heartbeat failed:', error?.message);
             }
         }
-    }
+    };
 
     onMounted(() => {
         // Envia imediatamente ao montar
-        sendHeartbeat()
+        sendHeartbeat();
 
-        intervalId = setInterval(sendHeartbeat, intervalSeconds * 1000)
-    })
+        intervalId = setInterval(sendHeartbeat, intervalSeconds * 1000);
+    });
 
     onBeforeUnmount(() => {
         if (intervalId !== null) {
-            clearInterval(intervalId)
-            intervalId = null
+            clearInterval(intervalId);
+            intervalId = null;
         }
-    })
+    });
 
-    return { sendHeartbeat }
+    return { sendHeartbeat };
 }

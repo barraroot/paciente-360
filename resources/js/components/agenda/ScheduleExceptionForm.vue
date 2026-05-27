@@ -79,7 +79,7 @@ function reset() {
     <!-- Início -->
     <div>
       <label for="sef-starts-at" class="block text-sm font-medium text-foreground mb-1">
-        Início do bloqueio <span class="text-danger-500" aria-hidden="true">*</span>
+        Início do bloqueio <span class="text-danger-600" aria-hidden="true">*</span>
       </label>
       <input
         id="sef-starts-at"
@@ -90,7 +90,7 @@ function reset() {
         :class="localErrors.starts_at ? 'border-danger-500' : 'border-border'"
         @input="clearError('starts_at')"
       />
-      <p v-if="localErrors.starts_at" role="alert" class="mt-1 text-xs text-danger-500">
+      <p v-if="localErrors.starts_at" role="alert" class="mt-1 text-xs text-danger-600">
         {{ Array.isArray(localErrors.starts_at) ? localErrors.starts_at[0] : localErrors.starts_at }}
       </p>
     </div>
@@ -98,7 +98,7 @@ function reset() {
     <!-- Fim -->
     <div>
       <label for="sef-ends-at" class="block text-sm font-medium text-foreground mb-1">
-        Fim do bloqueio <span class="text-danger-500" aria-hidden="true">*</span>
+        Fim do bloqueio <span class="text-danger-600" aria-hidden="true">*</span>
       </label>
       <input
         id="sef-ends-at"
@@ -110,7 +110,7 @@ function reset() {
         :class="localErrors.ends_at ? 'border-danger-500' : 'border-border'"
         @input="clearError('ends_at')"
       />
-      <p v-if="localErrors.ends_at" role="alert" class="mt-1 text-xs text-danger-500">
+      <p v-if="localErrors.ends_at" role="alert" class="mt-1 text-xs text-danger-600">
         {{ Array.isArray(localErrors.ends_at) ? localErrors.ends_at[0] : localErrors.ends_at }}
       </p>
     </div>
@@ -128,7 +128,7 @@ function reset() {
         class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500 transition"
         @input="clearError('reason')"
       />
-      <p v-if="localErrors.reason" role="alert" class="mt-1 text-xs text-danger-500">
+      <p v-if="localErrors.reason" role="alert" class="mt-1 text-xs text-danger-600">
         {{ Array.isArray(localErrors.reason) ? localErrors.reason[0] : localErrors.reason }}
       </p>
     </div>

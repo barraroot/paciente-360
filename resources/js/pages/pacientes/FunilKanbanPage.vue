@@ -166,24 +166,18 @@ const ORIGEM_OPTIONS = [
         <div class="flex gap-3 mb-6 flex-wrap">
             <select
                 v-model="filtros.origem"
+                aria-label="Filtrar por origem"
                 class="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
                 @change="aplicarFiltros"
             >
-                <option
-                    v-for="opt in ORIGEM_OPTIONS"
-                    :key="opt.value"
-                    :value="opt.value"
-                >
+                <option v-for="opt in ORIGEM_OPTIONS" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                 </option>
             </select>
         </div>
 
         <!-- Loading -->
-        <div
-            v-if="loading"
-            class="flex justify-center items-center py-20"
-        >
+        <div v-if="loading" class="flex justify-center items-center py-20">
             <span class="text-foreground-muted">Carregando Kanban…</span>
         </div>
 
@@ -197,12 +191,7 @@ const ORIGEM_OPTIONS = [
         </div>
 
         <!-- Board -->
-        <KanbanBoard
-            v-else
-            :colunas="colunas"
-            :pacientes="pacientes"
-            @card-moved="onCardMoved"
-        />
+        <KanbanBoard v-else :colunas="colunas" :pacientes="pacientes" @card-moved="onCardMoved" />
 
         <!-- Modal de motivo perdido -->
         <PerdidoMotivoModal

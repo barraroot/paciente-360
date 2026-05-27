@@ -113,7 +113,9 @@ function toggleTag(tagId) {
 }
 
 function goToPage(page) {
-    if (page < 1 || page > totalPages.value) { return; }
+    if (page < 1 || page > totalPages.value) {
+        return;
+    }
     filters.value.page = page;
     // usePacienteSearch detecta a mudança via watch e faz refetch
 }
@@ -189,9 +191,15 @@ async function confirmAnonimizar() {
 
 function exportarCsv() {
     const params = new URLSearchParams();
-    if (filters.value.q) { params.append('q', filters.value.q); }
-    if (filters.value.status) { params.append('status', filters.value.status); }
-    if (filters.value.origem) { params.append('origem', filters.value.origem); }
+    if (filters.value.q) {
+        params.append('q', filters.value.q);
+    }
+    if (filters.value.status) {
+        params.append('status', filters.value.status);
+    }
+    if (filters.value.origem) {
+        params.append('origem', filters.value.origem);
+    }
     if (filters.value.profissional_responsavel_id) {
         params.append('profissional_responsavel_id', filters.value.profissional_responsavel_id);
     }
@@ -216,13 +224,12 @@ function closeDropdown() {
 <template>
     <main class="min-h-screen bg-surface py-8 px-4" @click="closeDropdown">
         <div class="mx-auto max-w-7xl">
-
             <!-- ── Cabeçalho ──────────────────────────────────────────────────── -->
             <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h1 class="text-2xl font-bold text-foreground">
                     {{ t('paciente.list.title') }}
                 </h1>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <!-- Exportar CSV (Admin Clínica only) -->
                     <button
                         v-if="auth.hasPermission('paciente.export')"
@@ -253,12 +260,16 @@ function closeDropdown() {
             </div>
 
             <!-- ── Toolbar de filtros (sticky) ────────────────────────────────── -->
-            <div class="sticky top-0 z-10 mb-4 rounded-xl border border-border bg-surface-elevated p-4 shadow-[var(--shadow-card)]">
+            <div
+                class="sticky top-0 z-10 mb-4 rounded-xl border border-border bg-surface-elevated p-4 shadow-[var(--shadow-card)]"
+            >
                 <div class="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end">
-
                     <!-- Busca -->
                     <div class="flex flex-col gap-1 md:flex-1 md:min-w-48">
-                        <label for="filter-q" class="text-xs font-medium uppercase tracking-wide text-foreground-muted">
+                        <label
+                            for="filter-q"
+                            class="text-xs font-medium uppercase tracking-wide text-foreground-muted"
+                        >
                             {{ t('common.search') }}
                         </label>
                         <input
@@ -273,7 +284,10 @@ function closeDropdown() {
 
                     <!-- Status -->
                     <div class="flex flex-col gap-1">
-                        <label for="filter-status" class="text-xs font-medium uppercase tracking-wide text-foreground-muted">
+                        <label
+                            for="filter-status"
+                            class="text-xs font-medium uppercase tracking-wide text-foreground-muted"
+                        >
                             {{ t('paciente.list.filters.status') }}
                         </label>
                         <select
@@ -294,7 +308,10 @@ function closeDropdown() {
 
                     <!-- Origem -->
                     <div class="flex flex-col gap-1">
-                        <label for="filter-origem" class="text-xs font-medium uppercase tracking-wide text-foreground-muted">
+                        <label
+                            for="filter-origem"
+                            class="text-xs font-medium uppercase tracking-wide text-foreground-muted"
+                        >
                             {{ t('paciente.list.filters.origem') }}
                         </label>
                         <select
@@ -315,7 +332,10 @@ function closeDropdown() {
 
                     <!-- Profissional -->
                     <div class="flex flex-col gap-1">
-                        <label for="filter-prof" class="text-xs font-medium uppercase tracking-wide text-foreground-muted">
+                        <label
+                            for="filter-prof"
+                            class="text-xs font-medium uppercase tracking-wide text-foreground-muted"
+                        >
                             {{ t('paciente.list.filters.profissional') }}
                         </label>
                         <select
@@ -327,11 +347,7 @@ function closeDropdown() {
                             <option value="">
                                 {{ t('paciente.list.filters.profissional') }}: Todos
                             </option>
-                            <option
-                                v-for="prof in profissionais"
-                                :key="prof.id"
-                                :value="prof.id"
-                            >
+                            <option v-for="prof in profissionais" :key="prof.id" :value="prof.id">
                                 {{ prof.name }}
                             </option>
                         </select>
@@ -354,7 +370,9 @@ function closeDropdown() {
                     role="group"
                     :aria-label="t('paciente.list.filters.tag')"
                 >
-                    <span class="self-center text-xs font-medium uppercase tracking-wide text-foreground-muted mr-1">
+                    <span
+                        class="self-center text-xs font-medium uppercase tracking-wide text-foreground-muted mr-1"
+                    >
                         {{ t('paciente.list.filters.tag') }}:
                     </span>
                     <button
@@ -363,9 +381,11 @@ function closeDropdown() {
                         type="button"
                         :aria-pressed="filters['tag[]'].includes(tag.id)"
                         class="rounded-full border px-2.5 py-0.5 text-xs font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
-                        :class="filters['tag[]'].includes(tag.id)
-                            ? 'border-primary-500 bg-primary-50 text-primary-700'
-                            : 'border-border bg-surface text-foreground-muted hover:border-primary-400'"
+                        :class="
+                            filters['tag[]'].includes(tag.id)
+                                ? 'border-primary-500 bg-primary-50 text-primary-700'
+                                : 'border-border bg-surface text-foreground-muted hover:border-primary-400'
+                        "
                         @click.stop="toggleTag(tag.id)"
                     >
                         {{ tag.nome ?? tag.name }}
@@ -395,7 +415,6 @@ function closeDropdown() {
 
             <!-- ── Conteúdo ────────────────────────────────────────────────────── -->
             <template v-else>
-
                 <!-- Empty state -->
                 <div
                     v-if="pacientes.length === 0"
@@ -414,19 +433,48 @@ function closeDropdown() {
                 </div>
 
                 <template v-else>
-
                     <!-- ── Tabela (desktop) ────────────────────────────────────── -->
-                    <div class="hidden md:block overflow-x-auto rounded-xl border border-border bg-surface-elevated shadow-[var(--shadow-card)]">
+                    <div
+                        class="hidden md:block overflow-x-auto rounded-xl border border-border bg-surface-elevated shadow-[var(--shadow-card)]"
+                    >
                         <table class="w-full text-sm">
                             <thead class="border-b border-border bg-surface text-left">
                                 <tr>
-                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted">Nome</th>
-                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted">Status</th>
-                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted">{{ t('paciente.form.telefone_primario') }}</th>
-                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted">{{ t('paciente.list.filters.convenio') }}</th>
-                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted">{{ t('paciente.list.filters.profissional') }}</th>
-                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted">Última atualização</th>
-                                    <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted text-right">{{ t('users.list.column_actions') }}</th>
+                                    <th
+                                        class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted"
+                                    >
+                                        Nome
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted"
+                                    >
+                                        Status
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted"
+                                    >
+                                        {{ t('paciente.form.telefone_primario') }}
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted"
+                                    >
+                                        {{ t('paciente.list.filters.convenio') }}
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted"
+                                    >
+                                        {{ t('paciente.list.filters.profissional') }}
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted"
+                                    >
+                                        Última atualização
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-muted text-right"
+                                    >
+                                        {{ t('users.list.column_actions') }}
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
@@ -457,7 +505,11 @@ function closeDropdown() {
                                         {{ paciente.profissional_responsavel?.nome ?? '—' }}
                                     </td>
                                     <td class="px-4 py-3 text-foreground-muted text-xs">
-                                        {{ paciente.updated_at ? formatDateTime(paciente.updated_at) : '—' }}
+                                        {{
+                                            paciente.updated_at
+                                                ? formatDateTime(paciente.updated_at)
+                                                : '—'
+                                        }}
                                     </td>
                                     <td class="px-4 py-3 text-right" @click.stop>
                                         <div class="relative inline-block">
@@ -478,7 +530,11 @@ function closeDropdown() {
                                                     type="button"
                                                     role="menuitem"
                                                     class="flex w-full items-center px-3 py-2 text-sm text-foreground hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
-                                                    @click="router.push(`/panel/pacientes/${paciente.id}`)"
+                                                    @click="
+                                                        router.push(
+                                                            `/panel/pacientes/${paciente.id}`,
+                                                        )
+                                                    "
                                                 >
                                                     Ver
                                                 </button>
@@ -487,7 +543,11 @@ function closeDropdown() {
                                                     type="button"
                                                     role="menuitem"
                                                     class="flex w-full items-center px-3 py-2 text-sm text-foreground hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
-                                                    @click="router.push(`/panel/pacientes/${paciente.id}/editar`)"
+                                                    @click="
+                                                        router.push(
+                                                            `/panel/pacientes/${paciente.id}/editar`,
+                                                        )
+                                                    "
                                                 >
                                                     Editar
                                                 </button>
@@ -517,7 +577,9 @@ function closeDropdown() {
                             @click="router.push(`/panel/pacientes/${paciente.id}`)"
                         >
                             <div class="mb-2 flex items-start justify-between gap-2">
-                                <p class="font-medium text-foreground text-sm">{{ paciente.nome }}</p>
+                                <p class="font-medium text-foreground text-sm">
+                                    {{ paciente.nome }}
+                                </p>
                                 <span
                                     class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium shrink-0"
                                     :class="statusClass(paciente.status)"

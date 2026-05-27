@@ -10,11 +10,13 @@ const selected = ref(null);
 const STATUSES = ['success', 'escalated', 'failed'];
 
 function statusClass(status) {
-    return {
-        success: 'bg-green-100 text-green-700',
-        escalated: 'bg-amber-100 text-amber-700',
-        failed: 'bg-red-100 text-red-700',
-    }[status] ?? 'bg-gray-100 text-gray-600';
+    return (
+        {
+            success: 'bg-green-100 text-green-700',
+            escalated: 'bg-amber-100 text-amber-700',
+            failed: 'bg-red-100 text-red-700',
+        }[status] ?? 'bg-gray-100 text-gray-600'
+    );
 }
 
 async function load() {
@@ -36,11 +38,18 @@ onMounted(load);
     <div class="p-6">
         <div class="mb-6">
             <h1 class="text-xl font-semibold text-gray-900">Logs de Execução da IA</h1>
-            <p class="text-sm text-gray-500">Auditoria das decisões da IA (conteúdo pseudonimizado).</p>
+            <p class="text-sm text-gray-500">
+                Auditoria das decisões da IA (conteúdo pseudonimizado).
+            </p>
         </div>
 
         <div class="mb-4 flex items-center gap-3">
-            <select v-model="filters.status" class="rounded-lg border-gray-300 text-sm" @change="load">
+            <select
+                v-model="filters.status"
+                aria-label="Filtrar por status"
+                class="rounded-lg border-gray-300 text-sm"
+                @change="load"
+            >
                 <option value="">Todos os status</option>
                 <option v-for="s in STATUSES" :key="s" :value="s">{{ s }}</option>
             </select>
@@ -48,9 +57,14 @@ onMounted(load);
 
         <div v-if="store.loading" class="py-12 text-center text-gray-500">Carregando…</div>
 
-        <div v-else-if="store.error" class="rounded-lg bg-red-50 p-4 text-sm text-red-700">{{ store.error }}</div>
+        <div v-else-if="store.error" class="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+            {{ store.error }}
+        </div>
 
-        <div v-else-if="store.executionLogs.length === 0" class="rounded-lg border border-dashed border-gray-300 py-12 text-center text-gray-500">
+        <div
+            v-else-if="store.executionLogs.length === 0"
+            class="rounded-lg border border-dashed border-gray-300 py-12 text-center text-gray-500"
+        >
             Nenhum log de execução ainda.
         </div>
 
@@ -69,20 +83,41 @@ onMounted(load);
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    <tr v-for="log in store.executionLogs" :key="log.id" class="text-sm text-gray-700">
+                    <tr
+                        v-for="log in store.executionLogs"
+                        :key="log.id"
+                        class="text-sm text-gray-700"
+                    >
                         <td class="px-4 py-3 whitespace-nowrap">{{ fmtDate(log.created_at) }}</td>
                         <td class="px-4 py-3">{{ log.persona?.name ?? '—' }}</td>
                         <td class="px-4 py-3">{{ log.classified_intent ?? '—' }}</td>
-                        <td class="px-4 py-3">{{ log.confidence_score != null ? (log.confidence_score * 100).toFixed(0) + '%' : '—' }}</td>
-                        <td class="px-4 py-3">{{ log.action ?? '—' }}</td>
-                        <td class="px-4 py-3">{{ log.latency_ms != null ? log.latency_ms + ' ms' : '—' }}</td>
                         <td class="px-4 py-3">
-                            <span :class="statusClass(log.status)" class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium">
+                            {{
+                                log.confidence_score != null
+                                    ? (log.confidence_score * 100).toFixed(0) + '%'
+                                    : '—'
+                            }}
+                        </td>
+                        <td class="px-4 py-3">{{ log.action ?? '—' }}</td>
+                        <td class="px-4 py-3">
+                            {{ log.latency_ms != null ? log.latency_ms + ' ms' : '—' }}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span
+                                :class="statusClass(log.status)"
+                                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                            >
                                 {{ log.status }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <button type="button" class="text-indigo-600 hover:underline" @click="selected = log">Detalhes</button>
+                            <button
+                                type="button"
+                                class="text-indigo-600 hover:underline"
+                                @click="selected = log"
+                            >
+                                Detalhes
+                            </button>
                         </td>
                     </tr>
                 </tbody>
@@ -102,14 +137,39 @@ onMounted(load);
             >
                 <div class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
                     <div class="mb-4 flex items-center justify-between">
-                        <h2 id="log-detail-title" class="text-lg font-semibold text-gray-900">Detalhe do log</h2>
-                        <button type="button" class="text-gray-400 hover:text-gray-600" @click="selected = null" aria-label="Fechar">✕</button>
+                        <h2 id="log-detail-title" class="text-lg font-semibold text-gray-900">
+                            Detalhe do log
+                        </h2>
+                        <button
+                            type="button"
+                            class="text-gray-400 hover:text-gray-600"
+                            @click="selected = null"
+                            aria-label="Fechar"
+                        >
+                            ✕
+                        </button>
                     </div>
                     <dl class="space-y-2 text-sm">
-                        <div><dt class="text-gray-500">Correlation ID</dt><dd class="font-mono text-xs text-gray-800">{{ selected.correlation_id }}</dd></div>
-                        <div><dt class="text-gray-500">Intenção</dt><dd class="text-gray-800">{{ selected.classified_intent ?? '—' }}</dd></div>
-                        <div><dt class="text-gray-500">Ação / Status</dt><dd class="text-gray-800">{{ selected.action ?? '—' }} / {{ selected.status }}</dd></div>
-                        <div v-if="selected.error_message"><dt class="text-gray-500">Erro</dt><dd class="text-red-700">{{ selected.error_message }}</dd></div>
+                        <div>
+                            <dt class="text-gray-500">Correlation ID</dt>
+                            <dd class="font-mono text-xs text-gray-800">
+                                {{ selected.correlation_id }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">Intenção</dt>
+                            <dd class="text-gray-800">{{ selected.classified_intent ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">Ação / Status</dt>
+                            <dd class="text-gray-800">
+                                {{ selected.action ?? '—' }} / {{ selected.status }}
+                            </dd>
+                        </div>
+                        <div v-if="selected.error_message">
+                            <dt class="text-gray-500">Erro</dt>
+                            <dd class="text-red-700">{{ selected.error_message }}</dd>
+                        </div>
                     </dl>
                 </div>
             </div>

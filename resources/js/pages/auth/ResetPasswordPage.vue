@@ -179,7 +179,7 @@ function fieldError(field) {
                             v-if="error"
                             role="alert"
                             aria-live="assertive"
-                            class="mb-4 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500"
+                            class="mb-4 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-600"
                         >
                             {{ error }}
                         </div>
@@ -210,7 +210,7 @@ function fieldError(field) {
                                     v-if="fieldError('email')"
                                     id="email-error"
                                     role="alert"
-                                    class="mt-1 text-xs text-danger-500"
+                                    class="mt-1 text-xs text-danger-600"
                                 >
                                     {{ fieldError('email') }}
                                 </p>
@@ -240,7 +240,7 @@ function fieldError(field) {
                                     v-if="fieldError('password')"
                                     id="password-error"
                                     role="alert"
-                                    class="mt-1 text-xs text-danger-500"
+                                    class="mt-1 text-xs text-danger-600"
                                 >
                                     {{ fieldError('password') }}
                                 </p>
@@ -270,7 +270,7 @@ function fieldError(field) {
                                     v-if="fieldError('password_confirmation')"
                                     id="password-confirmation-error"
                                     role="alert"
-                                    class="mt-1 text-xs text-danger-500"
+                                    class="mt-1 text-xs text-danger-600"
                                 >
                                     {{ fieldError('password_confirmation') }}
                                 </p>

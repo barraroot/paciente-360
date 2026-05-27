@@ -215,7 +215,7 @@ function fieldError(idx, field) {
           class="block text-xs font-medium text-foreground mb-1"
         >
           Nome do medicamento
-          <span class="text-danger-500" aria-hidden="true">*</span>
+          <span class="text-danger-600" aria-hidden="true">*</span>
         </label>
         <input
           :id="`med-name-${idx}`"
@@ -252,7 +252,7 @@ function fieldError(idx, field) {
           v-if="fieldError(idx, 'medication_name')"
           :id="`med-name-err-${idx}`"
           role="alert"
-          class="mt-1 text-xs text-danger-500"
+          class="mt-1 text-xs text-danger-600"
         >
           {{ fieldError(idx, 'medication_name') }}
         </p>
@@ -290,7 +290,7 @@ function fieldError(idx, field) {
       <div>
         <label :for="`med-posology-${idx}`" class="block text-xs font-medium text-foreground mb-1">
           Posologia
-          <span class="text-danger-500" aria-hidden="true">*</span>
+          <span class="text-danger-600" aria-hidden="true">*</span>
         </label>
         <textarea
           :id="`med-posology-${idx}`"
@@ -307,7 +307,7 @@ function fieldError(idx, field) {
           v-if="fieldError(idx, 'posology')"
           :id="`med-posology-err-${idx}`"
           role="alert"
-          class="mt-1 text-xs text-danger-500"
+          class="mt-1 text-xs text-danger-600"
         >
           {{ fieldError(idx, 'posology') }}
         </p>

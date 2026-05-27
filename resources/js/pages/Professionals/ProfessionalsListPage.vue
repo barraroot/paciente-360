@@ -17,9 +17,7 @@ const toast = ref(null);
 const items = computed(() => store.list);
 const loading = computed(() => store.loading);
 const forbidden = computed(() => store.forbidden);
-const isEmpty = computed(
-    () => ! loading.value && ! forbidden.value && items.value.length === 0,
-);
+const isEmpty = computed(() => !loading.value && !forbidden.value && items.value.length === 0);
 
 let searchTimer = null;
 function onSearchInput(value) {
@@ -49,7 +47,7 @@ function cancelDeactivate() {
 
 async function confirmDeactivate() {
     const prof = deactivateTarget.value;
-    if (! prof) {
+    if (!prof) {
         return;
     }
     deactivating.value = true;
@@ -74,12 +72,18 @@ async function onReactivate(prof) {
 }
 
 function onSaved() {
-    showToast(editingProfessional.value ? t('professionals.success.updated') : t('professionals.success.created'));
+    showToast(
+        editingProfessional.value
+            ? t('professionals.success.updated')
+            : t('professionals.success.created'),
+    );
 }
 
 function showToast(msg, type = 'success') {
     toast.value = { msg, type };
-    setTimeout(() => { toast.value = null; }, 4000);
+    setTimeout(() => {
+        toast.value = null;
+    }, 4000);
 }
 
 onMounted(() => {
@@ -91,10 +95,18 @@ onMounted(() => {
     <div class="p-4 sm:p-6 max-w-6xl mx-auto">
         <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
             <div>
-                <h1 class="text-2xl font-semibold text-foreground">{{ t('professionals.page_title') }}</h1>
-                <p class="mt-0.5 text-sm text-foreground-muted">{{ t('professionals.page_subtitle') }}</p>
+                <h1 class="text-2xl font-semibold text-foreground">
+                    {{ t('professionals.page_title') }}
+                </h1>
+                <p class="mt-0.5 text-sm text-foreground-muted">
+                    {{ t('professionals.page_subtitle') }}
+                </p>
             </div>
-            <button type="button" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800" @click="openCreate">
+            <button
+                type="button"
+                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800"
+                @click="openCreate"
+            >
                 + {{ t('professionals.toolbar.new') }}
             </button>
         </header>
@@ -125,67 +137,119 @@ onMounted(() => {
         </ul>
 
         <!-- Acesso negado (403) -->
-        <div v-else-if="forbidden" role="alert" class="text-center py-12 border border-dashed border-danger-300 rounded-xl bg-danger-50">
-            <p class="text-base font-semibold text-danger-700">{{ t('professionals.forbidden.title') }}</p>
+        <div
+            v-else-if="forbidden"
+            role="alert"
+            class="text-center py-12 border border-dashed border-danger-300 rounded-xl bg-danger-50"
+        >
+            <p class="text-base font-semibold text-danger-700">
+                {{ t('professionals.forbidden.title') }}
+            </p>
             <p class="mt-1 text-sm text-danger-600">{{ t('professionals.forbidden.body') }}</p>
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="isEmpty" class="text-center py-12 border border-dashed border-border rounded-xl">
-            <p class="text-base font-semibold text-foreground">{{ t('professionals.empty_state.title') }}</p>
-            <p class="mt-1 text-sm text-foreground-muted">{{ t('professionals.empty_state.body') }}</p>
-            <button type="button" class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800" @click="openCreate">
+        <div
+            v-else-if="isEmpty"
+            class="text-center py-12 border border-dashed border-border rounded-xl"
+        >
+            <p class="text-base font-semibold text-foreground">
+                {{ t('professionals.empty_state.title') }}
+            </p>
+            <p class="mt-1 text-sm text-foreground-muted">
+                {{ t('professionals.empty_state.body') }}
+            </p>
+            <button
+                type="button"
+                class="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-700 text-white text-sm font-semibold hover:bg-primary-800"
+                @click="openCreate"
+            >
                 + {{ t('professionals.empty_state.cta') }}
             </button>
         </div>
 
         <!-- Tabela -->
-        <table v-else class="w-full border border-border rounded-xl overflow-hidden bg-surface-elevated">
-            <thead class="bg-surface-muted">
-                <tr class="text-left text-xs uppercase tracking-wide text-foreground-muted">
-                    <th class="px-4 py-3">{{ t('professionals.table.name') }}</th>
-                    <th class="px-4 py-3">{{ t('professionals.table.council') }}</th>
-                    <th class="px-4 py-3">{{ t('professionals.table.especialidade') }}</th>
-                    <th class="px-4 py-3">{{ t('professionals.table.status') }}</th>
-                    <th class="px-4 py-3 text-right">{{ t('professionals.table.actions') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="prof in items" :key="prof.id" class="border-t border-border">
-                    <td class="px-4 py-3">
-                        <p class="text-sm font-medium text-foreground">{{ prof.name }}</p>
-                        <p v-if="prof.user" class="text-xs text-foreground-muted">{{ prof.user.name }}</p>
-                    </td>
-                    <td class="px-4 py-3 text-sm text-foreground">
-                        {{ prof.council_type === 'OUTRO' ? prof.council_type_other : prof.council_type }}
-                        {{ prof.council_number }}/{{ prof.council_state }}
-                    </td>
-                    <td class="px-4 py-3 text-sm text-foreground-muted">{{ prof.especialidade ?? '—' }}</td>
-                    <td class="px-4 py-3">
-                        <span
-                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-                            :class="prof.is_active ? 'bg-success-50 text-success-700' : 'bg-surface-muted text-foreground-muted'"
-                        >
-                            <span aria-hidden="true">{{ prof.is_active ? '●' : '○' }}</span>
-                            {{ prof.is_active ? t('professionals.table.status_active') : t('professionals.table.status_inactive') }}
-                        </span>
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                        <button class="text-sm text-primary-700 hover:underline mr-3" @click="openEdit(prof)">{{ t('professionals.actions.edit') }}</button>
-                        <button
-                            v-if="prof.is_active"
-                            class="text-sm text-danger-600 hover:underline"
-                            @click="onDeactivate(prof)"
-                        >{{ t('professionals.actions.deactivate') }}</button>
-                        <button
-                            v-else
-                            class="text-sm text-primary-700 hover:underline"
-                            @click="onReactivate(prof)"
-                        >{{ t('professionals.actions.reactivate') }}</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div
+            v-else
+            class="overflow-x-auto"
+            tabindex="0"
+            role="region"
+            :aria-label="t('professionals.table.region_label')"
+        >
+            <table
+                class="w-full border border-border rounded-xl overflow-hidden bg-surface-elevated"
+            >
+                <thead class="bg-surface-muted">
+                    <tr class="text-left text-xs uppercase tracking-wide text-foreground-muted">
+                        <th class="px-4 py-3">{{ t('professionals.table.name') }}</th>
+                        <th class="px-4 py-3">{{ t('professionals.table.council') }}</th>
+                        <th class="px-4 py-3">{{ t('professionals.table.especialidade') }}</th>
+                        <th class="px-4 py-3">{{ t('professionals.table.status') }}</th>
+                        <th class="px-4 py-3 text-right">{{ t('professionals.table.actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="prof in items" :key="prof.id" class="border-t border-border">
+                        <td class="px-4 py-3">
+                            <p class="text-sm font-medium text-foreground">{{ prof.name }}</p>
+                            <p v-if="prof.user" class="text-xs text-foreground-muted">
+                                {{ prof.user.name }}
+                            </p>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-foreground">
+                            {{
+                                prof.council_type === 'OUTRO'
+                                    ? prof.council_type_other
+                                    : prof.council_type
+                            }}
+                            {{ prof.council_number }}/{{ prof.council_state }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-foreground-muted">
+                            {{ prof.especialidade ?? '—' }}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span
+                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                                :class="
+                                    prof.is_active
+                                        ? 'bg-success-50 text-success-700'
+                                        : 'bg-surface-muted text-foreground-muted'
+                                "
+                            >
+                                <span aria-hidden="true">{{ prof.is_active ? '●' : '○' }}</span>
+                                {{
+                                    prof.is_active
+                                        ? t('professionals.table.status_active')
+                                        : t('professionals.table.status_inactive')
+                                }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <button
+                                class="text-sm text-primary-700 hover:underline mr-3"
+                                @click="openEdit(prof)"
+                            >
+                                {{ t('professionals.actions.edit') }}
+                            </button>
+                            <button
+                                v-if="prof.is_active"
+                                class="text-sm text-danger-600 hover:underline"
+                                @click="onDeactivate(prof)"
+                            >
+                                {{ t('professionals.actions.deactivate') }}
+                            </button>
+                            <button
+                                v-else
+                                class="text-sm text-primary-700 hover:underline"
+                                @click="onReactivate(prof)"
+                            >
+                                {{ t('professionals.actions.reactivate') }}
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
         <!-- Toast -->
         <div
@@ -193,7 +257,11 @@ onMounted(() => {
             role="status"
             aria-live="polite"
             class="fixed right-4 top-20 z-50 rounded-lg px-4 py-3 text-sm font-medium shadow-popover"
-            :class="toast.type === 'error' ? 'border border-danger-500 bg-danger-50 text-danger-700' : 'border border-success-500 bg-success-50 text-success-700'"
+            :class="
+                toast.type === 'error'
+                    ? 'border border-danger-500 bg-danger-50 text-danger-700'
+                    : 'border border-success-500 bg-success-50 text-success-700'
+            "
         >
             {{ toast.msg }}
         </div>

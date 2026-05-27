@@ -175,13 +175,13 @@ function handleOverlayClick(e) {
                     <!-- Paciente -->
                     <div>
                         <label class="block text-sm font-medium text-foreground mb-1" for="fc-paciente">
-                            Paciente <span class="text-danger-500" aria-hidden="true">*</span>
+                            Paciente <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
                         <p v-if="form.paciente_label" class="text-sm font-semibold text-primary-700 mb-1">
                             {{ form.paciente_label }}
                         </p>
                         <PatientAutocomplete id="fc-paciente" @select="selectPatient" />
-                        <p v-if="fieldErrors.paciente_id" role="alert" class="mt-1 text-xs text-danger-500">
+                        <p v-if="fieldErrors.paciente_id" role="alert" class="mt-1 text-xs text-danger-600">
                             {{ fieldErrors.paciente_id[0] }}
                         </p>
                     </div>
@@ -189,7 +189,7 @@ function handleOverlayClick(e) {
                     <!-- Profissional -->
                     <div>
                         <label for="fc-professional" class="block text-sm font-medium text-foreground mb-1">
-                            Profissional <span class="text-danger-500" aria-hidden="true">*</span>
+                            Profissional <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
                         <select
                             id="fc-professional"
@@ -200,7 +200,7 @@ function handleOverlayClick(e) {
                             <option value="" disabled>Selecione um profissional</option>
                             <option v-for="p in professionals" :key="p.id" :value="p.id">{{ p.name }}</option>
                         </select>
-                        <p v-if="fieldErrors.professional_id" role="alert" class="mt-1 text-xs text-danger-500">
+                        <p v-if="fieldErrors.professional_id" role="alert" class="mt-1 text-xs text-danger-600">
                             {{ fieldErrors.professional_id[0] }}
                         </p>
                     </div>
@@ -208,7 +208,7 @@ function handleOverlayClick(e) {
                     <!-- Tipo de atendimento -->
                     <div>
                         <label for="fc-type" class="block text-sm font-medium text-foreground mb-1">
-                            Tipo de atendimento <span class="text-danger-500" aria-hidden="true">*</span>
+                            Tipo de atendimento <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
                         <select
                             id="fc-type"
@@ -221,7 +221,7 @@ function handleOverlayClick(e) {
                                 {{ t.nome }} ({{ t.duration_minutes }} min)
                             </option>
                         </select>
-                        <p v-if="fieldErrors.appointment_type_id" role="alert" class="mt-1 text-xs text-danger-500">
+                        <p v-if="fieldErrors.appointment_type_id" role="alert" class="mt-1 text-xs text-danger-600">
                             {{ fieldErrors.appointment_type_id[0] }}
                         </p>
                     </div>
@@ -229,7 +229,7 @@ function handleOverlayClick(e) {
                     <!-- Data/hora de início -->
                     <div>
                         <label for="fc-starts-at" class="block text-sm font-medium text-foreground mb-1">
-                            Data e hora de início <span class="text-danger-500" aria-hidden="true">*</span>
+                            Data e hora de início <span class="text-danger-600" aria-hidden="true">*</span>
                         </label>
                         <input
                             id="fc-starts-at"
@@ -238,7 +238,7 @@ function handleOverlayClick(e) {
                             class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
                             :class="{ 'border-danger-500': fieldErrors.starts_at }"
                         />
-                        <p v-if="fieldErrors.starts_at" role="alert" class="mt-1 text-xs text-danger-500">
+                        <p v-if="fieldErrors.starts_at" role="alert" class="mt-1 text-xs text-danger-600">
                             {{ fieldErrors.starts_at[0] }}
                         </p>
                     </div>

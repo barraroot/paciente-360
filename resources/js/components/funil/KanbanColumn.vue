@@ -70,23 +70,44 @@ function onCardMoved(event) {
 
 // v-model local para o draggable
 const localCards = computed(() =>
-    [...props.pacientes].sort((a, b) => (a.funil_posicao ?? 0) - (b.funil_posicao ?? 0))
+    [...props.pacientes].sort((a, b) => (a.funil_posicao ?? 0) - (b.funil_posicao ?? 0)),
 );
 
-const colunaColor = computed(() => props.coluna.cor ?? '#6366f1');
+const colunaColor = computed(() => props.coluna.cor ?? '#4f46e5');
+
+/**
+ * Cor de texto legível sobre a cor da coluna (UX-018 / contraste AA).
+ * Calcula a luminância relativa (WCAG) do fundo escolhido pelo usuário e
+ * devolve texto escuro ou branco — funciona para qualquer cor configurada.
+ */
+const headerTextColor = computed(() => {
+    const hex = colunaColor.value.replace('#', '');
+    const full =
+        hex.length === 3
+            ? hex
+                  .split('')
+                  .map((c) => c + c)
+                  .join('')
+            : hex;
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255);
+    const lin = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    const luminance = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    // contraste com branco = 1.05 / (L + 0.05); usa texto escuro quando branco falha AA
+    return 1.05 / (luminance + 0.05) >= 4.5 ? '#ffffff' : '#1f2937';
+});
 </script>
 
 <template>
     <div class="flex flex-col w-72 flex-shrink-0">
         <!-- Header da coluna -->
         <div
-            class="flex items-center justify-between px-3 py-2 rounded-t-lg text-white text-sm font-semibold"
-            :style="{ backgroundColor: colunaColor }"
+            class="flex items-center justify-between px-3 py-2 rounded-t-lg text-sm font-semibold"
+            :style="{ backgroundColor: colunaColor, color: headerTextColor }"
         >
             <span>{{ coluna.nome }}</span>
             <span
-                class="bg-white/20 rounded-full px-2 py-0.5 text-xs font-bold"
-                aria-label="`${pacientes.length} pacientes nesta coluna`"
+                class="bg-black/10 rounded-full px-2 py-0.5 text-xs font-bold"
+                :aria-label="`${pacientes.length} pacientes nesta coluna`"
             >
                 {{ pacientes.length }}
             </span>

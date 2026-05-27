@@ -43,7 +43,12 @@ function onCardMoved(payload) {
 </script>
 
 <template>
-    <div class="flex gap-4 overflow-x-auto pb-4 min-h-96">
+    <div
+        class="flex gap-4 overflow-x-auto pb-4 min-h-96"
+        tabindex="0"
+        role="region"
+        aria-label="Quadro do funil de pacientes"
+    >
         <KanbanColumn
             v-for="coluna in colunas"
             :key="coluna.id"

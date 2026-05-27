@@ -411,7 +411,7 @@ function statusClass(status) {
                     v-else-if="usersError"
                     role="alert"
                     aria-live="assertive"
-                    class="rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500"
+                    class="rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-600"
                 >
                     {{ usersError }}
                 </div>
@@ -608,7 +608,7 @@ function statusClass(status) {
                     v-else-if="invitationsError"
                     role="alert"
                     aria-live="assertive"
-                    class="rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500"
+                    class="rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-600"
                 >
                     {{ invitationsError }}
                 </div>
@@ -720,7 +720,7 @@ function statusClass(status) {
                         v-if="editModal.error"
                         role="alert"
                         aria-live="assertive"
-                        class="mb-4 rounded-lg border border-danger-500 bg-danger-50 px-3 py-2 text-sm text-danger-500"
+                        class="mb-4 rounded-lg border border-danger-500 bg-danger-50 px-3 py-2 text-sm text-danger-600"
                     >
                         {{ editModal.error }}
                     </div>
@@ -741,7 +741,7 @@ function statusClass(status) {
                                 class="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 :class="{ 'border-danger-500 focus:border-danger-500': fieldEditError('name') }"
                             />
-                            <p v-if="fieldEditError('name')" role="alert" class="mt-1 text-xs text-danger-500">
+                            <p v-if="fieldEditError('name')" role="alert" class="mt-1 text-xs text-danger-600">
                                 {{ fieldEditError('name') }}
                             </p>
                         </div>
@@ -808,7 +808,7 @@ function statusClass(status) {
                 v-if="disableModal.error"
                 role="alert"
                 aria-live="assertive"
-                class="mt-3 rounded-lg border border-danger-500 bg-danger-50 px-3 py-2 text-sm text-danger-500"
+                class="mt-3 rounded-lg border border-danger-500 bg-danger-50 px-3 py-2 text-sm text-danger-600"
             >
                 {{ disableModal.error }}
             </div>
@@ -836,7 +836,7 @@ function statusClass(status) {
                 v-if="revokeModal.error"
                 role="alert"
                 aria-live="assertive"
-                class="mt-3 rounded-lg border border-danger-500 bg-danger-50 px-3 py-2 text-sm text-danger-500"
+                class="mt-3 rounded-lg border border-danger-500 bg-danger-50 px-3 py-2 text-sm text-danger-600"
             >
                 {{ revokeModal.error }}
             </div>

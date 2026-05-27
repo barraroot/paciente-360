@@ -163,7 +163,7 @@ function cancelEmailLink() {
                 <form @submit.prevent="submit" class="p-5 space-y-4">
                     <div>
                         <label for="prof-name" class="block text-sm font-medium text-foreground mb-1">
-                            {{ t('professionals.form.name_label') }} <span class="text-danger-500">*</span>
+                            {{ t('professionals.form.name_label') }} <span class="text-danger-600">*</span>
                         </label>
                         <input
                             id="prof-name"
@@ -175,7 +175,7 @@ function cancelEmailLink() {
                             class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                             :class="{ 'border-danger-500': errors.name }"
                         />
-                        <p v-if="errors.name" class="mt-1 text-xs text-danger-500">{{ errors.name[0] }}</p>
+                        <p v-if="errors.name" class="mt-1 text-xs text-danger-600">{{ errors.name[0] }}</p>
                     </div>
 
                     <CouncilTypeSelect
@@ -188,7 +188,7 @@ function cancelEmailLink() {
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label for="prof-council-number" class="block text-sm font-medium text-foreground mb-1">
-                                {{ t('professionals.form.council_number_label') }} <span class="text-danger-500">*</span>
+                                {{ t('professionals.form.council_number_label') }} <span class="text-danger-600">*</span>
                             </label>
                             <input
                                 id="prof-council-number"
@@ -200,11 +200,11 @@ function cancelEmailLink() {
                                 class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                                 :class="{ 'border-danger-500': errors.council_number }"
                             />
-                            <p v-if="errors.council_number" class="mt-1 text-xs text-danger-500">{{ errors.council_number[0] }}</p>
+                            <p v-if="errors.council_number" class="mt-1 text-xs text-danger-600">{{ errors.council_number[0] }}</p>
                         </div>
                         <div>
                             <label for="prof-council-state" class="block text-sm font-medium text-foreground mb-1">
-                                {{ t('professionals.form.council_state_label') }} <span class="text-danger-500">*</span>
+                                {{ t('professionals.form.council_state_label') }} <span class="text-danger-600">*</span>
                             </label>
                             <select
                                 id="prof-council-state"
@@ -240,7 +240,7 @@ function cancelEmailLink() {
                     <!-- Modo de vínculo (apenas em create) -->
                     <div v-if="!isEdit" class="space-y-2 pt-2 border-t border-border">
                         <label class="block text-sm font-medium text-foreground">
-                            {{ t('professionals.form.link_mode_label') }} <span class="text-danger-500">*</span>
+                            {{ t('professionals.form.link_mode_label') }} <span class="text-danger-600">*</span>
                         </label>
                         <div class="flex gap-3">
                             <label class="inline-flex items-center gap-2 text-sm">
@@ -261,7 +261,7 @@ function cancelEmailLink() {
                                 class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                                 :class="{ 'border-danger-500': errors.user_id }"
                             />
-                            <p v-if="errors.user_id" class="mt-1 text-xs text-danger-500">{{ errors.user_id[0] }}</p>
+                            <p v-if="errors.user_id" class="mt-1 text-xs text-danger-600">{{ errors.user_id[0] }}</p>
                         </div>
 
                         <div v-else>
@@ -274,7 +274,7 @@ function cancelEmailLink() {
                                 class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                                 :class="{ 'border-danger-500': errors.email }"
                             />
-                            <p v-if="errors.email" class="mt-1 text-xs text-danger-500">{{ errors.email[0] }}</p>
+                            <p v-if="errors.email" class="mt-1 text-xs text-danger-600">{{ errors.email[0] }}</p>
                         </div>
                     </div>
 
@@ -282,7 +282,7 @@ function cancelEmailLink() {
                         {{ t('professionals.form.user_link_immutable_note') }}
                     </div>
 
-                    <div v-if="errors._global" role="alert" class="text-xs text-danger-500">
+                    <div v-if="errors._global" role="alert" class="text-xs text-danger-600">
                         {{ errors._global[0] }}
                     </div>
 

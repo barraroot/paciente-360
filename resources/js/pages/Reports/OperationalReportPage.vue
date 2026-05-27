@@ -1,13 +1,13 @@
 <script setup>
-import { onMounted } from 'vue'
-import { useReportsStore } from '@/stores/reportsStore'
+import { onMounted } from 'vue';
+import { useReportsStore } from '@/stores/reportsStore';
 
 /**
  * T270 (Fase 8 — Lote E US-10.2) — Relatório Operacional.
  */
-const store = useReportsStore()
+const store = useReportsStore();
 
-onMounted(() => store.loadOperational())
+onMounted(() => store.loadOperational());
 </script>
 
 <template>
@@ -32,32 +32,82 @@ onMounted(() => store.loadOperational())
 
             <section>
                 <h2>Volume por Atendente</h2>
-                <table>
-                    <thead><tr><th>Atendente</th><th>Mensagens</th><th>Conversas</th></tr></thead>
-                    <tbody>
-                        <tr v-for="row in (store.operational.data.volume_per_attendant ?? [])" :key="row.user_id">
-                            <td>{{ row.user_name }}</td>
-                            <td>{{ row.messages_count }}</td>
-                            <td>{{ row.conversations_count }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div
+                    class="table-scroll"
+                    tabindex="0"
+                    role="region"
+                    aria-label="Volume por atendente"
+                >
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Atendente</th>
+                                <th>Mensagens</th>
+                                <th>Conversas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="row in store.operational.data.volume_per_attendant ?? []"
+                                :key="row.user_id"
+                            >
+                                <td>{{ row.user_name }}</td>
+                                <td>{{ row.messages_count }}</td>
+                                <td>{{ row.conversations_count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
             <section>
                 <h2>Performance da IA</h2>
-                <p>Resoluções autônomas: {{ store.operational.data.ai_performance?.autonomous_resolutions ?? 0 }}</p>
-                <p>Taxa de handoff: {{ store.operational.data.ai_performance?.handoff_rate_percent ?? 0 }}%</p>
+                <p>
+                    Resoluções autônomas:
+                    {{ store.operational.data.ai_performance?.autonomous_resolutions ?? 0 }}
+                </p>
+                <p>
+                    Taxa de handoff:
+                    {{ store.operational.data.ai_performance?.handoff_rate_percent ?? 0 }}%
+                </p>
             </section>
         </div>
     </section>
 </template>
 
 <style scoped>
-.report { padding: 1.5rem; }
-.report__sections { display: grid; gap: 1.5rem; }
-.report__sections section { background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem; }
-.report__sections h2 { font-size: 1rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
-table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #f1f5f9; }
+.report {
+    padding: 1.5rem;
+}
+.report__sections {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+}
+.report__sections .table-scroll {
+    overflow-x: auto;
+}
+.report__sections section {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+.report__sections h2 {
+    font-size: 1rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th,
+td {
+    text-align: left;
+    padding: 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+}
 </style>

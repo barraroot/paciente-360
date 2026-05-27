@@ -375,7 +375,7 @@ async function submit() {
           <!-- Data de emissão (editável — default hoje) -->
           <div class="rounded-xl border border-border bg-surface p-4 space-y-2">
             <label for="renew-issued-at" class="block text-sm font-medium text-foreground">
-              Data de emissão <span class="text-danger-500" aria-hidden="true">*</span>
+              Data de emissão <span class="text-danger-600" aria-hidden="true">*</span>
             </label>
             <input
               id="renew-issued-at"
@@ -387,7 +387,7 @@ async function submit() {
               class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-500"
               :class="{ 'border-danger-500': fieldErrors.issued_at }"
             />
-            <p v-if="fieldErrors.issued_at" role="alert" class="text-xs text-danger-500">
+            <p v-if="fieldErrors.issued_at" role="alert" class="text-xs text-danger-600">
               {{ fieldErrors.issued_at[0] }}
             </p>
           </div>
@@ -463,7 +463,7 @@ async function submit() {
               :type="form.type"
               :errors="fieldErrors"
             />
-            <p v-if="fieldErrors.items" role="alert" class="mt-2 text-xs text-danger-500">
+            <p v-if="fieldErrors.items" role="alert" class="mt-2 text-xs text-danger-600">
               {{ fieldErrors.items[0] }}
             </p>
           </div>

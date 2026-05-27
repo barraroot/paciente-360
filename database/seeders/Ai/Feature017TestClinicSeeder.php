@@ -9,8 +9,12 @@ use App\Domain\Ai\KnowledgeBase\Services\AiKnowledgeBaseService;
 use App\Domain\Ai\Persona\Models\AiPersona;
 use App\Domain\Ai\WorkContext\Services\AiWorkContextService;
 use App\Models\Agenda\AppointmentType;
+use App\Models\Agenda\ProfessionalSchedule;
+use App\Models\Professional;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -39,7 +43,8 @@ class Feature017TestClinicSeeder extends Seeder
         $this->command?->info("Provisionando clínica de teste no tenant #{$tenant->id} ({$tenant->slug}).");
 
         $this->seedWorkContext($tenant);
-        $this->seedAppointmentType($tenant);
+        $type = $this->seedAppointmentType($tenant);
+        $this->seedProfessionalsAndSchedules($tenant, $type);
         $this->seedKnowledgeBase($tenant);
 
         $this->command?->info('Pronto. Veja specs/017-ai-conversation-humanization/test-plan.md (seções 3 e 4).');
@@ -82,9 +87,9 @@ class Feature017TestClinicSeeder extends Seeder
         $this->command?->info('  ✓ Contexto de trabalho.');
     }
 
-    private function seedAppointmentType(Tenant $tenant): void
+    private function seedAppointmentType(Tenant $tenant): AppointmentType
     {
-        AppointmentType::query()->firstOrCreate(
+        $type = AppointmentType::query()->firstOrCreate(
             ['tenant_id' => $tenant->id, 'slug' => 'consulta-enxaqueca-cefaleia'],
             [
                 'nome' => 'Consulta enxaqueca/cefaleia',
@@ -98,6 +103,73 @@ class Feature017TestClinicSeeder extends Seeder
         );
 
         $this->command?->info('  ✓ Tipo de atendimento (R$300, 60min).');
+
+        return $type;
+    }
+
+    /**
+     * Garante profissionais ATIVOS com agenda recorrente desta semana em diante,
+     * para o get-availability retornar horários reais. Cobre o profissional já
+     * existente (1ª escolha alfabética da tool) + cria a "Dra. Daniele".
+     */
+    private function seedProfessionalsAndSchedules(Tenant $tenant, AppointmentType $type): void
+    {
+        $creatorId = User::query()->where('tenant_id', $tenant->id)->value('id');
+
+        if ($creatorId === null) {
+            $this->command?->warn('  ! Sem usuário no tenant — não é possível criar horários (created_by_user_id obrigatório).');
+
+            return;
+        }
+
+        // Cria a Dra. Daniele se ainda não existir (idempotente por nome).
+        Professional::query()->firstOrCreate(
+            ['tenant_id' => $tenant->id, 'name' => 'Dra. Daniele Oliveira'],
+            ['especialidade' => 'Neurologia — Cefaleia e Enxaqueca', 'is_active' => true],
+        );
+
+        $professionals = Professional::query()
+            ->where('tenant_id', $tenant->id)
+            ->where('is_active', true)
+            ->whereNull('deleted_at')
+            ->get();
+
+        // Esta semana (segunda) em diante; blocos manhã + tarde, seg–sex.
+        $effectiveFrom = Carbon::now()->startOfWeek()->toDateString();
+        $blocks = [
+            ['start' => '08:00', 'end' => '12:00'],
+            ['start' => '14:00', 'end' => '18:00'],
+        ];
+
+        $schedulesCreated = 0;
+        foreach ($professionals as $professional) {
+            // Oferece o tipo de atendimento (pivot tenant-scoped).
+            $professional->appointmentTypes()->syncWithoutDetaching([
+                $type->id => ['tenant_id' => $tenant->id, 'created_at' => now()],
+            ]);
+
+            foreach (range(1, 5) as $dow) { // ISO: 1=Seg .. 5=Sex
+                $schedule = ProfessionalSchedule::query()->firstOrCreate(
+                    [
+                        'tenant_id' => $tenant->id,
+                        'professional_id' => $professional->id,
+                        'day_of_week' => $dow,
+                        'effective_from' => $effectiveFrom,
+                    ],
+                    [
+                        'blocks' => $blocks,
+                        'effective_until' => null,
+                        'created_by_user_id' => $creatorId,
+                    ],
+                );
+
+                if ($schedule->wasRecentlyCreated) {
+                    $schedulesCreated++;
+                }
+            }
+        }
+
+        $this->command?->info("  ✓ {$professionals->count()} profissional(is) ativo(s) com agenda seg–sex (08–12 / 14–18). Horários novos: {$schedulesCreated}.");
     }
 
     private function seedKnowledgeBase(Tenant $tenant): void

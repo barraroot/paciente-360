@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import axios from 'axios'
+import api from '@/lib/api'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 /**
@@ -25,7 +25,7 @@ function showToast(msg, type = 'success') {
 async function load() {
     loading.value = true
     try {
-        const { data } = await axios.get('/api/v1/integrations/api-tokens')
+        const { data } = await api.get('/integrations/api-tokens')
         tokens.value = data.data ?? []
     } catch (e) {
         error.value = e?.response?.data?.message ?? 'Falha ao carregar tokens.'
@@ -42,7 +42,7 @@ function openCreate() {
 
 async function onSubmit() {
     try {
-        const { data } = await axios.post('/api/v1/integrations/api-tokens', form.value)
+        const { data } = await api.post('/integrations/api-tokens', form.value)
         lastToken.value = data.meta?.token_plaintext ?? null
         await load()
         showToast('Token criado. Copie agora!')
@@ -56,7 +56,7 @@ async function confirmRevoke() {
     revokeTarget.value = null
     if (!token) { return }
     try {
-        await axios.delete(`/api/v1/integrations/api-tokens/${token.id}`)
+        await api.delete(`/integrations/api-tokens/${token.id}`)
         showToast('Token revogado.')
         await load()
     } catch (e) {

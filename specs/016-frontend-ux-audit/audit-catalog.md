@@ -13,9 +13,9 @@ _(a popular a partir de `navigation.js` + `router/index.js`)_
 
 | id | screen | category | severity | scope | description | recommendation | verification | status | test_ref |
 |----|--------|----------|----------|-------|-------------|----------------|--------------|--------|----------|
-| UX-001 | `components/Inbox/AiPauseBadge.vue`,`ReleaseAiButton.vue`,`TakeoverButton.vue` | i18n | alto | ambos | 10 chaves `inbox.ai_pause.*` cruas (badge/release/takeover) | Adicionar bloco `inbox.ai_pause` ao `pt-BR.json` | `scan-i18n-keys.mjs` limpo | corrigido (na branch `fix/inbox-realtime-layout-e-infra`) | G14 |
-| UX-002 | `pages/pacientes/PacientesListPage.vue` | i18n | alto | ambos | Chave crua `import.export_cta` | Adicionar tradução em `pt-BR.json` | `scan-i18n-keys.mjs` limpo | aberto | G14 |
-| UX-003 | `pages/prescriptions/PrescriptionsReportPage.vue` | i18n | alto | ambos | Chave crua `prescription.restricted_access` | Adicionar tradução em `pt-BR.json` | `scan-i18n-keys.mjs` limpo | aberto | G14 |
+| UX-001 | `components/Inbox/AiPauseBadge.vue`,`ReleaseAiButton.vue`,`TakeoverButton.vue` | i18n | alto | ambos | 10 chaves `inbox.ai_pause.*` cruas (badge/release/takeover) | Adicionar bloco `inbox.ai_pause` ao `pt-BR.json` | `scan-i18n-keys.mjs` limpo | **verificado** (merge da branch de fixes) | G14 |
+| UX-002 | `pages/pacientes/PacientesListPage.vue` | i18n | alto | ambos | Chave crua `import.export_cta` | Adicionar `import.export_cta` ao `pt-BR.json` | `scan-i18n-keys.mjs` limpo | **verificado** | G14 |
+| UX-003 | `pages/prescriptions/PrescriptionsReportPage.vue` | i18n | alto | ambos | Chave crua `prescription.restricted_access` | Adicionar bloco `prescription.restricted_access` ao `pt-BR.json` | `scan-i18n-keys.mjs` limpo | **verificado** | G14 |
 | UX-004 | `components/ImpersonateBanner.vue:48` | feedback | medio | ambos | `alert()` nativo em falha de impersonate | Substituir por toast/feedback a11y | `scan-native-dialogs.mjs` limpo | aberto | G13 |
 | UX-005 | `components/Inbox/MessageInput.vue:284` | feedback | medio | ambos | `alert()` nativo ("anexar em breve") | Substituir por toast/estado inline | `scan-native-dialogs.mjs` limpo | aberto | G13 |
 | UX-006 | `pages/Campaigns/CampaignShowPage.vue:35` | feedback | alto | ambos | `confirm()` nativo no disparo de campanha (ação sensível) | Modal a11y de confirmação | `scan-native-dialogs.mjs` limpo | aberto | G13 |

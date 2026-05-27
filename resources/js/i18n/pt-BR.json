@@ -409,8 +409,12 @@
         "motivo_obrigatorio_title": "Por que este lead foi perdido?",
         "motivo_outro_label": "Descreva o motivo"
     },
+    "prescription": {
+        "restricted_access": "Acesso restrito"
+    },
     "import": {
         "title": "Importar Pacientes",
+        "export_cta": "Exportar CSV",
         "template_title": "Baixar template de importação",
         "template_help": "Preencha o template com os dados dos pacientes e envie abaixo.",
         "download_csv": "Baixar CSV",

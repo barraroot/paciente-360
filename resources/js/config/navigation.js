@@ -79,6 +79,12 @@ export const NAVIGATION = [
                 ability: 'ai.matrix.manage',
             },
             {
+                key: 'ia.work-context',
+                labelKey: 'layout.sidebar.ia.workContext',
+                routeName: 'ia.work-context.index',
+                ability: 'ai.work-context.view',
+            },
+            {
                 key: 'ia.bases',
                 labelKey: 'layout.sidebar.ia.bases',
                 routeName: 'ia.bases.index',

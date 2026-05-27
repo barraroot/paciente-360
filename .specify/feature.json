@@ -1,6 +1,3 @@
 {
-  "feature_directory": "specs/016-frontend-ux-audit",
-  "status": "delivered",
-  "delivered_at": "2026-05-27",
-  "constitution_check": "9/9 PASS (re-check sem amendment)"
+  "feature_directory": "specs/017-ai-conversation-humanization"
 }

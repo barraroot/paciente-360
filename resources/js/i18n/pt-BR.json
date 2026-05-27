@@ -288,6 +288,8 @@
         "no_results": "Nenhum resultado encontrado.",
         "show_more": "Ver mais",
         "show_less": "Ver menos",
+        "add": "Adicionar",
+        "saving": "Salvando…",
         "error_forbidden": "Você não tem permissão para esta ação.",
         "salvar": "Salvar",
         "salvando": "Salvando...",
@@ -298,6 +300,36 @@
         "fechar": "Fechar",
         "carregando": "Carregando...",
         "sem_permissao": "Sem permissão para esta ação."
+    },
+    "ia": {
+        "workContext": {
+            "title": "Contexto de Trabalho",
+            "subtitle": "Configure como a IA fala em nome da sua clínica: serviços, valores, locais, política de confirmação, tom e perguntas de qualificação.",
+            "tone": "Tom de voz",
+            "tonePlaceholder": "Ex.: acolhedor, com emojis 💛",
+            "services": "Serviços",
+            "serviceName": "Nome do serviço",
+            "serviceDesc": "Descrição (opcional)",
+            "pricing": "Valores",
+            "priceItem": "Item",
+            "priceCash": "À vista",
+            "priceCard": "No cartão",
+            "locations": "Locais de atendimento",
+            "city": "Cidade",
+            "address": "Endereço (opcional)",
+            "depositPolicy": "Política de confirmação / sinal",
+            "requiresDeposit": "Exige sinal antecipado para confirmar",
+            "depositPercent": "Percentual (%)",
+            "depositMethod": "Meio (ex.: PIX)",
+            "depositText": "Texto da política (opcional)",
+            "depositHint": "A coleta do sinal e a confirmação são feitas por um atendente humano — a IA nunca solicita pagamento.",
+            "questions": "Perguntas de qualificação",
+            "questionsHint": "A IA faz uma pergunta por vez, na ordem, de forma acolhedora.",
+            "freeForm": "Diferenciais e abordagem (texto livre)",
+            "freeFormPlaceholder": "Descreva o diferencial do atendimento, a abordagem da clínica/profissional…",
+            "saved": "Contexto salvo!",
+            "validationError": "Verifique os campos destacados e tente novamente."
+        }
     },
     "paciente": {
         "list": {
@@ -812,6 +844,7 @@
                 "title": "IA Matricial",
                 "personas": "Personas",
                 "matriz": "Matriz de Canais",
+                "workContext": "Contexto de Trabalho",
                 "bases": "Bases de Conhecimento",
                 "guardrails": "Guardrails",
                 "logs": "Logs da IA"

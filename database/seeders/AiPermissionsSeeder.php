@@ -35,6 +35,9 @@ class AiPermissionsSeeder extends Seeder
         'ai.guardrail.manage',
         'ai.matrix.manage',
         'ai.log.view',
+        // Feature 017 (US2) — Contexto de Trabalho.
+        'ai.work-context.view',
+        'ai.work-context.manage',
     ];
 
     /** @var array<string, list<string>> */
@@ -44,9 +47,11 @@ class AiPermissionsSeeder extends Seeder
             'ai.knowledge.view', 'ai.knowledge.manage',
             'ai.guardrail.view', 'ai.guardrail.manage',
             'ai.matrix.manage', 'ai.log.view',
+            'ai.work-context.view', 'ai.work-context.manage',
         ],
         'medico' => [
             'ai.persona.view', 'ai.knowledge.view', 'ai.guardrail.view', 'ai.log.view',
+            'ai.work-context.view',
         ],
         'atendente' => [
             'ai.persona.view', 'ai.log.view',

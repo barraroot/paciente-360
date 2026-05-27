@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\Ai\AiMarkdownController;
 use App\Http\Controllers\Api\V1\Ai\AiModelController;
 use App\Http\Controllers\Api\V1\Ai\AiPersonaChannelController;
 use App\Http\Controllers\Api\V1\Ai\AiPersonaController;
+use App\Http\Controllers\Api\V1\Ai\AiWorkContextController;
 use App\Http\Controllers\Api\V1\Audit\AuditLogsController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutAllController;
@@ -904,6 +905,10 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
     ->group(function (): void {
         // US1 — catálogo de modelos (somente leitura) + personas.
         Route::get('models', [AiModelController::class, 'index'])->name('models.index');
+
+        // Feature 017 (US2) — Contexto de Trabalho da clínica (singleton por tenant).
+        Route::get('work-context', [AiWorkContextController::class, 'show'])->name('work-context.show');
+        Route::put('work-context', [AiWorkContextController::class, 'update'])->name('work-context.update');
 
         Route::post('personas/{persona}/activate', [AiPersonaController::class, 'activate'])
             ->whereNumber('persona')

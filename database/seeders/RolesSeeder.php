@@ -124,6 +124,9 @@ class RolesSeeder extends Seeder
         'ai.guardrail.manage',
         'ai.matrix.manage',
         'ai.log.view',
+        // Feature 017 — Contexto de Trabalho
+        'ai.work-context.view',
+        'ai.work-context.manage',
     ];
 
     /**
@@ -191,6 +194,8 @@ class RolesSeeder extends Seeder
             'ai.guardrail.manage',
             'ai.matrix.manage',
             'ai.log.view',
+            'ai.work-context.view',
+            'ai.work-context.manage',
         ],
         'medico' => [
             'paciente.view',
@@ -222,6 +227,7 @@ class RolesSeeder extends Seeder
             'ai.knowledge.view',
             'ai.guardrail.view',
             'ai.log.view',
+            'ai.work-context.view',
         ],
         'atendente' => [
             'paciente.view',

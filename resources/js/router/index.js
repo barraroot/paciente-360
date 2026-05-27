@@ -126,6 +126,12 @@ const panelChildren = [
         meta: { title: 'layout.sidebar.ia.matriz', ability: 'ai.matrix.manage' },
     },
     {
+        path: 'ia/contexto-trabalho',
+        name: 'ia.work-context.index',
+        component: () => import('@/pages/Ia/WorkContextPage.vue'),
+        meta: { title: 'layout.sidebar.ia.workContext', ability: 'ai.work-context.view' },
+    },
+    {
         path: 'ia/bases',
         name: 'ia.bases.index',
         component: () => import('@/pages/Ia/BasesIndex.vue'),
@@ -528,8 +534,7 @@ router.beforeEach(async (to) => {
     // (OnboardingPolicy::manage). Demais perfis (ex.: médico) não devem ser
     // redirecionados nem alcançar a tela — senão tomam 403 em /onboarding/state.
     const canManageOnboarding =
-        auth.isAuthenticated &&
-        (auth.hasRole('admin-clinica') || auth.hasRole('super-admin'));
+        auth.isAuthenticated && (auth.hasRole('admin-clinica') || auth.hasRole('super-admin'));
 
     // Auto-redirect para onboarding quando tenant ainda não concluiu o setup.
     if (

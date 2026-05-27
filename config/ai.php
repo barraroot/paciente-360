@@ -158,6 +158,29 @@ return [
         'embedding_dimension' => (int) env('AI_EMBEDDING_DIMENSION', 1536),
         'embedding_model' => env('AI_EMBEDDING_MODEL', 'text-embedding-3-small'),
 
+        // Histórico mínimo-suficiente (feature 017, US1/US3): janela verbatim
+        // curta + resumo rolante; nunca a "janela vazia" de antes (FR-002).
+        'history' => [
+            'window_messages' => (int) env('AI_HISTORY_WINDOW_MESSAGES', 6),
+            'input_token_ceiling' => (int) env('AI_HISTORY_INPUT_TOKEN_CEILING', 6000),
+            'summary_max_tokens' => (int) env('AI_SUMMARY_MAX_TOKENS', 400),
+        ],
+
+        // Ferramentas de dados ao vivo (feature 017, US5).
+        'tools' => [
+            'enabled' => (bool) env('AI_TOOLS_ENABLED', true),
+            'max_round_trips' => (int) env('AI_TOOLS_MAX_ROUND_TRIPS', 3),
+        ],
+
+        // Contexto de trabalho por clínica (feature 017, US2).
+        'work_context' => [
+            'max_questions' => (int) env('AI_WORK_CONTEXT_MAX_QUESTIONS', 8),
+            'free_form_max_chars' => (int) env('AI_WORK_CONTEXT_FREE_FORM_MAX_CHARS', 4000),
+        ],
+
+        // Prompt caching (Anthropic cache_control) do bloco estático (feature 017, US3).
+        'prompt_caching' => (bool) env('AI_PROMPT_CACHING', true),
+
         // Recuperação semântica.
         'rag' => [
             'top_k' => (int) env('AI_RAG_TOP_K', 6),

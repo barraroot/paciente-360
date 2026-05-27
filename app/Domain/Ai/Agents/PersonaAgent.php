@@ -7,7 +7,9 @@ namespace App\Domain\Ai\Agents;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasStructuredOutput;
+use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Stringable;
 
@@ -19,15 +21,31 @@ use Stringable;
  * chamada `prompt()` a partir do AiModel da persona. A saída é ESTRUTURADA
  * para permitir o pós-processamento determinístico de segurança (Princípio III).
  */
-final class PersonaAgent implements Agent, HasStructuredOutput
+final class PersonaAgent implements Agent, Conversational, HasStructuredOutput
 {
     use Promptable;
 
-    public function __construct(public string $systemInstructions) {}
+    /**
+     * @param list<Message> $historyMessages janela verbatim mínima já pseudonimizada (feature 017, US1)
+     */
+    public function __construct(
+        public string $systemInstructions,
+        public array $historyMessages = [],
+    ) {}
 
     public function instructions(): Stringable|string
     {
         return $this->systemInstructions;
+    }
+
+    /**
+     * Histórico recente da conversa (US1) — nunca a "janela vazia" de antes.
+     *
+     * @return iterable<Message>
+     */
+    public function messages(): iterable
+    {
+        return $this->historyMessages;
     }
 
     /**

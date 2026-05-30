@@ -17,6 +17,13 @@ services:
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
+        # Wrapper de entrypoint corrige a posse das pastas escritas via bind-mount
+        # (public/build, storage, bootstrap/cache) antes do `gosu` dropar p/ $WWWUSER.
+        # Evita EACCES em `npm run build` quando algum arquivo virou root:root.
+        # Ver docker/sail-bootstrap.sh.
+        entrypoint:
+            - /bin/sh
+            - /var/www/html/docker/sail-bootstrap.sh
         volumes:
             - '.:/var/www/html'
         networks:

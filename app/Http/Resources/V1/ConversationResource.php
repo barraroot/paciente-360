@@ -51,6 +51,10 @@ final class ConversationResource extends JsonResource
             'resolution_mode' => $this->resolution_mode,
             'resolved_at' => $this->resolved_at?->toIso8601String(),
             'opened_at' => $this->opened_at?->toIso8601String(),
+            // Feature 018 (Polish T205, FR-008b) — estado de cooldown anti-abuso.
+            'cooldown_until' => $this->cooldown_until?->toIso8601String(),
+            'cooldown_reason' => $this->cooldown_reason,
+            'is_on_cooldown' => $this->isOnCooldown(),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

@@ -159,11 +159,22 @@ final class McpCircuitBreaker
      */
     public function recordManualRollback(int $actorUserId): void
     {
-        $this->transitionTo(
-            self::STATE_OPEN,
+        $initialCooldown = (int) config('ai.matricial.mcp.circuit_breaker.initial_cooldown_s', 60);
+
+        Redis::set(self::KEY_STATE, self::STATE_OPEN);
+        Redis::set(self::KEY_OPENED_AT, time());
+        Redis::set(self::KEY_COOLDOWN, $initialCooldown);
+        Redis::del(self::KEY_CANARY_LOCK);
+
+        $this->events->dispatch(new McpCircuitOpened(
+            failuresObserved: 0,
+            cooldownSeconds: $initialCooldown,
             source: 'manual_flag',
             actorUserId: $actorUserId,
-        );
+        ));
+
+        $this->metrics->mcpCircuitTransition(to: 'open', source: 'manual_flag');
+        $this->metrics->mcpCircuitState(2);
     }
 
     private function transitionToOpen(

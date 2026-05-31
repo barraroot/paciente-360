@@ -425,13 +425,7 @@
     "funil": {
         "title": "Funil de Leads",
         "config_title": "Configurar Funil",
-        "colunas_default": [
-            "Novo",
-            "Qualificado",
-            "Agendado",
-            "Compareceu",
-            "Perdido"
-        ],
+        "colunas_default": ["Novo", "Qualificado", "Agendado", "Compareceu", "Perdido"],
         "motivo": {
             "sem_interesse": "Sem interesse",
             "sem_retorno": "Sem retorno",
@@ -845,6 +839,7 @@
                 "personas": "Personas",
                 "matriz": "Matriz de Canais",
                 "workContext": "Contexto de Trabalho",
+                "voice": "Voz Padrão",
                 "bases": "Bases de Conhecimento",
                 "guardrails": "Guardrails",
                 "logs": "Logs da IA"

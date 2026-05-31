@@ -272,6 +272,21 @@ const conversationStatus = computed(() => props.conversation.status ?? 'aberta')
                 >
                     {{ t('inbox.acoes.reabrir') }}
                 </button>
+
+                <!-- Fase 18 (Polish T205, FR-008b) — encerrar cooldown anti-abuso -->
+                <button
+                    v-if="conversation?.is_on_cooldown && can('messaging.cooldown.manage')"
+                    type="button"
+                    class="rounded-lg border border-danger-300 bg-danger-50 px-3 py-1.5 text-xs font-medium text-danger-700 transition hover:bg-danger-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger-500"
+                    :title="
+                        conversation?.cooldown_until
+                            ? `Em cooldown até ${new Date(conversation.cooldown_until).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+                            : 'Em cooldown'
+                    "
+                    @click="store.endCooldown(conversation.id)"
+                >
+                    Encerrar cooldown
+                </button>
             </div>
         </div>
 

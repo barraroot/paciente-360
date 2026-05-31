@@ -189,6 +189,19 @@ return [
                 'so posso ouvir', 'so consigo ouvir',
             ],
         ],
+
+        // Retenção LGPD-aware do áudio bruto (Feature 018 Polish T210/T212,
+        // FR-055a/b/c). `default_days` = janela em que o WAV/OGG fica no
+        // storage SEM precisar de consent extra. Após isso, o PurgeJob apaga
+        // SE paciente NÃO tem `ConsentFinalidade::Transcricao` ativo. A
+        // transcrição em texto permanece indefinidamente (sem voz biométrica).
+        // `extended_days` é o teto MAX com consent — informativo na UI; o
+        // schedule de purge é responsabilidade do operador via política
+        // de tenant futura.
+        'retention' => [
+            'default_days' => (int) env('MESSAGING_AUDIO_RETENTION_DEFAULT_DAYS', 90),
+            'extended_days' => (int) env('MESSAGING_AUDIO_RETENTION_EXTENDED_DAYS', 365),
+        ],
     ],
 
     /*

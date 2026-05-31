@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Messaging\Audio\Inbound\Models;
 
+use App\Domain\Messaging\Message\Models\Message;
+use App\Domain\Messaging\Message\Models\MessageMedia;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Feature 018 (US4) — transcrição de cada áudio inbound (STT).
@@ -63,5 +66,21 @@ class AudioTranscription extends Model
             'duration_seconds' => 'integer',
             'latency_ms' => 'integer',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Message, $this>
+     */
+    public function message(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'message_id');
+    }
+
+    /**
+     * @return BelongsTo<MessageMedia, $this>
+     */
+    public function media(): BelongsTo
+    {
+        return $this->belongsTo(MessageMedia::class, 'media_id');
     }
 }

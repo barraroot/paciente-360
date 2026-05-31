@@ -1,18 +1,38 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useIaStore } from '@/stores/ia.js';
+import { useAuthStore } from '@/stores/auth.js';
+import PersonaTestChatModal from '@/components/Ia/PersonaTestChatModal.vue';
+import PersonaTestSessionHistoryDrawer from '@/components/Ia/PersonaTestSessionHistoryDrawer.vue';
 
 const router = useRouter();
 const store = useIaStore();
+const auth = useAuthStore();
 
 const confirmTarget = ref(null);
 const confirmMode = ref(null); // 'delete' | 'deactivate'
 const busy = ref(false);
 
+const canTestPersona = computed(() => auth.hasPermission('ai.persona.test'));
+const testPersona = ref(null);
+const testModalOpen = ref(false);
+const historyOpen = ref(false);
+
 onMounted(() => {
     store.fetchPersonas();
 });
+
+function openTest(persona) {
+    if (!canTestPersona.value) return;
+    testPersona.value = persona;
+    testModalOpen.value = true;
+}
+
+function closeTest() {
+    testModalOpen.value = false;
+    testPersona.value = null;
+}
 
 function goCreate() {
     router.push({ name: 'ia.personas.new' });
@@ -131,6 +151,14 @@ async function confirmAction() {
                         </td>
                         <td class="px-4 py-3 text-right space-x-3">
                             <button
+                                v-if="canTestPersona"
+                                type="button"
+                                class="text-primary-600 hover:underline"
+                                @click="openTest(persona)"
+                            >
+                                Testar
+                            </button>
+                            <button
                                 type="button"
                                 class="text-primary-600 hover:underline"
                                 @click="goEdit(persona)"
@@ -202,5 +230,15 @@ async function confirmAction() {
                 </div>
             </div>
         </Teleport>
+
+        <PersonaTestChatModal
+            v-if="testPersona"
+            :open="testModalOpen"
+            :persona="testPersona"
+            @close="closeTest"
+            @open-history="historyOpen = true"
+        />
+
+        <PersonaTestSessionHistoryDrawer :open="historyOpen" @close="historyOpen = false" />
     </div>
 </template>

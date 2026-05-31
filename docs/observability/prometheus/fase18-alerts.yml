@@ -1,0 +1,163 @@
+# Prometheus alerting rules — Fase 18 (Conversa Reativa + MCP + Multimodal)
+#
+# **T215 (FR-053a, runbook §4.3)** — alarmes operacionais que disparam quando
+# os SLOs da Fase 18 são violados. Carregar como rule_file no prometheus.yml:
+#
+#   rule_files:
+#     - /etc/prometheus/rules/fase18-alerts.yml
+#
+# Integração: AlertManager → Slack `#paciente360-ops` (warn) + PagerDuty
+# rota `oncall-paciente360` (page).
+
+groups:
+  - name: paciente360_fase18_mcp
+    interval: 30s
+    rules:
+      # ─────────────────────────────────────────────────────────────────
+      # MCP — Circuit Breaker
+      # ─────────────────────────────────────────────────────────────────
+
+      - alert: McpCircuitBreakerOpen
+        expr: ai_mcp_circuit_state > 0
+        for: 5m
+        labels:
+          severity: page
+          team: paciente360
+          component: mcp
+        annotations:
+          summary: "MCP circuit breaker em estado degradado ({{ $value }})"
+          description: |
+            O circuit breaker do servidor MCP está em half_open (1) ou open (2)
+            há mais de 5min. Estado atual: {{ $value }}.
+
+            **Impacto**: a IA caiu para tools nativas (FR-053b). Atendimento
+            NÃO parou, mas o caminho MCP está degradado.
+
+            **Ação**:
+              1. Cheque `docker compose ps mcp-server` + logs (`docker compose logs mcp-server --tail=200`).
+              2. Veja `audit_logs` recentes para `mcp.circuit.opened` — `last_error_code` indica a causa.
+              3. Considere rollback via `AI_TOOLS_VIA_MCP=false` se persistir > 30min
+                 (ver `docs/runbooks/fase18-mcp-cutover.md` §5).
+          runbook: "https://github.com/paciente360/paciente-360/blob/main/docs/runbooks/fase18-mcp-cutover.md#5-critério-e-procedimento-de-rollback"
+
+      - alert: McpCircuitBreakerCascadeOpen
+        expr: increase(ai_mcp_circuit_transitions_total{to="open"}[30m]) >= 3
+        labels:
+          severity: page
+          team: paciente360
+          component: mcp
+        annotations:
+          summary: "MCP circuit abriu 3+ vezes em 30min — cascata"
+          description: |
+            Circuit breaker oscilou para `open` ≥3 vezes em 30min. Indica
+            quebra fundamental no MCP server (não transiente).
+
+            **Ação**: rollback IMEDIATO conforme runbook §5 (`AI_TOOLS_VIA_MCP=false`).
+
+      - alert: McpLatencyP95High
+        expr: |
+          histogram_quantile(0.95,
+            sum by (capability, le) (rate(ai_mcp_request_duration_seconds_bucket[5m]))
+          ) > 1.0
+        for: 10m
+        labels:
+          severity: warn
+          team: paciente360
+          component: mcp
+        annotations:
+          summary: "MCP capability {{ $labels.capability }} p95 = {{ $value }}s"
+          description: |
+            Latência p95 do MCP para `{{ $labels.capability }}` excedeu 1s
+            por >10min. Target saudável: < 500ms (runbook §1 G4).
+
+            Sob 2s ainda é tolerável; sustentado > 2s → considere abrir CB manual.
+
+      - alert: McpErrorRateHigh
+        expr: |
+          sum by (capability) (rate(ai_mcp_request_duration_seconds_count{outcome="error"}[5m]))
+          /
+          sum by (capability) (rate(ai_mcp_request_duration_seconds_count[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: warn
+          team: paciente360
+          component: mcp
+        annotations:
+          summary: "MCP capability {{ $labels.capability }} com erro > 5%"
+          description: |
+            Taxa de erro do MCP para `{{ $labels.capability }}` > 5% por 5min.
+            Cooldown do CB dispara em 3 falhas consecutivas — antecipe a investigação.
+
+  - name: paciente360_fase18_coalescence
+    interval: 30s
+    rules:
+      - alert: AiCoalesceMaxReprocessesReached
+        expr: sum by (tenant) (rate(ai_coalesce_flush_reason_total{reason="max_reprocesses_reached"}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warn
+          team: paciente360
+          component: ai-coalescence
+        annotations:
+          summary: "Tenant {{ $labels.tenant }} hit max_reprocesses (US1 FR-004)"
+          description: |
+            Mais de 0.1 flush/s atingindo `max_reprocesses_reached` no tenant
+            {{ $labels.tenant }}. Indica paciente enviando msgs com cadência
+            mais rápida que o ciclo de processamento da IA. Verifique se há
+            abuso (rate limit + cooldown devem ter agido).
+
+  - name: paciente360_fase18_audio
+    interval: 30s
+    rules:
+      - alert: StttLatencyP95High
+        expr: |
+          histogram_quantile(0.95,
+            sum by (provider, le) (rate(ai_stt_duration_seconds_bucket[5m]))
+          ) > 10
+        for: 10m
+        labels:
+          severity: warn
+          team: paciente360
+          component: audio-stt
+        annotations:
+          summary: "STT {{ $labels.provider }} p95 = {{ $value }}s"
+          description: |
+            STT (`{{ $labels.provider }}`) p95 acima de 10s (SC-004 target).
+            Paciente está esperando longo demais pela resposta da IA após áudio.
+
+      - alert: TtsFallbackToTextSpike
+        expr: |
+          sum by (provider) (rate(ai_tts_fallback_to_text_total[5m])) > 0.5
+        for: 10m
+        labels:
+          severity: warn
+          team: paciente360
+          component: audio-tts
+        annotations:
+          summary: "TTS {{ $labels.provider }} fallback to text > 0.5/s"
+          description: |
+            TTS falhando frequentemente — paciente pediu áudio mas recebeu
+            texto. Cheque saúde do provider e quota.
+
+  - name: paciente360_fase18_ratelimit
+    interval: 30s
+    rules:
+      - alert: AiRateLimitCooldownSpike
+        expr: |
+          sum by (tenant, layer) (rate(ai_rate_limit_cooldown_active_total[5m])) > 1
+        for: 5m
+        labels:
+          severity: warn
+          team: paciente360
+          component: messaging-ratelimit
+        annotations:
+          summary: "Tenant {{ $labels.tenant }} sob ataque ({{ $labels.layer }} > 1 cooldown/s)"
+          description: |
+            Mais de 1 cooldown/s ativado na camada `{{ $labels.layer }}` no tenant
+            {{ $labels.tenant }} por >5min. Padrão sugere campanha de
+            spam ou bot. Verifique:
+              - Histórico recente em `messaging_conversations.cooldown_*`.
+              - `burst_label` no `audit_logs` para `messaging.conversation.cooldown.started`
+                (spam vs crisis vs unknown).
+              - Necessidade de bloqueio manual de identifier.

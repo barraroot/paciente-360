@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace Tests\Feature\Ai\Mcp;
 
 use App\Domain\Ai\Mcp\CircuitBreaker\McpCircuitBreaker;
+use App\Domain\Ai\Tools\ConversationTool;
+use App\Domain\Ai\Tools\Support\ToolContext;
 use App\Domain\Ai\Tools\Support\ToolRunner;
+use App\Models\Tenant;
+use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
+use Laravel\Ai\Tools\Request;
 use Tests\TestCase;
 
 /**
@@ -98,24 +103,38 @@ final class McpToolBridgeRoutingTest extends TestCase
         config(['ai.matricial.mcp.enabled' => true]);
         Redis::flushdb();
 
-        // MCP retorna erro 500
+        // MCP server retorna 500 — Http->throw() vai lançar RequestException.
         Http::fake([
             '*' => Http::response('Internal Server Error', 500),
         ]);
 
-        // ToolRunner::run() deve capturar o erro e usar nativa como fallback
-        // (sem lançar exceção, sem perder a resposta)
-        Http::fake([
-            '*' => Http::response('Internal Server Error', 500),
-        ]);
+        $tenant = Tenant::factory()->create();
+        $context = new ToolContext(
+            tenantId: $tenant->id,
+            conversationId: 0,
+            patientId: null,
+            contactPhone: null,
+            correlationId: null,
+        );
+        $nativeTool = new FakeNativeTool;
 
-        // Simula fallback: a exceção é capturada e a ferramenta nativa é usada
-        try {
-            Http::post('http://localhost:8090/mcp', []);
-        } catch (\Exception $e) {
-            // Erro esperado; em produção, ToolRunner captura e fallback acontece
-            $this->assertIsObject($e);
-        }
+        $runner = app(ToolRunner::class);
+        $result = $runner->run(
+            nativeTool: $nativeTool,
+            capabilityName: 'get-clinic-info',
+            arguments: [],
+            context: $context,
+        );
+
+        // (a) Native tool foi invocada como fallback (não lança exceção).
+        $this->assertEquals('native-tool-fallback-output', $result);
+        $this->assertEquals(1, $nativeTool->invocations);
+
+        // (b) CB registrou a falha (1ª; threshold 3 — ainda closed).
+        $this->assertEquals('closed', app(McpCircuitBreaker::class)->state());
+
+        // (c) Bridge tentou HTTP antes do fallback.
+        Http::assertSentCount(1);
     }
 
     public function test_circuit_breaker_records_failure_on_http_error(): void
@@ -133,5 +152,56 @@ final class McpToolBridgeRoutingTest extends TestCase
         // CB agora deve estar open
         $this->assertEquals($breaker->state(), 'open');
         $this->assertFalse($breaker->shouldAllowMcpCall());
+    }
+}
+
+/**
+ * Tool nativa fake para o teste de fallback — apenas conta invocações e
+ * devolve uma string conhecida. Não toca DB.
+ */
+final class FakeNativeTool extends ConversationTool
+{
+    public int $invocations = 0;
+
+    public function __construct()
+    {
+        // bypass parent constructor — nossa fake não usa ToolContext/Logger.
+    }
+
+    protected function toolName(): string
+    {
+        return 'fake-native';
+    }
+
+    protected function run(Request $request): string
+    {
+        $this->invocations++;
+
+        return 'native-tool-fallback-output';
+    }
+
+    public function handle(Request $request): string
+    {
+        return $this->run($request);
+    }
+
+    public function name(): string
+    {
+        return 'fake-native';
+    }
+
+    public function description(): string
+    {
+        return 'fake';
+    }
+
+    public function parameters(): array
+    {
+        return [];
+    }
+
+    public function schema(JsonSchema $schema): array
+    {
+        return [];
     }
 }

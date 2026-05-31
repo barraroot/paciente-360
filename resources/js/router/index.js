@@ -132,6 +132,12 @@ const panelChildren = [
         meta: { title: 'layout.sidebar.ia.workContext', ability: 'ai.work-context.view' },
     },
     {
+        path: 'ia/voz',
+        name: 'ia.voice.index',
+        component: () => import('@/components/Ia/VoiceDefaultSettings.vue'),
+        meta: { title: 'layout.sidebar.ia.voice', ability: 'ai.persona.manage' },
+    },
+    {
         path: 'ia/bases',
         name: 'ia.bases.index',
         component: () => import('@/pages/Ia/BasesIndex.vue'),

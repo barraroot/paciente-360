@@ -398,6 +398,20 @@ export const useInboxStore = defineStore('inbox', {
         },
 
         /**
+         * **Fase 18 (Polish T205, FR-008b)** — operador encerra o cooldown
+         * anti-abuso manualmente. Permission `messaging.cooldown.manage`.
+         * @param {string|number} conversationId
+         */
+        async endCooldown(conversationId) {
+            const { data } = await api.post(
+                `/inbox/conversations/${conversationId}/cooldown/end`,
+            );
+            const updated = data.data ?? data;
+            this._updateConversationInList(updated);
+            return updated;
+        },
+
+        /**
          * US-4.6 — Pausa a IA na conversa (Modo Humano Assume).
          * @param {string|number} conversationId
          * @param {Object} payload — { duration_hours?: number, until?: string, reason?: string }

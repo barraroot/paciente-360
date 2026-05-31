@@ -1,3 +1,7 @@
 {
-  "feature_directory": "specs/018-ai-multimodal-mcp"
+  "feature_directory": "specs/018-ai-multimodal-mcp",
+  "status": "delivered",
+  "delivered_at": "2026-05-31",
+  "constitution_check": "7/7 PASS (1 desvio target latência fim-a-fim p95 ≤12s — sem amendment, precedente da Fase 17; 1 desvio D2 — E2E DEFERRED, padrão das fases anteriores)",
+  "production_cutover_at": null
 }

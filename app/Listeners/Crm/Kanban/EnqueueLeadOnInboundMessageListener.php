@@ -5,11 +5,23 @@ declare(strict_types=1);
 namespace App\Listeners\Crm\Kanban;
 
 use App\Domain\Crm\Kanban\Services\LeadOnboardingService;
+use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Message\Events\MensagemRecebida;
+use App\Domain\Messaging\Message\Models\Message;
+use App\Domain\Messaging\RateLimiting\BurstClassifier;
+use App\Domain\Messaging\RateLimiting\CooldownService;
+use App\Domain\Messaging\RateLimiting\Exceptions\RateLimitExceededException;
+use App\Domain\Messaging\RateLimiting\InboundConversationLimiter;
+use App\Domain\Messaging\RateLimiting\IsConversationOnCooldownChecker;
 use App\Models\Tenant;
 
 /**
  * **T083 (Fase 18 — US2, FR-009)** — Lead onboarding automático no 1º contato.
+ *
+ * **Polish T203 (FR-008a..d)** — antes do onboarding, aplica rate limit
+ * anti-abuso (2 camadas). Se excedido, dispara cooldown auditável e PULA
+ * onboarding+coalescência. A mensagem inbound segue PERSISTIDA pelo
+ * `ProcessInboundMessageJob` — não é descartada (FR-008b).
  *
  * Escuta `MensagemRecebida` (Fase 3 — disparado pelo `ProcessInboundMessageJob`
  * ANTES dos demais listeners da IA). Garante que existe um `Paciente`
@@ -31,6 +43,10 @@ final class EnqueueLeadOnInboundMessageListener
 {
     public function __construct(
         private readonly LeadOnboardingService $onboarding,
+        private readonly InboundConversationLimiter $limiter,
+        private readonly CooldownService $cooldown,
+        private readonly IsConversationOnCooldownChecker $cooldownChecker,
+        private readonly BurstClassifier $burstClassifier,
     ) {}
 
     public function handle(MensagemRecebida $event): void
@@ -43,7 +59,7 @@ final class EnqueueLeadOnInboundMessageListener
             return;
         }
 
-        // Mensagens sandbox NÃO criam leads reais (US6).
+        // Mensagens sandbox NÃO criam leads reais nem entram na rate limit (US6).
         if ((bool) ($message->sandbox ?? false)) {
             return;
         }
@@ -68,6 +84,25 @@ final class EnqueueLeadOnInboundMessageListener
             return;
         }
 
+        // **Polish T203 (FR-008a/b)** — se já está em cooldown ativo, pula
+        // a chamada do limiter (não conta hit) e sai cedo — IA fica pausada
+        // até `cooldown_until` ou liberação manual.
+        if ($this->cooldownChecker->check($conversation)) {
+            return;
+        }
+
+        try {
+            $this->limiter->checkOrThrow(
+                conversationId: $conversation->id,
+                tenantId: $tenant->id,
+                identifier: $identifier,
+            );
+        } catch (RateLimitExceededException $e) {
+            $this->startCooldown($conversation, $e->limiterKey);
+
+            return;
+        }
+
         $paciente = $this->onboarding->ensureFor(
             channelType: $channelType,
             identifier: $identifier,
@@ -78,5 +113,36 @@ final class EnqueueLeadOnInboundMessageListener
         if ($paciente !== null && $conversation->patient_id === null) {
             $conversation->update(['patient_id' => $paciente->id]);
         }
+    }
+
+    private function startCooldown(Conversation $conversation, string $limiterKey): void
+    {
+        $reason = 'rate_limit_'.$limiterKey;
+        $burstLabel = $this->classifyRecentBurst($conversation);
+
+        $this->cooldown->startFor(
+            conversation: $conversation,
+            reason: $reason,
+            limiterKey: $limiterKey,
+            burstLabel: $burstLabel,
+        );
+    }
+
+    private function classifyRecentBurst(Conversation $conversation): ?string
+    {
+        $recent = Message::query()
+            ->where('tenant_id', $conversation->tenant_id)
+            ->where('conversation_id', $conversation->id)
+            ->where('direction', 'in')
+            ->where('sender_type', 'patient')
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get();
+
+        if ($recent->isEmpty()) {
+            return null;
+        }
+
+        return $this->burstClassifier->classify($recent);
     }
 }

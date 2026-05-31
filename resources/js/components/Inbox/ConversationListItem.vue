@@ -162,6 +162,25 @@ const isAiPaused = computed(() => {
     return aiPausedUntil.value > new Date();
 });
 
+// ─── Cooldown anti-abuso (Fase 18 — Polish T205, FR-008b) ────────────────────
+const cooldownUntil = computed(() => {
+    const val = props.conversation.cooldown_until;
+    if (!val) { return null; }
+    return new Date(val);
+});
+
+const isOnCooldown = computed(() => {
+    if (props.conversation.is_on_cooldown === true) { return true; }
+    if (!cooldownUntil.value) { return false; }
+    return cooldownUntil.value > new Date();
+});
+
+const cooldownMinutesRemaining = computed(() => {
+    if (!cooldownUntil.value) { return 0; }
+    const diffMs = cooldownUntil.value.getTime() - Date.now();
+    return Math.max(0, Math.ceil(diffMs / 60000));
+});
+
 // ─── Preview + hora ───────────────────────────────────────────────────────────
 
 const lastMessagePreview = computed(() => {
@@ -270,9 +289,9 @@ const unreadCount = computed(() => props.conversation.unread_count ?? 0);
                     </div>
                 </div>
 
-                <!-- Linha 3: badges secundários (janela, prioridade, IA pausada) -->
+                <!-- Linha 3: badges secundários (janela, prioridade, IA pausada, cooldown) -->
                 <div
-                    v-if="windowBadge || (priority !== 'normal') || isAiPaused"
+                    v-if="windowBadge || (priority !== 'normal') || isAiPaused || isOnCooldown"
                     class="mt-1 flex flex-wrap items-center gap-1"
                 >
                     <!-- Window 24h badge -->
@@ -305,6 +324,16 @@ const unreadCount = computed(() => props.conversation.unread_count ?? 0);
                         aria-label="IA pausada"
                     >
                         ⏸ IA
+                    </span>
+
+                    <!-- Cooldown anti-abuso (Fase 18 — Polish T205) -->
+                    <span
+                        v-if="isOnCooldown"
+                        class="inline-flex items-center gap-0.5 rounded-full border border-danger-300 bg-danger-50 px-1.5 py-0.5 text-[10px] font-medium text-danger-700"
+                        :title="`Em cooldown anti-abuso até ${cooldownUntil?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`"
+                        aria-label="Em cooldown anti-abuso"
+                    >
+                        🚫 cooldown {{ cooldownMinutesRemaining }}min
                     </span>
                 </div>
             </div>

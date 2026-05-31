@@ -85,6 +85,12 @@ export const NAVIGATION = [
                 ability: 'ai.work-context.view',
             },
             {
+                key: 'ia.voice',
+                labelKey: 'layout.sidebar.ia.voice',
+                routeName: 'ia.voice.index',
+                ability: 'ai.persona.manage',
+            },
+            {
                 key: 'ia.bases',
                 labelKey: 'layout.sidebar.ia.bases',
                 routeName: 'ia.bases.index',

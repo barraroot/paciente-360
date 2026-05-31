@@ -1,0 +1,228 @@
+{
+  "title": "Paciente360 — Fase 18 (Conversa Reativa + MCP + Multimodal)",
+  "description": "Dashboard operacional para a Fase 18: coalescência híbrida (US1), servidor MCP + circuit breaker (US7), STT/TTS (US4/US5) e rate limit + cooldown (Polish). Métricas Prometheus emitidas por app/Support/Metrics/AiMetrics.php — referência cruzada em config/observability/metrics.md. T214 (FR-053a, runbook §4.3).",
+  "tags": ["paciente360", "fase18", "ai", "mcp", "observability"],
+  "timezone": "America/Sao_Paulo",
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "tenant_id",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(ai_messages_total, tenant)",
+        "includeAll": true,
+        "multi": true,
+        "current": { "value": "$__all", "text": "All" }
+      },
+      {
+        "name": "capability",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(ai_mcp_request_duration_seconds, capability)",
+        "includeAll": true,
+        "multi": true,
+        "current": { "value": "$__all", "text": "All" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "MCP — Circuit Breaker State",
+      "type": "stat",
+      "description": "0=closed (saudável) | 1=half_open (canário em teste) | 2=open (degradado, fallback nativo). FR-053b.",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "max(ai_mcp_circuit_state)", "legendFormat": "state" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "CLOSED ✓", "color": "green" } } },
+            { "type": "value", "options": { "1": { "text": "HALF_OPEN ⚠", "color": "yellow" } } },
+            { "type": "value", "options": { "2": { "text": "OPEN ✗", "color": "red" } } }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 1, "color": "yellow" },
+              { "value": 2, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "MCP — Transições de circuit (último 1h)",
+      "type": "timeseries",
+      "description": "Transições para open/half_open/closed nos últimos 60min. Distingue source: automatic vs manual_flag (rollback operacional).",
+      "gridPos": { "x": 6, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (to, source) (increase(ai_mcp_circuit_transitions_total[5m]))",
+          "legendFormat": "{{to}} via {{source}}"
+        }
+      ]
+    },
+    {
+      "title": "MCP — Latência p95 por capability",
+      "type": "timeseries",
+      "description": "FR-053a target: p95 < 500ms em produção saudável. > 1s warn; > 2s page.",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (capability, le) (rate(ai_mcp_request_duration_seconds_bucket{capability=~\"$capability\"}[5m])))",
+          "legendFormat": "{{capability}} p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 0.5, "color": "yellow" },
+              { "value": 1.0, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "MCP — Taxa de erro por capability",
+      "type": "timeseries",
+      "description": "Erros geram recordFailure no circuit breaker (3 consecutivos → open com cooldown).",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (capability) (rate(ai_mcp_request_duration_seconds_count{outcome=\"error\", capability=~\"$capability\"}[5m]))",
+          "legendFormat": "{{capability}} errors/s"
+        }
+      ]
+    },
+    {
+      "title": "Coalescência — Mensagens por turno (US1)",
+      "type": "timeseries",
+      "description": "Histogram. Ideal: maioria 1–3 (paciente normal). Spikes para 10+ indicam bot ou crise (ver rate limit).",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(ai_coalesce_messages_per_turn_bucket[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(ai_coalesce_messages_per_turn_bucket[5m])))",
+          "legendFormat": "p50"
+        }
+      ]
+    },
+    {
+      "title": "Coalescência — Motivo de flush",
+      "type": "timeseries",
+      "description": "passive_debounce_elapsed (saudável) | max_turn_seconds (limite — investigar) | max_reprocesses_reached (cap atingido).",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (reason) (rate(ai_coalesce_flush_reason_total[5m]))",
+          "legendFormat": "{{reason}}"
+        }
+      ]
+    },
+    {
+      "title": "STT — Latência p95 (US4 — áudio inbound)",
+      "type": "timeseries",
+      "description": "Whisper. Target: p95 < 10s (SC-004). Tempo de espera do paciente.",
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (provider, le) (rate(ai_stt_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{provider}} p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 7, "color": "yellow" },
+              { "value": 10, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "TTS — Latência p95 + fallback to text",
+      "type": "timeseries",
+      "description": "ElevenLabs. Fallback to text incrementa quando provider falha — atendimento NÃO para (FR-034).",
+      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (provider, le) (rate(ai_tts_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{provider}} p95"
+        },
+        {
+          "expr": "sum by (provider) (rate(ai_tts_fallback_to_text_total[5m]))",
+          "legendFormat": "{{provider}} fallback/s"
+        }
+      ]
+    },
+    {
+      "title": "Rate limit — Cooldowns ativos por camada",
+      "type": "timeseries",
+      "description": "Camadas: per_conversation (30msg/10min) | per_identifier (100msg/10min). Picos sustentados → bot ou abuso.",
+      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (layer, tenant) (rate(ai_rate_limit_cooldown_active_total[5m]))",
+          "legendFormat": "{{layer}} tenant={{tenant}}"
+        }
+      ]
+    },
+    {
+      "title": "Kanban — Curação automática (US3)",
+      "type": "timeseries",
+      "description": "Eventos auditáveis distinguíveis por source (ia_tool | auto_listener | manual_override_blocked).",
+      "gridPos": { "x": 12, "y": 32, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (source, event_kind) (rate(ai_kanban_curation_events_total[5m]))",
+          "legendFormat": "{{event_kind}} via {{source}}"
+        }
+      ]
+    },
+    {
+      "title": "IA — Tool round-trips por turno (Fase 17)",
+      "type": "timeseries",
+      "description": "Cap em MaxSteps=3 — picos sustentados em 3 indicam tool fail loop ou prompt mal-conduzido.",
+      "gridPos": { "x": 0, "y": 40, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(ai_tool_round_trips_bucket[5m])))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "title": "IA — Mensagens processadas + escalações",
+      "type": "timeseries",
+      "description": "Volume agregado (todas as personas/canais). Escalações acima do baseline = sinal de degradação.",
+      "gridPos": { "x": 12, "y": 40, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum (rate(ai_messages_total{tenant=~\"$tenant_id\"}[5m]))",
+          "legendFormat": "msgs/s"
+        },
+        {
+          "expr": "sum by (reason) (rate(ai_escalation_total{tenant=~\"$tenant_id\"}[5m]))",
+          "legendFormat": "escalation {{reason}}"
+        }
+      ]
+    }
+  ]
+}

@@ -8,6 +8,7 @@ use App\Domain\Ai\Coalescing\Services\ConversationTurnCoordinator;
 use App\Domain\Ai\Coalescing\Services\PassiveDebounceScheduler;
 use App\Domain\Ai\Matrix\Services\AiMatrixService;
 use App\Domain\Messaging\Message\Events\MensagemRecebida;
+use App\Domain\Messaging\RateLimiting\IsConversationOnCooldownChecker;
 
 /**
  * Conecta a IA Matricial ao fluxo existente: ao receber uma mensagem inbound
@@ -32,6 +33,7 @@ final class TriggerAiResponseOnInboundMessage
         private readonly AiMatrixService $matrix,
         private readonly ConversationTurnCoordinator $coordinator,
         private readonly PassiveDebounceScheduler $scheduler,
+        private readonly IsConversationOnCooldownChecker $cooldownChecker,
     ) {}
 
     public function handle(MensagemRecebida $event): void
@@ -46,6 +48,12 @@ final class TriggerAiResponseOnInboundMessage
 
         // Mensagens sandbox NÃO disparam coalescência (sessão de teste — US6 trata).
         if ((bool) ($message->sandbox ?? false)) {
+            return;
+        }
+
+        // **Polish T202 (FR-008c)** — conversa em cooldown não dispara coalescência.
+        // Mensagem segue persistida; operador segue podendo responder manualmente.
+        if ($this->cooldownChecker->check($conversation)) {
             return;
         }
 

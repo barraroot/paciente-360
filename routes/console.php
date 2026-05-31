@@ -202,3 +202,10 @@ Schedule::command('integrations:purge-expired-dlq')
 Schedule::command('reports:aggregate-hourly')
     ->hourlyAt(5)
     ->withoutOverlapping();
+
+// Feature 018 (Polish T211, FR-055a) — purga LGPD-aware de áudios brutos
+// expirados sem consent `Transcricao`. 04:00 BRT diariamente.
+Schedule::command('compliance:purge-extended-audio')
+    ->dailyAt('04:00')
+    ->timezone('America/Sao_Paulo')
+    ->withoutOverlapping();

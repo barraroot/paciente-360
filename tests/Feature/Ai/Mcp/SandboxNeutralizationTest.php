@@ -10,6 +10,7 @@ use App\Models\Agenda\AppointmentType;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
 
@@ -59,18 +60,106 @@ final class SandboxNeutralizationTest extends TestCase
 
     public function test_create_or_find_lead_in_sandbox_returns_synthetic_output(): void
     {
-        $this->markTestSkipped(
-            'Falha com erro SQL de transação durante MCP call — '
-            .'aguarda debug da infra MCP para identificar qual query está deixando transação em estado comprometido.'
+        $pacientesAntes = \DB::table('pacientes')->count();
+
+        $response = $this->postJson(
+            '/mcp',
+            [
+                'jsonrpc' => '2.0',
+                'id' => 1,
+                'method' => 'tools/call',
+                'params' => [
+                    'name' => 'create-or-find-lead',
+                    'arguments' => [],
+                ],
+            ],
+            ['Authorization' => "Bearer {$this->sandboxToken}"]
+        );
+
+        $response->assertStatus(200);
+
+        $payload = $this->decodeJsonContent($response);
+        $this->assertTrue(
+            $payload['sandbox'] ?? false,
+            'Output deve trazer flag sandbox=true.',
+        );
+        $this->assertStringStartsWith(
+            'sandbox-',
+            (string) ($payload['patient_id'] ?? ''),
+            'patient_id sintético deve ser prefixado com sandbox-.',
+        );
+        $this->assertStringContainsString('SANDBOX', (string) ($payload['text'] ?? ''));
+
+        $this->assertEquals(
+            $pacientesAntes,
+            \DB::table('pacientes')->count(),
+            'Sandbox NÃO pode persistir lead em pacientes (FR-041).',
         );
     }
 
     public function test_hold_slot_in_sandbox_returns_synthetic_output(): void
     {
-        $this->markTestSkipped(
-            'Falha com erro SQL de transação durante MCP call — '
-            .'aguarda debug da infra MCP para identificar qual query está deixando transação em estado comprometido.'
+        $reservasAntes = \DB::table('slot_reservations')->count();
+
+        $response = $this->postJson(
+            '/mcp',
+            [
+                'jsonrpc' => '2.0',
+                'id' => 2,
+                'method' => 'tools/call',
+                'params' => [
+                    'name' => 'hold-slot',
+                    'arguments' => [
+                        'professional_id' => 999,
+                        'appointment_type_id' => 999,
+                        'starts_at' => '2099-01-01T10:00:00Z',
+                    ],
+                ],
+            ],
+            ['Authorization' => "Bearer {$this->sandboxToken}"]
         );
+
+        $response->assertStatus(200);
+
+        $payload = $this->decodeJsonContent($response);
+        $this->assertTrue(
+            $payload['sandbox'] ?? false,
+            'Output deve trazer flag sandbox=true.',
+        );
+        $this->assertStringStartsWith(
+            'sandbox-',
+            (string) ($payload['slot_reservation_id'] ?? ''),
+            'slot_reservation_id sintético deve ser prefixado com sandbox-.',
+        );
+        $this->assertStringContainsString('SANDBOX', (string) ($payload['text'] ?? ''));
+
+        $this->assertEquals(
+            $reservasAntes,
+            \DB::table('slot_reservations')->count(),
+            'Sandbox NÃO pode persistir reserva em slot_reservations (FR-041).',
+        );
+    }
+
+    /**
+     * Capabilities sandbox retornam JSON via Response::json() — o servidor MCP
+     * empacota como `content[0].text` (string JSON). Esta helper extrai o
+     * payload sintético independente da forma de transporte.
+     *
+     * @return array<string, mixed>
+     */
+    private function decodeJsonContent(TestResponse $response): array
+    {
+        $text = $response->json('result.content.0.text');
+        if (is_string($text)) {
+            $decoded = json_decode($text, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        $direct = $response->json('result');
+
+        return is_array($direct) ? $direct : [];
     }
 
     public function test_read_capabilities_in_sandbox_work_normally(): void

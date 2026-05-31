@@ -21,6 +21,7 @@ import {
   createPortabilityRequest,
   executePortabilityRequest,
 } from '@/lib/privacyApi'
+import api from '@/lib/api.js'
 
 export const usePrivacyStore = defineStore('privacy', () => {
   // ─── State ─────────────────────────────────────────────────────────────────
@@ -154,6 +155,49 @@ export const usePrivacyStore = defineStore('privacy', () => {
       finalidade: null,
       state: null,
       channel: null,
+    }
+  }
+
+  // ─── Fase 18 (Polish T208/T209) — Consent Transcricao por paciente ─────
+  // Endpoints reais:
+  //   GET    /api/v1/pacientes/{p}/consents/transcricao
+  //   POST   /api/v1/pacientes/{p}/consents/transcricao/grant
+  //   POST   /api/v1/pacientes/{p}/consents/transcricao/revoke
+
+  async function fetchTranscricaoConsent(patientId) {
+    const { data } = await api.get(`/pacientes/${patientId}/consents/transcricao`)
+    return data.data
+  }
+
+  async function grantTranscricaoConsent(patientId) {
+    saving.value = true
+    error.value = null
+    try {
+      const { data } = await api.post(`/pacientes/${patientId}/consents/transcricao/grant`, {
+        channel: 'panel',
+      })
+      return data.data
+    } catch (e) {
+      error.value = e?.response?.data?.message ?? 'Erro ao conceder consentimento.'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function revokeTranscricaoConsent(patientId) {
+    saving.value = true
+    error.value = null
+    try {
+      const { data } = await api.post(`/pacientes/${patientId}/consents/transcricao/revoke`, {
+        channel: 'panel',
+      })
+      return data.data
+    } catch (e) {
+      error.value = e?.response?.data?.message ?? 'Erro ao revogar consentimento.'
+      throw e
+    } finally {
+      saving.value = false
     }
   }
 
@@ -306,6 +350,10 @@ export const usePrivacyStore = defineStore('privacy', () => {
     revoke,
     setFilter,
     resetFilters,
+    // ─── Fase 18 (Polish) — Consent Transcricao ───
+    fetchTranscricaoConsent,
+    grantTranscricaoConsent,
+    revokeTranscricaoConsent,
     // ─── forgetting (US-13.2) ───
     forgettingRequests,
     forgettingPagination,

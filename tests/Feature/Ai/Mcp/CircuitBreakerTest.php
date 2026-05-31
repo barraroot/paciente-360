@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Ai\Mcp;
 
 use App\Domain\Ai\Mcp\CircuitBreaker\McpCircuitBreaker;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
@@ -148,9 +149,26 @@ final class CircuitBreakerTest extends TestCase
 
     public function test_manual_rollback_creates_distinct_snapshot(): void
     {
-        $this->markTestSkipped(
-            'Aguarda fix do McpCircuitBreaker::recordManualRollback para dispatchar McpCircuitOpened — '
-            .'transitionTo() não emite evento; deferred para correção na infra MCP.'
+        $actor = User::factory()->create();
+
+        $this->breaker->recordManualRollback($actor->id);
+
+        $this->assertEquals('open', $this->breaker->state());
+
+        $snapshot = \DB::table('mcp_circuit_breaker_snapshots')
+            ->where('source', 'manual_flag')
+            ->where('transition_to', 'open')
+            ->where('actor_user_id', $actor->id)
+            ->first();
+
+        $this->assertNotNull(
+            $snapshot,
+            'Manual rollback deve persistir snapshot distinguível (source=manual_flag, actor preenchido).',
         );
+
+        $automaticSnapshots = \DB::table('mcp_circuit_breaker_snapshots')
+            ->where('source', 'automatic')
+            ->count();
+        $this->assertEquals(0, $automaticSnapshots, 'Rollback manual NÃO deve criar snapshot automatic.');
     }
 }

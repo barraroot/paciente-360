@@ -46,9 +46,11 @@ use App\Http\Controllers\Api\V1\Integrations\ApiTokensController;
 use App\Http\Controllers\Api\V1\Integrations\WebhooksController;
 use App\Http\Controllers\Api\V1\Kanban\KanbanCurationEventController;
 use App\Http\Controllers\Api\V1\Kanban\KanbanPipelineMappingController;
+use App\Http\Controllers\Api\V1\Messaging\RateLimiting\ConversationCooldownController;
 use App\Http\Controllers\Api\V1\Notifications\NotificationTemplateController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
 use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
+use App\Http\Controllers\Api\V1\Pacientes\Consents\TranscricaoConsentController;
 use App\Http\Controllers\Api\V1\Pacientes\ExportacaoController;
 use App\Http\Controllers\Api\V1\Pacientes\FunilController;
 use App\Http\Controllers\Api\V1\Pacientes\ImportacaoController;
@@ -244,6 +246,20 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])->grou
     Route::post('/pacientes/{paciente}/promote-to-kanban', [PromoteToKanbanController::class, 'store'])
         ->whereNumber('paciente')
         ->name('pacientes.promote-to-kanban');
+
+    // Feature 018 (Polish T208, FR-055a/b/c) — consent transcricao por paciente.
+    Route::get('/pacientes/{paciente}/consents/transcricao', [
+        TranscricaoConsentController::class,
+        'show',
+    ])->whereNumber('paciente')->name('pacientes.consents.transcricao.show');
+    Route::post('/pacientes/{paciente}/consents/transcricao/grant', [
+        TranscricaoConsentController::class,
+        'grant',
+    ])->whereNumber('paciente')->name('pacientes.consents.transcricao.grant');
+    Route::post('/pacientes/{paciente}/consents/transcricao/revoke', [
+        TranscricaoConsentController::class,
+        'revoke',
+    ])->whereNumber('paciente')->name('pacientes.consents.transcricao.revoke');
 });
 
 // US-1.3 — Billing: planos públicos (sem auth) e checkout/assinatura autenticados.
@@ -440,6 +456,14 @@ Route::middleware(['auth:sanctum', 'throttle:inbox'])->prefix('inbox')->group(fu
         ->whereNumber('conversation');
     Route::post('conversations/{conversation}/link-patient', [ConversationsController::class, 'linkPatient'])
         ->name('inbox.conversations.link-patient')
+        ->whereNumber('conversation');
+
+    // Feature 018 (Polish T205, FR-008b) — encerrar cooldown anti-abuso.
+    Route::post('conversations/{conversation}/cooldown/end', [
+        ConversationCooldownController::class,
+        'end',
+    ])
+        ->name('inbox.conversations.cooldown.end')
         ->whereNumber('conversation');
     Route::get('poll', InboxPollController::class)
         ->name('inbox.poll');

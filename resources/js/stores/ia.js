@@ -27,6 +27,15 @@ export const useIaStore = defineStore('ia', {
         executionLogs: [],
         executionLogsMeta: null,
         workContext: null,
+        // Fase 18 (US6) — chat de teste sandbox
+        personaTestSession: null,
+        personaTestMessages: [],
+        personaTestSessions: [],
+        personaTestEchoChannelName: null,
+        // Fase 18 (US5) — catálogo de vozes TTS + settings do tenant
+        voices: [],
+        voicesByLanguage: {}, // cache: { 'pt-BR': Voice[] }
+        voiceSettings: null, // { default_voice_id, default_voice, tts_enabled }
         loading: false,
         saving: false,
         error: null,
@@ -344,6 +353,149 @@ export const useIaStore = defineStore('ia', {
             }
             if (this.selectedPersona?.id === persona.id) {
                 this.selectedPersona = persona;
+            }
+        },
+
+        // ─── Fase 18 (US6) — Chat de teste sandbox de Persona ────────────
+        // Endpoints reais (routes/api.php):
+        //   POST   /ai/personas/{persona}/test-sessions
+        //   GET    /ai/persona-test-sessions
+        //   POST   /ai/persona-test-sessions/{id}/messages
+        //   POST   /ai/persona-test-sessions/{id}/close
+        //   POST   /ai/persona-test-sessions/{id}/archive
+        //
+        // Princípio: o `mcp_token` retornado pelo open NÃO é armazenado no
+        // store nem persistido — fica apenas no escopo do componente que
+        // chamou `openPersonaTestSession` (FR-051 — revogado no close).
+
+        async openPersonaTestSession(personaId, { useDraft = false, personaDraft = null } = {}) {
+            this.saving = true;
+            this.error = null;
+            try {
+                const payload = {};
+                if (useDraft) {
+                    payload.use_draft = true;
+                    payload.persona_draft = personaDraft ?? {};
+                }
+                const { data } = await api.post(`/ai/personas/${personaId}/test-sessions`, payload);
+                this.personaTestSession = data.data;
+                this.personaTestEchoChannelName = data.data?.echo_channel ?? null;
+                this.personaTestMessages = [];
+                return data.data;
+            } catch (e) {
+                this.error = e?.response?.data?.message ?? 'Erro ao abrir sessão de teste.';
+                throw e;
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async sendPersonaTestMessage(sessionId, text) {
+            const { data } = await api.post(`/ai/persona-test-sessions/${sessionId}/messages`, {
+                content_type: 'text',
+                text,
+            });
+            return data.data;
+        },
+
+        async closePersonaTestSession(sessionId) {
+            const { data } = await api.post(`/ai/persona-test-sessions/${sessionId}/close`);
+            if (this.personaTestSession?.id === sessionId) {
+                this.personaTestSession = { ...this.personaTestSession, ...data.data };
+                this.personaTestEchoChannelName = null;
+            }
+            this._replaceTestSession(data.data);
+            return data.data;
+        },
+
+        async listPersonaTestSessions(params = {}) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await api.get('/ai/persona-test-sessions', { params });
+                this.personaTestSessions = data.data ?? [];
+                return this.personaTestSessions;
+            } catch (e) {
+                this.error = e?.response?.data?.message ?? 'Erro ao listar sessões de teste.';
+                throw e;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async archivePersonaTestSession(sessionId) {
+            const { data } = await api.post(`/ai/persona-test-sessions/${sessionId}/archive`);
+            this._replaceTestSession(data.data);
+            return data.data;
+        },
+
+        appendPersonaTestMessage(message) {
+            // Idempotência: ignora duplicatas vindas da round-trip POST + Echo.
+            if (!message || message.id == null) {
+                return;
+            }
+            const exists = this.personaTestMessages.some((m) => m.id === message.id);
+            if (exists) {
+                return;
+            }
+            this.personaTestMessages.push(message);
+        },
+
+        clearPersonaTestMessages() {
+            this.personaTestMessages = [];
+        },
+
+        _replaceTestSession(session) {
+            if (!session) return;
+            const idx = this.personaTestSessions.findIndex((s) => s.id === session.id);
+            if (idx !== -1) {
+                this.personaTestSessions.splice(idx, 1, session);
+            }
+        },
+
+        // ─── Fase 18 (US5) — Catálogo de vozes + settings do tenant ──────
+        // Endpoints reais:
+        //   GET /ai/voices?language=pt-BR
+        //   GET /tenant/settings/voice
+        //   PUT /tenant/settings/voice  { default_voice_id, tts_enabled }
+
+        async fetchVoices(language = 'pt-BR') {
+            // Cache por idioma — vozes não mudam de uma página para outra.
+            if (Array.isArray(this.voicesByLanguage[language])) {
+                this.voices = this.voicesByLanguage[language];
+                return this.voices;
+            }
+            const { data } = await api.get('/ai/voices', { params: { language } });
+            const voices = data.data ?? [];
+            this.voicesByLanguage[language] = voices;
+            this.voices = voices;
+            return voices;
+        },
+
+        async fetchVoiceSettings() {
+            this.loading = true;
+            this.error = null;
+            try {
+                const { data } = await api.get('/tenant/settings/voice');
+                this.voiceSettings = data.data ?? null;
+                return this.voiceSettings;
+            } catch (e) {
+                this.error = e?.response?.data?.message ?? 'Erro ao carregar configuração de voz.';
+                throw e;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async saveVoiceSettings(payload) {
+            this.saving = true;
+            this.error = null;
+            try {
+                const { data } = await api.put('/tenant/settings/voice', payload);
+                this.voiceSettings = data.data ?? null;
+                return this.voiceSettings;
+            } finally {
+                this.saving = false;
             }
         },
     },

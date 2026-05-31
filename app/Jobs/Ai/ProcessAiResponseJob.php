@@ -12,6 +12,7 @@ use App\Domain\Ai\Coalescing\Services\TurnState;
 use App\Domain\Ai\Coalescing\Services\TurnVersionGuard;
 use App\Domain\Ai\Services\AiMessageProcessor;
 use App\Domain\Messaging\Conversation\Models\Conversation;
+use App\Domain\Messaging\RateLimiting\IsConversationOnCooldownChecker;
 use App\Models\Tenant;
 use App\Support\Metrics\AiMetricsContract;
 use Illuminate\Bus\Queueable;
@@ -74,9 +75,17 @@ final class ProcessAiResponseJob implements ShouldQueue
         TurnVersionGuard $guard,
         PassiveDebounceScheduler $scheduler,
         AiMetricsContract $metrics,
+        IsConversationOnCooldownChecker $cooldownChecker,
     ): void {
         $conversation = $this->resolveConversation();
         if ($conversation === null) {
+            return;
+        }
+
+        // **Polish T202 (FR-008c)** — conversa em cooldown pula IA inteiramente.
+        // O job foi enfileirado antes do cooldown disparar, mas só agora vemos
+        // o estado atualizado. Mensagens ficam persistidas; operador responde.
+        if ($cooldownChecker->check($conversation)) {
             return;
         }
 

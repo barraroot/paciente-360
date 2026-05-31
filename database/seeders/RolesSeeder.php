@@ -129,6 +129,8 @@ class RolesSeeder extends Seeder
         'ai.work-context.manage',
         // Feature 018 — US6 Persona Test Chat Sandbox
         'ai.persona.test',
+        // Feature 018 — Polish T205 (FR-008b) — encerrar cooldown manualmente.
+        'messaging.cooldown.manage',
     ];
 
     /**
@@ -200,6 +202,8 @@ class RolesSeeder extends Seeder
             'ai.work-context.manage',
             // Feature 018 — admin clínica testa personas no sandbox.
             'ai.persona.test',
+            // Feature 018 — admin clínica gerencia cooldown anti-abuso.
+            'messaging.cooldown.manage',
         ],
         'medico' => [
             'paciente.view',
@@ -252,6 +256,8 @@ class RolesSeeder extends Seeder
             // Fase 15 — atendente vê personas e logs da IA.
             'ai.persona.view',
             'ai.log.view',
+            // Feature 018 — atendente encerra cooldown anti-abuso (opera inbox).
+            'messaging.cooldown.manage',
         ],
         'recepcionista' => [
             'paciente.view',

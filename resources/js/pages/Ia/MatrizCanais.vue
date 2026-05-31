@@ -58,7 +58,7 @@ async function save() {
             <button
                 type="button"
                 :disabled="!dirty || store.saving"
-                class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
                 @click="save"
             >
                 {{ store.saving ? 'Salvando…' : 'Salvar alterações' }}

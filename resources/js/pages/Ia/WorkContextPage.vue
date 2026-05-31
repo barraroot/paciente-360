@@ -84,27 +84,28 @@ async function save() {
 <template>
     <div class="mx-auto max-w-3xl space-y-6 p-4">
         <header class="space-y-1">
-            <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h1 class="text-xl font-semibold text-foreground">
                 {{ $t('ia.workContext.title') }}
             </h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
+            <p class="text-sm text-foreground-muted">
                 {{ $t('ia.workContext.subtitle') }}
             </p>
         </header>
 
-        <div v-if="loading" class="py-12 text-center text-gray-500">{{ $t('common.loading') }}</div>
+        <div v-if="loading" class="py-12 text-center text-foreground-muted">{{ $t('common.loading') }}</div>
 
         <form v-else class="space-y-8" @submit.prevent="save">
             <!-- Tom de voz -->
             <section class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label for="work-context-tone" class="block text-sm font-medium text-foreground mb-1">
                     {{ $t('ia.workContext.tone') }}
                 </label>
                 <input
+                    id="work-context-tone"
                     v-model="form.tone"
                     type="text"
                     maxlength="120"
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                    class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     :placeholder="$t('ia.workContext.tonePlaceholder')"
                 />
             </section>
@@ -112,7 +113,7 @@ async function save() {
             <!-- Serviços -->
             <section class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    <h2 class="text-sm font-semibold text-foreground">
                         {{ $t('ia.workContext.services') }}
                     </h2>
                     <button
@@ -128,17 +129,17 @@ async function save() {
                         v-model="s.nome"
                         type="text"
                         :placeholder="$t('ia.workContext.serviceName')"
-                        class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <input
                         v-model="s.descricao"
                         type="text"
                         :placeholder="$t('ia.workContext.serviceDesc')"
-                        class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <button
                         type="button"
-                        class="px-2 text-gray-400 hover:text-red-600"
+                        class="px-2 text-foreground-muted hover:text-danger-600"
                         @click="removeAt(form.services, i)"
                     >
                         ✕
@@ -149,7 +150,7 @@ async function save() {
             <!-- Preços -->
             <section class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    <h2 class="text-sm font-semibold text-foreground">
                         {{ $t('ia.workContext.pricing') }}
                     </h2>
                     <button
@@ -169,23 +170,23 @@ async function save() {
                         v-model="p.item"
                         type="text"
                         :placeholder="$t('ia.workContext.priceItem')"
-                        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <input
                         v-model="p.valor_a_vista"
                         type="text"
                         :placeholder="$t('ia.workContext.priceCash')"
-                        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <input
                         v-model="p.valor_cartao"
                         type="text"
                         :placeholder="$t('ia.workContext.priceCard')"
-                        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <button
                         type="button"
-                        class="px-2 text-gray-400 hover:text-red-600"
+                        class="px-2 text-foreground-muted hover:text-danger-600"
                         @click="removeAt(form.pricing, i)"
                     >
                         ✕
@@ -196,7 +197,7 @@ async function save() {
             <!-- Locais -->
             <section class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    <h2 class="text-sm font-semibold text-foreground">
                         {{ $t('ia.workContext.locations') }}
                     </h2>
                     <button
@@ -212,17 +213,17 @@ async function save() {
                         v-model="l.cidade"
                         type="text"
                         :placeholder="$t('ia.workContext.city')"
-                        class="w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="w-40 rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <input
                         v-model="l.endereco"
                         type="text"
                         :placeholder="$t('ia.workContext.address')"
-                        class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <button
                         type="button"
-                        class="px-2 text-gray-400 hover:text-red-600"
+                        class="px-2 text-foreground-muted hover:text-danger-600"
                         @click="removeAt(form.locations, i)"
                     >
                         ✕
@@ -231,12 +232,12 @@ async function save() {
             </section>
 
             <!-- Política de sinal -->
-            <section class="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+            <section class="space-y-3 rounded-lg border border-border p-4">
+                <h2 class="text-sm font-semibold text-foreground">
                     {{ $t('ia.workContext.depositPolicy') }}
                 </h2>
-                <label class="flex items-center gap-2 text-sm">
-                    <input v-model="form.deposit_policy.exige_sinal" type="checkbox" />
+                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                    <input v-model="form.deposit_policy.exige_sinal" type="checkbox" class="mr-2 mt-0.5" />
                     {{ $t('ia.workContext.requiresDeposit') }}
                 </label>
                 <div
@@ -249,28 +250,28 @@ async function save() {
                         min="0"
                         max="100"
                         :placeholder="$t('ia.workContext.depositPercent')"
-                        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <input
                         v-model="form.deposit_policy.meio"
                         type="text"
                         :placeholder="$t('ia.workContext.depositMethod')"
-                        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <input
                         v-model="form.deposit_policy.texto"
                         type="text"
                         :placeholder="$t('ia.workContext.depositText')"
-                        class="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="sm:col-span-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                 </div>
-                <p class="text-xs text-gray-500">{{ $t('ia.workContext.depositHint') }}</p>
+                <p class="text-xs text-foreground-muted">{{ $t('ia.workContext.depositHint') }}</p>
             </section>
 
             <!-- Perguntas de qualificação -->
             <section class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                    <h2 class="text-sm font-semibold text-foreground">
                         {{ $t('ia.workContext.questions') }}
                     </h2>
                     <button
@@ -281,21 +282,21 @@ async function save() {
                         + {{ $t('common.add') }}
                     </button>
                 </div>
-                <p class="text-xs text-gray-500">{{ $t('ia.workContext.questionsHint') }}</p>
+                <p class="text-xs text-foreground-muted">{{ $t('ia.workContext.questionsHint') }}</p>
                 <div
                     v-for="(q, i) in form.qualification_questions"
                     :key="`q-${i}`"
                     class="flex items-center gap-2"
                 >
-                    <span class="w-5 text-sm text-gray-400">{{ i + 1 }}.</span>
+                    <span class="w-5 text-sm text-foreground-muted">{{ i + 1 }}.</span>
                     <input
                         v-model="form.qualification_questions[i]"
                         type="text"
-                        class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                        class="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <button
                         type="button"
-                        class="px-2 text-gray-400 hover:text-red-600"
+                        class="px-2 text-foreground-muted hover:text-danger-600"
                         @click="removeAt(form.qualification_questions, i)"
                     >
                         ✕
@@ -305,20 +306,21 @@ async function save() {
 
             <!-- Texto livre -->
             <section class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
+                <label for="work-context-free-form" class="block text-sm font-medium text-foreground mb-1">{{
                     $t('ia.workContext.freeForm')
                 }}</label>
                 <textarea
+                    id="work-context-free-form"
                     v-model="form.free_form"
                     rows="6"
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800"
+                    class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     :placeholder="$t('ia.workContext.freeFormPlaceholder')"
                 ></textarea>
             </section>
 
             <div
                 v-if="Object.keys(errors).length"
-                class="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                class="rounded-lg bg-danger-50 p-3 text-sm text-danger-700"
             >
                 {{ $t('ia.workContext.validationError') }}
             </div>

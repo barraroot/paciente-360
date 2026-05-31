@@ -119,5 +119,25 @@ class RouteServiceProvider extends ServiceProvider
                 ->response(fn () => response()->json(['error' => 'too_many_requests'], 429)
                     ->header('Retry-After', '60'));
         });
+
+        // Feature 018 (T037, FR-008a/b — Q-clarify-5=C) — rate limit anti-abuso
+        // 2 camadas para o pipeline inbound. NÃO atende request HTTP — é
+        // consumido pelo InboundConversationLimiter (T200, Polish) via
+        // RateLimiter::tooManyAttempts / hit, com chave manual. Os defaults
+        // vêm de config('messaging.rate.*') para permitir override por env.
+        // Janela em minutos é a mesma para ambas (default 10min).
+        RateLimiter::for('messaging:inbound:per-conversation', function (mixed $key): Limit {
+            return Limit::perMinutes(
+                (int) config('messaging.rate.window_minutes', 10),
+                (int) config('messaging.rate.per_conversation', 30),
+            )->by((string) $key);
+        });
+
+        RateLimiter::for('messaging:inbound:per-identifier', function (mixed $key): Limit {
+            return Limit::perMinutes(
+                (int) config('messaging.rate.window_minutes', 10),
+                (int) config('messaging.rate.per_identifier', 100),
+            )->by((string) $key);
+        });
     }
 }

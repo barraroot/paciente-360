@@ -47,7 +47,7 @@ onMounted(load);
             <select
                 v-model="filters.status"
                 aria-label="Filtrar por status"
-                class="rounded-lg border-border-strong text-sm"
+                class="rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                 @change="load"
             >
                 <option value="">Todos os status</option>
@@ -115,7 +115,7 @@ onMounted(load);
                         <td class="px-4 py-3 text-right">
                             <button
                                 type="button"
-                                class="text-indigo-600 hover:underline"
+                                class="text-primary-600 hover:underline"
                                 @click="selected = log"
                             >
                                 Detalhes

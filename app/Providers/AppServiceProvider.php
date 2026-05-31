@@ -7,6 +7,10 @@ use App\Domain\Auth\Services\SuspiciousTokenUsageDetector;
 use App\Domain\Auth\Services\TokenIssuerService;
 use App\Domain\Integrations\Models\WebhookEndpoint;
 use App\Domain\Messaging\Assignment\Models\AssignmentRule;
+use App\Domain\Messaging\Audio\Inbound\Services\AudioTranscriptionProvider;
+use App\Domain\Messaging\Audio\Inbound\Services\OpenAIWhisperProvider;
+use App\Domain\Messaging\Audio\Outbound\Services\AudioSynthesisProvider;
+use App\Domain\Messaging\Audio\Outbound\Services\ElevenLabsProvider;
 use App\Domain\Messaging\Channel\Adapters\WhatsAppCloudAdapter;
 use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Messaging\Conversation\Contracts\ConversaIATogglingContract;
@@ -159,6 +163,20 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(
             OutboundNotificationMetricsContract::class,
             OutboundNotificationMetrics::class,
+        );
+
+        // Feature 018 (T127, US4) — AudioTranscriptionProvider plugável (default Whisper).
+        // Trocar provedor (Google STT, Azure Speech) = mudar este binding.
+        $this->app->bind(
+            AudioTranscriptionProvider::class,
+            OpenAIWhisperProvider::class,
+        );
+
+        // Feature 018 (T143, US5) — AudioSynthesisProvider plugável (default ElevenLabs).
+        // Trocar provedor (OpenAI TTS, Azure Neural) = mudar este binding.
+        $this->app->bind(
+            AudioSynthesisProvider::class,
+            ElevenLabsProvider::class,
         );
 
         // T034 — Fase 4: BearerAuthContract → TokenIssuerService (singleton).

@@ -3,6 +3,8 @@
 namespace App\Domain\Messaging\Message\Models;
 
 use App\Casts\AsJsonArray;
+use App\Domain\Ai\Persona\Models\PersonaTestSession;
+use App\Domain\Messaging\Audio\Inbound\Models\AudioTranscription;
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Models\Concerns\BelongsToTenant;
 use App\Models\Paciente;
@@ -83,6 +85,11 @@ class Message extends Model
         'sent_at',
         'delivered_at',
         'read_at',
+        // Feature 018 (T018) — multimodal + sandbox de teste de Persona.
+        'transcription_id',
+        'is_audio_origin',
+        'sandbox',
+        'sandbox_session_id',
     ];
 
     /**
@@ -97,6 +104,9 @@ class Message extends Model
             'sent_at' => 'datetime',
             'delivered_at' => 'datetime',
             'read_at' => 'datetime',
+            // Feature 018.
+            'is_audio_origin' => 'boolean',
+            'sandbox' => 'boolean',
         ];
     }
 
@@ -112,6 +122,43 @@ class Message extends Model
     public function media(): HasMany
     {
         return $this->hasMany(MessageMedia::class);
+    }
+
+    /**
+     * Feature 018 (US4) — transcrição STT desta mensagem quando inbound áudio.
+     *
+     * @return BelongsTo<AudioTranscription, $this>
+     */
+    public function transcription(): BelongsTo
+    {
+        return $this->belongsTo(AudioTranscription::class, 'transcription_id');
+    }
+
+    /**
+     * Feature 018 (US6) — sessão sandbox quando a mensagem é parte de um
+     * chat de teste de Persona (sandbox=true).
+     *
+     * @return BelongsTo<PersonaTestSession, $this>
+     */
+    public function sandboxSession(): BelongsTo
+    {
+        return $this->belongsTo(PersonaTestSession::class, 'sandbox_session_id');
+    }
+
+    /**
+     * **T186 (Fase 18 — US6, FR-042)** — escopo para EXCLUIR mensagens sandbox
+     * de agregadores de métrica/dashboard/relatório. Toda nova query de
+     * agregação deve aplicar `->excludeSandbox()` para evitar poluir KPIs
+     * com tráfego de Persona Test Sessions.
+     *
+     * @param Builder<Message> $query
+     * @return Builder<Message>
+     */
+    public function scopeExcludeSandbox($query)
+    {
+        return $query->where(function ($q): void {
+            $q->where('sandbox', false)->orWhereNull('sandbox');
+        });
     }
 
     /**

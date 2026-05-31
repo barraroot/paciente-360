@@ -273,6 +273,19 @@ return [
                 'tries' => 1,
                 'timeout' => 120,
             ],
+            // Fase 18 (US4) — fila dedicada do TranscribeInboundAudioJob (STT
+            // Whisper). Prioridade alta — paciente está esperando a IA responder
+            // ao áudio. Timeout 30s (Whisper p95 ~10s + folga). tries=1 para
+            // falhas serem auditadas via marker visível na conversa (FR-027),
+            // não reprocessadas silenciosamente.
+            'transcription' => [
+                'connection' => 'redis',
+                'queue' => ['transcription'],
+                'balance' => 'simple',
+                'processes' => 4,
+                'tries' => 1,
+                'timeout' => 30,
+            ],
         ],
 
         'local' => [
@@ -327,6 +340,15 @@ return [
                 'processes' => 2,
                 'tries' => 1,
                 'timeout' => 120,
+            ],
+            // Fase 18 (US4) — STT inbound em local.
+            'transcription' => [
+                'connection' => 'redis',
+                'queue' => ['transcription'],
+                'balance' => 'simple',
+                'processes' => 1,
+                'tries' => 1,
+                'timeout' => 30,
             ],
         ],
 
@@ -383,6 +405,15 @@ return [
                 'processes' => 2,
                 'tries' => 1,
                 'timeout' => 120,
+            ],
+            // Fase 18 (US4) — STT inbound em staging.
+            'transcription' => [
+                'connection' => 'redis',
+                'queue' => ['transcription'],
+                'balance' => 'simple',
+                'processes' => 2,
+                'tries' => 1,
+                'timeout' => 30,
             ],
         ],
     ],

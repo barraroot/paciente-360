@@ -38,6 +38,8 @@ class AiPermissionsSeeder extends Seeder
         // Feature 017 (US2) — Contexto de Trabalho.
         'ai.work-context.view',
         'ai.work-context.manage',
+        // Feature 018 (US6, T036, FR-044) — chat de teste de Persona em sandbox.
+        'ai.persona.test',
     ];
 
     /** @var array<string, list<string>> */
@@ -48,6 +50,7 @@ class AiPermissionsSeeder extends Seeder
             'ai.guardrail.view', 'ai.guardrail.manage',
             'ai.matrix.manage', 'ai.log.view',
             'ai.work-context.view', 'ai.work-context.manage',
+            'ai.persona.test',
         ],
         'medico' => [
             'ai.persona.view', 'ai.knowledge.view', 'ai.guardrail.view', 'ai.log.view',

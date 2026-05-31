@@ -145,4 +145,72 @@ return [
         'recovery_seconds' => (int) env('MESSAGING_CB_RECOVERY_SECONDS', 30),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Áudio multimodal (feature 018, US4 + US5)
+    |--------------------------------------------------------------------------
+    |
+    | STT inbound (WhatsApp + Instagram Direct; widget fica fora — FR-026).
+    | TTS outbound sob gatilho explícito do paciente (Q3=A, FR-031/033).
+    | Provedores plugáveis via interfaces App\Domain\Messaging\Audio.
+    | Consentimento LGPD: STT/TTS reusam ConsentFinalidade::Comunicacao
+    | (Q-clarify-2=B, FR-055); retenção do áudio bruto além do prazo padrão
+    | exige nova ConsentFinalidade::Transcricao (FR-055a).
+    |
+    */
+
+    'audio' => [
+        'stt' => [
+            'provider' => env('MESSAGING_STT_PROVIDER', 'openai_whisper'),
+            'openai_api_key' => env('MESSAGING_STT_OPENAI_API_KEY'),
+            'timeout_s' => (int) env('MESSAGING_STT_TIMEOUT_S', 15),
+            'max_duration_s' => (int) env('MESSAGING_STT_MAX_DURATION_S', 120),
+            'default_language' => env('MESSAGING_STT_DEFAULT_LANGUAGE', 'pt'),
+        ],
+
+        'tts' => [
+            'provider' => env('MESSAGING_TTS_PROVIDER', 'elevenlabs'),
+            'elevenlabs_api_key' => env('MESSAGING_TTS_ELEVENLABS_API_KEY'),
+            'elevenlabs_model' => env('MESSAGING_TTS_ELEVENLABS_MODEL', 'eleven_turbo_v2_5'),
+            'max_text_length' => (int) env('MESSAGING_TTS_MAX_TEXT_LENGTH', 2000),
+            'enabled' => (bool) env('MESSAGING_TTS_ENABLED', true),
+            'format' => env('MESSAGING_TTS_FORMAT', 'mp3'),
+        ],
+
+        // Gatilhos explícitos de preferência por áudio (Q3=A, R11). Match por
+        // substring após normalização (lowercase + sem acento). Adicione mais
+        // se identificar padrões no campo.
+        'outbound' => [
+            'triggers' => [
+                'nao sei ler', 'nao consigo ler',
+                'manda audio', 'me responda em audio', 'me responda por audio',
+                'responde por audio', 'manda por audio', 'envia audio',
+                'to dirigindo', 'estou dirigindo', 'to andando', 'estou andando',
+                'so posso ouvir', 'so consigo ouvir',
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rate limit anti-abuso (feature 018, US1 — FR-008a..d, Q-clarify-5=C)
+    |--------------------------------------------------------------------------
+    |
+    | 2 camadas reusando RateLimiter Laravel (registrado em RouteServiceProvider).
+    | Excedido → cooldown auditável (CooldownService). NÃO é caminho de MVP —
+    | implementado no Polish (T200-T207). Gate de produção: ativo antes de
+    | promover MVP a tenants pagantes.
+    |
+    */
+
+    'rate' => [
+        'per_conversation' => (int) env('MESSAGING_RATE_PER_CONVERSATION', 30),
+        'per_identifier' => (int) env('MESSAGING_RATE_PER_IDENTIFIER', 100),
+        'window_minutes' => (int) env('MESSAGING_RATE_WINDOW_MINUTES', 10),
+    ],
+
+    'cooldown' => [
+        'minutes' => (int) env('MESSAGING_COOLDOWN_MINUTES', 15),
+    ],
+
 ];

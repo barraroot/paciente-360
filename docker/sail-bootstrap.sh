@@ -21,4 +21,18 @@ for path in public/build storage bootstrap/cache; do
     fi
 done
 
+# Sinaliza ao Horizon (container irmão) para terminar e reiniciar — único jeito
+# de o supervisor recarregar autoload/opcache depois de um `composer install` no
+# host. O comando só publica uma flag no Redis; Horizon faz o graceful restart
+# sozinho (`restart: unless-stopped` no compose o sobe de volta). Idempotente:
+# no 1º boot ainda não há worker rodando e a flag é consumida quando subir.
+# Rodamos como $WWWUSER pra não criar cache/log com posse root, e em background
+# pra não atrasar o start se o Redis ainda não estiver pronto.
+if [ -f /var/www/html/artisan ] && command -v gosu >/dev/null 2>&1; then
+    (
+        cd /var/www/html \
+            && gosu "$WWWUSER" php artisan horizon:terminate >/dev/null 2>&1 || true
+    ) &
+fi
+
 exec /usr/local/bin/start-container "$@"

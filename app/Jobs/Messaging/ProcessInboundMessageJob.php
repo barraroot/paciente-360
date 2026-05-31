@@ -3,6 +3,7 @@
 namespace App\Jobs\Messaging;
 
 use App\Domain\Messaging\Channel\Adapters\ChannelAdapterResolver;
+use App\Domain\Messaging\Channel\Adapters\InboundMessageDto;
 use App\Domain\Messaging\Channel\Models\Channel;
 use App\Domain\Messaging\Conversation\Events\ConversaCriada;
 use App\Domain\Messaging\Conversation\Models\Conversation;
@@ -10,13 +11,16 @@ use App\Domain\Messaging\Conversation\Services\PatientResolverService;
 use App\Domain\Messaging\Infrastructure\Webhook\WebhookEvent;
 use App\Domain\Messaging\Message\Events\MensagemRecebida;
 use App\Domain\Messaging\Message\Models\Message;
+use App\Domain\Messaging\Message\Models\MessageMedia;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -269,7 +273,28 @@ class ProcessInboundMessageJob implements ShouldQueue
                 event(new ConversaCriada($conversation));
             }
 
-            event(new MensagemRecebida($message, $conversation));
+            // Feature 018 (T130, US4) — áudio inbound em canal suportado
+            // (WhatsApp/Instagram Direct; widget fica fora — FR-026):
+            // baixa a mídia, persiste MessageMedia e enfileira STT.
+            // O TranscribeInboundAudioJob re-emite `MensagemRecebida` após
+            // transcrever para o texto seguir o pipeline (coalescência/lead/IA).
+            $shouldTranscribe = $this->shouldTranscribeAudio($dto, $channel->type);
+            if ($shouldTranscribe) {
+                try {
+                    $this->downloadAudioAsMedia($message, $dto->mediaUrls[0] ?? null);
+                    TranscribeInboundAudioJob::dispatch($message->id, $channel->tenant_id);
+                } catch (\Throwable $e) {
+                    Log::warning('inbound_audio.download_failed', [
+                        'message_id' => $message->id,
+                        'tenant_id' => $channel->tenant_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Fallback: trata como mensagem normal sem STT.
+                    event(new MensagemRecebida($message, $conversation));
+                }
+            } else {
+                event(new MensagemRecebida($message, $conversation));
+            }
         } else {
             // Mensagem duplicada: re-dispara evento para garantir notificação
             // ao inbox (webhook recebido novamente — ex.: retry do Twilio).
@@ -280,6 +305,67 @@ class ProcessInboundMessageJob implements ShouldQueue
         $webhookEvent->update([
             'processed_at' => now(),
             'status' => 'processed',
+        ]);
+    }
+
+    /**
+     * Feature 018 (US4, FR-024/026) — true só para áudio em WhatsApp/Instagram
+     * Direct com pelo menos 1 URL de mídia. Widget de site (`type='web'`) é
+     * skipped explicitamente — STT fica fora de escopo (operador trata).
+     */
+    private function shouldTranscribeAudio(InboundMessageDto $dto, string $channelType): bool
+    {
+        if ($dto->contentType !== 'audio') {
+            return false;
+        }
+        if (count($dto->mediaUrls) === 0) {
+            return false;
+        }
+        if (! in_array($channelType, ['whatsapp', 'instagram'], true)) {
+            return false; // widget fora (FR-026)
+        }
+
+        return true;
+    }
+
+    /**
+     * Feature 018 (US4) — baixa o áudio inbound e persiste como `MessageMedia`.
+     * Bem simples por design: HTTP GET + Storage::put. Em prod com S3, o
+     * download pode ir para job próprio com retry, mas a simplicidade aqui
+     * cobre o 1ª iteração (Whisper aceita até 25MB; áudios WhatsApp típicos
+     * ficam em <10MB).
+     */
+    private function downloadAudioAsMedia(Message $message, ?string $url): void
+    {
+        if ($url === null || $url === '') {
+            throw new \RuntimeException('Inbound audio without media URL.');
+        }
+
+        $response = Http::timeout(15)->get($url)->throw();
+        $contents = (string) $response->body();
+        $mime = (string) ($response->header('Content-Type') ?: 'audio/ogg');
+        $ext = match (true) {
+            str_contains($mime, 'mpeg') || str_contains($mime, 'mp3') => 'mp3',
+            str_contains($mime, 'ogg') => 'ogg',
+            str_contains($mime, 'wav') => 'wav',
+            str_contains($mime, 'mp4') || str_contains($mime, 'm4a') => 'm4a',
+            default => 'audio',
+        };
+        $path = "audio/{$message->tenant_id}/{$message->id}.{$ext}";
+
+        $disk = (string) config('filesystems.default', 'local');
+        Storage::disk($disk)->put($path, $contents);
+
+        MessageMedia::create([
+            'tenant_id' => $message->tenant_id,
+            'message_id' => $message->id,
+            'storage_disk' => $disk,
+            'storage_path' => $path,
+            'mime_type' => $mime,
+            'size_bytes' => strlen($contents),
+            'original_filename' => null,
+            'checksum_sha256' => hash('sha256', $contents),
+            'sensitive_hint' => true,
         ]);
     }
 

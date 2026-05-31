@@ -127,6 +127,8 @@ class RolesSeeder extends Seeder
         // Feature 017 — Contexto de Trabalho
         'ai.work-context.view',
         'ai.work-context.manage',
+        // Feature 018 — US6 Persona Test Chat Sandbox
+        'ai.persona.test',
     ];
 
     /**
@@ -196,6 +198,8 @@ class RolesSeeder extends Seeder
             'ai.log.view',
             'ai.work-context.view',
             'ai.work-context.manage',
+            // Feature 018 — admin clínica testa personas no sandbox.
+            'ai.persona.test',
         ],
         'medico' => [
             'paciente.view',

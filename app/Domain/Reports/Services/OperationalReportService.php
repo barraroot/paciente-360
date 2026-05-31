@@ -68,6 +68,10 @@ final class OperationalReportService
             ->where('tenant_id', $tenantId)
             ->whereBetween('created_at', [$start, $end])
             ->whereNotNull('user_id')
+            // Feature 018 (T186, FR-042) — exclui tráfego de Persona Test Sessions.
+            ->where(function ($q): void {
+                $q->where('sandbox', false)->orWhereNull('sandbox');
+            })
             ->selectRaw('user_id, COUNT(*) as messages_sent, COUNT(DISTINCT conversation_id) as conversations_handled')
             ->groupBy('user_id')
             ->orderByDesc('messages_sent')

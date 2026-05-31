@@ -34,6 +34,8 @@ class StorePersonaRequest extends FormRequest
     {
         return [
             'ai_model_id' => ['required', 'integer', Rule::exists('ai_models', 'id')],
+            // Feature 018 (T158, US5, FR-037a) — voz TTS opcional na criação.
+            'voice_id' => ['nullable', 'integer', Rule::exists('voice_catalog', 'id')->where('is_active', true)],
             'name' => ['required', 'string', 'min:2', 'max:120'],
             'description' => ['nullable', 'string', 'max:2000'],
             'markdown_content' => ['required', 'string', 'max:50000'],

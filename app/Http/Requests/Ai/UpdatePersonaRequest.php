@@ -34,6 +34,8 @@ class UpdatePersonaRequest extends FormRequest
     {
         return [
             'ai_model_id' => ['sometimes', 'integer', Rule::exists('ai_models', 'id')],
+            // Feature 018 (T158, US5, FR-037a) — voz TTS plugável.
+            'voice_id' => ['nullable', 'integer', Rule::exists('voice_catalog', 'id')->where('is_active', true)],
             'name' => ['sometimes', 'string', 'min:2', 'max:120'],
             'description' => ['nullable', 'string', 'max:2000'],
             'markdown_content' => ['sometimes', 'string', 'max:50000'],

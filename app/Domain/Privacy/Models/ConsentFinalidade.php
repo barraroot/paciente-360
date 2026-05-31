@@ -25,6 +25,18 @@ enum ConsentFinalidade: string
      */
     case Integracoes = 'integracoes';
 
+    /**
+     * **T023 (Fase 18 — Q-clarify-2=B, FR-055a)** — Retenção PROLONGADA do
+     * áudio bruto inbound além do prazo padrão das mídias (Fase 13). Sem
+     * este consentimento, o PurgeExpiredAudioRawJob (T210) apaga o WAV/OGG
+     * no prazo padrão e apenas a transcrição em texto permanece.
+     *
+     * STT/TTS em si (US4/US5) reusam {@see self::Transacional} como base de
+     * licitude — são meios técnicos do mesmo propósito comunicacional já
+     * consentido no cadastro.
+     */
+    case Transcricao = 'transcricao';
+
     public function label(): string
     {
         return match ($this) {
@@ -32,6 +44,7 @@ enum ConsentFinalidade: string
             self::Marketing => 'Marketing',
             self::Pesquisa => 'Pesquisa',
             self::Integracoes => 'Compartilhamento com Integrações',
+            self::Transcricao => 'Armazenamento prolongado de áudio (transcrição)',
         };
     }
 }

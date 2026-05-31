@@ -35,6 +35,8 @@ class AiToolInvocation extends Model
         'conversation_id',
         'correlation_id',
         'tool_name',
+        'source',
+        'sandbox',
         'input_summary',
         'outcome',
         'result_summary',
@@ -51,6 +53,7 @@ class AiToolInvocation extends Model
             'input_summary' => AsJsonArray::class,
             'result_summary' => AsJsonArray::class,
             'latency_ms' => 'integer',
+            'sandbox' => 'boolean',
             'created_at' => 'datetime',
         ];
     }

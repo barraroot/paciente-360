@@ -67,6 +67,11 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::prefix('api/public')
                 ->middleware('api')
                 ->group(base_path('routes/api-public.php'));
+
+            // Feature 018 (US7, T040) — servidor MCP local (laravel-mcp v0).
+            // Rota `/mcp` registrada via Mcp::web() em routes/mcp.php; auth via
+            // McpTokenGuard (Sanctum PAT + ability mcp.invoke + tenant claim).
+            require base_path('routes/mcp.php');
         },
     )
     // T061 — /broadcasting/auth com Bearer Sanctum + triple-check tenant slug.

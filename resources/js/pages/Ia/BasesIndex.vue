@@ -72,7 +72,7 @@ function indexStatus(base) {
             </div>
             <button
                 type="button"
-                class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                class="inline-flex items-center rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
                 @click="goCreate"
             >
                 Nova base
@@ -92,7 +92,7 @@ function indexStatus(base) {
             <p class="text-foreground-muted">Nenhuma base de conhecimento criada ainda.</p>
             <button
                 type="button"
-                class="mt-3 text-sm font-medium text-indigo-600 hover:underline"
+                class="mt-3 text-sm font-medium text-primary-600 hover:underline"
                 @click="goCreate"
             >
                 Criar a primeira base
@@ -145,7 +145,7 @@ function indexStatus(base) {
                         <td class="px-4 py-3 text-right space-x-3">
                             <button
                                 type="button"
-                                class="text-indigo-600 hover:underline"
+                                class="text-primary-600 hover:underline"
                                 @click="goEdit(base)"
                             >
                                 Editar

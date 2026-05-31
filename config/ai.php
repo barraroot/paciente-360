@@ -208,6 +208,37 @@ return [
             'interpretacao_exame',
             'conduta_risco',
         ],
+
+        // Coalescência híbrida (feature 018, US1 — FR-001/002/003/004): debounce
+        // passivo de entrada + cancel-and-reprocess durante o pensamento.
+        // Limites configuráveis por tenant (default por env aqui).
+        'coalesce' => [
+            'passive_debounce_s' => (int) env('AI_COALESCE_PASSIVE_DEBOUNCE_S', 4),
+            'passive_debounce_max_s' => (int) env('AI_COALESCE_PASSIVE_DEBOUNCE_MAX_S', 10),
+            'max_turn_s' => (int) env('AI_COALESCE_MAX_TURN_S', 30),
+            'max_reprocesses' => (int) env('AI_COALESCE_MAX_REPROCESSES', 3),
+            // TTL hard das chaves Redis (`ai:turn:*`) — evita leak se job morrer.
+            'redis_state_ttl_s' => (int) env('AI_COALESCE_REDIS_STATE_TTL_S', 300),
+        ],
+
+        // Servidor MCP local (feature 018, US7 — FR-045..053d). Sob a decisão
+        // Q2=B (substituição), a IA de produção consome tools EXCLUSIVAMENTE via
+        // este servidor quando AI_TOOLS_VIA_MCP=true. As tools nativas
+        // (App\Domain\Ai\Tools) ficam mantidas como fallback runtime via
+        // circuit breaker (FR-053b). NÃO remover o caminho nativo após cut-over.
+        'mcp' => [
+            'enabled' => (bool) env('AI_TOOLS_VIA_MCP', false),
+            'local_url' => env('MCP_LOCAL_URL', 'http://mcp-server:8090'),
+            'request_timeout_s' => (int) env('MCP_REQUEST_TIMEOUT_S', 10),
+            'token_ttl_seconds' => (int) env('MCP_TOKEN_TTL_SECONDS', 300),
+            // Circuit breaker (FR-053b/c/d) — Redis-backed.
+            'circuit_breaker' => [
+                'failure_threshold' => (int) env('MCP_CIRCUIT_BREAKER_FAILURE_THRESHOLD', 3),
+                'failure_window_s' => (int) env('MCP_CIRCUIT_BREAKER_FAILURE_WINDOW_S', 30),
+                'initial_cooldown_s' => (int) env('MCP_CIRCUIT_BREAKER_INITIAL_COOLDOWN_S', 60),
+                'max_cooldown_s' => (int) env('MCP_CIRCUIT_BREAKER_MAX_COOLDOWN_S', 600),
+            ],
+        ],
     ],
 
 ];

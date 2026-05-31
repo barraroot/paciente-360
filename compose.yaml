@@ -176,6 +176,44 @@ services:
     # Auto-hospedado: a app fala com ele em http://evolution-api:8080 (rede sail).
     # Porta de host 8085 (8080 já é usada pelo reverb). Reusa pgsql (schema `evolution`)
     # e redis (DB index 2).
+    # Feature 018 — Servidor MCP local (laravel-mcp v0).
+    # Opt-in via profile: `vendor/bin/sail --profile mcp up -d mcp-server`
+    # ou `COMPOSE_PROFILES=mcp vendor/bin/sail up -d`.
+    # Sob a decisão Q2=B (substituição), este serviço hospeda o servidor MCP
+    # consumido pela IA de produção quando AI_TOOLS_VIA_MCP=true. O caminho
+    # de fallback runtime (tools nativas laravel/ai) continua disponível via
+    # circuit breaker (FR-053b). Não exposto à internet por default.
+    # Reusa pgsql + redis (mesma rede, mesmo container app).
+    mcp-server:
+        image: 'sail-8.5/app'
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '${FORWARD_MCP_PORT:-8090}:8090'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        working_dir: /var/www/html
+        command:
+            - php
+            - artisan
+            - serve
+            - '--host=0.0.0.0'
+            - '--port=8090'
+        networks:
+            - sail
+        depends_on:
+            laravel.test:
+                condition: service_started
+            redis:
+                condition: service_healthy
+            pgsql:
+                condition: service_healthy
+        profiles:
+            - mcp
+        restart: unless-stopped
     evolution-api:
         image: 'evoapicloud/evolution-api:latest'
         ports:

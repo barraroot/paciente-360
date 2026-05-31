@@ -81,6 +81,9 @@ class Conversation extends Model
         'priority',
         'received_outside_hours',
         'unread_count',
+        // Feature 018 (T019, Polish T200-T207) — cooldown anti-abuso.
+        'cooldown_until',
+        'cooldown_reason',
     ];
 
     /**
@@ -97,7 +100,19 @@ class Conversation extends Model
             'ai_paused_until' => 'datetime',
             'received_outside_hours' => 'boolean',
             'unread_count' => 'integer',
+            // Feature 018.
+            'cooldown_until' => 'datetime',
         ];
+    }
+
+    /**
+     * Feature 018 (T019, FR-008b) — true se a conversa está sob cooldown
+     * de rate limit anti-abuso.
+     */
+    public function isOnCooldown(): bool
+    {
+        return $this->cooldown_until !== null
+            && $this->cooldown_until->isFuture();
     }
 
     // -------------------------------------------------------------------------

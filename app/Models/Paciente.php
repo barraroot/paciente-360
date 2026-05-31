@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\AsJsonArray;
+use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -79,6 +80,10 @@ class Paciente extends Model
         'anonimizado_em',
         'merged_into_paciente_id',
         'merged_at',
+        // Feature 018 (T085-pre, US2, FR-010) — identificadores de canais
+        // não-WhatsApp para auto-onboarding como lead.
+        'instagram_handle',
+        'widget_anonymous_id',
     ];
 
     /**
@@ -132,6 +137,17 @@ class Paciente extends Model
     public function eventosTimeline(): HasMany
     {
         return $this->hasMany(EventoTimeline::class);
+    }
+
+    /**
+     * Feature 018 (T104) — usado pelo DowngradeToLostOnInactivityListener
+     * para consultar `last_inbound_message_at` das conversas do paciente.
+     *
+     * @return HasMany<Conversation, $this>
+     */
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'patient_id');
     }
 
     public function profissionalResponsavel(): BelongsTo

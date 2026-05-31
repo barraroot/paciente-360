@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\V1\Ai\AiModelController;
 use App\Http\Controllers\Api\V1\Ai\AiPersonaChannelController;
 use App\Http\Controllers\Api\V1\Ai\AiPersonaController;
 use App\Http\Controllers\Api\V1\Ai\AiWorkContextController;
+use App\Http\Controllers\Api\V1\Ai\Personas\PersonaTestSessionController;
+use App\Http\Controllers\Api\V1\Ai\Voices\VoiceCatalogController;
 use App\Http\Controllers\Api\V1\Audit\AuditLogsController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutAllController;
@@ -42,6 +44,8 @@ use App\Http\Controllers\Api\V1\Inbox\QuickRepliesController;
 use App\Http\Controllers\Api\V1\Inbox\TakeoverController;
 use App\Http\Controllers\Api\V1\Integrations\ApiTokensController;
 use App\Http\Controllers\Api\V1\Integrations\WebhooksController;
+use App\Http\Controllers\Api\V1\Kanban\KanbanCurationEventController;
+use App\Http\Controllers\Api\V1\Kanban\KanbanPipelineMappingController;
 use App\Http\Controllers\Api\V1\Notifications\NotificationTemplateController;
 use App\Http\Controllers\Api\V1\Onboarding\OnboardingController;
 use App\Http\Controllers\Api\V1\Pacientes\AnotacoesController;
@@ -52,6 +56,7 @@ use App\Http\Controllers\Api\V1\Pacientes\MesclagemController;
 use App\Http\Controllers\Api\V1\Pacientes\PacientesController;
 use App\Http\Controllers\Api\V1\Pacientes\PacienteTagsController;
 use App\Http\Controllers\Api\V1\Pacientes\PatchStatusController;
+use App\Http\Controllers\Api\V1\Pacientes\PromoteToKanbanController;
 use App\Http\Controllers\Api\V1\Pacientes\TagsController;
 use App\Http\Controllers\Api\V1\Pacientes\TimelineController;
 use App\Http\Controllers\Api\V1\Panel\PanelHomeController;
@@ -74,6 +79,7 @@ use App\Http\Controllers\Api\V1\Reports\ExecutiveDashboardController;
 use App\Http\Controllers\Api\V1\Reports\OperationalReportController;
 use App\Http\Controllers\Api\V1\Tenant\CurrentTenantController;
 use App\Http\Controllers\Api\V1\Tenant\RegisterController as TenantRegisterController;
+use App\Http\Controllers\Api\V1\Tenant\VoiceSettingsController;
 use App\Http\Controllers\Api\V1\Users\InvitationsController;
 use App\Http\Controllers\Api\V1\Users\UsersController;
 use App\Http\Controllers\Webhooks\EvolutionWebhookController;
@@ -198,6 +204,46 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])->grou
     Route::apiResource('/notification-templates', NotificationTemplateController::class)
         ->parameters(['notification-templates' => 'notificationTemplate'])
         ->only(['index', 'store', 'update', 'destroy']);
+});
+
+// Feature 018 — US5 — Voice catalog (ai.persona.manage) + tenant voice settings.
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('ai')
+    ->name('ai.')
+    ->group(function (): void {
+        Route::get('/voices', [VoiceCatalogController::class, 'index'])
+            ->name('voices.index');
+    });
+
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('tenant/settings')
+    ->name('tenant.settings.')
+    ->group(function (): void {
+        Route::get('/voice', [VoiceSettingsController::class, 'show'])
+            ->name('voice.show');
+        Route::put('/voice', [VoiceSettingsController::class, 'update'])
+            ->name('voice.update');
+    });
+
+// Feature 018 — US3 — Kanban pipeline mappings + curation events + promote.
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
+    ->prefix('kanban')
+    ->name('kanban.')
+    ->group(function (): void {
+        Route::get('/pipeline-mappings', [KanbanPipelineMappingController::class, 'index'])
+            ->name('pipeline-mappings.index');
+        Route::put('/pipeline-mappings/{eventKind}', [KanbanPipelineMappingController::class, 'update'])
+            ->name('pipeline-mappings.update');
+        Route::post('/pipeline-mappings/restore-defaults', [KanbanPipelineMappingController::class, 'restoreDefaults'])
+            ->name('pipeline-mappings.restore-defaults');
+        Route::get('/curation-events', [KanbanCurationEventController::class, 'index'])
+            ->name('curation-events.index');
+    });
+
+Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])->group(function (): void {
+    Route::post('/pacientes/{paciente}/promote-to-kanban', [PromoteToKanbanController::class, 'store'])
+        ->whereNumber('paciente')
+        ->name('pacientes.promote-to-kanban');
 });
 
 // US-1.3 — Billing: planos públicos (sem auth) e checkout/assinatura autenticados.
@@ -919,6 +965,19 @@ Route::middleware(['auth:sanctum', 'tenant.slug', 'tenant.not-suspended'])
 
         Route::apiResource('personas', AiPersonaController::class)
             ->parameters(['personas' => 'persona']);
+
+        // Feature 018 (US6) — chat sandbox de Persona (PAT efêmero + Reverb private channel).
+        Route::post('personas/{persona}/test-sessions', [PersonaTestSessionController::class, 'store'])
+            ->whereNumber('persona')
+            ->name('personas.test-sessions.store');
+        Route::get('persona-test-sessions', [PersonaTestSessionController::class, 'index'])
+            ->name('persona-test-sessions.index');
+        Route::post('persona-test-sessions/{session}/messages', [PersonaTestSessionController::class, 'sendMessage'])
+            ->name('persona-test-sessions.send-message');
+        Route::post('persona-test-sessions/{session}/close', [PersonaTestSessionController::class, 'close'])
+            ->name('persona-test-sessions.close');
+        Route::post('persona-test-sessions/{session}/archive', [PersonaTestSessionController::class, 'archive'])
+            ->name('persona-test-sessions.archive');
 
         // US2 — matriz Persona × Canal + consulta de config por canal.
         Route::get('persona-channels', [AiPersonaChannelController::class, 'index'])->name('persona-channels.index');

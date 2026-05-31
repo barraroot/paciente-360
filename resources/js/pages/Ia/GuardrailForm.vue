@@ -87,11 +87,13 @@ function fieldError(key) {
 
         <form v-else class="space-y-5" @submit.prevent="submit">
             <div>
-                <label class="block text-sm font-medium text-foreground">Nome</label>
+                <label for="guardrail-name" class="block text-sm font-medium text-foreground mb-1">Nome <span class="text-danger-600">*</span></label>
                 <input
+                    id="guardrail-name"
                     v-model="form.name"
                     type="text"
-                    class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                    class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    :class="{ 'border-danger-500': fieldError('name') }"
                 />
                 <p v-if="fieldError('name')" class="mt-1 text-xs text-danger-600">
                     {{ fieldError('name') }}
@@ -99,10 +101,12 @@ function fieldError(key) {
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-foreground">Categoria</label>
+                <label for="guardrail-category" class="block text-sm font-medium text-foreground mb-1">Categoria</label>
                 <select
+                    id="guardrail-category"
                     v-model="form.category"
-                    class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                    class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    :class="{ 'border-danger-500': fieldError('category') }"
                 >
                     <option value="">— Nenhuma —</option>
                     <option v-for="c in CATEGORIES" :key="c" :value="c">{{ c }}</option>
@@ -113,11 +117,12 @@ function fieldError(key) {
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-foreground">Descrição</label>
+                <label for="guardrail-description" class="block text-sm font-medium text-foreground mb-1">Descrição</label>
                 <input
+                    id="guardrail-description"
                     v-model="form.description"
                     type="text"
-                    class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                    class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
             </div>
 
@@ -140,7 +145,7 @@ function fieldError(key) {
                 <button
                     type="submit"
                     :disabled="store.saving"
-                    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                    class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
                 >
                     {{ store.saving ? 'Salvando…' : 'Salvar' }}
                 </button>

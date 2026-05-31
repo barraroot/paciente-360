@@ -23,6 +23,8 @@ class ConversationFactory extends Factory
         $threadId = '+55'.fake()->numerify('##9########');
 
         return [
+            'tenant_id' => Tenant::factory(),
+            'channel_id' => 1, // Placeholder — deve ser sobrescrito se necessário
             'external_thread_id' => $threadId,
             'status' => 'aberta',
             'assigned_user_id' => null,

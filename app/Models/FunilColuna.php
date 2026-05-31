@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string $slug
  * @property int $posicao
  * @property string|null $cor
+ * @property bool $is_initial
  * @property bool $is_terminal
  * @property bool $motivo_obrigatorio
  * @property bool $is_system
@@ -41,6 +42,7 @@ class FunilColuna extends Model
         'slug',
         'posicao',
         'cor',
+        'is_initial',
         'is_terminal',
         'motivo_obrigatorio',
         'is_system',
@@ -52,6 +54,7 @@ class FunilColuna extends Model
     protected function casts(): array
     {
         return [
+            'is_initial' => 'boolean',
             'is_terminal' => 'boolean',
             'motivo_obrigatorio' => 'boolean',
             'is_system' => 'boolean',

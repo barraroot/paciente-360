@@ -17,13 +17,18 @@ use App\Domain\Ai\Persona\Events\PersonaAtribuidaAConversa;
 use App\Domain\Ai\Persona\Models\AiPersona;
 use App\Domain\Ai\Tools\Support\ConversationToolFactory;
 use App\Domain\Ai\Tools\Support\ToolContext;
+use App\Domain\Messaging\Audio\Inbound\Services\AudioPreferenceDetector;
+use App\Domain\Messaging\Audio\Outbound\Services\AudioSynthesisService;
 use App\Domain\Messaging\Channel\Adapters\OutboundMessage;
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Domain\Messaging\Message\Models\Message;
 use App\Domain\Messaging\Message\Services\MessageDispatchService;
+use App\Models\Tenant;
 use App\Support\Lgpd\PiiScrubber;
 use App\Support\Metrics\AiMetricsContract;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Orquestra a resposta da IA para uma conversa (US3): resolve persona,
@@ -41,6 +46,8 @@ final class AiMessageProcessor
         private readonly OutboundNameInjector $nameInjector,
         private readonly ConversationSummarizerService $summarizer,
         private readonly ConversationToolFactory $toolFactory,
+        private readonly AudioPreferenceDetector $audioPreference,
+        private readonly AudioSynthesisService $audioSynthesis,
     ) {}
 
     public function process(Conversation $conversation): void
@@ -138,6 +145,12 @@ final class AiMessageProcessor
                 senderUserId: null,
                 senderType: 'ai',
             );
+
+            // Feature 018 (T148, US5, FR-031..037) — TTS sob gatilho explícito.
+            // Falhas silenciosas: AudioSynthesisService já registra `fallback_to_text`;
+            // a mensagem texto JÁ foi enviada acima, então o paciente recebe a resposta
+            // de qualquer forma (FR-034). O áudio é COMPLEMENTAR, não substituto.
+            $this->maybeAttachAudio($conversation, $persona, $message, $outboundBody);
 
             $this->log($conversation, $persona, $correlationId, $context, $intent, $confidence, $decision, $message->id, 'success', $latencyMs, $response->usage ?? null);
             $this->metrics->message($conversation->tenant_id);
@@ -253,6 +266,51 @@ final class AiMessageProcessor
         $normalize = static fn (string $value): string => preg_replace('/\s+/', ' ', mb_strtolower(trim($value))) ?? '';
 
         return $normalize($patientMessage) === $normalize((string) $lastAi->body);
+    }
+
+    /**
+     * Feature 018 (T148, US5, FR-031..037) — sintetiza áudio TTS sob gatilho
+     * explícito (Q3=A) e o anexa à mensagem outbound JÁ enviada.
+     *
+     * Ordem:
+     *  1. Tenant tem `tts_enabled=false` → no-op (FR-037).
+     *  2. Canal é widget (`type='web'`) → no-op (FR-032).
+     *  3. AudioPreferenceDetector verifica gatilho nas últimas inbound — sem
+     *     gatilho → no-op (Q3=A, FR-033 reversibilidade por turno).
+     *  4. Synthesize: sucesso → MessageMedia anexada à mensagem; falha →
+     *     `audio_syntheses.fallback_to_text=true` registrado e mensagem já
+     *     foi enviada como texto antes (FR-034).
+     */
+    private function maybeAttachAudio(Conversation $conversation, AiPersona $persona, Message $message, string $sourceText): void
+    {
+        try {
+            // FR-037 — kill switch do tenant.
+            $tenant = Tenant::query()->find($conversation->tenant_id);
+            if ($tenant !== null && isset($tenant->tts_enabled) && $tenant->tts_enabled === false) {
+                return;
+            }
+
+            // FR-032 — widget de site não recebe áudio.
+            $channelType = $conversation->channel?->type ?? '';
+            if ($channelType === 'web' || $channelType === '') {
+                return;
+            }
+
+            // Q3=A / FR-031 — gatilho explícito do paciente.
+            if (! $this->audioPreference->prefersAudioForConversation($conversation)) {
+                return;
+            }
+
+            $this->audioSynthesis->synthesizeForMessage($message, $persona, $sourceText);
+        } catch (Throwable $e) {
+            // Áudio é COMPLEMENTAR — falhas nunca propagam para o caller.
+            // O texto já foi enviado; isso fica como warning de operação.
+            Log::warning('ai.tts_attach_failed', [
+                'tenant_id' => $conversation->tenant_id,
+                'message_id' => $message->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

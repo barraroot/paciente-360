@@ -187,7 +187,7 @@ async function copy() {
                 <button
                     v-if="template"
                     type="button"
-                    class="text-indigo-600 hover:underline"
+                    class="text-primary-600 hover:underline"
                     @click="applyTemplate"
                 >
                     Usar modelo

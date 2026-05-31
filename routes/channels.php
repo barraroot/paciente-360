@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Ai\Persona\Models\PersonaTestSession;
 use App\Domain\Messaging\Conversation\Models\Conversation;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
@@ -124,6 +125,41 @@ Broadcast::channel('tenant.{tenantId}.inbox', function (User $user, int $tenantI
 
 Broadcast::channel('prescriptions.{tenantId}', function (User $user, int $tenantId) {
     return $user->tenant_id !== null && (int) $user->tenant_id === (int) $tenantId;
+});
+
+/*
+|--------------------------------------------------------------------------
+| T185 (Fase 18 — US6) — Canal de chat sandbox de Persona Test
+|--------------------------------------------------------------------------
+|
+| `persona-test.{sessionId}` — canal privado por sessão de teste.
+| Só o admin que abriu a sessão pode ingressar (FR-043 — isolamento).
+| Sessões fechadas/expiradas também negam ingresso.
+*/
+
+Broadcast::channel('persona-test.{sessionId}', function (User $user, int $sessionId) {
+    /** @var PersonaTestSession|null $session */
+    $session = PersonaTestSession::query()
+        ->where('id', $sessionId)
+        ->first();
+
+    if ($session === null) {
+        return false;
+    }
+
+    if ((int) $session->tenant_id !== (int) $user->tenant_id) {
+        return false;
+    }
+
+    if ((int) $session->admin_user_id !== (int) $user->id) {
+        return false;
+    }
+
+    if ($session->status !== 'open') {
+        return false;
+    }
+
+    return ['id' => $user->id, 'name' => $user->name];
 });
 
 Broadcast::channel('tenant.{tenantId}.conversa.{conversationId}', function (User $user, int $tenantId, int $conversationId) {

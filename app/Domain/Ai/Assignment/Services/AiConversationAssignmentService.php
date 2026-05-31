@@ -106,6 +106,27 @@ final class AiConversationAssignmentService
     }
 
     /**
+     * Inverso de `markAssignmentPaused`: devolve a atribuição ativa a `assigned`
+     * (sem tocar na conversa). Usado pelo listener de resume da IA, onde a
+     * conversa já teve `ai_paused_until` zerado pelo `HumanTakeoverService`.
+     * Idempotente — seguro chamar quando não há atribuição ou já está ativa.
+     */
+    public function markAssignmentResumed(int $conversationId): void
+    {
+        $assignment = $this->findActive($conversationId);
+
+        if ($assignment === null || ! $assignment->isPaused()) {
+            return;
+        }
+
+        $assignment->update([
+            'status' => AiConversationAssignment::STATUS_ASSIGNED,
+            'paused_by' => null,
+            'paused_at' => null,
+        ]);
+    }
+
+    /**
      * Marca a atribuição ativa como pausada (sem tocar na conversa). Usado pelo
      * listener de takeover humano, onde a conversa já teve o pause setado.
      */

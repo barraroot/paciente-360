@@ -7,6 +7,7 @@ use App\Domain\Ai\Guardrail\Models\AiGuardrail;
 use App\Domain\Ai\KnowledgeBase\Models\AiKnowledgeBase;
 use App\Domain\Ai\Matrix\Models\AiPersonaChannel;
 use App\Domain\Ai\Model\Models\AiModel;
+use App\Domain\Ai\Voice\Models\VoiceCatalogEntry;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\Ai\AiPersonaFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -36,6 +37,7 @@ class AiPersona extends Model
     protected $fillable = [
         'tenant_id',
         'ai_model_id',
+        'voice_id',
         'name',
         'description',
         'markdown_content',
@@ -65,6 +67,17 @@ class AiPersona extends Model
     public function model(): BelongsTo
     {
         return $this->belongsTo(AiModel::class, 'ai_model_id');
+    }
+
+    /**
+     * Feature 018 (US5, Q-clarify-4=B) — voz desta Persona no TTS (FR-037a).
+     * NULL → fallback no PersonaVoiceResolverService (T146).
+     *
+     * @return BelongsTo<VoiceCatalogEntry, $this>
+     */
+    public function voice(): BelongsTo
+    {
+        return $this->belongsTo(VoiceCatalogEntry::class, 'voice_id');
     }
 
     public function channels(): HasMany

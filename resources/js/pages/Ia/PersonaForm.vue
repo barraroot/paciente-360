@@ -97,10 +97,12 @@ function fieldError(key) {
 
         <form v-else class="space-y-5" @submit.prevent="submit">
             <div>
-                <label class="block text-sm font-medium text-foreground">Modelo de IA</label>
+                <label for="persona-ai-model" class="block text-sm font-medium text-foreground mb-1">Modelo de IA</label>
                 <select
+                    id="persona-ai-model"
                     v-model="form.ai_model_id"
-                    class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                    class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    :class="{ 'border-danger-500': fieldError('ai_model_id') }"
                 >
                     <option v-for="m in store.activeModels" :key="m.id" :value="m.id">
                         {{ m.name }} ({{ m.provider }})
@@ -112,11 +114,13 @@ function fieldError(key) {
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-foreground">Nome</label>
+                <label for="persona-name" class="block text-sm font-medium text-foreground mb-1">Nome <span class="text-danger-600">*</span></label>
                 <input
+                    id="persona-name"
                     v-model="form.name"
                     type="text"
-                    class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                    class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    :class="{ 'border-danger-500': fieldError('name') }"
                 />
                 <p v-if="fieldError('name')" class="mt-1 text-xs text-danger-600">
                     {{ fieldError('name') }}
@@ -124,11 +128,12 @@ function fieldError(key) {
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-foreground">Tom de voz</label>
+                <label for="persona-tone" class="block text-sm font-medium text-foreground mb-1">Tom de voz</label>
                 <input
+                    id="persona-tone"
                     v-model="form.tone"
                     type="text"
-                    class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                    class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="cordial e objetivo"
                 />
             </div>
@@ -144,35 +149,32 @@ function fieldError(key) {
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-foreground"
-                        >Mensagem inicial</label
-                    >
+                    <label for="persona-initial-message" class="block text-sm font-medium text-foreground mb-1">Mensagem inicial</label>
                     <textarea
+                        id="persona-initial-message"
                         v-model="form.initial_message"
                         rows="2"
-                        class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                        class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     ></textarea>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-foreground"
-                        >Mensagem de fallback</label
-                    >
+                    <label for="persona-fallback-message" class="block text-sm font-medium text-foreground mb-1">Mensagem de fallback</label>
                     <textarea
+                        id="persona-fallback-message"
                         v-model="form.fallback_message"
                         rows="2"
-                        class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                        class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     ></textarea>
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-foreground"
-                    >Regras de encaminhamento humano</label
-                >
+                <label for="persona-handoff-rules" class="block text-sm font-medium text-foreground mb-1">Regras de encaminhamento humano</label>
                 <textarea
+                    id="persona-handoff-rules"
                     v-model="form.handoff_rules"
                     rows="3"
-                    class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                    class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 ></textarea>
             </div>
 
@@ -199,7 +201,7 @@ function fieldError(key) {
                             v-model="selectedBaseIds"
                             type="checkbox"
                             :value="base.id"
-                            class="rounded border-border-strong text-indigo-600"
+                            class="rounded border-border text-primary-600"
                         />
                         <span>{{ base.name }}</span>
                         <span v-if="!base.is_active" class="text-xs text-foreground-subtle"
@@ -233,7 +235,7 @@ function fieldError(key) {
                             v-model="selectedGuardrailIds"
                             type="checkbox"
                             :value="guardrail.id"
-                            class="rounded border-border-strong text-indigo-600"
+                            class="rounded border-border text-primary-600"
                         />
                         <span>{{ guardrail.name }}</span>
                         <span v-if="!guardrail.is_active" class="text-xs text-foreground-subtle"
@@ -245,14 +247,16 @@ function fieldError(key) {
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-foreground">Temperatura</label>
+                    <label for="persona-temperature" class="block text-sm font-medium text-foreground mb-1">Temperatura</label>
                     <input
+                        id="persona-temperature"
                         v-model.number="form.model_settings.temperature"
                         type="number"
                         step="0.1"
                         min="0"
                         max="1"
-                        class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                        class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        :class="{ 'border-danger-500': fieldError('model_settings.temperature') }"
                     />
                     <p
                         v-if="fieldError('model_settings.temperature')"
@@ -262,14 +266,13 @@ function fieldError(key) {
                     </p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-foreground"
-                        >Limite de tokens</label
-                    >
+                    <label for="persona-max-tokens" class="block text-sm font-medium text-foreground mb-1">Limite de tokens</label>
                     <input
+                        id="persona-max-tokens"
                         v-model.number="form.model_settings.max_tokens"
                         type="number"
                         min="256"
-                        class="mt-1 w-full rounded-lg border-border-strong text-sm"
+                        class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                 </div>
             </div>
@@ -284,7 +287,7 @@ function fieldError(key) {
                 <button
                     type="submit"
                     :disabled="store.saving"
-                    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                    class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
                 >
                     {{ store.saving ? 'Salvando…' : 'Salvar' }}
                 </button>

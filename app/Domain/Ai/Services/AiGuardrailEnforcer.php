@@ -57,10 +57,20 @@ final class AiGuardrailEnforcer
      *
      * @param list<string> $ragSnippets trechos recuperados das bases (US4)
      * @param string|null $workContext bloco renderizado do Contexto de Trabalho da clínica (feature 017, US2)
+     * @param bool|null $isLead feature 018 US3 FR-011b — quando `false` (paciente regular),
+     *                          injeta bloco de relacionamento existente para evitar requalificar
      */
-    public function composeInstructions(AiPersona $persona, array $ragSnippets = [], ?string $workContext = null): string
+    public function composeInstructions(AiPersona $persona, array $ragSnippets = [], ?string $workContext = null, ?bool $isLead = null): string
     {
         $parts = [$this->minimalGuardrails()];
+
+        // Feature 018 (US3, FR-011b, T125a) — distinção lead vs paciente regular.
+        // Quando o interlocutor é paciente já cadastrado (não-lead), respeita
+        // o relacionamento existente e ajusta tom/qualificação.
+        if ($isLead === false) {
+            $parts[] = "# Interlocutor: Paciente já cadastrado\n\n"
+                .'Este interlocutor é um **paciente já cadastrado**, não um novo lead. NÃO refaça qualificação como se fosse desconhecido; respeite o relacionamento existente; ofereça ações apropriadas (revisão, retorno, esclarecimento de dúvida pós-consulta) ao invés do funil de venda. Se ele estiver buscando algo novo (procedimento adicional, troca de plano), você pode oferecer com naturalidade — mas sem o tom de "primeiro contato".';
+        }
 
         // Guardrails ATIVOS da clínica associados à persona (FR-025).
         $clinicGuardrails = $persona->relationLoaded('guardrails')

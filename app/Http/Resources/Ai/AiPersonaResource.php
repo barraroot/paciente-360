@@ -27,6 +27,14 @@ final class AiPersonaResource extends JsonResource
                 'provider' => $this->model->provider,
                 'is_active' => $this->model->is_active,
             ]),
+            // Feature 018 (T157, US5, FR-037a) — voz TTS desta persona.
+            'voice_id' => $this->voice_id,
+            'voice' => $this->whenLoaded('voice', fn (): array => [
+                'id' => $this->voice->id,
+                'display_name' => $this->voice->display_name,
+                'gender' => $this->voice->gender,
+                'tone' => $this->voice->tone,
+            ]),
             'markdown_content' => $this->markdown_content,
             'tone' => $this->tone,
             'objective' => $this->objective,

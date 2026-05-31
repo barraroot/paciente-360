@@ -46,7 +46,7 @@ function onToggle(row, channelKey, event) {
                     <td v-for="c in channels" :key="c.key" class="px-4 py-3 text-center">
                         <input
                             type="checkbox"
-                            class="h-4 w-4 rounded border-border-strong text-indigo-600"
+                            class="h-4 w-4 rounded border-border text-primary-600"
                             :checked="row.channels[c.key]"
                             :aria-label="`${row.name} no canal ${c.label}`"
                             @change="onToggle(row, c.key, $event)"

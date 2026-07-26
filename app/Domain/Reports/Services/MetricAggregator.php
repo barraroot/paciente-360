@@ -136,8 +136,8 @@ final class MetricAggregator
             ->where('tenant_id', $tenantId)
             ->whereBetween('starts_at', [$start, $end->copy()->addDays(30)])
             ->where('status', 'realizada')
-            ->distinct('patient_id')
-            ->count('patient_id');
+            ->distinct('paciente_id')
+            ->count('paciente_id');
 
         $rate = $leads === 0 ? 0.0 : round(($converted / $leads) * 100, 2);
 
@@ -184,7 +184,7 @@ final class MetricAggregator
             ->whereBetween('starts_at', [$start, $end])
             ->where('status', 'realizada')
             ->join('appointment_types', 'appointments.appointment_type_id', '=', 'appointment_types.id')
-            ->sum('appointment_types.price_cents');
+            ->sum(DB::raw('appointment_types.valor_particular * 100'));
 
         return ['numeric' => (float) $totalCents];
     }

@@ -35,10 +35,10 @@ class ExecutiveDashboardController extends Controller
     {
         Gate::authorize('report.view');
 
-        [$start, $end] = $this->resolvePeriod($request);
+        [$start, $end, $previousStart, $previousEnd] = $this->resolvePeriod($request);
         $tenant = app('tenant');
 
-        $data = $this->service->getKpis($tenant, $start, $end, $request->user());
+        $data = $this->service->getKpis($tenant, $start, $end, $request->user(), $previousStart, $previousEnd);
 
         return new ExecutiveDashboardResource($data);
     }
@@ -58,11 +58,11 @@ class ExecutiveDashboardController extends Controller
     {
         Gate::authorize('report.export');
 
-        [$start, $end] = $this->resolvePeriod($request);
+        [$start, $end, $previousStart, $previousEnd] = $this->resolvePeriod($request);
         $tenant = app('tenant');
         $user = $request->user();
 
-        $data = $this->service->getKpis($tenant, $start, $end, $user);
+        $data = $this->service->getKpis($tenant, $start, $end, $user, $previousStart, $previousEnd);
         $pdfBytes = $this->pdfRenderer->renderPdf($tenant, $data);
 
         // Audit + persistência em report_exports.
@@ -93,7 +93,10 @@ class ExecutiveDashboardController extends Controller
     }
 
     /**
-     * @return array{0: Carbon, 1: Carbon}
+     * Resolve a janela [start, end] e, para o preset "Hoje" (`1d`), também o
+     * período anterior explícito (ontem 00:00 → hoje 00:00) usado pelos deltas.
+     *
+     * @return array{0: Carbon, 1: Carbon, 2: ?Carbon, 3: ?Carbon}
      */
     private function resolvePeriod(Request $request): array
     {
@@ -103,6 +106,7 @@ class ExecutiveDashboardController extends Controller
 
         $end = $endRaw !== '' ? Carbon::parse($endRaw) : Carbon::now();
         $start = $startRaw !== '' ? Carbon::parse($startRaw) : match ($preset) {
+            '1d' => $end->copy()->startOfDay(),
             '24h' => $end->copy()->subHours(24),
             '7d' => $end->copy()->subDays(7),
             '90d' => $end->copy()->subDays(90),
@@ -116,6 +120,16 @@ class ExecutiveDashboardController extends Controller
             $start = $maxStart;
         }
 
-        return [$start, $end];
+        // Preset "Hoje" (1d): período anterior é o dia anterior completo
+        // (ontem 00:00 → hoje 00:00) — não as últimas 24h a partir de agora.
+        // Demais presets mantêm a derivação padrão do Service (null aqui).
+        $previousStart = null;
+        $previousEnd = null;
+        if ($preset === '1d' && $startRaw === '') {
+            $previousEnd = $end->copy()->startOfDay();
+            $previousStart = $previousEnd->copy()->subDay();
+        }
+
+        return [$start, $end, $previousStart, $previousEnd];
     }
 }

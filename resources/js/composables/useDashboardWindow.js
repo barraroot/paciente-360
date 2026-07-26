@@ -2,7 +2,7 @@ import { ref, computed, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth.js';
 
 const STORAGE_KEY = 'executive_dashboard:window:v1';
-const VALID_WINDOWS = ['24h', '7d', '30d', '90d'];
+const VALID_WINDOWS = ['1d', '24h', '7d', '30d', '90d'];
 const DEFAULT_WINDOW = '7d';
 
 /**

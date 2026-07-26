@@ -11,8 +11,8 @@ const props = defineProps({
 const { t } = useI18n();
 
 const isVisible = computed(() => {
-    if (props.window === '24h') {
-        // FR-008: oculto na janela 24h (dados live por definição).
+    if (props.window === '24h' || props.window === '1d') {
+        // FR-008: oculto em janelas curtas (24h / Hoje) — dados live por definição.
         return false;
     }
     const lag = Number(props.lagSeconds);

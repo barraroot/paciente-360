@@ -37,25 +37,30 @@ final class ExecutiveDashboardService
      * Retorna KPIs para uma janela [start, end]. Aplica escopo por perfil
      * se `$user` for Médico (filter professional_id).
      *
+     * Quando `$previousStart`/`$previousEnd` são informados (preset "Hoje"),
+     * os deltas comparam contra esse período anterior explícito; caso
+     * contrário, o Service deriva o período anterior padrão em
+     * {@see self::fetchWithDelta()}.
+     *
      * @return array<string, mixed>
      */
-    public function getKpis(Tenant $tenant, Carbon $start, Carbon $end, ?User $user = null): array
+    public function getKpis(Tenant $tenant, Carbon $start, Carbon $end, ?User $user = null, ?Carbon $previousStart = null, ?Carbon $previousEnd = null): array
     {
         $useAggregated = $this->shouldUseAggregations($start, $end);
 
         return [
             'period' => ['start' => $start->toIso8601String(), 'end' => $end->toIso8601String()],
-            'leads_by_channel' => $this->fetchWithDelta('leads_by_channel', $tenant, $start, $end, $useAggregated),
-            'conversion_rate' => $this->fetchWithDelta('conversion_rate', $tenant, $start, $end, $useAggregated),
-            'no_show_rate' => $this->fetchWithDelta('no_show_rate', $tenant, $start, $end, $useAggregated),
+            'leads_by_channel' => $this->fetchWithDelta('leads_by_channel', $tenant, $start, $end, $useAggregated, $previousStart, $previousEnd),
+            'conversion_rate' => $this->fetchWithDelta('conversion_rate', $tenant, $start, $end, $useAggregated, $previousStart, $previousEnd),
+            'no_show_rate' => $this->fetchWithDelta('no_show_rate', $tenant, $start, $end, $useAggregated, $previousStart, $previousEnd),
             'nps' => [
                 'value' => null,
                 'delta_percent' => null,
                 'placeholder' => true,
                 'message' => 'NPS — disponível em fase futura (Q8)',
             ],
-            'estimated_revenue' => $this->fetchWithDelta('estimated_revenue', $tenant, $start, $end, $useAggregated),
-            'response_time_first_p95' => $this->fetchWithDelta('response_time_first_p95', $tenant, $start, $end, $useAggregated),
+            'estimated_revenue' => $this->fetchWithDelta('estimated_revenue', $tenant, $start, $end, $useAggregated, $previousStart, $previousEnd),
+            'response_time_first_p95' => $this->fetchWithDelta('response_time_first_p95', $tenant, $start, $end, $useAggregated, $previousStart, $previousEnd),
             'computed_at' => Carbon::now()->toIso8601String(),
             'used_aggregations' => $useAggregated,
             'aggregation_lag_seconds' => $useAggregated ? $this->aggregationLagSeconds($tenant) : 0,
@@ -65,15 +70,24 @@ final class ExecutiveDashboardService
     /**
      * Wrapper que adiciona delta_percent comparando contra período anterior.
      *
+     * O período anterior é explícito quando `$previousStart`/`$previousEnd`
+     * são informados (preset "Hoje" → dia anterior completo); senão é derivado
+     * da própria janela atual.
+     *
      * @return array{value: float|null, delta_percent: float|null, json?: mixed}
      */
-    private function fetchWithDelta(string $metric, Tenant $tenant, Carbon $start, Carbon $end, bool $useAggregated): array
+    private function fetchWithDelta(string $metric, Tenant $tenant, Carbon $start, Carbon $end, bool $useAggregated, ?Carbon $previousStart = null, ?Carbon $previousEnd = null): array
     {
         $current = $this->fetch($metric, $tenant, $start, $end, $useAggregated);
 
-        $duration = $start->diffInDays($end, true);
-        $prevEnd = $start->copy()->subDay();
-        $prevStart = $prevEnd->copy()->subDays((int) $duration);
+        if ($previousStart !== null && $previousEnd !== null) {
+            $prevStart = $previousStart->copy();
+            $prevEnd = $previousEnd->copy();
+        } else {
+            $duration = $start->diffInDays($end, true);
+            $prevEnd = $start->copy()->subDay();
+            $prevStart = $prevEnd->copy()->subDays((int) $duration);
+        }
         $previous = $this->fetch($metric, $tenant, $prevStart, $prevEnd, $useAggregated);
 
         $cv = $current['value'] ?? 0;

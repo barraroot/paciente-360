@@ -10,7 +10,7 @@ const emit = defineEmits(['update:modelValue']);
 const { t } = useI18n();
 
 const tablistRef = useTemplateRef('tablistRef');
-const windows = ['24h', '7d', '30d', '90d'];
+const windows = ['1d', '24h', '7d', '30d', '90d'];
 
 function select(value) {
     if (value !== props.modelValue) {

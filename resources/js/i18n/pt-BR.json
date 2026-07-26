@@ -988,6 +988,7 @@
         "page_subtitle": "Visão analítica do desempenho da clínica.",
         "period_filter": {
             "label": "Período",
+            "1d": "Hoje",
             "24h": "Últimas 24h",
             "7d": "7 dias",
             "30d": "30 dias",
